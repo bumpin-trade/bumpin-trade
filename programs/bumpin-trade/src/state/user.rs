@@ -12,17 +12,16 @@ use crate::state::infrastructure::user_token::UserToken;
 #[derive(Default, Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct User {
+    pub user_key: Pubkey,
     pub authority: Pubkey,
     pub next_order_id: u128,
     pub next_liquidation_id: u128,
     pub hold: u128,
-    /// Whether the user is active, being liquidated or bankrupt
-    pub status: u8,
-    pub user_tokens: [UserToken; 20],
-    pub user_stakes: [UserStake; 20],
-    pub user_positions: [UserPosition; 10],
+    pub user_tokens: [UserToken; 10],
+    pub user_stakes: [UserStake; 10],
+    pub user_positions: [UserPosition; 24],
     pub user_orders: [UserOrder; 16],
-    pub user_rewards: [UserRewards; 20],
+    pub user_rewards: [UserRewards; 10],
 }
 
 impl User {
