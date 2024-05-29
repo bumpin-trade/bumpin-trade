@@ -32,7 +32,9 @@ pub struct PlaceOrder<'info> {
         constraint = can_sign_for_user(& user_account, & authority) ?
     )]
     pub user_account: AccountLoader<'info, User>,
+
     pub authority: Signer<'info>,
+
     #[account(
         mut,
         constraint = pool.load() ?.pool_mint_key.eq(& margin_token.mint.key())
@@ -44,17 +46,23 @@ pub struct PlaceOrder<'info> {
         constraint = pool.load() ?.pool_mint_key = market.load() ?.pool_mint_key
     )]
     pub pool: AccountLoader<'info, Pool>,
+
     pub market: AccountLoader<'info, Market>,
-    pub state: AccountLoader<'info, State>,
+
+    pub state: Account<'info, State>,
     #[account(
         mut,
         constraint = & pool_vault.mint.eq(& user_token_account.mint),
         token::authority = authority
     )]
     pub user_token_account: Account<'info, TokenAccount>,
+
     pub pool_vault: Account<'info, TokenAccount>,
+
     pub trade_token: AccountLoader<'info, TradeToken>,
+
     pub bump_signer: AccountInfo<'info>,
+    
     pub token_program: Program<'info, Token>,
 }
 

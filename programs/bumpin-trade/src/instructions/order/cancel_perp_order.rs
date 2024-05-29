@@ -18,6 +18,7 @@ pub struct CancelOrderCtx<'info> {
         constraint = can_sign_for_user(& user_account, & authority) ?
     )]
     pub user_account: AccountLoader<'info, User>,
+
     pub authority: Signer<'info>,
     #[account(
         mut,
@@ -25,11 +26,16 @@ pub struct CancelOrderCtx<'info> {
         token::authority = authority
     )]
     pub user_token_account: Account<'info, TokenAccount>,
+
     pub pool_vault: Account<'info, TokenAccount>,
+
     pub trade_token: AccountLoader<'info, TradeToken>,
+
     pub bump_signer: AccountInfo<'info>,
+
     pub token_program: Program<'info, Token>,
-    pub state: AccountLoader<'info, State>,
+    
+    pub state: Account<'info, State>,
 }
 
 
