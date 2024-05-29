@@ -1,0 +1,239 @@
+use anchor_lang::prelude::*;
+use crate::errors::BumpErrorCode::{CouldNotFindUserPosition, CouldNotFindUserStake, CouldNotFindUserToken};
+use crate::errors::{BumpErrorCode, BumpResult};
+use crate::{check};
+use crate::state::infrastructure::user_order::{OrderSide, OrderStatus, PositionSide, UserOrder};
+use crate::state::infrastructure::user_position::UserPosition;
+use crate::state::infrastructure::user_stake::{UserRewards, UserStake};
+use crate::state::infrastructure::user_token::UserToken;
+
+
+#[account(zero_copy(unsafe))]
+#[derive(Default, Eq, PartialEq, Debug)]
+#[repr(C)]
+pub struct User {
+    pub authority: Pubkey,
+    pub next_order_id: u128,
+    pub next_liquidation_id: u128,
+    pub hold: u128,
+    /// Whether the user is active, being liquidated or bankrupt
+    pub status: u8,
+    pub user_tokens: [UserToken; 20],
+    pub user_stakes: [UserStake; 20],
+    pub user_positions: [UserPosition; 10],
+    pub user_orders: [UserOrder; 16],
+    pub user_rewards: [UserRewards; 20],
+}
+
+impl User {
+    pub fn get_user_token_mut(&self, mint: &Pubkey) -> BumpResult<&mut UserToken> {
+        Ok(self.user_tokens.iter_mut()
+            .find(|user_token| user_token.token_mint.eq(mint))
+            .ok_or(CouldNotFindUserToken)?)
+    }
+    pub fn get_user_token_ref(&self, mint: &Pubkey) -> BumpResult<&UserToken> {
+        Ok(self.user_tokens.iter()
+            .find(|&user_token| user_token.token_mint.eq(mint))
+            .ok_or(CouldNotFindUserToken)?)
+    }
+
+    pub fn get_user_stake_mut(&mut self, pool_index: u16) -> BumpResult<&mut UserStake> {
+        Ok(self.user_stakes.get_mut(pool_index).ok_or(CouldNotFindUserStake)?)
+    }
+    pub fn get_user_stake_ref(&mut self, pool_index: u16) -> BumpResult<&UserStake> {
+        Ok(self.user_stakes.get(pool_index).ok_or(CouldNotFindUserStake)?)
+    }
+
+    pub fn sub_order_hold_in_usd(&mut self, amount: u128) {
+        check!(self.hold >= amount,BumpErrorCode::AmountNotEnough);
+        self.hold -= amount;
+    }
+
+    pub fn add_order_hold_in_usd(&mut self, amount: u128) {
+        self.hold += amount;
+    }
+
+    pub fn use_token(&mut self, token: &Pubkey, amount: u128, is_check: bool) -> BumpResult<u128> {
+        let use_from_balance;
+        let mut token_balance = self.get_user_token_mut(token)?;
+        if is_check {
+            check!(token_balance.amount >= token_balance.used_amount, BumpErrorCode::AmountNotEnough)
+        }
+        if token_balance.amount >= token_balance.used_amount + amount {
+            token_balance.add_token_used_amount(amount);
+            use_from_balance = amount;
+        } else if token_balance.amount > token_balance.used_amount {
+            use_from_balance = token_balance.amount - token_balance.used_amount;
+            token_balance.add_token_used_amount(amount);
+        } else {
+            token_balance.add_token_used_amount(amount);
+            use_from_balance = 0u128;
+        }
+
+        Ok(use_from_balance)
+    }
+
+    pub fn un_use_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
+        let mut token_balance = self.get_user_token_mut(token)?;
+        check!(token_balance.used_amount > amount, BumpErrorCode::AmountNotEnough);
+        token_balance.sub_token_used_amount(amount);
+        Ok(())
+    }
+
+    pub fn find_position_by_seed(&self, user: &Pubkey, symbol: [u8; 32], token: &Pubkey, is_cross_margin: bool, program_id: &Pubkey) -> BumpResult<Option<&UserPosition>> {
+        let position_key = self.generate_position_key(user, symbol, token, is_cross_margin, program_id)?;
+        Ok(self.user_positions.iter().find(|position| position.position_key.eq(&position_key)))
+    }
+
+    pub fn generate_position_key(&self, user: &Pubkey, symbol: [u8; 32], token: &Pubkey, is_cross_margin: bool, program_id: &Pubkey) -> BumpResult<Pubkey> {
+        // Convert is_cross_margin to a byte array
+        let is_cross_margin_bytes: &[u8] = if is_cross_margin { &[1] } else { &[0] };
+        // Create the seeds array by concatenating the byte representations
+        let seeds: &[&[u8]] = &[
+            user.as_ref(),
+            &symbol,
+            token.as_ref(),
+            is_cross_margin_bytes,
+        ];
+
+        // Find the program address
+        let (address, _bump_seed) = Pubkey::find_program_address(seeds, program_id);
+        Ok(address)
+    }
+
+    pub fn find_position_by_key(&self, position_key: &Pubkey) -> BumpResult<&UserPosition> {
+        Ok(self.user_positions.iter()
+            .find(|user_position: UserPosition| user_position.position_key.eq(position_key))
+            .ok_or(CouldNotFindUserPosition)?)
+    }
+
+    pub fn find_position_mut_by_key(&self, position_key: &Pubkey) -> BumpResult<&mut UserPosition> {
+        Ok(self.user_positions.iter_mut()
+            .find(|user_position: UserPosition| user_position.position_key.eq(position_key))
+            .ok_or(CouldNotFindUserPosition)?)
+    }
+
+
+    pub fn find_order_by_id(&self, order_id: u128) -> BumpResult<&mut UserOrder> {
+        Ok(self.user_orders.iter().find(|order| order.order_id
+            == order_id).as_mut().unwrap())
+    }
+
+    pub fn has_other_short_order(&self, symbol: [u8; 32], margin_token: Pubkey, is_cross_margin: bool) -> BumpResult<bool> {
+        for order in self.user_orders {
+            if order.symbol.eq(&symbol) &&
+                order.margin_token.eq(&margin_token) &&
+                order.cross_margin.eq(&is_cross_margin) &&
+                order.position_side.eq(&PositionSide::INCREASE) &&
+                order.order_side.eq(&OrderSide::SHORT) {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    pub fn has_other_order(&self, order_id: u128) -> BumpResult<bool> {
+        for order in self.user_orders {
+            if order.order_id == order_id {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    pub fn next_usable_order_index(&self) -> BumpResult<usize> {
+        for (index, order) in self.user_orders.iter().enumerate() {
+            if order.status.eq(&OrderStatus::INIT) {
+                return Ok(index);
+            }
+        }
+        Err(BumpErrorCode::NoMoreOrderSpace)
+    }
+
+    pub fn next_usable_position_index(&self) -> BumpResult<usize> {
+        for (index, position) in self.user_positions.iter().enumerate() {
+            if position.status.eq(&OrderStatus::INIT) {
+                return Ok(index);
+            }
+        }
+        Err(BumpErrorCode::AmountNotEnough)
+    }
+
+
+    pub fn add_position(&self, position: UserPosition, index: usize) -> BumpResult<> {
+        let exist_position = self.user_positions.get_mut(index).ok_or(BumpErrorCode::AmountNotEnough)?;
+        if let Some(element) = exist_position {
+            *element = position;
+            return Ok(());
+        }
+        Err(BumpErrorCode::AmountNotEnough)
+    }
+
+    pub fn add_order(&self, order: &mut UserOrder, index: usize) -> BumpResult<> {
+        let exist_order = self.user_orders.get_mut(index).ok_or(BumpErrorCode::OrderNotExist)?;
+        if let Some(element) = exist_order {
+            *element = order;
+            return Ok(());
+        }
+        Err(BumpErrorCode::OrderNotExist)
+    }
+
+    pub fn delete_order(&self, order_id: u128) -> BumpResult<> {
+        let mut order_index = -1;
+        for (index, user_order) in self.user_orders.iter().enumerate() {
+            if user_order.order_id == order_id {
+                order_index = index;
+            }
+        }
+        if order_index == -1 {
+            return Err(BumpErrorCode::AmountNotEnough);
+        }
+
+        let exist_order = self.user_orders.get_mut(order_index).ok_or(BumpErrorCode::AmountNotEnough)?;
+        if let Some(element) = exist_order {
+            *element = UserOrder::default();
+            return Ok(());
+        }
+        Err(BumpErrorCode::AmountNotEnough)
+    }
+
+    pub fn get_order_leverage(&self, symbol: [u8; 32], order_side: OrderSide, is_cross_margin: bool, leverage: u128) -> BumpResult<u128> {
+        for order in self.user_orders {
+            if order.symbol == symbol &&
+                order.order_side.eq(&order_side) &&
+                order.position_side.eq(&PositionSide::DECREASE) &&
+                order.cross_margin == is_cross_margin {
+                return Ok(order.leverage);
+            }
+        }
+        Ok(leverage)
+    }
+
+
+    pub fn update_all_orders_leverage(&mut self, leverage: u128, symbol: [u8; 32], margin_token: &Pubkey, is_long: bool, is_cross_margin: bool) {
+        for mut user_order in self.user_orders {
+            let is_long_order = user_order.order_side.eq(&OrderSide::LONG);
+            if user_order.cross_margin == is_cross_margin && user_order.symbol == symbol && user_order.margin_token.eq(margin_token) && ((is_long_order == is_long && user_order.position_side.eq(&PositionSide::INCREASE)) || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE))) {
+                user_order.set_leverage(leverage)
+            }
+        }
+    }
+}
+
+impl Default for User {
+    fn default() -> Self {
+        User {
+            authority: Default::default(),
+            next_order_id: 1,
+            next_liquidation_id: 1,
+            hold: 0,
+            status: 0,
+            user_tokens: [UserToken::default(); 20],
+            user_stakes: [UserStake::default(); 20],
+            user_positions: [UserPosition::default(); 10],
+            user_orders: [UserOrder::default(); 16],
+            user_rewards: [UserRewards::default(); 20],
+        }
+    }
+}
+

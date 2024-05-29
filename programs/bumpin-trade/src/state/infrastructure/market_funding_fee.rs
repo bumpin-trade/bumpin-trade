@@ -1,0 +1,67 @@
+use anchor_lang::zero_copy;
+use num_traits::ToPrimitive;
+use solana_program::clock::Clock;
+use solana_program::sysvar::Sysvar;
+
+use crate::errors::BumpResult;
+use crate::math::casting::Cast;
+use crate::math::safe_math::SafeMath;
+
+#[zero_copy(unsafe)]
+#[derive(Eq, PartialEq, Debug)]
+#[repr(C)]
+pub struct MarketFundingFee {
+    pub long_funding_fee_amount_per_size: i128,
+    pub short_funding_fee_amount_per_size: i128,
+    pub total_long_funding_fee: i128,
+    pub total_short_funding_fee: i128,
+    pub long_funding_fee_rate: i128,
+    pub short_funding_fee_rate: i128,
+    pub last_update: u128,
+}
+
+impl Default for MarketFundingFee {
+    fn default() -> Self {
+        MarketFundingFee {
+            long_funding_fee_amount_per_size: 0,
+            short_funding_fee_amount_per_size: 0,
+            total_long_funding_fee: 0,
+            total_short_funding_fee: 0,
+            long_funding_fee_rate: 0,
+            short_funding_fee_rate: 0,
+            last_update: 0,
+        }
+    }
+}
+
+impl MarketFundingFee {
+    pub fn update_last_update(&mut self) {
+        self.last_update = Clock::get()?.unix_timestamp.to_u128()?;
+    }
+    pub fn update_market_funding_fee_rate(&mut self, short_funding_fee_amount_per_size_delta: i128, long_funding_fee_amount_per_size_delta: i128, fee_durations: u128) -> BumpResult<()> {
+        self.short_funding_fee_amount_per_size = short_funding_fee_amount_per_size_delta.
+            safe_add(self.short_funding_fee_amount_per_size.cast()?)?.
+            cast::<i128>()?;
+
+        self.long_funding_fee_amount_per_size = long_funding_fee_amount_per_size_delta.
+            safe_add(self.long_funding_fee_amount_per_size.cast()?).
+            cast::<i128>()?;
+
+        self.long_funding_fee_rate = long_funding_fee_amount_per_size_delta.
+            safe_div(fee_durations.cast()?)?.
+            safe_mul(3600i128)?;
+
+        self.short_funding_fee_rate = short_funding_fee_amount_per_size_delta.
+            safe_div(fee_durations.cast()?)?.
+            safe_mul(3600i128)?;
+        self.update_last_update();
+    }
+
+
+    pub fn get_market_funding_fee_durations(&self) -> BumpResult<u128> {
+        if self.last_update > 0 {
+            let clock = Clock::get()?;
+            clock.unix_timestamp.to_u128().safe_sub(self.last_update)?;
+        } else { 0 }
+    }
+}

@@ -1,0 +1,79 @@
+use std::cell::Ref;
+use std::collections::BTreeMap;
+use std::iter::Peekable;
+use std::panic::Location;
+use std::slice::Iter;
+
+use anchor_lang::Discriminator;
+use anchor_lang::prelude::AccountLoader;
+use arrayref::array_ref;
+use solana_program::account_info::AccountInfo;
+use solana_program::msg;
+use solana_program::pubkey::Pubkey;
+
+use crate::errors::BumpErrorCode::{CouldNotLoadTradeTokenData, InvalidTradeTokenAccount, TradeTokenNotFind};
+use crate::errors::BumpResult;
+use crate::math::safe_unwrap::SafeUnwrap;
+use crate::state::trade_token::TradeToken;
+use crate::traits::Size;
+
+pub struct TradeTokenMap<'a>(pub BTreeMap<Pubkey, AccountLoader<'a, TradeToken>>);
+
+impl<'a> TradeTokenMap<'a> {
+    #[track_caller]
+    #[inline(always)]
+    pub fn get_trade_token(&self, mint: &Pubkey) -> BumpResult<Ref<TradeToken>> {
+        let loader = match self.0.get(mint) {
+            None => {
+                let caller = Location::caller();
+                msg!(
+                    "Could not find trade_token {} at {}:{}",
+                    mint,
+                    caller.file(),
+                    caller.line()
+                );
+                return Err(TradeTokenNotFind);
+            }
+            Some(loader) => loader
+        };
+        match loader.load() {
+            Ok(trade_token) => Ok(trade_token),
+            Err(e) => {
+                let caller = Location::caller();
+                msg!("{:?}", e);
+                msg!(
+                    "Could not load trade_token {} at {}:{}",
+                    mint,
+                    caller.file(),
+                    caller.line()
+                );
+                Err(CouldNotLoadTradeTokenData)
+            }
+        }
+    }
+    pub fn load<'c>(account_info_iter: &'c mut Peekable<Iter<AccountInfo>>) -> BumpResult<TradeTokenMap<'a>> {
+        let mut trade_token_vec: TradeTokenMap = TradeTokenMap(BTreeMap::new());
+        let trade_token_discriminator = TradeToken::discriminator();
+        while let Some(account_info) = account_info_iter.peek() {
+            let data = account_info
+                .try_borrow_data()
+                .or(Err(CouldNotLoadTradeTokenData))?;
+
+            let expected_data_len = TradeToken::SIZE;
+            if data.len() < expected_data_len {
+                break;
+            }
+            let account_discriminator = array_ref![data, 0, 8];
+            if account_discriminator != &trade_token_discriminator {
+                continue;
+            }
+
+            let trade_token_mint = Pubkey::from(*array_ref![data, 8, 32]);
+            let account_info = account_info_iter.next().safe_unwrap()?;
+            let account_loader: AccountLoader<TradeToken> = AccountLoader::try_from(account_info).or(Err(InvalidTradeTokenAccount))?;
+
+            trade_token_vec.0.insert(trade_token_mint, account_loader.clone());
+        }
+        Ok(trade_token_vec)
+    }
+}

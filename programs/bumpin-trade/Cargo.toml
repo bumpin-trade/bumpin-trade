@@ -1,0 +1,29 @@
+[package]
+name = "bumpin-trade"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "bumpin_trade"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "0.30.0"
+anchor-spl = "0.30.0"
+solana-program = "1.18.11"
+pyth-client = "0.5.1"
+pyth-sdk-solana = "0.10.1"
+borsh = "1.4.0"
+num-traits = "0.2.18"
+uint = { version = "0.9.1", default-features = false }
+arrayref="0.3.7"
+

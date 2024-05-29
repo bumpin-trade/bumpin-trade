@@ -1,0 +1,63 @@
+use anchor_lang::{Accounts, Key, ToAccountInfo};
+use anchor_lang::require_keys_neq;
+use anchor_lang::context::Context;
+use anchor_lang::prelude::{Account, AccountLoader, Program, Signer, System, Sysvar};
+use anchor_spl::token::{Mint, Token, TokenAccount};
+use solana_program::account_info::AccountInfo;
+use solana_program::rent::Rent;
+use crate::{get_then_update_id};
+use crate::state::state::State;
+use crate::state::trade_token::TradeToken;
+use anchor_lang::error;
+
+#[derive(Accounts)]
+pub struct InitializeTradeToken<'info> {
+    #[account(
+        init,
+        seeds = [b"trade_token", state.number_of_trade_tokens.to_le_bytes().as_ref()],
+        space = std::mem::size_of::< TradeToken > () + 8,
+        bump,
+        payer = admin
+    )]
+    pub trade_token: AccountLoader<'info, TradeToken>,
+    pub trade_token_mint: Box<Account<'info, Mint>>,
+    #[account(
+        init,
+        seeds = [b"trade_token_vault".as_ref(), state.number_of_trade_tokens.to_le_bytes().as_ref()],
+        bump,
+        payer = admin,
+        token::mint = trade_token_mint,
+        token::authority = bump_signer
+    )]
+    pub trade_token_vault: Box<Account<'info, TokenAccount>>,
+    pub oracle: AccountInfo<'info>,
+    #[account(
+        constraint = state.bump_signer.eq(& bump_signer.key())
+    )]
+    pub bump_signer: AccountInfo<'info>,
+    #[account(
+        mut,
+        has_one = bump_signer
+    )]
+    pub state: Box<Account<'info, State>>,
+    #[account(mut)]
+    pub admin: Signer<'info>,
+    pub rent: Sysvar<'info, Rent>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+}
+
+pub fn initialize_trade_token(ctx: Context<InitializeTradeToken>, discount: u128, liquidation_factor: u128) -> anchor_lang::Result<()> {
+    let state = &mut ctx.accounts.state;
+    let trade_token = &mut ctx.accounts.trade_token.load_init()?;
+    **trade_token = TradeToken {
+        mint: *ctx.accounts.trade_token_mint.key(),
+        oracle: *ctx.accounts.oracle.key(),
+        token_index: get_then_update_id!(state,number_of_trade_tokens),
+        discount,
+        liquidation_factor,
+        decimals: ctx.accounts.trade_token_mint.decimals,
+        trade_token_vault: *trade_token.trade_token_vault,
+    };
+    Ok(())
+}
