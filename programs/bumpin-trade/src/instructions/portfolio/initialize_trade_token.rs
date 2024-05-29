@@ -35,7 +35,7 @@ pub struct InitializeTradeToken<'info> {
         mut,
         has_one = bump_signer
     )]
-    pub state: AccountLoader<'info, State>,
+    pub state: Account<'info, State>,
     #[account(mut)]
     pub admin: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
@@ -49,7 +49,7 @@ pub fn initialize_trade_token(ctx: Context<InitializeTradeToken>, discount: u128
     **trade_token = TradeToken {
         mint: *ctx.accounts.trade_token_mint.key(),
         oracle: *ctx.accounts.oracle.key(),
-        token_index: get_then_update_id!(state,number_of_trade_tokens),
+        token_index: get_then_update_id!(state, number_of_trade_tokens),
         discount,
         liquidation_factor,
         decimals: ctx.accounts.trade_token_mint.decimals,

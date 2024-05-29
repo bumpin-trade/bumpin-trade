@@ -15,7 +15,7 @@ pub struct InitializeState<'info> {
         bump,
         payer = admin
     )]
-    pub state: AccountLoader<'info, State>,
+    pub state: Account<'info, State>,
     pub admin_signer: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
     pub system_program: Program<'info, System>,
