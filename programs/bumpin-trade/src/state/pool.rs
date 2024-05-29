@@ -95,34 +95,40 @@ impl Default for Pool {
 
 
 impl Pool {
-    pub fn add_amount(&mut self, amount: u128) {
+    pub fn add_amount(&mut self, amount: u128) -> BumpResult<()> {
         self.pool_balance.amount = self.pool_balance.amount.safe_add(amount)?;
+        Ok(())
     }
 
-    pub fn sub_amount(&mut self, amount: u128) {
-        validate!(self.pool_balance.amount >= amount, BumpErrorCode::AmountNotEnough.into());
+    pub fn sub_amount(&mut self, amount: u128) -> BumpResult<()> {
+        validate!( self.pool_balance.amount >= amount, BumpErrorCode::AmountNotEnough.into());
         self.pool_balance.amount = self.pool_balance.amount.safe_sub(amount)?;
+        Ok(())
     }
 
-    pub fn add_supply(&mut self, stake_amount: u128) {
+    pub fn add_supply(&mut self, stake_amount: u128) -> BumpResult<()> {
         self.total_supply = self.total_supply.safe_add(stake_amount)?;
+        Ok(())
     }
     pub fn hold_pool(&mut self, amount: u128) -> BumpResult<()> {
         validate!(self.check_hold_is_allowed(amount), BumpErrorCode::AmountNotEnough.into());
-        Ok(self.pool_balance.hold_amount = add_u128(self.pool_balance.hold_amount, amount)?)
+        self.pool_balance.hold_amount = add_u128(self.pool_balance.hold_amount, amount)?;
+        Ok(())
     }
 
     pub fn un_hold_pool(&mut self, amount: u128) -> BumpResult<()> {
         validate!(self.pool_balance.hold_amount>=amount, BumpErrorCode::AmountNotEnough.into());
-        Ok(self.pool_balance.hold_amount = add_u128(self.pool_balance.hold_amount, amount)?)
+        self.pool_balance.hold_amount = add_u128(self.pool_balance.hold_amount, amount)?;
+        Ok(())
     }
 
     pub fn add_unsettle(&mut self, amount: i128) -> BumpResult<()> {
         if amount < 0 {
-            Ok(self.pool_balance.un_settle_amount = cal_utils::sub_u128(self.pool_balance.un_settle_amount?, amount.abs().to_u128()?)?)
+            self.pool_balance.un_settle_amount = cal_utils::sub_u128(self.pool_balance.un_settle_amount?, amount.abs().to_u128()?)?;
         } else {
-            Ok(self.pool_balance.un_settle_amount = add_u128(self.pool_balance.un_settle_amount?, amount.abs().to_u128()?)?)
+            self.pool_balance.un_settle_amount = add_u128(self.pool_balance.un_settle_amount?, amount.abs().to_u128()?)?;
         }
+        Ok(())
     }
 
     pub fn get_current_max_un_stake(&self) -> BumpResult<u128> {
