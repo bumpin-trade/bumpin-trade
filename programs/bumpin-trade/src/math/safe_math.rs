@@ -1,24 +1,15 @@
-use std::panic::Location;
-
-use anchor_lang::prelude::*;
-use solana_program::msg;
-
 use crate::math::bn::{U192, U256};
 use crate::math::ceil_div::CheckedCeilDiv;
-use crate::math::constants::{RATE_PRECISION, SMALL_RATE_PRECISION};
 use crate::math::floor_div::CheckedFloorDiv;
-use crate::errors::BumpErrorCode::MathError;
-use crate::errors::BumpResult;
+use solana_program::msg;
+use std::panic::Location;
+use crate::errors::{BumpResult, BumpErrorCode};
 
 pub trait SafeMath: Sized {
     fn safe_add(self, rhs: Self) -> BumpResult<Self>;
     fn safe_sub(self, rhs: Self) -> BumpResult<Self>;
     fn safe_mul(self, rhs: Self) -> BumpResult<Self>;
-    fn safe_mul_rate(self, rhs: Self) -> BumpResult<Self>;
-    fn safe_mul_small_rate(self, rhs: Self) -> BumpResult<Self>;
     fn safe_div(self, rhs: Self) -> BumpResult<Self>;
-    fn safe_div_rate(self, rhs: Self) -> BumpResult<Self>;
-    fn safe_div_small_rate(self, rhs: Self) -> BumpResult<Self>;
     fn safe_div_ceil(self, rhs: Self) -> BumpResult<Self>;
 }
 
@@ -33,7 +24,7 @@ macro_rules! checked_impl {
                     None => {
                         let caller = Location::caller();
                         msg!("Math error thrown at {}:{}", caller.file(), caller.line());
-                        Err(MathError)
+                        Err(BumpErrorCode::MathError)
                     }
                 }
             }
@@ -46,7 +37,7 @@ macro_rules! checked_impl {
                     None => {
                         let caller = Location::caller();
                         msg!("Math error thrown at {}:{}", caller.file(), caller.line());
-                        Err(MathError)
+                        Err(BumpErrorCode::MathError)
                     }
                 }
             }
@@ -59,20 +50,9 @@ macro_rules! checked_impl {
                     None => {
                         let caller = Location::caller();
                         msg!("Math error thrown at {}:{}", caller.file(), caller.line());
-                        Err(MathError)
+                        Err(BumpErrorCode::MathError)
                     }
                 }
-            }
-            #[track_caller]
-            #[inline(always)]
-            fn safe_mul_rate(self, v: $t) -> BumpResult<$t> {
-                self.safe_mul(v)?.safe_div(RATE_PRECISION.cast()?);
-            }
-
-                        #[track_caller]
-            #[inline(always)]
-            fn safe_mul_small_rate(self, v: $t) -> BumpResult<$t> {
-                self.safe_mul(v)?.safe_div(SMALL_RATE_PRECISION.cast()?);
             }
 
             #[track_caller]
@@ -83,21 +63,9 @@ macro_rules! checked_impl {
                     None => {
                         let caller = Location::caller();
                         msg!("Math error thrown at {}:{}", caller.file(), caller.line());
-                        Err(MathError)
+                        Err(BumpErrorCode::MathError)
                     }
                 }
-            }
-
-             #[track_caller]
-            #[inline(always)]
-            fn safe_div_rate(self, v: $t) -> BumpResult<$t> {
-                self.safe_mul(RATE_PRECISION.cast()?)?.safe_div(v);
-            }
-
-                         #[track_caller]
-            #[inline(always)]
-            fn safe_div_small_rate(self, v: $t) -> BumpResult<$t> {
-                self.safe_mul(SMALL_RATE_PRECISION.cast()?)?.safe_div(v);
             }
 
             #[track_caller]
@@ -108,7 +76,7 @@ macro_rules! checked_impl {
                     None => {
                         let caller = Location::caller();
                         msg!("Math error thrown at {}:{}", caller.file(), caller.line());
-                        Err(MathError)
+                        Err(BumpErrorCode::MathError)
                     }
                 }
             }
@@ -131,7 +99,7 @@ checked_impl!(i8);
 
 pub trait SafeDivFloor: Sized {
     /// Perform floor division
-    fn safe_div_floor(self, rhs: Self) -> Result<Self>;
+    fn safe_div_floor(self, rhs: Self) -> BumpResult<Self>;
 }
 
 macro_rules! div_floor_impl {
@@ -145,7 +113,7 @@ macro_rules! div_floor_impl {
                     None => {
                         let caller = Location::caller();
                         msg!("Math error thrown at {}:{}", caller.file(), caller.line());
-                        Err(MathError)
+                        Err(BumpErrorCode::MathError)
                     }
                 }
             }

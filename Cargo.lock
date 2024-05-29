@@ -632,7 +632,6 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "arrayref",
- "borsh 1.5.0",
  "num-traits",
  "pyth-client",
  "pyth-sdk-solana",

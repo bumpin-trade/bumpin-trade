@@ -4,7 +4,7 @@
 #![allow(clippy::ptr_offset_with_cast)]
 #![allow(clippy::manual_range_contains)]
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use anchor_lang::prelude::borsh::{BorshDeserialize, BorshSerialize};
 use std::borrow::BorrowMut;
 use std::convert::TryInto;
 use std::io::{Error, ErrorKind, Write};

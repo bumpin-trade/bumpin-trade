@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use crate::state::infrastructure::fee_reward::FeeReward;
 
 #[account(zero_copy(unsafe))]
-#[derive(Default)]
+#[derive(Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct State {
     pub admin: Pubkey,
