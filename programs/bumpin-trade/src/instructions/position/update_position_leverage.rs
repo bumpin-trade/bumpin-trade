@@ -15,6 +15,7 @@ use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 use crate::utils::token;
+use crate::can_sign_for_user;
 
 #[derive(Accounts)]
 pub struct UpdatePositionLeverage<'info> {

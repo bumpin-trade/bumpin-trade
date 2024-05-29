@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use crate::state::infrastructure::fee_reward::FeeReward;
 
-#[account]
+#[account(zero_copy(unsafe))]
 #[derive(Default)]
 #[repr(C)]
 pub struct State {

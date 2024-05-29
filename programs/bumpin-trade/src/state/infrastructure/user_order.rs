@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
 
 #[zero_copy(unsafe)]
@@ -23,7 +24,7 @@ pub struct UserOrder {
     pub status: OrderStatus,
 }
 
-#[derive(Default, Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Debug, Eq, Default)]
 pub enum OrderSide {
     #[default]
     NONE,
@@ -31,14 +32,14 @@ pub enum OrderSide {
     SHORT,
 }
 
-#[derive(Default, Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Debug, Eq, Default)]
 pub enum OrderStatus {
     #[default]
     INIT,
     USING,
 }
 
-#[derive(Default, Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Debug, Eq, Default)]
 pub enum PositionSide {
     #[default]
     NONE,
@@ -46,7 +47,7 @@ pub enum PositionSide {
     DECREASE,
 }
 
-#[derive(Default, Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Debug, Eq, Default)]
 pub enum OrderType {
     #[default]
     NONE,
@@ -55,7 +56,7 @@ pub enum OrderType {
     STOP,
 }
 
-#[derive(Default, Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Debug, Eq, Default)]
 pub enum StopType {
     #[default]
     NONE,
