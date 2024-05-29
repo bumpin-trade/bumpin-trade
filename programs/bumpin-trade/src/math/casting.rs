@@ -10,7 +10,7 @@ use crate::math::bn::U192;
 pub trait Cast: Sized {
     #[track_caller]
     #[inline(always)]
-    fn cast<T: std::convert::TryFrom<Self>>(self) -> BumpResult<T> {
+    fn cast<T: TryFrom<Self>>(self) -> BumpResult<T> {
         match self.try_into() {
             Ok(result) => Ok(result),
             Err(_) => {

@@ -241,7 +241,7 @@ impl PositionProcessor<'_> {
         check!(params.update_margin_amount < cal_utils::usd_to_token_u(self.position.position_size.safe_sub(self.position.initial_margin_usd)?,trade_token.decimals,token_price)?, BumpErrorCode::AmountNotEnough);
         self.position.add_initial_margin(params.update_margin_amount)?;
         if self.position.cross_margin {
-            self.position.add_initial_margin_usd(cal_utils::div_rate_u(self.position.position_size, self.position.leverage));
+            self.position.add_initial_margin_usd(cal_utils::div_rate_u(self.position.position_size, self.position.leverage)?);
         } else {
             self.position.add_initial_margin_usd(cal_utils::token_to_usd_u(params.update_margin_amount, trade_token.decimals, token_price)?);
             self.position.set_leverage(cal_utils::div_rate_u(self.position.position_size, self.position.initial_margin_usd)?)?;

@@ -3,7 +3,6 @@ use anchor_lang::context::Context;
 use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
-use anchor_lang::prelude::Pubkey;
 use crate::check;
 use crate::errors::BumpErrorCode;
 use crate::instructions::{cal_utils, UpdatePositionMarginParams};
@@ -57,7 +56,7 @@ pub fn handle_update_position_leverage(ctx: Context<UpdatePositionLeverage>, par
     let trade_token = ctx.accounts.trade_token.load_mut()?;
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
     let mut oracle_map = OracleMap::load(remaining_accounts_iter)?;
-    let trade_token_map = TradeTokenMap::load(remaining_accounts_iter)?;
+    let mut trade_token_map = TradeTokenMap::load(remaining_accounts_iter)?;
     let pool = ctx.accounts.pool.load_mut()?;
     let state = ctx.accounts.state.load_mut()?;
     let market = ctx.accounts.market.load_mut()?;
@@ -80,21 +79,21 @@ pub fn handle_update_position_leverage(ctx: Context<UpdatePositionLeverage>, par
                 let new_initial_margin_in_usd = cal_utils::div_rate_u(position.position_size, position.leverage)?;
                 let add_margin_in_usd = if new_initial_margin_in_usd > position.initial_margin_usd { new_initial_margin_in_usd.safe_sub(position.initial_margin_usd)? } else { 0u128 };
                 let mut user_processor = UserProcessor { user: &mut user };
-                let cross_available_value = user_processor.get_available_value(oracle_map, trade_token_map)?;
+                let cross_available_value = user_processor.get_available_value(&mut oracle_map, &mut trade_token_map)?;
                 check!(add_margin_in_usd.cast::<i128>()? < cross_available_value, BumpErrorCode::AmountNotEnough);
 
                 add_margin_amount = cal_utils::usd_to_token_u(add_margin_in_usd, trade_token.decimals, token_price)?;
-                let available_amount = user.get_user_token_ref(trade_token.mint)?.get_token_available_amount()?;
+                let available_amount = user.get_user_token_ref(&trade_token.mint)?.get_token_available_amount()?;
                 add_initial_margin_from_portfolio = cal_utils::token_to_usd_u(add_margin_amount.min(available_amount), trade_token.decimals, token_price)?;
-                user.use_token(trade_token.mint, add_margin_amount, false)?;
+                user.use_token(&trade_token.mint, add_margin_amount, false)?;
             } else {
                 add_margin_amount = params.add_margin_amount;
             }
-            position_processor.execute_add_position_margin(UpdatePositionMarginParams {
+            position_processor.execute_add_position_margin(&UpdatePositionMarginParams {
                 position_key,
                 is_add: true,
                 update_margin_amount: add_margin_amount,
-            }, &trade_token, &oracle_map, pool)?;
+            }, &trade_token, &mut oracle_map, &mut pool?)?;
             if !params.is_cross_margin {
                 token::receive(
                     &ctx.accounts.token_program,
@@ -107,13 +106,13 @@ pub fn handle_update_position_leverage(ctx: Context<UpdatePositionLeverage>, par
         } else {
             position.set_leverage(params.leverage)?;
             let reduce_margin = position.initial_margin_usd.safe_sub(cal_utils::div_rate_u(position.position_size, position.leverage)?)?;
-            let reduce_margin_amount = position_processor.execute_reduce_position_margin(UpdatePositionMarginParams {
+            let reduce_margin_amount = position_processor.execute_reduce_position_margin(&UpdatePositionMarginParams {
                 position_key,
                 is_add: false,
                 update_margin_amount: reduce_margin,
-            }, false, &trade_token, &oracle_map, &pool, &market, &state)?;
+            }, false, &trade_token, &mut oracle_map, &mut pool?, &market, &state)?;
             if position.cross_margin {
-                user.un_use_token(position.margin_mint, reduce_margin_amount)?
+                user.un_use_token(&position.margin_mint, reduce_margin_amount)?
             } else {
                 token::send_from_program_vault(
                     &ctx.accounts.token_program,

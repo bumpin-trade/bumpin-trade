@@ -94,7 +94,7 @@ impl<'a> UserProcessor<'a> {
             total_used_value = total_used_value.safe_add(token_used_value)?;
 
             let token_borrowing_value = user_token.get_token_borrowing_value(&trade_token, &oracle_price_data);
-            total_borrowing_value = total_borrowing_value.safe_add(token_borrowing_value.cast()?)?;
+            total_borrowing_value = total_borrowing_value.safe_add(token_borrowing_value?)?;
         }
 
         for mut user_position in self.user.user_positions {
@@ -102,12 +102,12 @@ impl<'a> UserProcessor<'a> {
                 let trade_token = trade_token_map.get_trade_token(&user_position.margin_mint)?;
                 let oracle_price_data = oracle_map.get_price_data(&user_position.index_mint)?;
                 total_im_from_portfolio_value = total_im_from_portfolio_value.
-                    safe_add(user_position.initial_margin_usd_from_portfolio.cast()?)?;
+                    safe_add(user_position.initial_margin_usd_from_portfolio)?;
 
                 let position_un_pnl = user_position.get_position_un_pnl(&trade_token, oracle_price_data.price, true)?;
                 total_un_pnl_value = total_un_pnl_value.safe_add(position_un_pnl)?;
 
-                total_mm_usd_value = total_mm_usd_value.safe_add(user_position.mm_usd.cast()?)?;
+                total_mm_usd_value = total_mm_usd_value.safe_add(user_position.mm_usd)?;
             }
         }
         let available_value = total_net_value.
@@ -174,7 +174,7 @@ impl<'a> UserProcessor<'a> {
     pub fn sub_token_with_liability(&mut self, token: &Pubkey, amount: u128) -> BumpResult<u128> {
         let mut liability = 0u128;
         check!(self.user.user_tokens.map(|mint|mint.token_mint).contains(&token), BumpErrorCode::AmountNotEnough);
-        let mut token_balance = self.user.user_tokens.iter_mut().find(|mint| mint.token_mint)?;
+        let mut token_balance = self.user.user_tokens.iter_mut().find(|mint| mint.token_mint.eq(token))?;
         if token_balance.amount >= amount {
             token_balance.amount = token_balance.amount.safe_sub(amount)?;
         } else if token_balance.amount > 0u128 {
@@ -192,9 +192,9 @@ impl<'a> UserProcessor<'a> {
 
     pub fn un_use_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
         check!(self.user.user_tokens.map(|mint|mint.token_mint).contains(&token), BumpErrorCode::AmountNotEnough);
-        let mut token_balance = self.user.user_tokens.iter_mut().find(|mint| mint.token_mint)?;
+        let mut token_balance = self.user.user_tokens.iter_mut().find(|mint| mint.token_mint.eq(token))?;
         check!(token_balance.used_amount >= amount, BumpErrorCode::AmountNotEnough);
-        token_balance.used_amount = token_balance.used_amount.safe_sub(amount.cast())?;
+        token_balance.used_amount = token_balance.used_amount.safe_sub(amount)?;
         Ok(())
     }
 

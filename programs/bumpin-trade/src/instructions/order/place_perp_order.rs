@@ -73,8 +73,8 @@ pub struct PlaceOrderParams {
     pub order_margin: u128,
     pub leverage: u128,
     pub trigger_price: u128,
-    pub acceptable_price: i128,
-    pub place_time: i128,
+    pub acceptable_price: u128,
+    pub place_time: u128,
 }
 
 

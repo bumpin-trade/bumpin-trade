@@ -1,15 +1,14 @@
 use anchor_lang::{Accounts, Key};
 use anchor_lang::context::Context;
-use anchor_lang::prelude::{Account, Pubkey};
-use anchor_lang::prelude::{AccountLoader, Program, Signer};
+use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
+
 use crate::instructions::constraints::*;
 use crate::math::safe_math::SafeMath;
 use crate::processor::user_processor::UserProcessor;
 use crate::state::user::User;
 use crate::utils::token;
-use borsh::io;
 
 #[derive(Accounts)]
 #[instruction(token_index: u16,)]

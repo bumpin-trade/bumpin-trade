@@ -8,7 +8,6 @@ use solana_program::rent::Rent;
 use anchor_lang::error;
 use crate::state::pool::Pool;
 use crate::state::state::State;
-use anchor_lang::prelude::Pubkey;
 
 #[derive(Accounts)]
 pub struct InitializeStablePool<'info> {

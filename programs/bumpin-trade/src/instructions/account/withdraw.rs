@@ -2,7 +2,7 @@ use anchor_lang::prelude::ErrorCode;
 use anchor_lang::prelude::msg;
 use anchor_lang::{Accounts, Key};
 use anchor_lang::context::Context;
-use anchor_lang::prelude::{Account, AccountLoader, Program, Signer, Pubkey};
+use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 use crate::instructions::constraints::*;
@@ -15,7 +15,6 @@ use crate::state::oracle::oracle_map::OracleMap;
 use crate::state::state::State;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
-use borsh::io;
 
 #[derive(Accounts)]
 #[instruction(token_index: u16,)]
@@ -48,7 +47,7 @@ pub struct Withdraw<'info> {
 }
 
 pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) {
-    validate!(amount>0,AmountZero);
+    validate!(amount>0, AmountZero);
 
     let mut user = &ctx.accounts.user.load_mut()?;
 
