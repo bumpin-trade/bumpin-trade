@@ -25,7 +25,7 @@ pub struct UpdatePositionLeverage<'info> {
     pub authority: Signer<'info>,
     pub trade_token: AccountLoader<'info, TradeToken>,
     pub pool: AccountLoader<'info, Pool>,
-    pub state: AccountLoader<'info, State>,
+    pub state: Account<'info, State>,
     pub market: AccountLoader<'info, Market>,
     #[account(
         mut,

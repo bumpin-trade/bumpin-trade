@@ -11,7 +11,6 @@ use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::user::User;
 use crate::can_sign_for_user;
-use crate::pool_stake_not_paused;
 
 #[derive(Accounts)]
 #[instruction(pool_index: u16, trade_token_index: u16)]
@@ -21,7 +20,7 @@ pub struct PoolUnStake<'info> {
         seeds = [b"bump_state".as_ref()],
         bump,
     )]
-    pub state: AccountLoader<'info, State>,
+    pub state: Account<'info, State>,
     #[account(
         mut,
         seeds = [b"user", authority.key.as_ref()],
@@ -69,10 +68,7 @@ pub struct UnStakeParams {
     portfolio: bool,
 }
 
-#[access_control(
-    pool_stake_not_paused(& ctx.accounts.pool)
-)]
-pub fn handle_pool_un_stake(mut ctx: Context<PoolUnStake>, pool_index: usize, un_stake_params: UnStakeParams) -> Result<()> {
+pub fn handle_pool_un_stake(mut ctx: Context<PoolUnStake>, pool_index: u16, un_stake_params: UnStakeParams) -> Result<()> {
     let mut pool = &mut ctx.accounts.pool.load_mut()?;
     let mut user = &mut ctx.accounts.user.load_mut()?;
     let mut state = &mut ctx.accounts.state.load_mut()?;

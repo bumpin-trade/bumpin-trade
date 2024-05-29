@@ -22,7 +22,7 @@ pub struct LiquidateIsolatePosition<'info> {
         has_one = keeper_signer,
         bump,
     )]
-    pub state: AccountLoader<'info, State>,
+    pub state: Account<'info, State>,
     #[account(
         mut,
         seeds = [b"user", user.as_ref()],

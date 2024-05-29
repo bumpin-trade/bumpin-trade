@@ -15,7 +15,6 @@ use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 use crate::can_sign_for_user;
-use crate::pool_stake_not_paused;
 
 #[derive(Accounts)]
 #[instruction(pool_index: u16, trade_token_index: u16)]
@@ -25,7 +24,7 @@ pub struct PoolStake<'info> {
         seeds = [b"bump_state".as_ref()],
         bump,
     )]
-    pub state: AccountLoader<'info, State>,
+    pub state: Account<'info, State>,
     #[account(
         mut,
         seeds = [b"user", authority.key.as_ref()],
@@ -82,10 +81,7 @@ pub struct StakeParams {
     portfolio: bool,
 }
 
-#[access_control(
-    pool_stake_not_paused(& ctx.accounts.pool)
-)]
-pub fn handle_pool_stake(mut ctx: Context<PoolStake>, pool_index: usize, trade_token_index: u16, stake_params: StakeParams) -> anchor_lang::Result<()> {
+pub fn handle_pool_stake(mut ctx: Context<PoolStake>, pool_index: u16, trade_token_index: u16, stake_params: StakeParams) -> anchor_lang::Result<()> {
     let mut pool = &mut ctx.accounts.pool.load_mut()?;
     validate!(pool.pool_config.mini_stake_amount>stake_params.request_token_amount,StakeToSmall);
 

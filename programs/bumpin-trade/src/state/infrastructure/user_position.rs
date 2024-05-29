@@ -44,12 +44,14 @@ pub enum PositionStatus {
 }
 
 impl UserPosition {
-    pub fn add_position_size(&mut self, position_size: u128) {
+    pub fn add_position_size(&mut self, position_size: u128) -> BumpResult<()> {
         self.position_size = self.position_size.safe_add(position_size)?;
+        Ok(())
     }
 
-    pub fn sub_position_size(&mut self, position_size: u128) {
+    pub fn sub_position_size(&mut self, position_size: u128) -> BumpResult<()> {
         self.position_size = self.position_size.safe_sub(position_size)?;
+        Ok(())
     }
 
     pub fn set_entry_price(&mut self, entry_price: u128) {
@@ -80,44 +82,54 @@ impl UserPosition {
         self.open_funding_fee_amount_per_size = open_funding_fee_amount_per_size;
     }
 
-    pub fn add_initial_margin(&mut self, initial_margin: u128) {
+    pub fn add_initial_margin(&mut self, initial_margin: u128) -> BumpResult<()> {
         self.initial_margin = self.initial_margin.safe_add(initial_margin)?;
+        Ok(())
     }
 
-    pub fn add_realized_borrowing_fee(&mut self, realized_borrowing_fee: u128) {
+    pub fn add_realized_borrowing_fee(&mut self, realized_borrowing_fee: u128) -> BumpResult<()> {
         self.realized_borrowing_fee = self.realized_borrowing_fee.safe_add(realized_borrowing_fee)?;
+        Ok(())
     }
 
-    pub fn add_realized_funding_fee(&mut self, realized_funding_fee: i128) {
+    pub fn add_realized_funding_fee(&mut self, realized_funding_fee: i128) -> BumpResult<()> {
         self.realized_funding_fee = self.realized_funding_fee.safe_add(realized_funding_fee)?;
+        Ok(())
     }
 
-    pub fn add_realized_funding_fee_in_usd(&mut self, realized_funding_fee_in_usd: i128) {
+    pub fn add_realized_funding_fee_in_usd(&mut self, realized_funding_fee_in_usd: i128) -> BumpResult<()> {
         self.realized_funding_fee_in_usd = self.realized_funding_fee_in_usd.safe_add(realized_funding_fee_in_usd)?;
+        Ok(())
     }
 
-    pub fn add_realized_borrowing_fee_in_usd(&mut self, realized_borrowing_fee_in_usd: u128) {
+    pub fn add_realized_borrowing_fee_in_usd(&mut self, realized_borrowing_fee_in_usd: u128) -> BumpResult<()> {
         self.realized_borrowing_fee_in_usd = self.realized_borrowing_fee_in_usd.safe_add(realized_borrowing_fee_in_usd)?;
+        Ok(())
     }
 
-    pub fn sub_initial_margin(&mut self, initial_margin: u128) {
+    pub fn sub_initial_margin(&mut self, initial_margin: u128) -> BumpResult<()> {
         self.initial_margin = self.initial_margin.safe_sub(initial_margin)?;
+        Ok(())
     }
 
-    pub fn add_initial_margin_usd(&mut self, initial_margin_usd: u128) {
+    pub fn add_initial_margin_usd(&mut self, initial_margin_usd: u128) -> BumpResult<()> {
         self.initial_margin_usd = self.initial_margin_usd.safe_add(initial_margin_usd)?;
+        Ok(())
     }
 
-    pub fn sub_initial_margin_usd(&mut self, initial_margin_usd: u128) {
+    pub fn sub_initial_margin_usd(&mut self, initial_margin_usd: u128) -> BumpResult<()> {
         self.initial_margin_usd = self.initial_margin_usd.safe_sub(initial_margin_usd)?;
+        Ok(())
     }
 
-    pub fn add_initial_margin_usd_from_portfolio(&mut self, initial_margin_usd_from_portfolio: u128) {
+    pub fn add_initial_margin_usd_from_portfolio(&mut self, initial_margin_usd_from_portfolio: u128) -> BumpResult<()> {
         self.initial_margin_usd_from_portfolio = self.initial_margin_usd_from_portfolio.safe_add(initial_margin_usd_from_portfolio)?;
+        Ok(())
     }
 
-    pub fn sub_initial_margin_usd_from_portfolio(&mut self, initial_margin_usd_from_portfolio: u128) {
+    pub fn sub_initial_margin_usd_from_portfolio(&mut self, initial_margin_usd_from_portfolio: u128) -> BumpResult<()> {
         self.initial_margin_usd_from_portfolio = self.initial_margin_usd_from_portfolio.safe_sub(initial_margin_usd_from_portfolio)?;
+        Ok(())
     }
 
     pub fn set_initial_margin_usd_from_portfolio(&mut self, initial_margin_usd_from_portfolio: u128) {
@@ -132,36 +144,44 @@ impl UserPosition {
         self.position_size = position_size;
     }
 
-    pub fn add_hold_pool_amount(&mut self, hold_pool_amount: u128) {
+    pub fn add_hold_pool_amount(&mut self, hold_pool_amount: u128) -> BumpResult<()> {
         self.hold_pool_amount = self.hold_pool_amount.safe_add(hold_pool_amount)?;
+        Ok(())
     }
 
-    pub fn sub_hold_pool_amount(&mut self, hold_pool_amount: u128) {
+    pub fn sub_hold_pool_amount(&mut self, hold_pool_amount: u128) -> BumpResult<()> {
         self.hold_pool_amount = self.hold_pool_amount.safe_add(hold_pool_amount)?;
+        Ok(())
     }
 
-    pub fn add_realized_pnl(&mut self, realized_pnl: i128) {
+    pub fn add_realized_pnl(&mut self, realized_pnl: i128) -> BumpResult<()> {
         self.realized_pnl = self.realized_pnl.cast::<i128>()?.safe_add(realized_pnl.cast::<i128>()?)?.cast::<i128>()?;
+        Ok(())
     }
 
-    pub fn sub_realized_borrowing_fee(&mut self, realized_borrowing_fee: u128) {
+    pub fn sub_realized_borrowing_fee(&mut self, realized_borrowing_fee: u128) -> BumpResult<()> {
         self.realized_borrowing_fee = self.realized_borrowing_fee.safe_sub(realized_borrowing_fee)?;
+        Ok(())
     }
 
-    pub fn sub_realized_borrowing_fee_usd(&mut self, realized_borrowing_fee_in_usd: u128) {
+    pub fn sub_realized_borrowing_fee_usd(&mut self, realized_borrowing_fee_in_usd: u128) -> BumpResult<()> {
         self.realized_borrowing_fee_in_usd = self.realized_borrowing_fee_in_usd.safe_sub(realized_borrowing_fee_in_usd)?;
+        Ok(())
     }
 
-    pub fn sub_realized_funding_fee(&mut self, realized_funding_fee: i128) {
+    pub fn sub_realized_funding_fee(&mut self, realized_funding_fee: i128) -> BumpResult<()> {
         self.realized_funding_fee = self.realized_funding_fee.cast::<i128>()?.safe_sub(realized_funding_fee.cast::<i128>()?)?.cast::<i128>()?;
+        Ok(())
     }
 
-    pub fn sub_realized_funding_fee_usd(&mut self, realized_funding_fee_in_usd: i128) {
+    pub fn sub_realized_funding_fee_usd(&mut self, realized_funding_fee_in_usd: i128) -> BumpResult<()> {
         self.realized_funding_fee_in_usd = self.realized_funding_fee_in_usd.cast::<i128>()?.safe_sub(realized_funding_fee_in_usd.cast::<i128>()?)?.cast::<i128>()?;
+        Ok(())
     }
 
-    pub fn sub_close_fee_usd(&mut self, close_fee_in_usd: u128) {
+    pub fn sub_close_fee_usd(&mut self, close_fee_in_usd: u128) -> BumpResult<()> {
         self.close_fee_in_usd = self.close_fee_in_usd.safe_sub(close_fee_in_usd)?;
+        Ok(())
     }
 
     pub fn set_last_update(&mut self, last_update: u128) {
@@ -234,9 +254,5 @@ impl UserPosition {
             self.initial_margin_usd_from_portfolio = self.initial_margin_usd_from_portfolio.safe_sub(reduce_initial_margin_usd)?;
             Ok(amount)
         }
-    }
-
-    fn get_percent_initial_margin_usd(&self, amount: u128) -> BumpResult<u128> {
-        Ok()
     }
 }

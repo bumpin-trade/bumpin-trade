@@ -21,7 +21,7 @@ pub struct LiquidateCrossPosition<'info> {
         has_one = keeper_signer,
         bump,
     )]
-    pub state: AccountLoader<'info, State>,
+    pub state: Account<'info, State>,
 
     #[account(
         mut,
