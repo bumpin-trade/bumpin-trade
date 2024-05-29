@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::pubkey::Pubkey;
-use crate::check;
 
 use crate::constraints::*;
 use crate::errors::{BumpErrorCode};
@@ -13,6 +12,8 @@ use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::utils::token;
+use crate::validate;
+use solana_program::msg;
 
 #[derive(Accounts)]
 pub struct AddPositionMargin<'info> {
@@ -45,7 +46,7 @@ pub struct UpdatePositionMarginParams {
 }
 
 pub fn handle_add_position_margin(ctx: Context<AddPositionMargin>, params: UpdatePositionMarginParams) -> anchor_lang::Result<()> {
-    check!(params.update_margin_amount > 0u128, BumpErrorCode::AmountNotEnough);
+    validate!(params.update_margin_amount > 0u128, BumpErrorCode::AmountNotEnough.into());
     let mut user = ctx.accounts.user_account.load_mut()?;
     let trade_token = ctx.accounts.trade_token.load_mut()?;
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
@@ -55,7 +56,7 @@ pub fn handle_add_position_margin(ctx: Context<AddPositionMargin>, params: Updat
     let mut pool = ctx.accounts.pool.load_mut()?;
     let state = ctx.accounts.state.load_mut()?;
     let market = ctx.accounts.market.load_mut()?;
-    check!(position.cross_margin, BumpErrorCode::AmountNotEnough);
+    validate!(position.cross_margin, BumpErrorCode::AmountNotEnough.into());
     if params.is_add {
         token::receive(
             &ctx.accounts.token_program,
@@ -65,12 +66,12 @@ pub fn handle_add_position_margin(ctx: Context<AddPositionMargin>, params: Updat
             params.update_margin_amount,
         )?;
     }
-    check!(trade_token.mint.eq(&position.margin_mint), BumpErrorCode::AmountNotEnough);
+    validate!(trade_token.mint.eq(&position.margin_mint), BumpErrorCode::AmountNotEnough.into());
 
     if params.is_add {
         position_processor.execute_add_position_margin(&params, &trade_token, &mut oracle_map, &mut pool)?;
     } else {
-        let reduce_margin_amount = position_processor.execute_reduce_position_margin(&params, true, &trade_token, &oracle_map, &pool, &market, &state)?;
+        let reduce_margin_amount = position_processor.execute_reduce_position_margin(&params, true, &trade_token, &mut oracle_map, &mut pool, &market, &state)?;
         token::send_from_program_vault(
             &ctx.accounts.token_program,
             &ctx.accounts.pool_vault,

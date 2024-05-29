@@ -14,7 +14,7 @@ use crate::state::user::User;
 #[derive(Accounts)]
 #[instruction(token_index: u16,)]
 pub struct Withdraw<'info> {
-    pub state: Box<Account<'info, State>>,
+    pub state: AccountLoader<'info, State>,
     #[account(
         mut,
         constraint = can_sign_for_user(& user, & authority) ?

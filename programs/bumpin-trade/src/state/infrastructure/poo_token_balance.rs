@@ -1,6 +1,6 @@
 use anchor_lang::zero_copy;
 use solana_program::pubkey::Pubkey;
-use crate::check;
+use crate::{validate};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::math::safe_math::SafeMath;
@@ -20,7 +20,7 @@ pub struct PoolTokenBalance {
 
 impl PoolTokenBalance {
     pub fn hold_pool(&mut self, pool_config: PoolConfig, amount: u128) -> BumpResult<()> {
-        check!(self.check_hold_is_allowed(amount,pool_config),BumpErrorCode::AmountNotEnough);
+        validate!(self.check_hold_is_allowed(amount,pool_config), BumpErrorCode::AmountNotEnough.into());
         self.hold_amount = cal_utils::add_u128(self.hold_amount, amount)?;
         Ok(())
     }

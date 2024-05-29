@@ -1,9 +1,7 @@
-use anchor_lang::error_code;
+use anchor_lang::prelude::*;
 
-pub type BumpResult<T = ()> = Result<T, BumpErrorCode>;
-
+pub type BumpResult<T = ()> = std::result::Result<T, BumpErrorCode>;
 #[error_code]
-#[derive(PartialEq, Eq)]
 pub enum BumpErrorCode {
     #[msg("AmountNotEnough")]
     AmountNotEnough,
@@ -88,7 +86,7 @@ pub enum BumpErrorCode {
 macro_rules! print_error {
     ($err:expr) => {{
         || {
-            let error_code: SkylarksErrorCode = $err;
+            let error_code: BumpErrorCode = $err;
             msg!("{:?} thrown at {}:{}", error_code, file!(), line!());
             $err
         }
@@ -99,7 +97,7 @@ macro_rules! print_error {
 macro_rules! math_error {
     () => {{
         || {
-            let error_code = $crate::error::ErrorCode::MathError;
+            let error_code = $crate::errors::BumpErrorCode::MathError;
             msg!("Error {} thrown at {}:{}", error_code, file!(), line!());
             error_code
         }

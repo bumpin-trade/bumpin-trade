@@ -1,9 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
-use crate::check;
-use crate::errors::BumpErrorCode;
 use crate::instructions::{cal_utils, UpdatePositionMarginParams};
-use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::processor::position_processor::PositionProcessor;
 use crate::processor::user_processor::UserProcessor;
@@ -15,13 +12,14 @@ use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 use crate::utils::token;
-use crate::can_sign_for_user;
+use crate::{can_sign_for_user, validate};
+use crate::errors::BumpErrorCode;
 
 #[derive(Accounts)]
 pub struct UpdatePositionLeverage<'info> {
     #[account(
         mut,
-        constraint = can_sign_for_user(&user_account, &authority) ?
+        constraint = can_sign_for_user(& user_account, & authority) ?
     )]
     pub user_account: AccountLoader<'info, User>,
     pub authority: Signer<'info>,
@@ -58,11 +56,11 @@ pub fn handle_update_position_leverage(ctx: Context<UpdatePositionLeverage>, par
     let pool = ctx.accounts.pool.load_mut()?;
     let state = ctx.accounts.state.load_mut()?;
     let market = ctx.accounts.market.load_mut()?;
-    check!(params.leverage <= market.market_trade_config.max_leverage, BumpErrorCode::AmountNotEnough);
+    validate!(params.leverage <= market.market_trade_config.max_leverage, BumpErrorCode::AmountNotEnough.into());
 
     let position_key = user.generate_position_key(&user.authority, params.symbol, &trade_token.mint, params.is_cross_margin, &ctx.program_id)?;
     let mut position = user.find_position_mut_by_key(&position_key)?;
-    check!(position.leverage != params.leverage, BumpErrorCode::AmountNotEnough);
+    validate!(position.leverage != params.leverage, BumpErrorCode::AmountNotEnough.into());
     let mut position_processor = PositionProcessor { position: &mut position };
 
     let token_price = oracle_map.get_price_data(&trade_token.mint)?.price;
@@ -78,7 +76,7 @@ pub fn handle_update_position_leverage(ctx: Context<UpdatePositionLeverage>, par
                 let add_margin_in_usd = if new_initial_margin_in_usd > position.initial_margin_usd { new_initial_margin_in_usd.safe_sub(position.initial_margin_usd)? } else { 0u128 };
                 let mut user_processor = UserProcessor { user: &mut user };
                 let cross_available_value = user_processor.get_available_value(&mut oracle_map, &mut trade_token_map)?;
-                check!(add_margin_in_usd.cast::<i128>()? < cross_available_value, BumpErrorCode::AmountNotEnough);
+                validate!(add_margin_in_usd.cast::<i128>()? < cross_available_value, BumpErrorCode::AmountNotEnough.into());
 
                 add_margin_amount = cal_utils::usd_to_token_u(add_margin_in_usd, trade_token.decimals, token_price)?;
                 let available_amount = user.get_user_token_ref(&trade_token.mint)?.get_token_available_amount()?;

@@ -1,5 +1,4 @@
 use solana_program::pubkey::Pubkey;
-use crate::check;
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
@@ -13,6 +12,8 @@ use crate::state::pool_map::PoolMap;
 use crate::state::state::State;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
+use crate::validate;
+use solana_program::msg;
 
 pub struct UserProcessor<'a> {
     pub(crate) user: &'a mut User,
@@ -173,7 +174,7 @@ impl<'a> UserProcessor<'a> {
 
     pub fn sub_token_with_liability(&mut self, token: &Pubkey, amount: u128) -> BumpResult<u128> {
         let mut liability = 0u128;
-        check!(self.user.user_tokens.map(|mint|mint.token_mint).contains(&token), BumpErrorCode::AmountNotEnough);
+        validate!(self.user.user_tokens.map(|mint|mint.token_mint).contains(&token), BumpErrorCode::AmountNotEnough.into());
         let mut token_balance = self.user.user_tokens.iter_mut().find(|mint| mint.token_mint.eq(token))?;
         if token_balance.amount >= amount {
             token_balance.amount = token_balance.amount.safe_sub(amount)?;
@@ -191,9 +192,9 @@ impl<'a> UserProcessor<'a> {
     }
 
     pub fn un_use_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
-        check!(self.user.user_tokens.map(|mint|mint.token_mint).contains(&token), BumpErrorCode::AmountNotEnough);
+        validate!(self.user.user_tokens.map(|mint|mint.token_mint).contains(&token), BumpErrorCode::AmountNotEnough.into());
         let mut token_balance = self.user.user_tokens.iter_mut().find(|mint| mint.token_mint.eq(token))?;
-        check!(token_balance.used_amount >= amount, BumpErrorCode::AmountNotEnough);
+        validate!(token_balance.used_amount >= amount, BumpErrorCode::AmountNotEnough.into());
         token_balance.used_amount = token_balance.used_amount.safe_sub(amount)?;
         Ok(())
     }

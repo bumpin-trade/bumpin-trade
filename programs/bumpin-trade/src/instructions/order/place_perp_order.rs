@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
-use crate::{check, get_then_update_id};
+use crate::{get_then_update_id, validate};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 
@@ -101,10 +101,10 @@ pub fn handle_place_order(ctx: Context<PlaceOrder>, order: PlaceOrderParams) -> 
     let state = ctx.accounts.state.load()?;
     let pool = ctx.accounts.pool.load()?;
     let token = &ctx.accounts.margin_token;
-    check!(validate_place_order(order, &token.mint, &market, &pool, &state), BumpErrorCode::InvalidParam);
+    validate!(validate_place_order(order, &token.mint, &market, &pool, &state), BumpErrorCode::InvalidParam.into());
 
     if user.has_other_short_order(order.symbol, token.mint, order.is_cross_margin)? {
-        return Err(BumpErrorCode::OnlyOneShortOrderAllowed);
+        return Err(BumpErrorCode::OnlyOneShortOrderAllowed.into());
     }
 
     let order_id = get_then_update_id!(user, next_order_id);
@@ -262,7 +262,7 @@ pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder,
                 is_long,
                 is_cross_margin: order.cross_margin,
                 decimals,
-            }, trade_token, &user, &state, &market, &pool, market_processor)?;
+            }, &trade_token, &user, &state, &market, &pool, &mut market_processor)?;
         }
         PositionSide::DECREASE => {
             //decrease
@@ -309,7 +309,7 @@ fn execute_increase_order_margin(order: &mut UserOrder,
         let available_value = user_processor.get_available_value(oracle_map, trade_token_map)?;
         if available_value < 0i128 {
             let fix_order_margin_in_usd = order.order_size.cast::<i128>()?.safe_add(available_value)?.cast::<i128>()?;
-            check!(fix_order_margin_in_usd > 0i128, BumpErrorCode::BalanceNotEnough);
+            validate!(fix_order_margin_in_usd > 0i128, BumpErrorCode::BalanceNotEnough.into());
             user.sub_order_hold_in_usd(order.order_size);
             order.order_size = fix_order_margin_in_usd.cast::<u128>()?;
         } else {
@@ -319,7 +319,7 @@ fn execute_increase_order_margin(order: &mut UserOrder,
         order_margin_from_balance = user.use_token(margin_token, order_margin, false)?;
     } else {
         let order_margin_in_usd = cal_utils::token_to_usd_u(order.order_margin, decimals, margin_token_price)?;
-        check!(order_margin_in_usd >= state.min_order_margin_usd, BumpErrorCode::AmountNotEnough);
+        validate!(order_margin_in_usd >= state.min_order_margin_usd, BumpErrorCode::AmountNotEnough.into());
         order_margin = order.order_margin;
         order_margin_from_balance = order.order_margin;
     }
@@ -334,10 +334,10 @@ fn get_execution_price(oracle_map: &mut OracleMap, order: &mut UserOrder, index_
 
     if order.order_type.eq(&OrderType::MARKET) {
         if order.order_side.eq(&OrderSide::LONG) && index_price >= order.acceptable_price {
-            return Err(BumpErrorCode::PriceIsNotAllowed);
+            return Err(BumpErrorCode::PriceIsNotAllowed.into());
         }
         if order.order_side.eq(&OrderSide::SHORT) && index_price <= order.acceptable_price {
-            return Err(BumpErrorCode::PriceIsNotAllowed);
+            return Err(BumpErrorCode::PriceIsNotAllowed.into());
         }
         return Ok(index_price);
     }
@@ -347,7 +347,7 @@ fn get_execution_price(oracle_map: &mut OracleMap, order: &mut UserOrder, index_
         if (long && order.trigger_price >= index_price) || (!long && order.trigger_price <= index_price) {
             return Ok(index_price);
         }
-        return Err(BumpErrorCode::PriceIsNotAllowed);
+        return Err(BumpErrorCode::PriceIsNotAllowed.into());
     }
 
     if order.order_type.eq(&OrderType::STOP) && order.stop_type.eq(&StopType::StopLoss) {
@@ -356,22 +356,22 @@ fn get_execution_price(oracle_map: &mut OracleMap, order: &mut UserOrder, index_
         }
     }
 
-    Err(BumpErrorCode::PriceIsNotAllowed)
+    Err(BumpErrorCode::PriceIsNotAllowed.into())
 }
 
 fn validate_execute_order(order: &mut UserOrder, market: &Market, pool: &Pool) -> BumpResult<()> {
 
     // token verify
     if order.margin_token != market.pool_mint_key {
-        return Err(BumpErrorCode::TokenNotMatch);
+        return Err(BumpErrorCode::TokenNotMatch.into());
     }
 
     if pool.pool_mint != order.margin_token {
-        return Err(BumpErrorCode::TokenNotMatch);
+        return Err(BumpErrorCode::TokenNotMatch.into());
     }
 
     if order.leverage > market.market_trade_config.max_leverage {
-        return Err(BumpErrorCode::LeverageIsNotAllowed);
+        return Err(BumpErrorCode::LeverageIsNotAllowed.into());
     }
     Ok(())
 }

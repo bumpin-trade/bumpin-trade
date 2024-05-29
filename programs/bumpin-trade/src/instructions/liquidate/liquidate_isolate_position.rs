@@ -11,6 +11,7 @@ use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::validate;
+use solana_program::msg;
 
 #[derive(Accounts)]
 #[instruction(market_index: u16, trade_token_index: u16, user: Pubkey)]

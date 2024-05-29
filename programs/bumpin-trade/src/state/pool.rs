@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use num_traits::ToPrimitive;
-use crate::check;
+use crate::{validate};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{add_u128, cal_utils};
 use crate::math::safe_math::SafeMath;
@@ -85,6 +85,7 @@ impl Default for Pool {
             total_supply: 0u128,
             pool_status: PoolStatus::NORMAL,
             stable: false,
+            decimals: 0,
             apr: 0u128,
             insurance_fund_amount: 0,
         }
@@ -98,7 +99,7 @@ impl Pool {
     }
 
     pub fn sub_amount(&mut self, amount: u128) {
-        check!(self.pool_balance.amount >= amount, BumpErrorCode::AmountNotEnough);
+        validate!(self.pool_balance.amount >= amount, BumpErrorCode::AmountNotEnough.into());
         self.pool_balance.amount = self.pool_balance.amount.safe_sub(amount)?;
     }
 
@@ -106,12 +107,12 @@ impl Pool {
         self.total_supply = self.total_supply.safe_add(stake_amount)?;
     }
     pub fn hold_pool(&mut self, amount: u128) -> BumpResult<()> {
-        check!(self.check_hold_is_allowed(amount), BumpErrorCode::AmountNotEnough);
+        validate!(self.check_hold_is_allowed(amount), BumpErrorCode::AmountNotEnough.into());
         Ok(self.pool_balance.hold_amount = add_u128(self.pool_balance.hold_amount, amount)?)
     }
 
     pub fn un_hold_pool(&mut self, amount: u128) -> BumpResult<()> {
-        check!(self.pool_balance.hold_amount>=amount, BumpErrorCode::AmountNotEnough);
+        validate!(self.pool_balance.hold_amount>=amount, BumpErrorCode::AmountNotEnough.into());
         Ok(self.pool_balance.hold_amount = add_u128(self.pool_balance.hold_amount, amount)?)
     }
 

@@ -8,39 +8,6 @@ macro_rules! get_struct_values {
 }
 
 #[macro_export]
-macro_rules! check {
-    ($cond:expr, $err:expr) => {
-        if !($cond) {
-            let error_code: $crate::errors::BumpErrorCode = $err;
-            #[cfg(not(feature = "test-bpf"))]
-            anchor_lang::prelude::msg!(
-                "Error \"{}\" thrown at {}:{}",
-                error_code,
-                file!(),
-                line!()
-            );
-            return Err(error_code.into());
-        }
-    };
-
-    ($cond:expr, $err:expr, $($arg:tt)*) => {
-        if !($cond) {
-            let error_code: $crate::errors::SkylarksErrorCode = $err;
-            #[cfg(not(feature = "test-bpf"))]
-            anchor_lang::prelude::msg!(
-                "Error \"{}\" thrown at {}:{}",
-                error_code,
-                file!(),
-                line!()
-            );
-            #[cfg(not(feature = "test-bpf"))]
-            anchor_lang::prelude::msg!($($arg)*);
-            return Err(error_code.into());
-        }
-    };
-}
-
-#[macro_export]
 macro_rules! get_then_update_id {
     ($struct:expr, $property: ident) => {{
         let current_id = $struct.$property;
@@ -90,7 +57,7 @@ macro_rules! load_mut {
     ($account_loader:expr) => {{
         $account_loader.load_mut().map_err(|e| {
             msg!("e {:?}", e);
-            let error_code = ErrorCode::UnableToLoadAccountLoader;
+            let error_code = BumpErrorCode::UnableToLoadAccountLoader;
             msg!("Error {} thrown at {}:{}", error_code, file!(), line!());
             error_code
         })
@@ -101,7 +68,7 @@ macro_rules! load_mut {
 macro_rules! load {
     ($account_loader:expr) => {{
         $account_loader.load().map_err(|_| {
-            let error_code = ErrorCode::UnableToLoadAccountLoader;
+            let error_code = BumpErrorCode::UnableToLoadAccountLoader;
             msg!("Error {} thrown at {}:{}", error_code, file!(), line!());
             error_code
         })

@@ -72,7 +72,7 @@ pub struct UnStakeParams {
 #[access_control(
     pool_stake_not_paused(& ctx.accounts.pool)
 )]
-pub fn handle_pool_un_stake(mut ctx: Context<PoolUnStake>, pool_index: u16, un_stake_params: UnStakeParams) -> Result<()> {
+pub fn handle_pool_un_stake(mut ctx: Context<PoolUnStake>, pool_index: usize, un_stake_params: UnStakeParams) -> Result<()> {
     let mut pool = &mut ctx.accounts.pool.load_mut()?;
     let mut user = &mut ctx.accounts.user.load_mut()?;
     let mut state = &mut ctx.accounts.state.load_mut()?;
