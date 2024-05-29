@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use solana_program::pubkey::Pubkey;
-use crate::errors::BumpErrorCode::OnlyLiquidateIsolatePosition;
+use crate::errors::{BumpErrorCode};
 use crate::processor::market_processor::MarketProcessor;
 use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::position_processor::PositionProcessor;
@@ -64,7 +64,7 @@ pub fn handle_liquidate_isolate_position(ctx: Context<LiquidateIsolatePosition>,
     let user = &mut ctx.accounts.user.load_mut()?;
     let user_position = user.find_position_mut_by_key(&position_key)?;
 
-    validate!(!user_position.cross_margin, OnlyLiquidateIsolatePosition);
+    validate!(!user_position.cross_margin, BumpErrorCode::OnlyLiquidateIsolatePosition);
     let market = &mut ctx.accounts.market.load_mut()?;
     let state = ctx.accounts.state.load_mut()?;
 

@@ -7,6 +7,7 @@ use crate::math::safe_math::SafeMath;
 use crate::state::infrastructure::fee_reward::FeeReward;
 use crate::state::infrastructure::pool_borrowing_fee::BorrowingFee;
 use crate::traits::Size;
+use solana_program::msg;
 
 #[account(zero_copy(unsafe))]
 #[derive(Eq, PartialEq, Debug)]

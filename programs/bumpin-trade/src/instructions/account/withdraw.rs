@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use crate::instructions::constraints::*;
 use crate::{utils, validate};
-use crate::errors::BumpErrorCode::{AmountNotEnough, AmountZero, UserNotEnoughValue};
+use crate::errors::{BumpErrorCode};
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::processor::user_processor::UserProcessor;
@@ -42,13 +42,13 @@ pub struct Withdraw<'info> {
 }
 
 pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) -> anchor_lang::Result<()> {
-    validate!(amount>0, AmountZero);
+    validate!(amount>0, BumpErrorCode::AmountZero);
 
     let mut user = &ctx.accounts.user.load_mut()?;
 
     let mut user_token = user.get_user_token_mut(&ctx.accounts.user_token_account.mint.key())?;
 
-    validate!(user_token.amount>amount,AmountNotEnough)?;
+    validate!(user_token.amount>amount, BumpErrorCode::AmountNotEnough)?;
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
 
     let mut oracle_map = OracleMap::load(remaining_accounts_iter)?;
@@ -59,7 +59,7 @@ pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) -
         .safe_mul(amount.cast()?)?;
 
     let available_value = user.get_available_value(&mut oracle_map)?;
-    validate!(available_value>withdraw_usd,UserNotEnoughValue)?;
+    validate!(available_value>withdraw_usd, BumpErrorCode::UserNotEnoughValue)?;
 
     let bump_signer_nonce = ctx.accounts.state.bump_signer_nonce;
     utils::token::send_from_program_vault(

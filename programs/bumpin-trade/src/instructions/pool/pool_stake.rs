@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use crate::{utils, validate};
-use crate::errors::BumpErrorCode::{AmountNotEnough, StakeToSmall};
+use crate::errors::{BumpErrorCode};
 use crate::math::safe_math::SafeMath;
 use crate::processor::fee_processor;
 use crate::processor::fee_reward_processor::update_account_fee_reward;
@@ -83,7 +83,7 @@ pub struct StakeParams {
 
 pub fn handle_pool_stake(mut ctx: Context<PoolStake>, pool_index: u16, trade_token_index: u16, stake_params: StakeParams) -> anchor_lang::Result<()> {
     let mut pool = &mut ctx.accounts.pool.load_mut()?;
-    validate!(pool.pool_config.mini_stake_amount>stake_params.request_token_amount,StakeToSmall);
+    validate!(pool.pool_config.mini_stake_amount>stake_params.request_token_amount, BumpErrorCode::StakeToSmall);
 
     let mut user = &mut ctx.accounts.user.load_mut()?;
     let mut state = ctx.accounts.state.load_mut()?;
@@ -99,10 +99,10 @@ pub fn handle_pool_stake(mut ctx: Context<PoolStake>, pool_index: u16, trade_tok
         let mut user_processor = UserProcessor { user };
 
         let mut user_token = user.get_user_token_mut(&pool.pool_mint)?;
-        validate!(user_token.amount>stake_params.request_token_amount,AmountNotEnough);
+        validate!(user_token.amount>stake_params.request_token_amount, BumpErrorCode::AmountNotEnough);
 
         let mut trade_token_map = TradeTokenMap::load(remaining_accounts)?;
-        validate!(  user_processor.get_available_value(&mut oracle_map, &mut trade_token_map)?>0,AmountNotEnough);
+        validate!(  user_processor.get_available_value(&mut oracle_map, &mut trade_token_map)?>0, BumpErrorCode::AmountNotEnough);
 
         utils::token::receive(
             &ctx.accounts.token_program,
@@ -131,7 +131,7 @@ pub fn handle_pool_stake(mut ctx: Context<PoolStake>, pool_index: u16, trade_tok
 
     let mut pool_processor = PoolProcessor { pool };
     let stake_amount = pool_processor.stake(base_mint_amount, &mut oracle_map, &market_map, &trade_token)?;
-    validate!(stake_amount < stake_params.min_stake_amount,StakeToSmall);
+    validate!(stake_amount < stake_params.min_stake_amount, BumpErrorCode::StakeToSmall);
 
     user_stake.add_user_stake(stake_amount)?;
     Ok(())

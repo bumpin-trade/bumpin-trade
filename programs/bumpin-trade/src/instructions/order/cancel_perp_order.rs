@@ -9,7 +9,6 @@ use crate::state::infrastructure::user_order::{OrderStatus, PositionSide};
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::utils::token;
-use anchor_lang::prelude::ErrorCode;
 
 #[derive(Accounts)]
 pub struct CancelOrderCtx<'info> {

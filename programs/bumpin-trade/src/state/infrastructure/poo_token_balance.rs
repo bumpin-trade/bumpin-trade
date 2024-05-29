@@ -5,6 +5,7 @@ use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::math::safe_math::SafeMath;
 use crate::state::pool::PoolConfig;
+use solana_program::msg;
 
 #[zero_copy(unsafe)]
 #[derive(Default, Eq, PartialEq, Debug)]

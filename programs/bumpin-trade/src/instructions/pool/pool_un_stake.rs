@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use crate::{utils, validate};
-use crate::errors::BumpErrorCode::UnStakeNotEnough;
+use crate::errors::{BumpErrorCode};
 use crate::math::safe_math::SafeMath;
 use crate::processor::fee_reward_processor::update_account_fee_reward;
 use crate::processor::pool_processor::PoolProcessor;
@@ -74,22 +74,22 @@ pub fn handle_pool_un_stake(mut ctx: Context<PoolUnStake>, pool_index: u16, un_s
     let mut state = &mut ctx.accounts.state.load_mut()?;
 
     let user_stake = user.get_user_stake_mut(pool_index)?;
-    validate!(user_stake.amount>=un_stake_params.un_stake_token_amount, UnStakeNotEnough);
+    validate!(user_stake.amount>=un_stake_params.un_stake_token_amount, BumpErrorCode::UnStakeNotEnough);
 
     let remaining_accounts = &mut ctx.remaining_accounts.iter().peekable();
     let mut oracle_map = OracleMap::load(remaining_accounts)?;
 
     let mut pool_processor = PoolProcessor { pool };
     let pool_value = pool_processor.get_pool_usd_value(&mut oracle_map)?;
-    validate!(pool.total_supply==0||pool_value==0, UnStakeNotEnough);
+    validate!(pool.total_supply==0||pool_value==0, BumpErrorCode::UnStakeNotEnough);
 
     let market_vec = MarketMap::load(remaining_accounts)?;
     let un_stake_token_amount = pool_processor.un_stake(un_stake_params.un_stake_token_amount, &mut oracle_map, pool_value)?;
-    validate!(un_stake_token_amount>pool.pool_config.mini_un_stake_amount, UnStakeNotEnough);
+    validate!(un_stake_token_amount>pool.pool_config.mini_un_stake_amount, BumpErrorCode::UnStakeNotEnough);
 
 
     let max_un_stake_amount = pool.get_current_max_un_stake()?;
-    validate!(un_stake_token_amount<max_un_stake_amount, UnStakeNotEnough);
+    validate!(un_stake_token_amount<max_un_stake_amount, BumpErrorCode::UnStakeNotEnough);
 
     let un_stake_token_amount_fee = pool_processor.collect_un_stake_fee(&mut state, un_stake_token_amount)?;
 

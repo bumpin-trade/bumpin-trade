@@ -22,7 +22,7 @@ macro_rules! validate {
             if ($assert) {
                 Ok(())
             } else {
-                let error_code: ErrorCode = $err;
+                let error_code: BumpErrorCode = $err;
                 msg!("Error {} thrown at {}:{}", error_code, file!(), line!());
                 Err(error_code)
             }
@@ -31,7 +31,7 @@ macro_rules! validate {
         if ($assert) {
             Ok(())
         } else {
-            let error_code: ErrorCode = $err;
+            let error_code: BumpErrorCode = $err;
             msg!("Error {} thrown at {}:{}", error_code, file!(), line!());
             msg!($($arg)*);
             Err(error_code)
