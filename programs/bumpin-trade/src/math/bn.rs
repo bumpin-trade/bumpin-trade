@@ -7,6 +7,7 @@
 use anchor_lang::prelude::borsh::{BorshDeserialize, BorshSerialize};
 use std::borrow::BorrowMut;
 use std::convert::TryInto;
+use anchor_lang::prelude::borsh::maybestd::io::{Read};
 use std::io::{Error, ErrorKind, Write};
 use std::mem::size_of;
 use uint::construct_uint;
@@ -40,6 +41,13 @@ macro_rules! impl_borsh_deserialize_for_bn {
                 let res = $type::from_le_bytes(buf[..size_of::<$type>()].try_into().unwrap());
                 *buf = &buf[size_of::<$type>()..];
                 Ok(res)
+            }
+
+            #[inline]
+            fn deserialize_reader<R: Read>(reader: &mut R) -> std::io::Result<Self>{
+                let mut buf = [0u8; size_of::<$type>()];
+                reader.read_exact(&mut buf)?;
+                Ok($type::from_le_bytes(buf))
             }
         }
     };
