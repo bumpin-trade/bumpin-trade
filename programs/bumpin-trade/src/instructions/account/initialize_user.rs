@@ -1,13 +1,12 @@
-use std::alloc::System;
 use anchor_lang::prelude::*;
 use solana_program::msg;
 use solana_program::program::invoke;
 use solana_program::rent::Rent;
 use crate::errors::BumpErrorCode::{CantPayUserInitFee};
-use crate::errors::{BumpErrorCode, BumpResult};
-use crate::{load_mut, utils};
+use crate::errors::{BumpErrorCode};
 use crate::state::state::State;
 use crate::state::user::User;
+use crate::state::traits::Size;
 use anchor_lang::require_keys_neq;
 use anchor_lang::prelude::Pubkey;
 use anchor_lang::error;
@@ -18,13 +17,13 @@ pub struct InitializeUser<'info> {
     #[account(
         init,
         seeds = [b"user", authority.key().as_ref()],
-        space = std::mem::size_of::< User > () + 8,
+        space = User::SIZE,
         bump,
         payer = payer
     )]
     pub user: AccountLoader<'info, User>,
 
-    pub state: AccountLoader<'info, State>,
+    pub state: Box<Account<'info, State>>,
 
     pub authority: Signer<'info>,
 
@@ -47,9 +46,7 @@ pub fn handle_initialize_user(ctx: Context<InitializeUser>) -> Result<()> {
         ..User::default()
     };
 
-    let state = ctx.accounts.state.load()?;
-    let init_fee = state.init_fee;
-
+    let init_fee = ctx.accounts.state.init_fee;
     if init_fee > 0 {
         let payer_lamports = ctx.accounts.payer.to_account_info().try_lamports()?;
         if payer_lamports < init_fee {

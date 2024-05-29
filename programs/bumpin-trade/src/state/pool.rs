@@ -26,6 +26,7 @@ pub struct Pool {
     pub total_supply: u128,
     pub pool_status: PoolStatus,
     pub stable: bool,
+    pub decimals: u8,
     pub apr: u128,
     pub insurance_fund_amount: u128,
 }

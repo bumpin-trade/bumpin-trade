@@ -3,7 +3,6 @@ use crate::errors::BumpResult;
 use crate::math::safe_math::SafeMath;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Eq, PartialEq, Debug, Clone, Copy)]
-#[repr(C)]
 pub struct FeeReward {
     pub fee_amount: u128,
     pub un_settle_fee_amount: u128,

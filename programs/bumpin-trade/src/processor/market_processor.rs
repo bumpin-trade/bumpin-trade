@@ -58,7 +58,7 @@ impl<'a> MarketProcessor<'_> {
         market_position.sub_open_interest(params.size);
         Ok(())
     }
-    pub fn update_market_funding_fee_rate(&mut self, state: &State, oracle_price: &mut OracleMap) {
+    pub fn update_market_funding_fee_rate(&mut self, state: &State, oracle_price: &mut OracleMap) -> BumpResult<()> {
         let oracle_price_data = oracle_price.get_price_data(&self.market.pool_mint_key)?;
         let long = self.market.long_open_interest;
         let short = self.market.short_open_interest;
@@ -94,6 +94,7 @@ impl<'a> MarketProcessor<'_> {
         }
 
         self.market.funding_fee.update_last_update();
+        Ok(())
     }
 
     pub fn update_market_total_funding_fee(&mut self,

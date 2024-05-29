@@ -6,6 +6,7 @@ use crate::state::infrastructure::user_order::{OrderSide, OrderStatus, PositionS
 use crate::state::infrastructure::user_position::UserPosition;
 use crate::state::infrastructure::user_stake::{UserRewards, UserStake};
 use crate::state::infrastructure::user_token::UserToken;
+use crate::state::traits::Size;
 
 
 #[account(zero_copy(unsafe))]
@@ -22,6 +23,10 @@ pub struct User {
     pub user_positions: [UserPosition; 24],
     pub user_orders: [UserOrder; 16],
     pub user_rewards: [UserRewards; 10],
+}
+
+impl Size for User {
+    const SIZE: usize = std::mem::size_of::<User>() + 8;
 }
 
 impl User {
