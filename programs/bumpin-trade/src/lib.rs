@@ -21,11 +21,11 @@ pub mod bumpin_trade {
     }
 
     /*-----pool pool------*/
-    pub fn pool_stake(ctx: Context<PoolStake>, pool_index: u16, trade_index: u16, params: StakeParams) -> Result<()> {
+    pub fn pool_stake(ctx: Context<PoolStake>, pool_index: usize, trade_index: u16, params: StakeParams) -> Result<()> {
         handle_pool_stake(ctx, pool_index, trade_index, params)
     }
 
-    pub fn pool_un_stake(ctx: Context<PoolUnStake>, pool_index: u16, params: UnStakeParams) -> Result<()> {
+    pub fn pool_un_stake(ctx: Context<PoolUnStake>, pool_index: usize, params: UnStakeParams) -> Result<()> {
         handle_pool_un_stake(ctx, pool_index, params)
     }
 

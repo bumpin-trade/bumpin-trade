@@ -2,7 +2,6 @@ use anchor_lang::context::Context;
 use num_traits::ToPrimitive;
 
 use solana_program::pubkey::Pubkey;
-use crate::check;
 
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{cal_utils, PlaceOrder, UpdatePositionMarginParams};
@@ -21,6 +20,8 @@ use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::utils::token;
+use crate::validate;
+use solana_program::msg;
 
 pub struct PositionProcessor<'a> {
     pub(crate) position: &'a mut UserPosition,
@@ -215,7 +216,7 @@ impl PositionProcessor<'_> {
                                           state: &State, ) -> BumpResult<u128> {
         let token_price = oracle_map.get_price_data(&self.position.margin_mint)?.price;
         let max_reduce_margin_in_usd = self.position.initial_margin_usd.safe_sub(cal_utils::div_rate_u(self.position.position_size, market.market_trade_config.max_leverage)?.max(state.min_order_margin_usd))?;
-        check!(max_reduce_margin_in_usd > params.update_margin_amount, BumpErrorCode::AmountNotEnough);
+        validate!(max_reduce_margin_in_usd > params.update_margin_amount, BumpErrorCode::AmountNotEnough.into());
         let reduce_margin_amount = cal_utils::usd_to_token_u(params.update_margin_amount, trade_token.decimals, token_price)?;
 
         if self.position.cross_margin && self.position.initial_margin_usd.safe_sub(self.position.initial_margin_usd_from_portfolio)? < reduce_margin_amount {
@@ -238,7 +239,7 @@ impl PositionProcessor<'_> {
     pub fn execute_add_position_margin(&mut self, params: &UpdatePositionMarginParams, trade_token: &TradeToken, oracle_map: &mut OracleMap, mut pool: &mut Pool) -> BumpResult<()> {
         let token_price = oracle_map.get_price_data(&self.position.margin_mint)?.price;
 
-        check!(params.update_margin_amount < cal_utils::usd_to_token_u(self.position.position_size.safe_sub(self.position.initial_margin_usd)?,trade_token.decimals,token_price)?, BumpErrorCode::AmountNotEnough);
+        validate!(params.update_margin_amount < cal_utils::usd_to_token_u(self.position.position_size.safe_sub(self.position.initial_margin_usd)?,trade_token.decimals,token_price)?, BumpErrorCode::AmountNotEnough);
         self.position.add_initial_margin(params.update_margin_amount)?;
         if self.position.cross_margin {
             self.position.add_initial_margin_usd(cal_utils::div_rate_u(self.position.position_size, self.position.leverage)?);
@@ -252,6 +253,7 @@ impl PositionProcessor<'_> {
         self.position.sub_hold_pool_amount(sub_amount)?;
         let mut pool_processor = PoolProcessor { pool: &mut pool };
         pool_processor.update_pnl_and_un_hold_pool_amount(sub_amount, 0i128, 0u128)?;
+        Ok(())
     }
 
     fn update_decrease_position(&mut self,

@@ -35,7 +35,7 @@ pub struct InitializeTradeToken<'info> {
         mut,
         has_one = bump_signer
     )]
-    pub state: Box<Account<'info, State>>,
+    pub state: AccountLoader<'info, State>,
     #[account(mut)]
     pub admin: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,

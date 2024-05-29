@@ -1,6 +1,6 @@
-use anchor_lang::Accounts;
-
-#[derive(Accounts)]
-pub struct InitializeMarket<'info> {
-
-}
+// use anchor_lang::Accounts;
+//
+// #[derive(Accounts)]
+// pub struct InitializeMarket<'info> {
+//
+// }

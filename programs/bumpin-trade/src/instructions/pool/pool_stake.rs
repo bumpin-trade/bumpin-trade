@@ -85,7 +85,7 @@ pub struct StakeParams {
 #[access_control(
     pool_stake_not_paused(& ctx.accounts.pool)
 )]
-pub fn handle_pool_stake(mut ctx: Context<PoolStake>, pool_index: u16, trade_token_index: u16, stake_params: StakeParams) -> anchor_lang::Result<()> {
+pub fn handle_pool_stake(mut ctx: Context<PoolStake>, pool_index: usize, trade_token_index: u16, stake_params: StakeParams) -> anchor_lang::Result<()> {
     let mut pool = &mut ctx.accounts.pool.load_mut()?;
     validate!(pool.pool_config.mini_stake_amount>stake_params.request_token_amount,StakeToSmall);
 

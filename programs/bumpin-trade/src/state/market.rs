@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use crate::errors::BumpResult;
 use crate::instructions::cal_utils;
 use crate::state::infrastructure::market_funding_fee::MarketFundingFee;
 use crate::traits::Size;
@@ -47,7 +48,7 @@ impl Size for Market {
 }
 
 #[zero_copy(unsafe)]
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, Default, AnchorSerialize, AnchorDeserialize, PartialEq, Debug)]
 #[repr(C)]
 pub struct MarketPosition {
     pub open_interest: u128,
@@ -55,31 +56,24 @@ pub struct MarketPosition {
 }
 
 impl MarketPosition {
-    pub fn add_open_interest(&mut self, size: u128, price: u128) {
+    pub fn add_open_interest(&mut self, size: u128, price: u128) -> BumpResult<()> {
         self.open_interest = cal_utils::add_u128(self.open_interest, size)?;
         self.entry_price = price;
+        Ok(())
     }
-    pub fn sub_open_interest(&mut self, size: u128) {
+    pub fn sub_open_interest(&mut self, size: u128) -> BumpResult<()> {
         if self.open_interest <= size {
             self.open_interest = 0u128;
             self.entry_price = 0u128;
         } else {
             self.open_interest = cal_utils::sub_u128(self.open_interest, size)?;
         }
-    }
-}
-
-impl Default for MarketPosition {
-    fn default() -> Self {
-        MarketPosition {
-            open_interest: 0,
-            entry_price: 0,
-        }
+        Ok(())
     }
 }
 
 #[zero_copy(unsafe)]
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, AnchorSerialize, AnchorDeserialize, Default, Debug)]
 #[repr(C)]
 pub struct MarketConfig {
     pub max_leverage: u128,
@@ -91,5 +85,3 @@ pub struct MarketConfig {
     pub long_short_ratio_limit: u128,
     pub long_short_oi_bottom_limit: u128,
 }
-
-impl Market {}
