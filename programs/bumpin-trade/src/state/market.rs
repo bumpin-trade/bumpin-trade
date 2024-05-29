@@ -22,11 +22,6 @@ pub struct Market {
     pub market_trade_config: MarketConfig,
 }
 
-
-impl Size for Market {
-    const SIZE: usize = std::mem::size_of::<Market>() + 8;
-}
-
 impl Default for Market {
     fn default() -> Self {
         Market {

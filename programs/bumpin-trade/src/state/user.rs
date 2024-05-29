@@ -220,20 +220,3 @@ impl User {
     }
 }
 
-impl Default for User {
-    fn default() -> Self {
-        User {
-            authority: Default::default(),
-            next_order_id: 1,
-            next_liquidation_id: 1,
-            hold: 0,
-            status: 0,
-            user_tokens: [UserToken::default(); 20],
-            user_stakes: [UserStake::default(); 20],
-            user_positions: [UserPosition::default(); 10],
-            user_orders: [UserOrder::default(); 16],
-            user_rewards: [UserRewards::default(); 20],
-        }
-    }
-}
-

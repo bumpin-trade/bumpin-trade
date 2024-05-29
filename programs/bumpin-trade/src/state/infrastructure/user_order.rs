@@ -1,4 +1,4 @@
-use anchor_lang::zero_copy;
+use anchor_lang::prelude::*;
 use solana_program::pubkey::Pubkey;
 
 #[zero_copy(unsafe)]

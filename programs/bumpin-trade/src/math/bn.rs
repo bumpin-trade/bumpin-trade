@@ -4,13 +4,11 @@
 #![allow(clippy::ptr_offset_with_cast)]
 #![allow(clippy::manual_range_contains)]
 
+use borsh::{BorshDeserialize, BorshSerialize};
 use std::borrow::BorrowMut;
 use std::convert::TryInto;
 use std::io::{Error, ErrorKind, Write};
 use std::mem::size_of;
-use ::borsh::BorshSerialize;
-
-use anchor_lang::prelude::*;
 use uint::construct_uint;
 
 use crate::errors::BumpErrorCode::BnConversionError;

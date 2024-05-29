@@ -1,10 +1,5 @@
-use anchor_lang::prelude::ErrorCode;
-use anchor_lang::prelude::msg;
-use anchor_lang::{Accounts, Key};
-use anchor_lang::context::Context;
-use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
+use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
-use solana_program::account_info::AccountInfo;
 use crate::instructions::constraints::*;
 use crate::{utils, validate};
 use crate::errors::BumpErrorCode::{AmountNotEnough, AmountZero, UserNotEnoughValue};
@@ -22,7 +17,7 @@ pub struct Withdraw<'info> {
     pub state: Box<Account<'info, State>>,
     #[account(
         mut,
-        constraint = can_sign_for_user(& user_account, & authority) ?
+        constraint = can_sign_for_user(& user, & authority) ?
     )]
     pub user: AccountLoader<'info, User>,
     pub authority: Signer<'info>,
@@ -46,7 +41,7 @@ pub struct Withdraw<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) {
+pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) -> anchor_lang::Result<()> {
     validate!(amount>0, AmountZero);
 
     let mut user = &ctx.accounts.user.load_mut()?;

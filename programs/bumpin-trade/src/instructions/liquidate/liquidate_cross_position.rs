@@ -1,6 +1,4 @@
-use anchor_lang::Accounts;
-use anchor_lang::context::Context;
-use anchor_lang::prelude::{AccountLoader, Signer};
+use anchor_lang::prelude::*;
 use solana_program::pubkey::Pubkey;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;

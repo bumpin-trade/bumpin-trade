@@ -28,7 +28,7 @@ impl<T> SafeUnwrap for Option<T> {
     }
 }
 
-impl<T, U> SafeUnwrap for BumpResult<T> {
+impl<T, U> SafeUnwrap for Result<T, U> {
     type Item = T;
 
     #[track_caller]

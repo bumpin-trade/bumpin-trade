@@ -1,7 +1,4 @@
-use anchor_lang::prelude::msg;
-use anchor_lang::{access_control, Accounts, AnchorDeserialize, AnchorSerialize};
-use anchor_lang::context::Context;
-use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
+use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use crate::{utils, validate};
 use crate::errors::BumpErrorCode::{AmountNotEnough, StakeToSmall};
@@ -17,6 +14,8 @@ use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
+use crate::can_sign_for_user;
+use crate::pool_stake_not_paused;
 
 #[derive(Accounts)]
 #[instruction(pool_index: u16, trade_token_index: u16)]

@@ -1,13 +1,8 @@
-use anchor_lang::{Accounts, AnchorDeserialize, AnchorSerialize};
-use anchor_lang::context::Context;
-use anchor_lang::prelude::{Account, Program, Signer, System, Sysvar};
-use anchor_spl::token::Token;
-use solana_program::account_info::AccountInfo;
+use anchor_lang::prelude::*;
 use solana_program::pubkey::Pubkey;
-use solana_program::rent::Rent;
+use anchor_spl::token::Token;
+
 use crate::state::state::State;
-use anchor_lang::error;
-use anchor_lang::require_keys_neq;
 
 #[derive(Accounts)]
 pub struct InitializeState<'info> {

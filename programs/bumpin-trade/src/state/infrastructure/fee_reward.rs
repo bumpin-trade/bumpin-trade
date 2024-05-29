@@ -1,7 +1,8 @@
+use anchor_lang::prelude::*;
 use crate::errors::BumpResult;
 use crate::math::safe_math::SafeMath;
 
-#[derive(Default, Eq, PartialEq, Debug, Clone, Copy)]
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Eq, PartialEq, Debug, Clone, Copy)]
 #[repr(C)]
 pub struct FeeReward {
     pub fee_amount: u128,

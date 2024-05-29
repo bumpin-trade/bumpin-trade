@@ -1,6 +1,4 @@
-use anchor_lang::{Accounts, Key};
-use anchor_lang::context::Context;
-use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
+use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 

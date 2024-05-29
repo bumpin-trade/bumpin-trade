@@ -1,8 +1,5 @@
-use anchor_lang::prelude::ErrorCode;
 use std::alloc::System;
-use anchor_lang::{Accounts, Key, ToAccountInfo};
-use anchor_lang::context::Context;
-use anchor_lang::prelude::{Account, AccountLoader, Program, Signer, Sysvar};
+use anchor_lang::prelude::*;
 use anchor_spl::token::spl_token::instruction::transfer;
 use solana_program::msg;
 use solana_program::program::invoke;
@@ -15,7 +12,6 @@ use crate::state::user::User;
 use anchor_lang::require_keys_neq;
 use anchor_lang::prelude::Pubkey;
 use anchor_lang::error;
-use anchor_lang::AnchorDeserialize;
 
 #[derive(Accounts)]
 pub struct InitializeUser<'info> {

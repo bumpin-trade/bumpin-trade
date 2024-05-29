@@ -15,23 +15,24 @@ declare_id!("GhzHdLjZ1qLLPnPq6YdeqJAszuBRN8WnLnK455yBbig6");
 #[program]
 pub mod bumpin_trade {
     use super::*;
+
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
         Ok(())
     }
 
     /*-----pool pool------*/
-    pub fn pool_stake(ctx: Context<PoolStake>, params: PoolStakeParams) -> Result<()> {
-        handle_pool_stake(ctx, params)
+    pub fn pool_stake(ctx: Context<PoolStake>, pool_index: u16, trade_index: u16, params: StakeParams) -> Result<()> {
+        handle_pool_stake(ctx, pool_index, trade_index, params)
     }
 
-    pub fn pool_un_stake(ctx: Context<PoolStake>, params: PoolUnstakeParams) -> Result<()> { handle_pool_un_stake(ctx, params) }
+    pub fn pool_un_stake(ctx: Context<PoolUnStake>, pool_index: u16, params: UnStakeParams) -> Result<()> {
+        handle_pool_un_stake(ctx, pool_index, params)
+    }
 
     /*-----account------*/
     pub fn deposit(ctx: Context<Deposit>, amount: u128) -> Result<()> { Ok(()) }
 
     pub fn withdraw(ctx: Context<Deposit>, amount: u128) -> Result<()> { Ok(()) }
-
-    pub fn initialize_perp_account(ctx: Context<InitializePerpAccount>) -> Result<()> { Ok(()) }
 
     /*-----order------*/
     pub fn place_order(ctx: Context<PlaceOrder>, params: PlaceOrderParams,

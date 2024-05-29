@@ -1,7 +1,5 @@
 use std::cell::Ref;
-use anchor_lang::{Accounts, AnchorDeserialize, AnchorSerialize};
-use anchor_lang::context::Context;
-use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
+use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
@@ -102,7 +100,7 @@ pub fn handle_place_order(ctx: Context<PlaceOrder>, order: PlaceOrderParams) -> 
     }
 
     let order_id = get_then_update_id!(user, next_order_id);
-    let user_order = UserOrder {
+    let mut user_order = UserOrder {
         authority: user.authority,
         order_id,
         symbol: order.symbol,
@@ -132,7 +130,7 @@ pub fn handle_place_order(ctx: Context<PlaceOrder>, order: PlaceOrderParams) -> 
     } else {
         //store order, wait to execute
         let next_index = user.next_usable_order_index();
-        user.add_order(user_order, next_index?)?;
+        user.add_order(&mut user_order, next_index?)?;
     }
     Ok(())
 }

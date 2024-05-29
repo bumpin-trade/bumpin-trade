@@ -2,6 +2,7 @@ pub mod market;
 pub mod user;
 pub mod pool;
 pub mod infrastructure;
+#[allow(clippy::module_inception)]
 pub mod state;
 pub mod trade_token;
 pub mod oracle;

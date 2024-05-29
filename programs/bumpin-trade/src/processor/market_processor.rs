@@ -1,4 +1,4 @@
-use anchor_lang::{AnchorDeserialize, AnchorSerialize};
+use anchor_lang::prelude::*;
 use solana_program::pubkey::Pubkey;
 
 use crate::errors::BumpResult;

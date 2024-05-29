@@ -1,6 +1,6 @@
 use anchor_lang::error_code;
 
-pub type BumpResult<T = ()> = std::result::Result<T, BumpErrorCode>;
+pub type BumpResult<T = ()> = Result<T, BumpErrorCode>;
 
 #[error_code]
 #[derive(PartialEq, Eq)]

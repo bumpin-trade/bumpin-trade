@@ -1,9 +1,5 @@
-use anchor_lang::{Accounts, Key, ToAccountInfo};
-use anchor_lang::require_keys_neq;
-use anchor_lang::context::Context;
-use anchor_lang::prelude::{Account, AccountLoader, Program, Signer, System, Sysvar};
+use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-use solana_program::account_info::AccountInfo;
 use solana_program::rent::Rent;
 use crate::{get_then_update_id};
 use crate::state::state::State;

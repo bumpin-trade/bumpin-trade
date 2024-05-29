@@ -1,8 +1,5 @@
-use anchor_lang::{Accounts, AnchorDeserialize, AnchorSerialize};
-use anchor_lang::context::Context;
-use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
+use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
-use solana_program::account_info::AccountInfo;
 use crate::check;
 use crate::errors::BumpErrorCode;
 use crate::instructions::{cal_utils, UpdatePositionMarginParams};
@@ -23,7 +20,7 @@ use crate::utils::token;
 pub struct UpdatePositionLeverage<'info> {
     #[account(
         mut,
-        constraint = can_sign_for_user(&user, &authority) ?
+        constraint = can_sign_for_user(&user_account, &authority) ?
     )]
     pub user_account: AccountLoader<'info, User>,
     pub authority: Signer<'info>,
