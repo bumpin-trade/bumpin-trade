@@ -21,7 +21,7 @@ pub struct PoolTokenBalance {
 
 impl PoolTokenBalance {
     pub fn hold_pool(&mut self, pool_config: PoolConfig, amount: u128) -> BumpResult<()> {
-        validate!(self.check_hold_is_allowed(amount,pool_config), BumpErrorCode::AmountNotEnough.into());
+        validate!(self.check_hold_is_allowed(amount,pool_config)?, BumpErrorCode::AmountNotEnough.into());
         self.hold_amount = cal_utils::add_u128(self.hold_amount, amount)?;
         Ok(())
     }

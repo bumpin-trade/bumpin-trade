@@ -15,11 +15,11 @@ pub struct PoolProcessor<'a> {
 }
 
 impl<'a> PoolProcessor<'_> {
-    pub fn collect_stake_fee(&mut self, state: &mut State, amount: u128) {
-        fee_processor::collect_stake_fee(&mut self.pool, state, amount)?;
+    pub fn collect_stake_fee(&mut self, state: &mut State, amount: u128) -> BumpResult<u128> {
+        Ok(fee_processor::collect_stake_fee(&mut self.pool, state, amount)?)
     }
-    pub fn collect_un_stake_fee(&mut self, state: &mut State, amount: u128) {
-        fee_processor::collect_un_stake_fee(&mut self.pool, state, amount)?;
+    pub fn collect_un_stake_fee(&mut self, state: &mut State, amount: u128) -> BumpResult<u128> {
+        Ok(fee_processor::collect_un_stake_fee(&mut self.pool, state, amount)?)
     }
     pub fn stake(&mut self, mint_amount: u128, oracle_map: &mut OracleMap, market_vec: &MarketMap, trade_token: &TradeToken) -> BumpResult<u128> {
         let mut stake_amount = mint_amount;
@@ -73,22 +73,23 @@ impl<'a> PoolProcessor<'_> {
         }
         Ok(if pool_value <= 0 { 0u128 } else { pool_value })
     }
-    pub fn update_pool_borrowing_fee_rate(&mut self) {
+    pub fn update_pool_borrowing_fee_rate(&mut self) -> BumpResult {
         self.pool.borrowing_fee.update_pool_borrowing_fee(&self.pool.pool_balance,
                                                           self.pool.pool_config.borrowing_interest_rate)?;
+        Ok(())
     }
 
-    pub fn update_pnl_and_un_hold_pool_amount(&mut self, amount: u128, token_pnl: i128, add_liability: u128) -> BumpResult<()> {
+    pub fn update_pnl_and_un_hold_pool_amount(&mut self, amount: u128, token_pnl: i128, add_liability: u128) -> BumpResult {
         self.pool.un_hold_pool(amount)?;
         if token_pnl < 0i128 {
-            self.pool.sub_amount(token_pnl.abs().cast::<u128>()?)
+            self.pool.sub_amount(token_pnl.abs().cast::<u128>()?)?
         } else if add_liability == 0u128 {
-            self.pool.add_amount(token_pnl.cast::<u128>()?)
+            self.pool.add_amount(token_pnl.cast::<u128>()?)?
         } else {
             let u_token_pnl = token_pnl.abs().cast::<u128>()?;
 
             self.pool.add_amount(if u_token_pnl > add_liability { u_token_pnl.cast::<u128>()?.safe_sub(add_liability.cast::<u128>()?)?.cast::<u128>()? } else { 0u128 })?;
-            self.pool.add_unsettle(if u_token_pnl > add_liability { add_liability.cast::<i128>()? } else { token_pnl })?;
+            self.pool.add_unsettle(if u_token_pnl > add_liability { add_liability } else { token_pnl })?;
         }
         Ok(())
     }

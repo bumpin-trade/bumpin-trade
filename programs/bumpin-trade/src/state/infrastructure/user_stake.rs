@@ -1,5 +1,6 @@
 use anchor_lang::zero_copy;
 use solana_program::pubkey::Pubkey;
+use crate::errors::BumpResult;
 
 use crate::math::safe_math::SafeMath;
 
@@ -13,18 +14,21 @@ pub struct UserStake {
 }
 
 impl UserStake {
-    pub fn add_user_stake(&mut self, stake_amount: u128) {
+    pub fn add_user_stake(&mut self, stake_amount: u128) -> BumpResult {
         self.amount = self.amount.
             safe_add(stake_amount)?;
+        Ok(())
     }
 
-    pub fn sub_user_stake(&mut self, stake_amount: u128) {
+    pub fn sub_user_stake(&mut self, stake_amount: u128) -> BumpResult {
         self.amount = self.amount.
             safe_sub(stake_amount)?;
+        Ok(())
     }
 
-    pub fn add_user_rewards(&mut self, rewards: u128) {
+    pub fn add_user_rewards(&mut self, rewards: u128) -> BumpResult {
         self.user_rewards.realised_rewards_token_amount = self.user_rewards.realised_rewards_token_amount.safe_add(rewards)?;
+        Ok(())
     }
 }
 

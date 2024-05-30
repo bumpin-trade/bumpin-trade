@@ -42,7 +42,7 @@ impl User {
             .ok_or(CouldNotFindUserToken)?)
     }
 
-    pub fn get_user_stake_mut(&mut self, pool_index: usize) -> BumpResult<&mut UserStake> {
+    pub fn get_user_stake_mut(&mut self, pool_index: u16) -> BumpResult<&mut UserStake> {
         Ok(self.user_stakes.get_mut(pool_index).ok_or(CouldNotFindUserStake)?)
     }
     pub fn get_user_stake_ref(&mut self, pool_index: usize) -> BumpResult<&UserStake> {
@@ -215,13 +215,14 @@ impl User {
     }
 
 
-    pub fn update_all_orders_leverage(&mut self, leverage: u128, symbol: [u8; 32], margin_token: &Pubkey, is_long: bool, is_cross_margin: bool) {
+    pub fn update_all_orders_leverage(&mut self, leverage: u128, symbol: [u8; 32], margin_token: &Pubkey, is_long: bool, is_cross_margin: bool) -> BumpResult {
         for mut user_order in self.user_orders {
             let is_long_order = user_order.order_side.eq(&OrderSide::LONG);
             if user_order.cross_margin == is_cross_margin && user_order.symbol == symbol && user_order.margin_token.eq(margin_token) && ((is_long_order == is_long && user_order.position_side.eq(&PositionSide::INCREASE)) || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE))) {
                 user_order.set_leverage(leverage)
             }
         }
+        Ok(())
     }
 }
 

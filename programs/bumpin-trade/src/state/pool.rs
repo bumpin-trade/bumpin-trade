@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use num_traits::ToPrimitive;
 use crate::{validate};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{add_u128, cal_utils};
@@ -111,7 +110,7 @@ impl Pool {
         Ok(())
     }
     pub fn hold_pool(&mut self, amount: u128) -> BumpResult<()> {
-        validate!(self.check_hold_is_allowed(amount), BumpErrorCode::AmountNotEnough.into());
+        validate!(self.check_hold_is_allowed(amount)?, BumpErrorCode::AmountNotEnough.into());
         self.pool_balance.hold_amount = add_u128(self.pool_balance.hold_amount, amount)?;
         Ok(())
     }
@@ -122,12 +121,8 @@ impl Pool {
         Ok(())
     }
 
-    pub fn add_unsettle(&mut self, amount: i128) -> BumpResult<()> {
-        if amount < 0 {
-            self.pool_balance.un_settle_amount = cal_utils::sub_u128(self.pool_balance.un_settle_amount?, amount.abs().to_u128()?)?;
-        } else {
-            self.pool_balance.un_settle_amount = add_u128(self.pool_balance.un_settle_amount?, amount.abs().to_u128()?)?;
-        }
+    pub fn add_unsettle(&mut self, amount: u128) -> BumpResult<()> {
+        self.pool_balance.un_settle_amount = add_u128(self.pool_balance.un_settle_amount, amount)?;
         Ok(())
     }
 

@@ -37,13 +37,13 @@ pub struct PlaceOrder<'info> {
 
     #[account(
         mut,
-        constraint = pool.load() ?.pool_mint_key.eq(& margin_token.mint.key())
+        constraint = pool.load() ?.pool_mint.eq(& margin_token.mint.key())
     )]
     pub margin_token: Account<'info, TokenAccount>,
 
     #[account(
         mut,
-        constraint = pool.load() ?.pool_mint_key = market.load() ?.pool_mint_key
+        constraint = pool.load() ?.pool_mint = market.load() ?.pool_mint_key
     )]
     pub pool: AccountLoader<'info, Pool>,
 
@@ -62,7 +62,7 @@ pub struct PlaceOrder<'info> {
     pub trade_token: AccountLoader<'info, TradeToken>,
 
     pub bump_signer: AccountInfo<'info>,
-    
+
     pub token_program: Program<'info, Token>,
 }
 
@@ -98,7 +98,7 @@ pub fn handle_place_order(ctx: Context<PlaceOrder>, order: PlaceOrderParams) -> 
 
     let market = ctx.accounts.market.load()?;
     let mut user = ctx.accounts.user_account.load()?;
-    let state = ctx.accounts.state.load()?;
+    let state = ctx.accounts.state;
     let pool = ctx.accounts.pool.load()?;
     let token = &ctx.accounts.margin_token;
     validate!(validate_place_order(order, &token.mint, &market, &pool, &state), BumpErrorCode::InvalidParam.into());

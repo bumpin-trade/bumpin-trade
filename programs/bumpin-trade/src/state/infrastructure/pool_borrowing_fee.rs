@@ -30,7 +30,7 @@ impl BorrowingFee {
                 safe_mul(borrowing_interest_rate.cast()?)?.
                 cast::<u128>()?;
         }
-        self.last_update = Clock::get()?.unix_timestamp.to_u128()?;
+        self.last_update = Clock::get().unwrap().unix_timestamp.to_u128().unwrap();
         Ok(())
     }
 
@@ -50,9 +50,9 @@ impl BorrowingFee {
         Ok(())
     }
     pub fn get_pool_borrowing_fee_durations(&self) -> BumpResult<u128> {
-        if self.last_update > 0 {
-            let clock = Clock::get()?;
-            clock.unix_timestamp.to_u128().safe_sub(self.last_update)?;
-        } else { 0 }
+        if self.last_update > 0u128 {
+            let clock = Clock::get().unwrap();
+            Ok(clock.unix_timestamp.to_u128().unwrap().safe_sub(self.last_update)?)
+        } else { Ok(0u128) }
     }
 }

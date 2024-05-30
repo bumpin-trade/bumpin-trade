@@ -42,28 +42,28 @@ pub struct PoolStake<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool_mint_vault".as_ref(), pool_index.to_le_bytes.as_ref()],
+        seeds = [b"pool_mint_vault".as_ref(), pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub pool_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
-        seeds = [b"trade_token_vault".as_ref(), trade_token_index.to_le_bytes.as_ref()],
+        seeds = [b"trade_token_vault".as_ref(), trade_token_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
-        seeds = [b"trade_token".as_ref(), trade_token_index.to_le_bytes.as_ref()],
+        seeds = [b"trade_token".as_ref(), trade_token_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub trade_token: AccountLoader<'info, TradeToken>,
 
     #[account(
         mut,
-        constraint = & pool_vault.mint.key().eq(& user_token_account.mint.key()) && & trade_token_vault.mint.eq(& user_token_account.mint.key()),
+        constraint = pool_vault.mint.key().eq(& user_token_account.mint.key()) && trade_token_vault.mint.eq(& user_token_account.mint.key()),
         token::authority = authority
     )]
     pub user_token_account: Box<Account<'info, TokenAccount>>,
@@ -86,14 +86,13 @@ pub fn handle_pool_stake(mut ctx: Context<PoolStake>, pool_index: u16, trade_tok
     validate!(pool.pool_config.mini_stake_amount>stake_params.request_token_amount, BumpErrorCode::StakeToSmall);
 
     let mut user = &mut ctx.accounts.user.load_mut()?;
-    let mut state = ctx.accounts.state.load_mut()?;
     let trade_token = ctx.accounts.trade_token.load()?;
     let remaining_accounts = &mut ctx.remaining_accounts.iter().peekable();
     let mut oracle_map = OracleMap::load(remaining_accounts)?;
     let market_map = MarketMap::load(remaining_accounts)?;
 
     let user_stake = user.get_user_stake_mut(pool_index)?;
-    update_account_fee_reward(user_stake, &pool);
+    update_account_fee_reward(user_stake, &pool)?;
 
     if stake_params.portfolio {
         let mut user_processor = UserProcessor { user };
@@ -125,7 +124,7 @@ pub fn handle_pool_stake(mut ctx: Context<PoolStake>, pool_index: u16, trade_tok
     ctx.accounts.pool_vault.reload()?;
 
     let stake_fee = fee_processor::collect_stake_fee(&mut pool,
-                                                     &mut state,
+                                                     &mut ctx.accounts.state,
                                                      stake_params.request_token_amount)?;
     let base_mint_amount = stake_params.request_token_amount.safe_sub(stake_fee)?;
 

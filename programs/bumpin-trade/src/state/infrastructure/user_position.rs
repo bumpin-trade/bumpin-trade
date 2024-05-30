@@ -229,7 +229,7 @@ impl UserPosition {
                 .safe_mul(self.initial_margin)?
                 .safe_div(self.initial_margin_usd)?;
 
-            let add_initial_amount = amount.min(borrow_margin)?;
+            let add_initial_amount = amount.min(borrow_margin);
 
             let add_initial_amount_usd = add_initial_amount
                 .safe_mul(self.initial_margin_usd)?

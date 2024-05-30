@@ -20,7 +20,7 @@ pub struct UserProcessor<'a> {
 }
 
 impl<'a> UserProcessor<'a> {
-    pub fn sub_user_token_amount(&self, user_token: &mut UserToken, mut amount: u128) {
+    pub fn sub_user_token_amount(&self, user_token: &mut UserToken, mut amount: u128) -> BumpResult {
         user_token.sub_token_amount(amount)?;
         for mut user_position in self.user.user_positions {
             if user_position.cross_margin && user_position.margin_mint.eq(&user_token.token_mint) && amount > 0 {
@@ -28,6 +28,7 @@ impl<'a> UserProcessor<'a> {
                 amount = amount.safe_sub(reduce_amount)?;
             }
         }
+        Ok(())
     }
     pub fn get_user_cross_position_value(&self, state: &State, market_map: &MarketMap, pool_map: &PoolMap, price_map: &mut OracleMap) -> BumpResult<(u128, i128, i128, u128)> {
         let mut total_im_usd = 0u128;
@@ -74,7 +75,7 @@ impl<'a> UserProcessor<'a> {
         }
         Ok(total_token_net_value)
     }
-    pub fn get_available_value(&mut self, oracle_map: &mut OracleMap, trade_token_map: &mut TradeTokenMap) -> BumpResult<i128> {
+    pub fn get_available_value(&mut self, oracle_map: &mut OracleMap, trade_token_map: &TradeTokenMap) -> BumpResult<i128> {
         let mut total_net_value = 0u128;
         let mut total_used_value = 0u128;
         let mut total_borrowing_value = 0u128;

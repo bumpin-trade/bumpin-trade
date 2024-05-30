@@ -35,8 +35,9 @@ impl Default for MarketFundingFee {
 }
 
 impl MarketFundingFee {
-    pub fn update_last_update(&mut self) {
-        self.last_update = Clock::get()?.unix_timestamp.to_u128()?;
+    pub fn update_last_update(&mut self) -> BumpResult {
+        self.last_update = Clock::get().unwrap().unix_timestamp.to_u128().unwrap();
+        Ok(())
     }
     pub fn update_market_funding_fee_rate(&mut self, short_funding_fee_amount_per_size_delta: i128, long_funding_fee_amount_per_size_delta: i128, fee_durations: u128) -> BumpResult<()> {
         self.short_funding_fee_amount_per_size = short_funding_fee_amount_per_size_delta.
@@ -44,7 +45,7 @@ impl MarketFundingFee {
             cast::<i128>()?;
 
         self.long_funding_fee_amount_per_size = long_funding_fee_amount_per_size_delta.
-            safe_add(self.long_funding_fee_amount_per_size.cast()?).
+            safe_add(self.long_funding_fee_amount_per_size.cast()?)?.
             cast::<i128>()?;
 
         self.long_funding_fee_rate = long_funding_fee_amount_per_size_delta.
@@ -54,14 +55,15 @@ impl MarketFundingFee {
         self.short_funding_fee_rate = short_funding_fee_amount_per_size_delta.
             safe_div(fee_durations.cast()?)?.
             safe_mul(3600i128)?;
-        self.update_last_update();
+        self.update_last_update()?;
+        Ok(())
     }
 
 
     pub fn get_market_funding_fee_durations(&self) -> BumpResult<u128> {
-        if self.last_update > 0 {
-            let clock = Clock::get()?;
-            clock.unix_timestamp.to_u128().safe_sub(self.last_update)?;
-        } else { 0 }
+        if self.last_update > 0u128 {
+            let clock = Clock::get().unwrap();
+            Ok(clock.unix_timestamp.to_u128().unwrap().safe_sub(self.last_update)?)
+        } else { Ok(0u128) }
     }
 }

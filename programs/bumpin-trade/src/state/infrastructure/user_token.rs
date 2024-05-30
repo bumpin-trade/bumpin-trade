@@ -3,6 +3,7 @@ use solana_program::pubkey::Pubkey;
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
+use crate::math::safe_unwrap::SafeUnwrap;
 use crate::state::oracle::oracle::OraclePriceData;
 use crate::state::trade_token::TradeToken;
 
@@ -18,18 +19,22 @@ pub struct UserToken {
 }
 
 impl UserToken {
-    pub fn add_token_amount(&mut self, amount: u128) {
+    pub fn add_token_amount(&mut self, amount: u128) -> BumpResult {
         self.amount = self.amount.safe_add(amount)?;
+        Ok(())
     }
-    pub fn sub_token_amount(&mut self, amount: u128) {
+    pub fn sub_token_amount(&mut self, amount: u128) -> BumpResult {
         self.amount = self.amount.safe_sub(amount)?;
+        Ok(())
     }
-    pub fn sub_token_used_amount(&mut self, amount: u128) {
+    pub fn sub_token_used_amount(&mut self, amount: u128) -> BumpResult {
         self.used_amount = self.used_amount.safe_sub(amount)?;
+        Ok(())
     }
 
-    pub fn add_token_used_amount(&mut self, amount: u128) {
+    pub fn add_token_used_amount(&mut self, amount: u128) -> BumpResult {
         self.used_amount = self.used_amount.safe_add(amount)?;
+        Ok(())
     }
     pub fn repay_liability(&mut self, amount: u128) -> BumpResult<u128> {
         if self.liability > 0 && self.amount > 0 {
@@ -67,7 +72,7 @@ impl UserToken {
 
     pub fn get_token_available_amount(&self) -> BumpResult<u128> {
         if self.amount > self.used_amount {
-            return Ok(self.amount.safe_sub(self.used_amount)?)
+            return Ok(self.amount.safe_sub(self.used_amount)?);
         };
         Ok(0u128)
     }

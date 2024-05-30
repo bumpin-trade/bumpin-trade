@@ -14,6 +14,7 @@ use crate::state::user::User;
 use crate::utils::token;
 use crate::{can_sign_for_user, validate};
 use crate::errors::BumpErrorCode;
+use crate::math::casting::Cast;
 
 #[derive(Accounts)]
 pub struct UpdatePositionLeverage<'info> {
@@ -53,8 +54,7 @@ pub fn handle_update_position_leverage(ctx: Context<UpdatePositionLeverage>, par
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
     let mut oracle_map = OracleMap::load(remaining_accounts_iter)?;
     let mut trade_token_map = TradeTokenMap::load(remaining_accounts_iter)?;
-    let pool = ctx.accounts.pool.load_mut()?;
-    let state = ctx.accounts.state.load_mut()?;
+    let mut pool = ctx.accounts.pool.load_mut()?;
     let market = ctx.accounts.market.load_mut()?;
     validate!(params.leverage <= market.market_trade_config.max_leverage, BumpErrorCode::AmountNotEnough.into());
 
@@ -89,7 +89,7 @@ pub fn handle_update_position_leverage(ctx: Context<UpdatePositionLeverage>, par
                 position_key,
                 is_add: true,
                 update_margin_amount: add_margin_amount,
-            }, &trade_token, &mut oracle_map, &mut pool?)?;
+            }, &trade_token, &mut oracle_map, &mut pool)?;
             if !params.is_cross_margin {
                 token::receive(
                     &ctx.accounts.token_program,

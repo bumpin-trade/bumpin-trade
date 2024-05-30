@@ -23,20 +23,17 @@ impl OraclePriceData {
 }
 
 pub fn get_oracle_price(
-    price_oracle: &AccountInfo,
-    clock_slot: u128,
-) -> BumpResult<OraclePriceData> {
-    get_pyth_price(price_oracle, clock_slot, 1)
+    price_oracle: &AccountInfo) -> BumpResult<OraclePriceData> {
+    get_pyth_price(price_oracle, 1)
 }
 
 pub fn get_pyth_price(
     price_oracle: &AccountInfo,
-    clock_slot: u128,
     multiple: u128,
 ) -> BumpResult<OraclePriceData> {
-    let price_feed = SolanaPriceAccount::account_info_to_feed(price_oracle)?;
-    let current_timestamp = Clock::get()?.unix_timestamp;
-    let price_data = price_feed.get_price_no_older_than(current_timestamp, 10).ok_or(PythOffline)?;
+    let price_feed = SolanaPriceAccount::account_info_to_feed(price_oracle).unwrap();
+    let current_timestamp = Clock::get().unwrap().unix_timestamp;
+    let price_data = price_feed.get_price_no_older_than(current_timestamp, 10).ok_or(PythOffline).unwrap();
 
 
     let oracle_price = price_data.price;

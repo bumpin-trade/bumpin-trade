@@ -34,17 +34,17 @@ pub struct Withdraw<'info> {
     )]
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
     #[account(
-        constraint = state.signer.eq(& bump_signer.key())
+        constraint = state.bump_signer.eq(& bump_signer.key())
     )]
     /// CHECK: forced drift_signer
     pub bump_signer: AccountInfo<'info>,
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) -> anchor_lang::Result<()> {
+pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) -> Result<()> {
     validate!(amount>0, BumpErrorCode::AmountZero);
 
-    let mut user = &ctx.accounts.user.load_mut()?;
+    let mut user = &mut ctx.accounts.user.load_mut()?;
 
     let mut user_token = user.get_user_token_mut(&ctx.accounts.user_token_account.mint.key())?;
 
@@ -58,7 +58,8 @@ pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) -
     let withdraw_usd = price_data.price.cast::<i128>()?
         .safe_mul(amount.cast()?)?;
 
-    let available_value = user.get_available_value(&mut oracle_map)?;
+    let mut user_processor = UserProcessor { user };
+    let available_value = user_processor.get_available_value(&mut oracle_map, &trade_token_map)?;
     validate!(available_value>withdraw_usd, BumpErrorCode::UserNotEnoughValue)?;
 
     let bump_signer_nonce = ctx.accounts.state.bump_signer_nonce;
@@ -73,8 +74,8 @@ pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) -
 
     user_token.sub_token_amount(amount)?;
 
-    let mut user_processor = UserProcessor { user: &mut user };
-    user_processor.update_cross_position_balance(ctx.accounts.user_token_account.mint,
+    user_processor.update_cross_position_balance(&ctx.accounts.user_token_account.mint,
                                                  amount,
                                                  false);
+    Ok(())
 }

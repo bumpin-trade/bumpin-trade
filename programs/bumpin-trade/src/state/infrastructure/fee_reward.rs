@@ -19,12 +19,14 @@ impl FeeReward {
         }
         Ok(delta_limit)
     }
-    pub fn add_fee_amount(&mut self, amount: u128) {
+    pub fn add_fee_amount(&mut self, amount: u128) -> BumpResult<()> {
         self.fee_amount = self.fee_amount.safe_add(amount)?;
+        Ok(())
     }
 
-    pub fn add_un_settle_amount(&mut self, amount: u128) {
+    pub fn add_un_settle_amount(&mut self, amount: u128) -> BumpResult<()> {
         self.fee_amount = self.un_settle_fee_amount.safe_add(amount)?;
+        Ok(())
     }
 }
 
