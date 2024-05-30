@@ -39,12 +39,13 @@ pub struct InitializeStateParams {
     pub redeem_fee_staking_rewards_ratio: u128,
     pub redeem_fee_pool_rewards_ratio: u128,
     pub pool_rewards_interval_limit: u128,
-    pub init_fee: u128,
+    pub init_fee: u64,
 }
 
 pub fn handle_initialize_state(ctx: Context<InitializeState>, initialize_state_params: InitializeStateParams) -> anchor_lang::Result<()> {
     let (bump_signer, bump_signer_nonce) =
         Pubkey::find_program_address(&[b"bump_state".as_ref()], ctx.program_id);
+
     **ctx.accounts.state = State {
         admin: *ctx.accounts.admin.key,
         bump_signer,

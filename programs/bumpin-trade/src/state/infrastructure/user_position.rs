@@ -54,32 +54,39 @@ impl UserPosition {
         Ok(())
     }
 
-    pub fn set_entry_price(&mut self, entry_price: u128) {
+    pub fn set_entry_price(&mut self, entry_price: u128) -> BumpResult {
         self.entry_price = entry_price;
+        Ok(())
     }
 
-    pub fn set_initial_margin(&mut self, initial_margin: u128) {
+    pub fn set_initial_margin(&mut self, initial_margin: u128) -> BumpResult {
         self.initial_margin = initial_margin;
+        Ok(())
     }
 
-    pub fn set_initial_margin_usd(&mut self, initial_margin_usd: u128) {
+    pub fn set_initial_margin_usd(&mut self, initial_margin_usd: u128) -> BumpResult {
         self.initial_margin_usd = initial_margin_usd;
+        Ok(())
     }
 
-    pub fn set_leverage(&mut self, leverage: u128) {
+    pub fn set_leverage(&mut self, leverage: u128) -> BumpResult {
         self.leverage = leverage;
+        Ok(())
     }
 
-    pub fn set_realized_pnl(&mut self, realized_pnl: i128) {
+    pub fn set_realized_pnl(&mut self, realized_pnl: i128) -> BumpResult {
         self.realized_pnl = realized_pnl;
+        Ok(())
     }
 
-    pub fn set_open_borrowing_fee_per_token(&mut self, open_borrowing_fee_per_token: u128) {
+    pub fn set_open_borrowing_fee_per_token(&mut self, open_borrowing_fee_per_token: u128) -> BumpResult {
         self.open_borrowing_fee_per_token = open_borrowing_fee_per_token;
+        Ok(())
     }
 
-    pub fn set_open_funding_fee_amount_per_size(&mut self, open_funding_fee_amount_per_size: i128) {
+    pub fn set_open_funding_fee_amount_per_size(&mut self, open_funding_fee_amount_per_size: i128) -> BumpResult {
         self.open_funding_fee_amount_per_size = open_funding_fee_amount_per_size;
+        Ok(())
     }
 
     pub fn add_initial_margin(&mut self, initial_margin: u128) -> BumpResult<()> {
@@ -132,16 +139,19 @@ impl UserPosition {
         Ok(())
     }
 
-    pub fn set_initial_margin_usd_from_portfolio(&mut self, initial_margin_usd_from_portfolio: u128) {
+    pub fn set_initial_margin_usd_from_portfolio(&mut self, initial_margin_usd_from_portfolio: u128) -> BumpResult {
         self.initial_margin_usd_from_portfolio = initial_margin_usd_from_portfolio;
+        Ok(())
     }
 
-    pub fn set_close_fee_in_usd(&mut self, close_fee_in_usd: u128) {
+    pub fn set_close_fee_in_usd(&mut self, close_fee_in_usd: u128) -> BumpResult {
         self.close_fee_in_usd = close_fee_in_usd;
+        Ok(())
     }
 
-    pub fn set_position_size(&mut self, position_size: u128) {
+    pub fn set_position_size(&mut self, position_size: u128) -> BumpResult {
         self.position_size = position_size;
+        Ok(())
     }
 
     pub fn add_hold_pool_amount(&mut self, hold_pool_amount: u128) -> BumpResult<()> {
@@ -184,40 +194,49 @@ impl UserPosition {
         Ok(())
     }
 
-    pub fn set_last_update(&mut self, last_update: u128) {
+    pub fn set_last_update(&mut self, last_update: u128) -> BumpResult {
         self.last_update_time = last_update;
+        Ok(())
     }
 
-    pub fn set_position_key(&mut self, position_key: Pubkey) {
+    pub fn set_position_key(&mut self, position_key: Pubkey) -> BumpResult {
         self.position_key = position_key;
+        Ok(())
     }
 
-    pub fn set_authority(&mut self, authority: Pubkey) {
+    pub fn set_authority(&mut self, authority: Pubkey) -> BumpResult {
         self.authority = authority;
+        Ok(())
     }
 
-    pub fn set_index_mint(&mut self, index_mint: Pubkey) {
+    pub fn set_index_mint(&mut self, index_mint: Pubkey) -> BumpResult {
         self.index_mint = index_mint;
+        Ok(())
     }
 
-    pub fn set_symbol(&mut self, symbol: [u8; 32]) {
+    pub fn set_symbol(&mut self, symbol: [u8; 32]) -> BumpResult {
         self.symbol = symbol;
+        Ok(())
     }
 
-    pub fn set_margin_mint(&mut self, margin_mint: Pubkey) {
+    pub fn set_margin_mint(&mut self, margin_mint: Pubkey) -> BumpResult {
         self.margin_mint = margin_mint;
+        Ok(())
     }
 
-    pub fn set_is_long(&mut self, is_long: bool) {
+    pub fn set_is_long(&mut self, is_long: bool) -> BumpResult {
         self.is_long = is_long;
+        Ok(())
     }
 
-    pub fn set_cross_margin(&mut self, cross_margin: bool) {
+    pub fn set_cross_margin(&mut self, cross_margin: bool) -> BumpResult {
         self.cross_margin = cross_margin;
+        Ok(())
     }
 
-    pub fn set_status(&mut self, status: PositionStatus) {
+    pub fn set_status(&mut self, status: PositionStatus) -> BumpResult {
         self.status = status;
+        Ok(())
     }
 
     pub fn add_position_portfolio_balance(&mut self, amount: u128) -> BumpResult<u128> {

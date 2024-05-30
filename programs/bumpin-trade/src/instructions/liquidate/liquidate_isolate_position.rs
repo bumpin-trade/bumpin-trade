@@ -23,11 +23,7 @@ pub struct LiquidateIsolatePosition<'info> {
         bump,
     )]
     pub state: Account<'info, State>,
-    #[account(
-        mut,
-        seeds = [b"user", user.as_ref()],
-        bump,
-    )]
+
     pub user: AccountLoader<'info, User>,
 
     #[account(
@@ -39,13 +35,13 @@ pub struct LiquidateIsolatePosition<'info> {
 
     #[account(
         mut,
-        address = market.pool_key
+        address = market.load() ?.pool_key
     )]
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
         mut,
-        address = market.stable_pool_key
+        address = market.load() ?.stable_pool_key
     )]
     pub stable_pool: AccountLoader<'info, Pool>,
 
@@ -60,19 +56,18 @@ pub struct LiquidateIsolatePosition<'info> {
 
 }
 
-pub fn handle_liquidate_isolate_position(ctx: Context<LiquidateIsolatePosition>, market_index: u16, trade_token_index: u16, position_key: Pubkey, user: Pubkey) {
+pub fn handle_liquidate_isolate_position(ctx: Context<LiquidateIsolatePosition>, market_index: u16, trade_token_index: u16, position_key: Pubkey, user: Pubkey) -> Result<()> {
     let user = &mut ctx.accounts.user.load_mut()?;
     let user_position = user.find_position_mut_by_key(&position_key)?;
 
     validate!(!user_position.cross_margin, BumpErrorCode::OnlyLiquidateIsolatePosition);
     let market = &mut ctx.accounts.market.load_mut()?;
-    let state = ctx.accounts.state.load_mut()?;
 
     let remaining_accounts = &mut ctx.remaining_accounts.iter().peekable();
     let mut oracle_map = OracleMap::load(remaining_accounts)?;
 
     let mut market_processor = MarketProcessor { market };
-    market_processor.update_market_funding_fee_rate(&state, &mut oracle_map);
+    market_processor.update_market_funding_fee_rate(&ctx.accounts.state, &mut oracle_map)?;
 
     let mut pool;
     if user_position.is_long {
@@ -81,14 +76,15 @@ pub fn handle_liquidate_isolate_position(ctx: Context<LiquidateIsolatePosition>,
         pool = &mut ctx.accounts.stable_pool.load_mut()?;
     }
     let mut pool_processor = PoolProcessor { pool };
-    pool_processor.update_pool_borrowing_fee_rate();
+    pool_processor.update_pool_borrowing_fee_rate()?;
 
     let mut position_processor = PositionProcessor { position: user_position };
-    let liquidation_price = position_processor.get_liquidation_price(&market, &pool, &state, &mut oracle_map)?;
+    let liquidation_price = position_processor.get_liquidation_price(&market, &pool, &ctx.accounts.state, &mut oracle_map)?;
 
     let index_price = oracle_map.get_price_data(&user_position.index_mint)?;
     if (user_position.is_long && index_price.price > liquidation_price) ||
         (!user_position.is_long && index_price.price < liquidation_price) {
         //  position_processor.decrease_position()
     }
+    Ok(())
 }

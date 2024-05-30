@@ -47,13 +47,13 @@ pub fn initialize_trade_token(ctx: Context<InitializeTradeToken>, discount: u128
     let state = &mut ctx.accounts.state;
     let trade_token = &mut ctx.accounts.trade_token.load_init()?;
     **trade_token = TradeToken {
-        mint: *ctx.accounts.trade_token_mint.key(),
-        oracle: *ctx.accounts.oracle.key(),
+        mint: ctx.accounts.trade_token_mint.key(),
+        oracle: ctx.accounts.oracle.key(),
         token_index: get_then_update_id!(state, number_of_trade_tokens),
         discount,
         liquidation_factor,
         decimals: ctx.accounts.trade_token_mint.decimals,
-        trade_token_vault: *trade_token.trade_token_vault,
+        trade_token_vault: *ctx.accounts.trade_token_vault.to_account_info().key,
     };
     Ok(())
 }

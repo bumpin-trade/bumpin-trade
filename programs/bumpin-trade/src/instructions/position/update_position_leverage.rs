@@ -106,16 +106,16 @@ pub fn handle_update_position_leverage(ctx: Context<UpdatePositionLeverage>, par
                 position_key,
                 is_add: false,
                 update_margin_amount: reduce_margin,
-            }, false, &trade_token, &mut oracle_map, &mut pool?, &market, &state)?;
+            }, false, &trade_token, &mut oracle_map, &mut pool, &market, &ctx.accounts.state)?;
             if position.cross_margin {
-                user.un_use_token(&position.margin_mint, reduce_margin_amount)?
+                user.un_use_token(&position.margin_mint, reduce_margin_amount)?;
             } else {
                 token::send_from_program_vault(
                     &ctx.accounts.token_program,
                     &ctx.accounts.pool_vault,
                     &ctx.accounts.user_token_account,
                     &ctx.accounts.bump_signer,
-                    ctx.accounts.state.load()?.bump_signer_nonce,
+                    ctx.accounts.state.bump_signer_nonce,
                     reduce_margin_amount,
                 )?;
             }
