@@ -8,6 +8,7 @@ use crate::state::infrastructure::user_token::UserToken;
 use crate::state::traits::Size;
 use crate::validate;
 use solana_program::msg;
+use crate::instructions::cal_utils;
 
 
 #[account(zero_copy(unsafe))]
@@ -49,9 +50,10 @@ impl User {
         Ok(self.user_stakes.get(pool_index).ok_or(CouldNotFindUserStake)?)
     }
 
-    pub fn sub_order_hold_in_usd(&mut self, amount: u128) {
+    pub fn sub_order_hold_in_usd(&mut self, amount: u128) -> BumpResult {
         validate!(self.hold >= amount,BumpErrorCode::AmountNotEnough.into());
-        self.hold -= amount;
+        self.hold = cal_utils::sub_u128(self.hold, amount)?;
+        Ok(())
     }
 
     pub fn add_order_hold_in_usd(&mut self, amount: u128) {
