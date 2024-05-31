@@ -81,7 +81,7 @@ impl<'a> PoolMap<'a> {
             }
         }
     }
-    pub fn load<'c>(account_info_iter: &'c mut Peekable<Iter<AccountInfo>>) -> BumpResult<PoolMap<'a>> {
+    pub fn load<'c>(account_info_iter: &'c mut Peekable<Iter<'a, AccountInfo<'a>>>) -> BumpResult<PoolMap<'a>> {
         let mut pool_map = PoolMap(BTreeMap::new());
         let pool_discriminator = Pool::discriminator();
         while let Some(account_info) = account_info_iter.peek() {
@@ -100,7 +100,7 @@ impl<'a> PoolMap<'a> {
 
             let pool_key = Pubkey::from(*array_ref![data, 8, 32]);
             let account_info = account_info_iter.next().safe_unwrap()?;
-            let account_loader: AccountLoader<Pool> = AccountLoader::try_from(account_info).or(Err(InvalidPoolAccount))?;
+            let account_loader: AccountLoader<'a, Pool> = AccountLoader::try_from(account_info).or(Err(InvalidPoolAccount))?;
 
             pool_map.0.insert(pool_key, account_loader);
         }

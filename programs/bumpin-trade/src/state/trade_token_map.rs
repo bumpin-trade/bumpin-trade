@@ -51,7 +51,7 @@ impl<'a> TradeTokenMap<'a> {
             }
         }
     }
-    pub fn load<'c>(account_info_iter: &'c mut Peekable<Iter<AccountInfo>>) -> BumpResult<TradeTokenMap<'a>> {
+    pub fn load<'c>(account_info_iter: &'c mut Peekable<Iter<'a, AccountInfo<'a>>>) -> BumpResult<TradeTokenMap<'a>> {
         let mut trade_token_vec: TradeTokenMap = TradeTokenMap(BTreeMap::new());
         let trade_token_discriminator = TradeToken::discriminator();
         while let Some(account_info) = account_info_iter.peek() {
@@ -70,9 +70,9 @@ impl<'a> TradeTokenMap<'a> {
 
             let trade_token_mint = Pubkey::from(*array_ref![data, 8, 32]);
             let account_info = account_info_iter.next().safe_unwrap()?;
-            let account_loader: AccountLoader<TradeToken> = AccountLoader::try_from(account_info).or(Err(InvalidTradeTokenAccount))?;
+            let account_loader: AccountLoader<'a, TradeToken> = AccountLoader::try_from(account_info).or(Err(InvalidTradeTokenAccount))?;
 
-            trade_token_vec.0.insert(trade_token_mint, account_loader.clone());
+            trade_token_vec.0.insert(trade_token_mint, account_loader);
         }
         Ok(trade_token_vec)
     }

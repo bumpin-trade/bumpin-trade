@@ -3,11 +3,9 @@ use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::ops::Deref;
 use std::slice::Iter;
-
 use anchor_lang::Discriminator;
-use anchor_lang::prelude::AccountLoader;
+use anchor_lang::prelude::*;
 use arrayref::array_ref;
-use solana_program::account_info::AccountInfo;
 use solana_program::msg;
 
 use crate::errors::{BumpErrorCode, BumpResult};
@@ -65,8 +63,8 @@ impl<'a> MarketMap<'a> {
 }
 
 impl<'a> MarketMap<'a> {
-    pub fn load<'b, 'c>(
-        account_info_iter: &'c mut Peekable<Iter<AccountInfo<'a>>>,
+    pub fn load<'c>(
+        account_info_iter: &'c mut Peekable<Iter<'a, AccountInfo<'a>>>,
     ) -> BumpResult<MarketMap<'a>> {
         let mut perp_market_map: MarketMap = MarketMap(BTreeMap::new());
         let market_discriminator: [u8; 8] = Market::discriminator();
@@ -81,15 +79,14 @@ impl<'a> MarketMap<'a> {
             }
             let account_discriminator = array_ref![data, 0, 8];
             if account_discriminator != &market_discriminator {
-                //check the discriminator
                 continue;
             }
-            let symbol = array_ref![data, 8, 32];
+            let symbol = *array_ref![data, 8, 32];
 
-            let account_info = account_info_iter.next().safe_unwrap()?;
-            let account_loader: AccountLoader<Market> =
+            let account_info = account_info_iter.next().ok_or(BumpErrorCode::InvalidMarketAccount)?;
+            let account_loader: AccountLoader<'a, Market> =
                 AccountLoader::try_from(account_info).or(Err(BumpErrorCode::InvalidMarketAccount))?;
-            perp_market_map.0.insert(*symbol, account_loader);
+            perp_market_map.0.insert(symbol, account_loader);
         }
         Ok(perp_market_map)
     }

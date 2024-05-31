@@ -42,13 +42,14 @@ impl<'a> UserProcessor<'a> {
             let price_data = price_map.get_price_data(&user_position.index_mint)?;
             let market = market_map.get_ref(&user_position.symbol)?;
             let pool = pool_map.get_ref(&user_position.margin_mint)?;
+            total_im_usd = total_im_usd.safe_add(user_position.initial_margin_usd)?;
 
             let position_processor = PositionProcessor { position: &mut user_position };
-
-            total_un_pnl_usd = total_un_pnl_usd.safe_add(position_processor.get_position_un_pnl_usd(price_data.price)?)?;
-            total_position_fee = total_position_fee.safe_add(position_processor.get_position_fee(&market, &pool, price_map)?)?;
-            total_im_usd = total_im_usd.safe_add(user_position.initial_margin_usd)?;
-            total_position_mm = total_position_mm.safe_add(position_processor.get_position_mm(&market, state)?)?;
+            {
+                total_un_pnl_usd = total_un_pnl_usd.safe_add(position_processor.get_position_un_pnl_usd(price_data.price)?)?;
+                total_position_fee = total_position_fee.safe_add(position_processor.get_position_fee(&market, &pool, price_map)?)?;
+                total_position_mm = total_position_mm.safe_add(position_processor.get_position_mm(&market, state)?)?;
+            }
             drop(position_processor);
         }
         Ok((total_im_usd, total_un_pnl_usd, total_position_fee, total_position_mm))
@@ -100,8 +101,13 @@ impl<'a> UserProcessor<'a> {
             total_borrowing_value = total_borrowing_value.safe_add(token_borrowing_value?)?;
         }
 
-        for mut user_position in self.user.user_positions {
-            let position_processor = PositionProcessor { position: &mut user_position };
+        let positions_count = self.user.user_positions.len();
+
+        // 使用索引进行迭代，避免重复借用
+        for i in 0..positions_count {
+            // 获取 user_position 的可变引用
+            let user_position = &mut self.user.user_positions[i];
+            let position_processor = PositionProcessor { position: user_position };
             if user_position.cross_margin {
                 let trade_token = trade_token_map.get_trade_token(&user_position.margin_mint)?;
                 let mint_price_data = oracle_map.get_price_data(&user_position.index_mint)?;

@@ -44,7 +44,7 @@ pub struct Withdraw<'info> {
 pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) -> Result<()> {
     validate!(amount>0, BumpErrorCode::AmountZero);
 
-    let mut user = ctx.accounts.user.load_mut()?;
+    let mut user = &mut ctx.accounts.user.load_mut()?;
 
     let mut user_token = user.get_user_token_mut(&ctx.accounts.user_token_account.mint.key())?;
 
@@ -58,7 +58,7 @@ pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) -
     let withdraw_usd = price_data.price.cast::<i128>()?
         .safe_mul(amount.cast()?)?;
 
-    let mut user_processor = UserProcessor { user.user };
+    let mut user_processor = UserProcessor { user };
     let available_value = user_processor.get_available_value(&mut oracle_map, &trade_token_map)?;
     validate!(available_value>withdraw_usd, BumpErrorCode::UserNotEnoughValue)?;
 
@@ -72,10 +72,10 @@ pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) -
         amount,
     )?;
 
-    user_token.sub_token_amount(amount)?;
+    //   user_token.sub_token_amount(amount)?;
 
     user_processor.update_cross_position_balance(&ctx.accounts.user_token_account.mint,
                                                  amount,
-                                                 false);
+                                                 false)?;
     Ok(())
 }

@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::errors::BumpErrorCode::{CouldNotFindUserPosition, CouldNotFindUserStake, CouldNotFindUserToken};
+use crate::errors::BumpErrorCode::{CouldNotFindUserOrder, CouldNotFindUserPosition, CouldNotFindUserStake, CouldNotFindUserToken};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::state::infrastructure::user_order::{OrderSide, OrderStatus, PositionSide, UserOrder};
 use crate::state::infrastructure::user_position::{PositionStatus, UserPosition};
@@ -122,9 +122,9 @@ impl User {
     }
 
 
-    pub fn find_order_by_id(&mut self, order_id: u128) -> BumpResult<&mut UserOrder> {
-        Ok(self.user_orders.iter().find(|order| order.order_id
-            == order_id).as_mut().unwrap())
+    pub fn get_user_order_mut(&mut self, order_id: u128) -> BumpResult<&mut UserOrder> {
+        let order_index = self.user_orders.iter().position(|user_order: &UserOrder| user_order.order_id == order_id).ok_or(CouldNotFindUserOrder)?;
+        Ok(&mut self.user_orders[order_index])
     }
 
     pub fn has_other_short_order(&self, symbol: [u8; 32], margin_token: Pubkey, is_cross_margin: bool) -> BumpResult<bool> {
