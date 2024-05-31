@@ -443,7 +443,7 @@ impl PositionProcessor<'_> {
             return Ok(());
         }
 
-        let mut add_funds;
+        let add_funds;
         if response.settle_fee >= 0i128 {
             add_funds = if response.decrease_margin > (response.settle_fee.safe_add(response.pool_pnl_token)?.abs().cast::<u128>()?) {
                 response.decrease_margin.safe_sub(response.settle_fee.safe_add(response.pool_pnl_token.abs().cast::<i128>()?)?.cast::<u128>()?)?
@@ -545,7 +545,7 @@ impl PositionProcessor<'_> {
         let mut reduce_amount = change_token_amount;
         for mut position in user.user_positions {
             if position.margin_mint.eq(token_mint) && position.cross_margin {
-                let mut change_amount = 0u128;
+                let mut change_amount;
 
                 if change_token_amount > 0i128 {
                     let borrowing_margin = position.initial_margin_usd

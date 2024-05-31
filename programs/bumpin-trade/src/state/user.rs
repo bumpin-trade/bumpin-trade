@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::errors::BumpErrorCode::{CouldNotFindUserOrder, CouldNotFindUserPosition, CouldNotFindUserStake, CouldNotFindUserToken};
+use crate::errors::BumpErrorCode::{CouldNotFindUserPosition, CouldNotFindUserStake, CouldNotFindUserToken};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::state::infrastructure::user_order::{OrderSide, OrderStatus, PositionSide, UserOrder};
 use crate::state::infrastructure::user_position::{PositionStatus, UserPosition};
@@ -122,9 +122,9 @@ impl User {
     }
 
 
-    pub fn get_user_order_mut(&mut self, order_id: u128) -> BumpResult<&mut UserOrder> {
-        let order_index = self.user_orders.iter().position(|user_order: &UserOrder| user_order.order_id == order_id).ok_or(CouldNotFindUserOrder)?;
-        Ok(&mut self.user_orders[order_index])
+    pub fn find_order_by_id(&mut self, order_id: u128) -> BumpResult<&mut UserOrder> {
+        let index = self.get_order_index_by_id(order_id);
+        Ok(&mut self.user_orders[index])
     }
 
     pub fn has_other_short_order(&self, symbol: [u8; 32], margin_token: Pubkey, is_cross_margin: bool) -> BumpResult<bool> {
@@ -168,31 +168,19 @@ impl User {
     }
 
 
-    pub fn add_position(&mut self, position: &mut UserPosition, index: usize) -> BumpResult<> {
-        let mut exist_position = self.user_positions.get_mut(index).ok_or(BumpErrorCode::AmountNotEnough)?;
-        exist_position = position;
+    pub fn add_position(&mut self, position: UserPosition, index: usize) -> BumpResult<> {
+        self.user_positions[index] = position;
         Ok(())
     }
 
-    pub fn add_order(&mut self, order: &mut UserOrder, index: usize) -> BumpResult<> {
-        let mut exist_order = self.user_orders.get_mut(index).ok_or(BumpErrorCode::OrderNotExist)?;
-        exist_order = order;
+    pub fn add_order(&mut self, order: UserOrder, index: usize) -> BumpResult<> {
+        self.user_orders[index] = order;
         Ok(())
     }
 
     pub fn delete_order(&mut self, order_id: u128) -> BumpResult<> {
-        let mut order_index = -1i8;
-        for (index, user_order) in self.user_orders.iter().enumerate() {
-            if user_order.order_id == order_id {
-                order_index = index as i8;
-            }
-        }
-        if order_index == -1i8 {
-            return Err(BumpErrorCode::AmountNotEnough);
-        }
-
-        let mut exist_order = self.user_orders.get_mut(order_index as usize).ok_or(BumpErrorCode::AmountNotEnough)?;
-        exist_order = &mut UserOrder::default();
+        let order_index = self.get_order_index_by_id(order_id);
+        self.user_orders[order_index] = UserOrder::default();
         Ok(())
     }
 
@@ -217,6 +205,10 @@ impl User {
             }
         }
         Ok(())
+    }
+
+    fn get_order_index_by_id(&self, order_id: u128) -> usize {
+        self.user_orders.iter().position(|user_order| user_order.order_id == order_id).ok_or(BumpErrorCode::OrderNotExist).unwrap()
     }
 }
 

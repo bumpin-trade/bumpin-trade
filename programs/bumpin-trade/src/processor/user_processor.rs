@@ -161,7 +161,7 @@ impl<'a> UserProcessor<'a> {
         Ok(())
     }
 
-    pub fn cancel_stop_orders(&self, order_id: u128, symbol: [u8; 32], margin_token: &Pubkey, is_cross_margin: bool) -> BumpResult<()> {
+    pub fn cancel_stop_orders(&mut self, order_id: u128, symbol: [u8; 32], margin_token: &Pubkey, is_cross_margin: bool) -> BumpResult<()> {
         for user_order in self.user.user_orders {
             if user_order.order_id == order_id {
                 continue;
@@ -173,7 +173,7 @@ impl<'a> UserProcessor<'a> {
         Ok(())
     }
 
-    pub fn cancel_all_orders(&mut self) -> BumpResult<()> {
+    pub fn cancel_all_orders(&self) -> BumpResult<()> {
         for (index, user_order) in self.user.user_orders.iter().enumerate() {
             if user_order.cross_margin {
                 self.user.sub_order_hold_in_usd(user_order.order_margin)?;
@@ -186,7 +186,7 @@ impl<'a> UserProcessor<'a> {
     pub fn sub_token_with_liability(&mut self, token: &Pubkey, amount: u128) -> BumpResult<u128> {
         let mut liability = 0u128;
         validate!(self.user.user_tokens.map(|mint|mint.token_mint).contains(&token), BumpErrorCode::AmountNotEnough.into());
-        let mut token_balance = self.user.user_tokens.iter_mut().find(|mint| mint.token_mint.eq(token)).ok_or(CouldNotFindUserToken)?;
+        let token_balance = self.user.user_tokens.iter_mut().find(|mint| mint.token_mint.eq(token)).ok_or(CouldNotFindUserToken)?;
         if token_balance.amount >= amount {
             token_balance.amount = token_balance.amount.safe_sub(amount)?;
         } else if token_balance.amount > 0u128 {
@@ -204,13 +204,13 @@ impl<'a> UserProcessor<'a> {
 
     pub fn un_use_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
         validate!(self.user.user_tokens.map(|mint|mint.token_mint).contains(&token), BumpErrorCode::AmountNotEnough);
-        let mut token_balance = self.user.user_tokens.iter_mut().find(|mint| mint.token_mint.eq(token)).ok_or(BumpErrorCode::AmountNotEnough).unwrap();
+        let token_balance = self.user.user_tokens.iter_mut().find(|mint| mint.token_mint.eq(token)).ok_or(BumpErrorCode::AmountNotEnough).unwrap();
         validate!(token_balance.used_amount >= amount, BumpErrorCode::AmountNotEnough);
         token_balance.used_amount = token_balance.used_amount.safe_sub(amount)?;
         Ok(())
     }
 
-    pub fn add_token(&self, token: &Pubkey, amount: u128) -> BumpResult<()> {
+    pub fn add_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
         let user_token = self.user.get_user_token_mut(token)?;
         user_token.add_token_amount(amount)?;
         Ok(())

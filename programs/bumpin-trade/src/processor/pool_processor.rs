@@ -29,8 +29,8 @@ impl<'a> PoolProcessor<'_> {
             stake_amount = cal_utils::token_to_usd_u(mint_amount, trade_token.decimals, oracle_price_data.price)?.
                 safe_div(self.get_pool_net_price(oracle_map, market_vec)?)?;
         }
-        self.pool.add_supply(stake_amount);
-        self.pool.add_amount(mint_amount);
+        self.pool.add_supply(stake_amount)?;
+        self.pool.add_amount(mint_amount)?;
         Ok(stake_amount)
     }
     pub fn un_stake(&mut self, un_stake_amount: u128, oracle_map: &mut OracleMap, pool_value: u128) -> BumpResult<u128> {

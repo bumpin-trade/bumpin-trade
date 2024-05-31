@@ -98,7 +98,7 @@ pub fn handle_place_order(ctx: Context<PlaceOrder>, order: PlaceOrderParams) -> 
     }
 
     let market = ctx.accounts.market.load()?;
-    let user = ctx.accounts.user_account.load_mut()?;
+    let mut user = ctx.accounts.user_account.load_mut()?;
     let pool = ctx.accounts.pool.load()?;
     let token = &ctx.accounts.margin_token;
     validate!(validate_place_order(order, &token.mint, &market, &pool, &ctx.accounts.state)?, BumpErrorCode::InvalidParam.into());
@@ -108,7 +108,7 @@ pub fn handle_place_order(ctx: Context<PlaceOrder>, order: PlaceOrderParams) -> 
     }
 
     let order_id = get_then_update_id!(user, next_order_id);
-    let mut user_order = UserOrder {
+    let user_order = UserOrder {
         authority: user.authority,
         order_id,
         symbol: order.symbol,
@@ -138,7 +138,7 @@ pub fn handle_place_order(ctx: Context<PlaceOrder>, order: PlaceOrderParams) -> 
     } else {
         //store order, wait to execute
         let next_index = user.next_usable_order_index();
-        user.add_order(&mut user_order, next_index?)?;
+        user.add_order(user_order, next_index?)?;
     }
     Ok(())
 }
@@ -183,9 +183,10 @@ fn validate_place_order(order: PlaceOrderParams, token: &Pubkey, market: &Ref<Ma
     Ok(res)
 }
 
-pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder, order_id: u128, execute_from_remote: bool) -> anchor_lang::Result<()> {
+pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder, order_id: u128, execute_from_remote: bool) -> Result<()> {
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
-    let oracle_map = &mut OracleMap::load(remaining_accounts_iter).as_ref().unwrap();
+    let binding = OracleMap::load(remaining_accounts_iter);
+    let oracle_map = &mut binding.as_ref().unwrap();
     let trade_token_map = &mut TradeTokenMap::load(remaining_accounts_iter)?;
 
     let mut user = ctx.accounts.user_account.load_mut()?;
@@ -196,7 +197,7 @@ pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder,
     let mut pool = ctx.accounts.pool.load_mut()?;
     let mut pool_processor = PoolProcessor { pool: &mut pool };
 
-    let order = if execute_from_remote { user.get_user_order_mut(order_id)? } else { &mut user_order };
+    let order = if execute_from_remote { user.find_order_by_id(order_id)? } else { &mut user_order };
 
     //validate order
     validate_execute_order(order, &market, &pool)?;
@@ -232,7 +233,7 @@ pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder,
                 decimals = market.index_mint_key_decimal;
             }
 
-            let (order_margin, order_margin_from_balance) = execute_increase_order_margin(order, &margin_token.mint, decimals, user.deref_mut(), margin_token_price, oracle_map, trade_token_map, &ctx.accounts.state.into_inner());
+            let (order_margin, order_margin_from_balance) = execute_increase_order_margin(order, &margin_token.mint, decimals, user.deref_mut(), margin_token_price, oracle_map, trade_token_map, &ctx.accounts.state);
             if position.position_size == 0u128 && position.status.eq(&PositionStatus::INIT) {
                 if user.has_other_order(order.order_id)? && user.get_order_leverage(order.symbol, order.order_side, order.cross_margin, order.leverage)? == order.leverage {
                     return Err(BumpErrorCode::AmountNotEnough.into());
@@ -246,7 +247,7 @@ pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder,
                 position.set_is_long(order.order_side.eq(&OrderSide::LONG))?;
                 position.set_cross_margin(order.cross_margin)?;
                 position.set_status(PositionStatus::USING)?;
-                user.add_position(&mut position, user.next_usable_position_index()?)?;
+                user.add_position(position, user.next_usable_position_index()?)?;
             } else if position.leverage != order.leverage {
                 return Err(BumpErrorCode::LeverageIsNotAllowed.into());
             }
@@ -298,7 +299,7 @@ fn execute_increase_order_margin(order: &mut UserOrder,
                                  margin_token_price: u128,
                                  oracle_map: &mut OracleMap,
                                  trade_token_map: &mut TradeTokenMap,
-                                 state: &State) -> (BumpResult<u128>, BumpResult<u128>) {
+                                 state: &Account<State>) -> (BumpResult<u128>, BumpResult<u128>) {
     let order_margin;
     let order_margin_from_balance;
 

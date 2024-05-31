@@ -46,7 +46,7 @@ pub fn deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> anchor_
     )?;
     ctx.accounts.trade_token_vault.reload()?;
 
-    let mut user_token = user.get_user_token_mut(&ctx.accounts.trade_token_vault.mint.key())?;
+    let user_token = user.get_user_token_mut(&ctx.accounts.trade_token_vault.mint.key())?;
     user_token.add_token_amount(amount)?;
 
     let repay_amount = user_token.repay_liability(amount)?;
@@ -56,7 +56,7 @@ pub fn deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> anchor_
 
         let mut user_processor = UserProcessor { user };
         user_processor.update_cross_position_balance(&ctx.accounts.user_token_account.mint,
-                                                     left_amount, true);
+                                                     left_amount, true)?;
     }
     Ok(())
 }

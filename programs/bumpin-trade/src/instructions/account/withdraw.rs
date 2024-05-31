@@ -46,7 +46,7 @@ pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) -
 
     let mut user = &mut ctx.accounts.user.load_mut()?;
 
-    let mut user_token = user.get_user_token_mut(&ctx.accounts.user_token_account.mint.key())?;
+    let user_token = user.get_user_token_mut(&ctx.accounts.user_token_account.mint.key())?;
 
     validate!(user_token.amount>amount, BumpErrorCode::AmountNotEnough)?;
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();

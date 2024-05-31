@@ -68,8 +68,8 @@ pub fn handle_update_position_leverage(ctx: Context<UpdatePositionLeverage>, par
 
     if position.position_size != 0u128 {
         if position.leverage > params.leverage {
-            let mut add_margin_amount = 0u128;
-            let mut add_initial_margin_from_portfolio = 0u128;
+            let mut add_margin_amount;
+            let mut add_initial_margin_from_portfolio;
             if position.cross_margin {
                 position.set_leverage(params.leverage)?;
                 let new_initial_margin_in_usd = cal_utils::div_rate_u(position.position_size, position.leverage)?;
