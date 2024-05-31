@@ -14,7 +14,7 @@ pub struct Market {
     pub pool_mint_key: Pubkey,
     pub index: u128,
     pub index_mint_key: Pubkey,
-    pub index_mint_key_decimal: u128,
+    pub index_mint_key_decimal: u8,
     pub stable_pool_key: Pubkey,
     pub stable_pool_mint_key: Pubkey,
     pub long_open_interest: MarketPosition,

@@ -43,21 +43,22 @@ impl User {
             .ok_or(CouldNotFindUserToken)?)
     }
 
-    pub fn get_user_stake_mut(&mut self, pool_index: u16) -> BumpResult<&mut UserStake> {
+    pub fn get_user_stake_mut(&mut self, pool_index: usize) -> BumpResult<&mut UserStake> {
         Ok(self.user_stakes.get_mut(pool_index).ok_or(CouldNotFindUserStake)?)
     }
     pub fn get_user_stake_ref(&mut self, pool_index: usize) -> BumpResult<&UserStake> {
         Ok(self.user_stakes.get(pool_index).ok_or(CouldNotFindUserStake)?)
     }
 
-    pub fn sub_order_hold_in_usd(&mut self, amount: u128) -> BumpResult {
+    pub fn sub_order_hold_in_usd(&mut self, amount: u128) -> BumpResult<()> {
         validate!(self.hold >= amount,BumpErrorCode::AmountNotEnough.into());
         self.hold = cal_utils::sub_u128(self.hold, amount)?;
         Ok(())
     }
 
-    pub fn add_order_hold_in_usd(&mut self, amount: u128) {
+    pub fn add_order_hold_in_usd(&mut self, amount: u128) -> BumpResult<()> {
         self.hold += amount;
+        Ok(())
     }
 
     pub fn use_token(&mut self, token: &Pubkey, amount: u128, is_check: bool) -> BumpResult<u128> {
@@ -167,22 +168,16 @@ impl User {
     }
 
 
-    pub fn add_position(&self, position: UserPosition, index: usize) -> BumpResult<> {
-        let exist_position = self.user_positions.get_mut(index).ok_or(BumpErrorCode::AmountNotEnough)?;
-        if let Some(exist_position) = exist_position {
-            *exist_position = position;
-            return Ok(());
-        }
-        Err(BumpErrorCode::AmountNotEnough)
+    pub fn add_position(&self, position: &mut UserPosition, index: usize) -> BumpResult<> {
+        let mut exist_position = self.user_positions.get_mut(index).ok_or(BumpErrorCode::AmountNotEnough)?;
+        exist_position = position;
+        Ok(())
     }
 
     pub fn add_order(&self, order: &mut UserOrder, index: usize) -> BumpResult<> {
-        let exist_order = self.user_orders.get_mut(index).ok_or(BumpErrorCode::OrderNotExist)?;
-        if let Some(exist_order) = exist_order {
-            *exist_order = order;
-            return Ok(());
-        }
-        Err(BumpErrorCode::OrderNotExist)
+        let mut exist_order = self.user_orders.get_mut(index).ok_or(BumpErrorCode::OrderNotExist)?;
+        exist_order = order;
+        Ok(())
     }
 
     pub fn delete_order(&self, order_id: u128) -> BumpResult<> {
@@ -196,12 +191,9 @@ impl User {
             return Err(BumpErrorCode::AmountNotEnough);
         }
 
-        let exist_order = self.user_orders.get_mut(order_index).ok_or(BumpErrorCode::AmountNotEnough)?;
-        if let Some(exist_order) = exist_order {
-            *exist_order = UserOrder::default();
-            return Ok(());
-        }
-        Err(BumpErrorCode::AmountNotEnough)
+        let mut exist_order = self.user_orders.get_mut(order_index as usize).ok_or(BumpErrorCode::AmountNotEnough)?;
+        exist_order = &mut UserOrder::default();
+        Ok(())
     }
 
     pub fn get_order_leverage(&self, symbol: [u8; 32], order_side: OrderSide, is_cross_margin: bool, leverage: u128) -> BumpResult<u128> {

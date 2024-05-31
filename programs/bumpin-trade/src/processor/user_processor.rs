@@ -104,11 +104,12 @@ impl<'a> UserProcessor<'a> {
             let position_processor = PositionProcessor { position: &mut user_position };
             if user_position.cross_margin {
                 let trade_token = trade_token_map.get_trade_token(&user_position.margin_mint)?;
-                let oracle_price_data = oracle_map.get_price_data(&user_position.index_mint)?;
+                let mint_price_data = oracle_map.get_price_data(&user_position.index_mint)?;
+                let index_price_data = oracle_map.get_price_data(&user_position.margin_mint)?;
                 total_im_from_portfolio_value = total_im_from_portfolio_value.
                     safe_add(user_position.initial_margin_usd_from_portfolio)?;
 
-                let position_un_pnl = position_processor.get_position_un_pnl_token(&trade_token, oracle_price_data.price, true)?;
+                let position_un_pnl = position_processor.get_position_un_pnl_token(&trade_token, mint_price_data.price, index_price_data.price)?;
                 total_un_pnl_value = total_un_pnl_value.safe_add(position_un_pnl)?;
 
                 total_mm_usd_value = total_mm_usd_value.safe_add(user_position.mm_usd)?;
@@ -124,7 +125,7 @@ impl<'a> UserProcessor<'a> {
         Ok(available_value)
     }
 
-    pub fn update_cross_position_balance(&mut self, mint: &Pubkey, amount: u128, add_amount: bool) -> BumpResult {
+    pub fn update_cross_position_balance(&mut self, mint: &Pubkey, amount: u128, add_amount: bool) -> BumpResult<()> {
         let mut reduce_amount = amount;
         for user_position in self.user.user_positions.iter_mut() {
             if user_position.cross_margin && user_position.margin_mint.eq(mint) && reduce_amount > 0 {
@@ -141,16 +142,16 @@ impl<'a> UserProcessor<'a> {
     }
 
     pub fn delete_position(&self, position_key: &Pubkey) -> BumpResult<> {
-        let mut position_index = -1;
+        let mut position_index = -1i8;
         for (index, position) in self.user.user_positions.iter().enumerate() {
             if position.position_key.eq(position_key) {
-                position_index = index;
+                position_index = index as i8;
             }
         }
-        if position_index == -1 {
+        if position_index == -1i8 {
             return Err(BumpErrorCode::AmountNotEnough);
         }
-        self.user.user_positions[position_index] = UserPosition::default();
+        self.user.user_positions[position_index as usize] = UserPosition::default();
         Ok(())
     }
 
@@ -197,13 +198,13 @@ impl<'a> UserProcessor<'a> {
 
     pub fn un_use_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
         validate!(self.user.user_tokens.map(|mint|mint.token_mint).contains(&token), BumpErrorCode::AmountNotEnough);
-        let mut token_balance = self.user.user_tokens.iter_mut().find(|mint| mint.token_mint.eq(token))?;
+        let mut token_balance = self.user.user_tokens.iter_mut().find(|mint| mint.token_mint.eq(token)).ok_or(BumpErrorCode::AmountNotEnough).unwrap();
         validate!(token_balance.used_amount >= amount, BumpErrorCode::AmountNotEnough);
         token_balance.used_amount = token_balance.used_amount.safe_sub(amount)?;
         Ok(())
     }
 
-    pub fn add_token(&self, token: &Pubkey, amount: u128) -> BumpResult {
+    pub fn add_token(&self, token: &Pubkey, amount: u128) -> BumpResult<()> {
         let user_token = self.user.get_user_token_mut(token)?;
         user_token.add_token_amount(amount)?;
         Ok(())

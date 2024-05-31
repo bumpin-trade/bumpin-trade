@@ -1,7 +1,6 @@
 use std::cell::RefMut;
 use std::collections::BTreeMap;
 use std::iter::Peekable;
-use std::panic::Location;
 use std::slice::Iter;
 
 use anchor_lang::Discriminator;
@@ -34,13 +33,6 @@ impl<'a> MarketMap<'a> {
     pub fn get_mut_ref(&self, symbol: &[u8; 32]) -> BumpResult<RefMut<Market>> {
         let loader = match self.0.get(symbol) {
             None => {
-                let caller = Location::caller();
-                msg!(
-                    "Could not find pool {} at {}:{}",
-                    symbol,
-                    caller.file(),
-                    caller.line()
-                );
                 return Err(TradeTokenNotFind);
             }
             Some(loader) => loader
@@ -48,14 +40,7 @@ impl<'a> MarketMap<'a> {
         match loader.load_mut() {
             Ok(market) => Ok(market),
             Err(e) => {
-                let caller = Location::caller();
                 msg!("{:?}", e);
-                msg!(
-                    "Could not load pool {} at {}:{}",
-                    symbol,
-                    caller.file(),
-                    caller.line()
-                );
                 Err(CouldNotLoadTradeTokenData)
             }
         }
@@ -66,28 +51,13 @@ impl<'a> MarketMap<'a> {
     pub fn get_ref(&self, symbol: &[u8; 32]) -> BumpResult<RefMut<Market>> {
         let loader = match self.0.get(symbol) {
             None => {
-                let caller = Location::caller();
-                msg!(
-                    "Could not find pool {} at {}:{}",
-                    symbol,
-                    caller.file(),
-                    caller.line()
-                );
                 return Err(TradeTokenNotFind);
             }
             Some(loader) => loader
         };
-        match loader.load() {
+        match loader.load_mut() {
             Ok(market) => Ok(market),
             Err(e) => {
-                let caller = Location::caller();
-                msg!("{:?}", e);
-                msg!(
-                    "Could not load pool {} at {}:{}",
-                    symbol,
-                    caller.file(),
-                    caller.line()
-                );
                 Err(CouldNotLoadTradeTokenData)
             }
         }
@@ -114,12 +84,12 @@ impl<'a> MarketMap<'a> {
                 //check the discriminator
                 continue;
             }
-            let symbol = array_ref![data, 8, 32]?;
+            let symbol = array_ref![data, 8, 32];
 
             let account_info = account_info_iter.next().safe_unwrap()?;
             let account_loader: AccountLoader<Market> =
                 AccountLoader::try_from(account_info).or(Err(BumpErrorCode::InvalidMarketAccount))?;
-            perp_market_map.0.insert(symbol, account_loader);
+            perp_market_map.0.insert(*symbol, account_loader);
         }
         Ok(perp_market_map)
     }

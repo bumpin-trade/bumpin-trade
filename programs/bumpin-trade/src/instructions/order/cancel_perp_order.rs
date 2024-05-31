@@ -46,14 +46,14 @@ pub fn handle_cancel_order(ctx: Context<CancelOrderCtx>, order_id: u128, reason_
     }
     user.delete_order(order_id)?;
     if order.position_side.eq(&PositionSide::INCREASE) && order.cross_margin {
-        user.sub_order_hold_in_usd(order.order_size)
+        user.sub_order_hold_in_usd(order.order_size)?;
     } else if order.position_side.eq(&PositionSide::INCREASE) && !order.cross_margin {
         token::send_from_program_vault(
             &ctx.accounts.token_program,
             &ctx.accounts.pool_vault,
             &ctx.accounts.user_token_account,
             &ctx.accounts.bump_signer,
-            ctx.accounts.state.load()?.bump_signer_nonce,
+            ctx.accounts.state.bump_signer_nonce,
             order.order_margin,
         )?;
     }

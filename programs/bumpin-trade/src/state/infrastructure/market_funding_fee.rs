@@ -41,7 +41,7 @@ impl MarketFundingFee {
     }
     pub fn update_market_funding_fee_rate(&mut self, short_funding_fee_amount_per_size_delta: i128, long_funding_fee_amount_per_size_delta: i128, fee_durations: u128) -> BumpResult<()> {
         self.short_funding_fee_amount_per_size = short_funding_fee_amount_per_size_delta.
-            safe_add(self.short_funding_fee_amount_per_size.cast()?)?.
+            safe_add(self.short_funding_fee_amount_per_size.cast::<i128>()?)?.
             cast::<i128>()?;
 
         self.long_funding_fee_amount_per_size = long_funding_fee_amount_per_size_delta.
@@ -49,11 +49,11 @@ impl MarketFundingFee {
             cast::<i128>()?;
 
         self.long_funding_fee_rate = long_funding_fee_amount_per_size_delta.
-            safe_div(fee_durations.cast()?)?.
+            safe_div(fee_durations.cast::<i128>()?)?.
             safe_mul(3600i128)?;
 
         self.short_funding_fee_rate = short_funding_fee_amount_per_size_delta.
-            safe_div(fee_durations.cast()?)?.
+            safe_div(fee_durations.cast::<i128>()?)?.
             safe_mul(3600i128)?;
         self.update_last_update()?;
         Ok(())

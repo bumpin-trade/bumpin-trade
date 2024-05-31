@@ -1,4 +1,5 @@
 use std::cell::Ref;
+use std::ops::{Deref, DerefMut};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
@@ -43,7 +44,7 @@ pub struct PlaceOrder<'info> {
 
     #[account(
         mut,
-        constraint = pool.load() ?.pool_mint = market.load() ?.pool_mint_key
+        constraint = pool.load() ?.pool_mint == market.load() ?.pool_mint_key
     )]
     pub pool: AccountLoader<'info, Pool>,
 
@@ -98,10 +99,10 @@ pub fn handle_place_order(ctx: Context<PlaceOrder>, order: PlaceOrderParams) -> 
 
     let market = ctx.accounts.market.load()?;
     let mut user = ctx.accounts.user_account.load()?;
-    let state = ctx.accounts.state;
+    let state = ctx.accounts.state.into_inner();
     let pool = ctx.accounts.pool.load()?;
     let token = &ctx.accounts.margin_token;
-    validate!(validate_place_order(order, &token.mint, &market, &pool, &state), BumpErrorCode::InvalidParam.into());
+    validate!(validate_place_order(order, &token.mint, &market, &pool, &state)?, BumpErrorCode::InvalidParam.into());
 
     if user.has_other_short_order(order.symbol, token.mint, order.is_cross_margin)? {
         return Err(BumpErrorCode::OnlyOneShortOrderAllowed.into());
@@ -185,8 +186,8 @@ fn validate_place_order(order: PlaceOrderParams, token: &Pubkey, market: &Ref<Ma
 
 pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder, order_id: u128, execute_from_remote: bool) -> anchor_lang::Result<()> {
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
-    let mut oracle_map = OracleMap::load(remaining_accounts_iter).as_ref()?.borrow_mut();
-    let trade_token_map = TradeTokenMap::load(remaining_accounts_iter)?;
+    let oracle_map = &mut OracleMap::load(remaining_accounts_iter).as_ref().unwrap();
+    let trade_token_map = &mut TradeTokenMap::load(remaining_accounts_iter)?;
 
     let mut user = ctx.accounts.user_account.load_mut()?;
     let margin_token = &ctx.accounts.margin_token;
@@ -194,7 +195,7 @@ pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder,
     let trade_token = ctx.accounts.trade_token.load()?;
     let mut market_processor = MarketProcessor { market: &mut market };
     let mut pool = ctx.accounts.pool.load_mut()?;
-    let state = ctx.accounts.state.load_mut()?;
+    let state = &mut ctx.accounts.state.into_inner();
     let mut pool_processor = PoolProcessor { pool: &mut pool };
 
     let order = if execute_from_remote { user.find_order_by_id(order_id)? } else { &mut user_order };
@@ -203,25 +204,25 @@ pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder,
     validate_execute_order(order, &market, &pool)?;
 
     let is_long = OrderSide::LONG == order.order_side;
-    let execute_price = get_execution_price(oracle_map.borrow_mut(), order, market.index_mint_key)?;
+    let execute_price = get_execution_price(oracle_map, order, market.index_mint_key)?;
 
     let position_option = user.find_position_by_seed(&user.authority, market.symbol, &margin_token.mint, order.cross_margin, ctx.program_id)?;
     let mut position;
     match position_option {
         None => { position = UserPosition::default() }
-        Some(pos) => { position = if pos.status.eq(&PositionStatus::INIT) { UserPosition::default() } else { pos? } }
+        Some(pos) => { position = if pos.status.eq(&PositionStatus::INIT) { UserPosition::default() } else { *pos } }
     }
 
     //update funding_fee_rate and borrowing_fee_rate
-    market_processor.update_market_funding_fee_rate(&state, oracle_map);
-    pool_processor.update_pool_borrowing_fee_rate();
+    market_processor.update_market_funding_fee_rate(&state, oracle_map)?;
+    pool_processor.update_pool_borrowing_fee_rate()?;
 
     let mut position_processor = PositionProcessor { position: &mut position };
 
     //do execute order and change position, cal fee....
     match order.position_side {
         PositionSide::NONE => { Err(BumpErrorCode::AmountNotEnough) }
-        PositionSide::INCREASE => {
+        PositionSide::INCREASE => Ok({
             let margin_token_price;
             let decimals;
 
@@ -229,14 +230,14 @@ pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder,
                 margin_token_price = execute_price;
                 decimals = trade_token.decimals;
             } else {
-                margin_token_price = oracle_map.unwrap().get_price_data(margin_token.mint)?.price;
+                margin_token_price = oracle_map.get_price_data(&margin_token.mint)?.price;
                 decimals = market.index_mint_key_decimal;
             }
 
-            let (order_margin, order_margin_from_balance) = execute_increase_order_margin(order, margin_token.mint, decimals, user, margin_token_price, &mut oracle_map?, &trade_token_map, ctx.accounts.state.load()?);
+            let (order_margin, order_margin_from_balance) = execute_increase_order_margin(order, &margin_token.mint, decimals, user.deref_mut(), margin_token_price, oracle_map, trade_token_map, &ctx.accounts.state.into_inner());
             if position.position_size == 0u128 && position.status.eq(&PositionStatus::INIT) {
                 if user.has_other_order(order.order_id)? && user.get_order_leverage(order.symbol, order.order_side, order.cross_margin, order.leverage)? == order.leverage {
-                    return Err(BumpErrorCode::AmountNotEnough);
+                    return Err(BumpErrorCode::AmountNotEnough.into());
                 }
                 position.set_position_key(user.generate_position_key(&user.authority, order.symbol, &order.margin_token, order.cross_margin, ctx.program_id)?);
                 position.set_authority(user.authority);
@@ -247,9 +248,9 @@ pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder,
                 position.set_is_long(order.order_side.eq(&OrderSide::LONG));
                 position.set_cross_margin(order.cross_margin);
                 position.set_status(PositionStatus::USING);
-                user.add_position(position, user.next_usable_position_index())?;
+                user.add_position(&mut position, user.next_usable_position_index()?)?;
             } else if position.leverage != order.leverage {
-                return Err(BumpErrorCode::LeverageIsNotAllowed);
+                return Err(BumpErrorCode::LeverageIsNotAllowed.into());
             }
 
             position_processor.increase_position(IncreasePositionParams {
@@ -262,15 +263,15 @@ pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder,
                 is_long,
                 is_cross_margin: order.cross_margin,
                 decimals,
-            }, &trade_token, &user, &state, &market, &pool, &mut market_processor)?;
-        }
-        PositionSide::DECREASE => {
+            }, &trade_token, user.deref_mut(), state, market.deref_mut(), pool.deref_mut(), &mut market_processor)?;
+        }),
+        PositionSide::DECREASE => Ok({
             //decrease
-            if position.position_size == 0u128 || position.status.eq(PositionStatus::INIT) {
-                return Err(BumpErrorCode::InvalidParam);
+            if position.position_size == 0u128 || position.status.eq(&PositionStatus::INIT) {
+                return Err(BumpErrorCode::InvalidParam.into());
             }
             if position.is_long == is_long {
-                return Err(BumpErrorCode::InvalidParam);
+                return Err(BumpErrorCode::InvalidParam.into());
             }
 
             if position.position_size < order.order_size {
@@ -283,8 +284,8 @@ pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder,
                 margin_token: order.margin_token,
                 decrease_size: order.order_size,
                 execute_price,
-            }, trade_token, user, state, market, pool, oracle_map, ctx)?
-        }
+            }, trade_token.deref(), user.deref_mut(), state, market.deref_mut(), pool.deref_mut(), oracle_map, ctx)?
+        })
     }?;
     //delete order
     user.delete_order(order_id)?;
@@ -306,19 +307,19 @@ fn execute_increase_order_margin(order: &mut UserOrder,
     let mut user_processor = UserProcessor { user: &mut user };
 
     if order.cross_margin {
-        let available_value = user_processor.get_available_value(oracle_map, trade_token_map)?;
+        let available_value = user_processor.get_available_value(oracle_map, trade_token_map).unwrap();
         if available_value < 0i128 {
-            let fix_order_margin_in_usd = order.order_size.cast::<i128>()?.safe_add(available_value)?.cast::<i128>()?;
+            let fix_order_margin_in_usd = order.order_size.cast::<i128>().unwrap().safe_add(available_value).unwrap().cast::<i128>().unwrap();
             validate!(fix_order_margin_in_usd > 0i128, BumpErrorCode::BalanceNotEnough.into());
-            user.sub_order_hold_in_usd(order.order_size);
-            order.order_size = fix_order_margin_in_usd.cast::<u128>()?;
+            user.sub_order_hold_in_usd(order.order_size).unwrap();
+            order.order_size = fix_order_margin_in_usd.cast::<u128>().unwrap();
         } else {
-            user.sub_order_hold_in_usd(order.order_size);
+            user.sub_order_hold_in_usd(order.order_size).unwrap();
         }
-        order_margin = cal_utils::usd_to_token_u(order.order_size, decimals, margin_token_price)?;
-        order_margin_from_balance = user.use_token(margin_token, order_margin, false)?;
+        order_margin = cal_utils::usd_to_token_u(order.order_size, decimals, margin_token_price).unwrap();
+        order_margin_from_balance = user.use_token(margin_token, order_margin, false).unwrap();
     } else {
-        let order_margin_in_usd = cal_utils::token_to_usd_u(order.order_margin, decimals, margin_token_price)?;
+        let order_margin_in_usd = cal_utils::token_to_usd_u(order.order_margin, decimals, margin_token_price).unwrap();
         validate!(order_margin_in_usd >= state.min_order_margin_usd, BumpErrorCode::AmountNotEnough.into());
         order_margin = order.order_margin;
         order_margin_from_balance = order.order_margin;

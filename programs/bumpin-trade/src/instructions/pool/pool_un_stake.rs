@@ -68,7 +68,7 @@ pub struct UnStakeParams {
     portfolio: bool,
 }
 
-pub fn handle_pool_un_stake(mut ctx: Context<PoolUnStake>, pool_index: u16, un_stake_params: UnStakeParams) -> Result<()> {
+pub fn handle_pool_un_stake(mut ctx: Context<PoolUnStake>, pool_index: usize, un_stake_params: UnStakeParams) -> Result<()> {
     let mut pool = &mut ctx.accounts.pool.load_mut()?;
     let mut user = &mut ctx.accounts.user.load_mut()?;
 

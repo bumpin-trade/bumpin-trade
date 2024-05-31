@@ -118,7 +118,7 @@ impl<'a> MarketProcessor<'_> {
         }
 
         if update_unsettle {
-            pool.add_unsettle(amount)?
+            pool.add_unsettle(amount.cast::<u128>()?)?
         }
 
         Ok(())
