@@ -98,11 +98,10 @@ pub fn handle_place_order(ctx: Context<PlaceOrder>, order: PlaceOrderParams) -> 
     }
 
     let market = ctx.accounts.market.load()?;
-    let mut user = ctx.accounts.user_account.load()?;
-    let state = ctx.accounts.state.into_inner();
+    let user = ctx.accounts.user_account.load_mut()?;
     let pool = ctx.accounts.pool.load()?;
     let token = &ctx.accounts.margin_token;
-    validate!(validate_place_order(order, &token.mint, &market, &pool, &state)?, BumpErrorCode::InvalidParam.into());
+    validate!(validate_place_order(order, &token.mint, &market, &pool, &ctx.accounts.state)?, BumpErrorCode::InvalidParam.into());
 
     if user.has_other_short_order(order.symbol, token.mint, order.is_cross_margin)? {
         return Err(BumpErrorCode::OnlyOneShortOrderAllowed.into());
@@ -144,7 +143,7 @@ pub fn handle_place_order(ctx: Context<PlaceOrder>, order: PlaceOrderParams) -> 
     Ok(())
 }
 
-fn validate_place_order(order: PlaceOrderParams, token: &Pubkey, market: &Ref<Market>, pool: &Ref<Pool>, state: &Ref<State>) -> BumpResult<bool> {
+fn validate_place_order(order: PlaceOrderParams, token: &Pubkey, market: &Ref<Market>, pool: &Ref<Pool>, state: &State) -> BumpResult<bool> {
     let mut res = true;
     match order.order_type {
         OrderType::NONE => { res = false }
@@ -195,7 +194,6 @@ pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder,
     let trade_token = ctx.accounts.trade_token.load()?;
     let mut market_processor = MarketProcessor { market: &mut market };
     let mut pool = ctx.accounts.pool.load_mut()?;
-    let state = &mut ctx.accounts.state.into_inner();
     let mut pool_processor = PoolProcessor { pool: &mut pool };
 
     let order = if execute_from_remote { user.find_order_by_id(order_id)? } else { &mut user_order };
@@ -214,7 +212,7 @@ pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder,
     }
 
     //update funding_fee_rate and borrowing_fee_rate
-    market_processor.update_market_funding_fee_rate(&state, oracle_map)?;
+    market_processor.update_market_funding_fee_rate(&ctx.accounts.state, oracle_map)?;
     pool_processor.update_pool_borrowing_fee_rate()?;
 
     let mut position_processor = PositionProcessor { position: &mut position };
@@ -239,15 +237,15 @@ pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder,
                 if user.has_other_order(order.order_id)? && user.get_order_leverage(order.symbol, order.order_side, order.cross_margin, order.leverage)? == order.leverage {
                     return Err(BumpErrorCode::AmountNotEnough.into());
                 }
-                position.set_position_key(user.generate_position_key(&user.authority, order.symbol, &order.margin_token, order.cross_margin, ctx.program_id)?);
-                position.set_authority(user.authority);
-                position.set_index_mint(market.index_mint_key);
-                position.set_symbol(order.symbol);
-                position.set_margin_mint(order.margin_token);
-                position.set_leverage(order.leverage);
-                position.set_is_long(order.order_side.eq(&OrderSide::LONG));
-                position.set_cross_margin(order.cross_margin);
-                position.set_status(PositionStatus::USING);
+                position.set_position_key(user.generate_position_key(&user.authority, order.symbol, &order.margin_token, order.cross_margin, ctx.program_id)?)?;
+                position.set_authority(user.authority)?;
+                position.set_index_mint(market.index_mint_key)?;
+                position.set_symbol(order.symbol)?;
+                position.set_margin_mint(order.margin_token)?;
+                position.set_leverage(order.leverage)?;
+                position.set_is_long(order.order_side.eq(&OrderSide::LONG))?;
+                position.set_cross_margin(order.cross_margin)?;
+                position.set_status(PositionStatus::USING)?;
                 user.add_position(&mut position, user.next_usable_position_index()?)?;
             } else if position.leverage != order.leverage {
                 return Err(BumpErrorCode::LeverageIsNotAllowed.into());
@@ -263,7 +261,7 @@ pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder,
                 is_long,
                 is_cross_margin: order.cross_margin,
                 decimals,
-            }, &trade_token, user.deref_mut(), state, market.deref_mut(), pool.deref_mut(), &mut market_processor)?;
+            }, &trade_token, user.deref_mut(), &mut ctx.accounts.state, market.deref_mut(), pool.deref_mut(), &mut market_processor)?;
         }),
         PositionSide::DECREASE => Ok({
             //decrease
@@ -284,7 +282,7 @@ pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder,
                 margin_token: order.margin_token,
                 decrease_size: order.order_size,
                 execute_price,
-            }, trade_token.deref(), user.deref_mut(), state, market.deref_mut(), pool.deref_mut(), oracle_map, ctx)?
+            }, trade_token.deref(), user.deref_mut(), &mut ctx.accounts.state, market.deref_mut(), pool.deref_mut(), oracle_map, ctx)?
         })
     }?;
     //delete order

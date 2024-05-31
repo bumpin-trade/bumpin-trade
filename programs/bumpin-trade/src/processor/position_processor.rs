@@ -135,9 +135,9 @@ impl PositionProcessor<'_> {
     pub fn decrease_position(&mut self,
                              params: DecreasePositionParams,
                              trade_token: &TradeToken,
-                             mut user: &mut User,
+                             user: &mut User,
                              state: &mut State,
-                             mut market: &mut Market,
+                             market: &mut Market,
                              pool: &mut Pool,
                              oracle_map: &mut OracleMap,
                              ctx: Context<PlaceOrder>) -> BumpResult<()> {
@@ -159,7 +159,7 @@ impl PositionProcessor<'_> {
             return Err(BumpErrorCode::AmountNotEnough);
         }
 
-        let mut user_processor = UserProcessor { user: &mut user };
+        let mut user_processor = UserProcessor { user };
         if params.decrease_size == self.position.position_size {
             let position_key = user.generate_position_key(&user.authority, market.symbol, &trade_token.mint, self.position.cross_margin, &ctx.program_id)?;
             user_processor.delete_position(&position_key)?
@@ -210,7 +210,7 @@ impl PositionProcessor<'_> {
                                           need_update_leverage: bool,
                                           trade_token: &TradeToken,
                                           oracle_map: &mut OracleMap,
-                                          mut pool: &mut Pool,
+                                          pool: &mut Pool,
                                           market: &Market,
                                           state: &State, ) -> BumpResult<u128> {
         let token_price = oracle_map.get_price_data(&self.position.margin_mint)?.price;
@@ -437,13 +437,13 @@ impl PositionProcessor<'_> {
     }
 
     fn add_insurance_fund(&mut self, market: &Market, state: &State, trade_token: &TradeToken, response: &UpdateDecreasePositionResponse, mut pool: &mut Pool) -> BumpResult<()> {
-        let pool_processor = PoolProcessor { pool: &mut pool };
+        let mut pool_processor = PoolProcessor { pool: &mut pool };
         if self.position.cross_margin {
             pool_processor.add_insurance_fund(cal_utils::usd_to_token_u(self.get_position_mm(market, state)?, trade_token.decimals, response.margin_token_price)?)?;
             return Ok(());
         }
 
-        let mut add_funds = 0u128;
+        let mut add_funds;
         if response.settle_fee >= 0i128 {
             add_funds = if response.decrease_margin > (response.settle_fee.safe_add(response.pool_pnl_token)?.abs().cast::<u128>()?) {
                 response.decrease_margin.safe_sub(response.settle_fee.safe_add(response.pool_pnl_token.abs().cast::<i128>()?)?.cast::<u128>()?)?
@@ -459,7 +459,7 @@ impl PositionProcessor<'_> {
         Ok(())
     }
 
-    fn settle(&mut self, response: &UpdateDecreasePositionResponse, mut user: &mut User, mut pool: &mut Pool, ctx: Context<PlaceOrder>) -> BumpResult<()> {
+    fn settle(&mut self, response: &UpdateDecreasePositionResponse, user: &mut User, mut pool: &mut Pool, ctx: Context<PlaceOrder>) -> BumpResult<()> {
         let mut pool_processor = PoolProcessor { pool: &mut pool };
 
         if self.position.cross_margin {
@@ -541,14 +541,11 @@ impl PositionProcessor<'_> {
         Ok(())
     }
 
-    fn update_all_position_from_portfolio_margin(&self, mut user: &mut User, change_token_amount: i128, token_mint: &Pubkey) -> BumpResult<()> {
+    fn update_all_position_from_portfolio_margin(&self, user: &mut User, change_token_amount: i128, token_mint: &Pubkey) -> BumpResult<()> {
         let mut reduce_amount = change_token_amount;
         for mut position in user.user_positions {
             if position.margin_mint.eq(token_mint) && position.cross_margin {
                 let mut change_amount = 0u128;
-                if position.initial_margin_usd == position.initial_margin_usd_from_portfolio || change_token_amount == 0i128 {
-                    change_amount = 0u128;
-                }
 
                 if change_token_amount > 0i128 {
                     let borrowing_margin = position.initial_margin_usd

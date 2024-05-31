@@ -32,7 +32,7 @@ impl Size for User {
 }
 
 impl User {
-    pub fn get_user_token_mut(&self, mint: &Pubkey) -> BumpResult<&mut UserToken> {
+    pub fn get_user_token_mut(&mut self, mint: &Pubkey) -> BumpResult<&mut UserToken> {
         Ok(self.user_tokens.iter_mut()
             .find(|user_token| user_token.token_mint.eq(mint))
             .ok_or(CouldNotFindUserToken)?)
@@ -63,7 +63,7 @@ impl User {
 
     pub fn use_token(&mut self, token: &Pubkey, amount: u128, is_check: bool) -> BumpResult<u128> {
         let use_from_balance;
-        let mut token_balance = self.get_user_token_mut(token)?;
+        let token_balance = self.get_user_token_mut(token)?;
         if is_check {
             validate!(token_balance.amount >= token_balance.used_amount, BumpErrorCode::AmountNotEnough.into());
         };
@@ -82,9 +82,9 @@ impl User {
     }
 
     pub fn un_use_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
-        let mut token_balance = self.get_user_token_mut(token)?;
+        let token_balance = self.get_user_token_mut(token)?;
         validate!(token_balance.used_amount > amount, BumpErrorCode::AmountNotEnough.into());
-        token_balance.sub_token_used_amount(amount);
+        token_balance.sub_token_used_amount(amount)?;
         Ok(())
     }
 
@@ -115,14 +115,14 @@ impl User {
             .ok_or(CouldNotFindUserPosition)?)
     }
 
-    pub fn find_position_mut_by_key(&self, position_key: &Pubkey) -> BumpResult<&mut UserPosition> {
+    pub fn find_position_mut_by_key(&mut self, position_key: &Pubkey) -> BumpResult<&mut UserPosition> {
         Ok(self.user_positions.iter_mut()
             .find(|user_position| user_position.position_key.eq(position_key))
             .ok_or(CouldNotFindUserPosition)?)
     }
 
 
-    pub fn find_order_by_id(&self, order_id: u128) -> BumpResult<&mut UserOrder> {
+    pub fn find_order_by_id(&mut self, order_id: u128) -> BumpResult<&mut UserOrder> {
         Ok(self.user_orders.iter().find(|order| order.order_id
             == order_id).as_mut().unwrap())
     }
@@ -168,19 +168,19 @@ impl User {
     }
 
 
-    pub fn add_position(&self, position: &mut UserPosition, index: usize) -> BumpResult<> {
+    pub fn add_position(&mut self, position: &mut UserPosition, index: usize) -> BumpResult<> {
         let mut exist_position = self.user_positions.get_mut(index).ok_or(BumpErrorCode::AmountNotEnough)?;
         exist_position = position;
         Ok(())
     }
 
-    pub fn add_order(&self, order: &mut UserOrder, index: usize) -> BumpResult<> {
+    pub fn add_order(&mut self, order: &mut UserOrder, index: usize) -> BumpResult<> {
         let mut exist_order = self.user_orders.get_mut(index).ok_or(BumpErrorCode::OrderNotExist)?;
         exist_order = order;
         Ok(())
     }
 
-    pub fn delete_order(&self, order_id: u128) -> BumpResult<> {
+    pub fn delete_order(&mut self, order_id: u128) -> BumpResult<> {
         let mut order_index = -1i8;
         for (index, user_order) in self.user_orders.iter().enumerate() {
             if user_order.order_id == order_id {

@@ -94,7 +94,7 @@ impl<'a> PoolProcessor<'_> {
         Ok(())
     }
 
-    pub fn add_insurance_fund(&self, amount: u128) -> BumpResult<()> {
+    pub fn add_insurance_fund(&mut self, amount: u128) -> BumpResult<()> {
         self.pool.add_insurance_fund(amount)?;
         Ok(())
     }

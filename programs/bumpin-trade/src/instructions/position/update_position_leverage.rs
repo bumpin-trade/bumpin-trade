@@ -56,7 +56,6 @@ pub fn handle_update_position_leverage(ctx: Context<UpdatePositionLeverage>, par
     let mut trade_token_map = TradeTokenMap::load(remaining_accounts_iter)?;
     let mut pool = ctx.accounts.pool.load_mut()?;
     let market = ctx.accounts.market.load_mut()?;
-    let state = ctx.accounts.state.into_inner();
     validate!(params.leverage <= market.market_trade_config.max_leverage, BumpErrorCode::AmountNotEnough.into());
 
     let position_key = user.generate_position_key(&user.authority, params.symbol, &trade_token.mint, params.is_cross_margin, &ctx.program_id)?;

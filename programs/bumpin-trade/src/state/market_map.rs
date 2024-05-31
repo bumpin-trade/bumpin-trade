@@ -1,6 +1,7 @@
 use std::cell::RefMut;
 use std::collections::BTreeMap;
 use std::iter::Peekable;
+use std::ops::Deref;
 use std::slice::Iter;
 
 use anchor_lang::Discriminator;
@@ -21,10 +22,9 @@ impl<'a> MarketMap<'a> {
     #[track_caller]
     #[inline(always)]
     pub fn get_all_market(&self) -> BumpResult<BTreeMap<[u8; 32], Market>> {
-        let market = self.0.iter().
-            map(|account_loader| {
-                account_loader.load()?
-            }).collect();
+        let market = self.0.iter()
+            .map(|(&key, &ref value)| (key, *value.load().unwrap().deref()))
+            .collect();
         Ok(market)
     }
 

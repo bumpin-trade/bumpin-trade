@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, CloseAccount, Token, TokenAccount, Transfer};
+use crate::math::casting::Cast;
 use crate::utils::signer::get_signer_seeds;
 
 pub fn send_from_program_vault<'info>(
@@ -19,7 +20,7 @@ pub fn send_from_program_vault<'info>(
     };
     let cpi_program = token_program.to_account_info();
     let cpi_context = CpiContext::new_with_signer(cpi_program, cpi_accounts, signers);
-    token::transfer(cpi_context, amount)
+    token::transfer(cpi_context, amount.cast::<u64>().unwrap())
 }
 
 pub fn receive<'info>(
@@ -36,7 +37,7 @@ pub fn receive<'info>(
     };
     let cpi_program = token_program.to_account_info();
     let cpi_context = CpiContext::new(cpi_program, cpi_accounts);
-    token::transfer(cpi_context, amount)
+    token::transfer(cpi_context, amount.cast::<u64>().unwrap())
 }
 
 pub fn close_vault<'info>(
