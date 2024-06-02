@@ -171,8 +171,7 @@ impl PositionProcessor<'_> {
 
         let mut user_processor = UserProcessor { user };
         if params.decrease_size == self.position.position_size {
-            let position_key = user.generate_position_key(&user.authority, market.symbol, &trade_token.mint, self.position.cross_margin, &ctx.program_id)?;
-            user_processor.delete_position(&position_key)?
+            user_processor.delete_position(market.symbol, &trade_token.mint, self.position.cross_margin, &ctx.program_id)?;
         } else {
             self.position.sub_position_size(params.decrease_size)?;
             self.position.sub_initial_margin(response.decrease_margin)?;
@@ -618,6 +617,22 @@ impl PositionProcessor<'_> {
         };
         let un_pnl_usd = self.get_position_un_pnl_usd(index_price)?;
         Ok(cal_utils::usd_to_token_i(un_pnl_usd, trade_token.decimals, mint_token_price)?)
+    }
+
+    pub fn generate_position_key(&self, user: &Pubkey, symbol: [u8; 32], token: &Pubkey, is_cross_margin: bool, program_id: &Pubkey) -> BumpResult<Pubkey> {
+        // Convert is_cross_margin to a byte array
+        let is_cross_margin_bytes: &[u8] = if is_cross_margin { &[1] } else { &[0] };
+        // Create the seeds array by concatenating the byte representations
+        let seeds: &[&[u8]] = &[
+            user.as_ref(),
+            &symbol,
+            token.as_ref(),
+            is_cross_margin_bytes,
+        ];
+
+        // Find the program address
+        let (address, _bump_seed) = Pubkey::find_program_address(seeds, program_id);
+        Ok(address)
     }
 }
 

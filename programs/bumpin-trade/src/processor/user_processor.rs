@@ -157,8 +157,9 @@ impl<'a> UserProcessor<'a> {
         Ok(())
     }
 
-    pub fn delete_position(&mut self, user: &Pubkey, symbol: [u8; 32], token: &Pubkey, is_cross_margin: bool, program_id: &Pubkey) -> BumpResult<> {
-        let position_index = self.user.user_positions.iter().position(|user_position: &UserPosition| user_position.position_key.eq(position_key)).ok_or(CouldNotFindUserPosition)?;
+    pub fn delete_position(&mut self, symbol: [u8; 32], token: &Pubkey, is_cross_margin: bool, program_id: &Pubkey) -> BumpResult<> {
+        let position_key = self.generate_position_key(symbol, token, is_cross_margin, program_id)?;
+        let position_index = self.user.user_positions.iter().position(|user_position: &UserPosition| user_position.position_key.eq(&position_key)).ok_or(CouldNotFindUserPosition)?;
         self.user.user_positions[position_index] = UserPosition::default();
         Ok(())
     }
@@ -178,7 +179,7 @@ impl<'a> UserProcessor<'a> {
     pub fn cancel_all_orders(&mut self) -> BumpResult<()> {
         let user_orders_length = self.user.user_orders.len();
         for index in 0..user_orders_length {
-            self.user.cancel_user_order(index);
+            self.user.cancel_user_order(index)?;
         }
         Ok(())
     }
@@ -214,6 +215,21 @@ impl<'a> UserProcessor<'a> {
         let user_token = self.user.get_user_token_mut(token)?;
         user_token.add_token_amount(amount)?;
         Ok(())
+    }
+    pub fn generate_position_key(&self, symbol: [u8; 32], token: &Pubkey, is_cross_margin: bool, program_id: &Pubkey) -> BumpResult<Pubkey> {
+        // Convert is_cross_margin to a byte array
+        let is_cross_margin_bytes: &[u8] = if is_cross_margin { &[1] } else { &[0] };
+        // Create the seeds array by concatenating the byte representations
+        let seeds: &[&[u8]] = &[
+            self.user.authority.as_ref(),
+            &symbol,
+            token.as_ref(),
+            is_cross_margin_bytes,
+        ];
+
+        // Find the program address
+        let (address, _bump_seed) = Pubkey::find_program_address(seeds, program_id);
+        Ok(address)
     }
 }
 
