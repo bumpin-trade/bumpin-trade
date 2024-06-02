@@ -70,10 +70,21 @@ impl<'a> PoolProcessor<'_> {
         user_stake.add_user_stake(stake_amount)?;
         Ok(stake_amount)
     }
-    pub fn un_stake(&mut self, un_stake_amount: u128, oracle_map: &mut OracleMap, pool_value: u128) -> BumpResult<u128> {
+    pub fn un_stake(&mut self, pool_loader: &AccountLoader<Pool>, user_loader: &AccountLoader<User>, un_stake_amount: u128, oracle_map: &mut OracleMap, market_map: &MarketMap) -> BumpResult<u128> {
+        let pool = pool_loader.load()?;
+        let mut user = user_loader.load_mut()?;
+        let pool_value = self.get_pool_usd_value(oracle_map, market_map)?;
         let un_stake_usd = cal_utils::mul_div_u(un_stake_amount, pool_value, self.pool.total_supply)?;
         let pool_price = oracle_map.get_price_data(&self.pool.pool_mint)?;
         let token_amount = cal_utils::div_u128(un_stake_usd, pool_price.price)?;
+        validate!(token_amount>pool.pool_config.mini_un_stake_amount, BumpErrorCode::UnStakeNotEnough);
+
+        let max_un_stake_amount = pool.get_current_max_un_stake()?;
+        validate!(token_amount<max_un_stake_amount, BumpErrorCode::UnStakeNotEnough);
+
+        let user_stake = user.get_user_stake_mut(pool.pool_index)?;
+        user_stake.sub_user_stake(un_stake_amount)?;
+
         Ok(token_amount)
     }
     pub fn get_pool_net_price(&mut self, oracle_map: &mut OracleMap, market_vec: &MarketMap) -> BumpResult<u128> {

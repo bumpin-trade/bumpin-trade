@@ -11,6 +11,7 @@ use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::user::User;
 use crate::can_sign_for_user;
+use crate::processor::optional_accounts::load_maps;
 
 #[derive(Accounts)]
 #[instruction(pool_index: u16, trade_token_index: u16)]
@@ -76,24 +77,23 @@ pub fn handle_pool_un_stake(ctx: Context<PoolUnStake>, pool_index: usize, un_sta
     validate!(user_stake.amount>=un_stake_params.un_stake_token_amount, BumpErrorCode::UnStakeNotEnough);
 
     let remaining_accounts = &mut ctx.remaining_accounts.iter().peekable();
-    let mut oracle_map = OracleMap::load(remaining_accounts)?;
-    let market_map = MarketMap::load(remaining_accounts)?;
+    let mut account_maps = load_maps(remaining_accounts)?;
+
+
+    validate!(pool.total_supply==0, BumpErrorCode::UnStakeNotEnough);
 
     let mut pool_processor = PoolProcessor { pool };
-    let pool_value = pool_processor.get_pool_usd_value(&mut oracle_map, &market_map)?;
-    validate!(pool.total_supply==0||pool_value==0u128, BumpErrorCode::UnStakeNotEnough);
 
-    let un_stake_token_amount = pool_processor.un_stake(un_stake_params.un_stake_token_amount, &mut oracle_map, pool_value)?;
-    validate!(un_stake_token_amount>pool.pool_config.mini_un_stake_amount, BumpErrorCode::UnStakeNotEnough);
+    let un_stake_token_amount = pool_processor.un_stake(&ctx.accounts.pool,
+                                                        &ctx.accounts.user,
+                                                        un_stake_params.un_stake_token_amount,
+                                                        &mut account_maps.oracle_map,
+                                                        &account_maps.market_map)?;
 
-
-    let max_un_stake_amount = pool.get_current_max_un_stake()?;
-    validate!(un_stake_token_amount<max_un_stake_amount, BumpErrorCode::UnStakeNotEnough);
-
-    let un_stake_token_amount_fee = pool_processor.collect_un_stake_fee(&mut ctx.accounts.state, un_stake_token_amount)?;
+    let un_stake_token_amount_fee = pool_processor.
+        collect_un_stake_fee(&mut ctx.accounts.state, un_stake_token_amount)?;
 
     update_account_fee_reward(&ctx.accounts.user, &ctx.accounts.pool)?;
-    let user_stake = user.get_user_stake_mut(pool_index)?;
 
     let transfer_amount = un_stake_token_amount.safe_sub(un_stake_token_amount_fee)?;
     if un_stake_params.portfolio {
@@ -111,15 +111,17 @@ pub fn handle_pool_un_stake(ctx: Context<PoolUnStake>, pool_index: usize, un_sta
         ctx.accounts.trade_token_vault.reload()?;
         user_token.add_token_amount(transfer_amount)?;
     } else {
-        utils::token::receive(
+        let bump_signer_nonce = ctx.accounts.state.bump_signer_nonce;
+
+        utils::token::send_from_program_vault(
             &ctx.accounts.token_program,
             &ctx.accounts.pool_vault,
             &ctx.accounts.user_token_account,
             &ctx.accounts.authority,
+            bump_signer_nonce,
             transfer_amount,
         )?;
         ctx.accounts.pool_vault.reload()?;
     }
-    user_stake.sub_user_stake(un_stake_params.un_stake_token_amount)?;
     Ok(())
 }

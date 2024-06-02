@@ -22,6 +22,12 @@ pub struct UserProcessor<'a> {
 }
 
 impl<'a> UserProcessor<'a> {
+    pub fn un_use_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
+        Ok((self.user.un_use_token(token, amount)?))
+    }
+    pub fn use_token(&mut self, token: &Pubkey, amount: u128, is_check: bool) -> BumpResult<u128> {
+        Ok((self.user.use_token(token, amount, is_check)?))
+    }
     pub fn withdraw(&mut self, amount: u128, mint: &Pubkey, oracle_map: &mut OracleMap, trade_token_map: &TradeTokenMap) -> BumpResult {
         let price_data = oracle_map.get_price_data(mint)?;
         let withdraw_usd = price_data.price.cast::<i128>()?
@@ -93,7 +99,7 @@ impl<'a> UserProcessor<'a> {
         }
         Ok(total_token_net_value)
     }
-    pub fn get_available_value(&mut self, oracle_map: &mut OracleMap, trade_token_map: &TradeTokenMap) -> BumpResult<i128> {
+    pub fn get_available_value(&self, oracle_map: &mut OracleMap, trade_token_map: &TradeTokenMap) -> BumpResult<i128> {
         let mut total_net_value = 0u128;
         let mut total_used_value = 0u128;
         let mut total_borrowing_value = 0u128;
@@ -202,14 +208,6 @@ impl<'a> UserProcessor<'a> {
             liability = amount;
         }
         Ok(liability)
-    }
-
-    pub fn un_use_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
-        validate!(self.user.user_tokens.map(|mint|mint.token_mint).contains(&token), BumpErrorCode::AmountNotEnough);
-        let token_balance = self.user.user_tokens.iter_mut().find(|mint| mint.token_mint.eq(token)).ok_or(BumpErrorCode::AmountNotEnough).unwrap();
-        validate!(token_balance.used_amount >= amount, BumpErrorCode::AmountNotEnough);
-        token_balance.used_amount = token_balance.used_amount.safe_sub(amount)?;
-        Ok(())
     }
 
     pub fn add_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {

@@ -129,13 +129,7 @@ impl Pool {
     }
 
     pub fn get_current_max_un_stake(&self) -> BumpResult<u128> {
-        if self.pool_config.pool_liquidity_limit == 0 {
-            let max_un_stake = cal_utils::sub_u128(self.pool_balance.amount, self.pool_balance.hold_amount);
-            max_un_stake
-        } else {
-            let min_amount = self.pool_balance.hold_amount.safe_div(self.pool_config.pool_liquidity_limit)?;
-            Ok(if self.pool_balance.amount > min_amount { self.pool_balance.amount.safe_sub(min_amount)? } else { 0u128 })
-        }
+        Ok(self.pool_balance.amount.safe_sub(self.pool_balance.hold_amount)?)
     }
 
     pub fn add_insurance_fund(&mut self, amount: u128) -> BumpResult<()> {

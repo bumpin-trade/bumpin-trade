@@ -121,6 +121,12 @@ impl User {
             .ok_or(CouldNotFindUserPosition)?)
     }
 
+    pub fn find_position_ref_by_key(&mut self, position_key: &Pubkey) -> BumpResult<&UserPosition> {
+        Ok(self.user_positions.iter_mut()
+            .find(|user_position| user_position.position_key.eq(position_key))
+            .ok_or(CouldNotFindUserPosition)?)
+    }
+
     pub fn find_ref_order_by_id(&mut self, order_id: u128) -> BumpResult<&UserOrder> {
         let index = self.get_order_index_by_id(order_id);
         Ok(&self.user_orders[index])
