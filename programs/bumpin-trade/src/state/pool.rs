@@ -12,6 +12,7 @@ use solana_program::msg;
 #[derive(Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct Pool {
+    pub pool_index: usize,
     pub pool_key: Pubkey,
     pub pool_mint: Pubkey,
     pub pool_mint_vault: Pubkey,
@@ -71,6 +72,7 @@ pub struct PoolConfig {
 impl Default for Pool {
     fn default() -> Self {
         Pool {
+            pool_index: Default::default(),
             pool_key: Default::default(),
             pool_mint: Default::default(),
             pool_mint_vault: Pubkey::default(),

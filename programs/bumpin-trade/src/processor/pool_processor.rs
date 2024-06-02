@@ -1,14 +1,20 @@
-use crate::errors::BumpResult;
+use anchor_lang::prelude::AccountLoader;
+use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::processor::fee_processor;
 use crate::processor::market_processor::MarketProcessor;
+use crate::processor::optional_accounts::AccountMaps;
+use crate::processor::user_processor::UserProcessor;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
+use crate::state::user::User;
+use crate::validate;
+use anchor_lang::prelude::msg;
 
 pub struct PoolProcessor<'a> {
     pub(crate) pool: &'a mut Pool,
@@ -21,16 +27,47 @@ impl<'a> PoolProcessor<'_> {
     pub fn collect_un_stake_fee(&mut self, state: &mut State, amount: u128) -> BumpResult<u128> {
         Ok(fee_processor::collect_un_stake_fee(&mut self.pool, state, amount)?)
     }
-    pub fn stake(&mut self, mint_amount: u128, oracle_map: &mut OracleMap, market_vec: &MarketMap, trade_token: &TradeToken) -> BumpResult<u128> {
+    pub fn portfolio_to_stake(&mut self, user_loader: &AccountLoader<User>,
+                              pool_loader: &AccountLoader<Pool>,
+                              mint_amount: u128,
+                              trade_token: &TradeToken,
+                              account_maps: &mut AccountMaps) -> BumpResult<u128> {
         let mut stake_amount = mint_amount;
+        let mut user = &mut user_loader.load_mut().unwrap();
+        let pool = pool_loader.load().unwrap();
+
+        let mut user_token = user.get_user_token_mut(&pool.pool_mint)?;
+        validate!(user_token.amount>mint_amount, BumpErrorCode::AmountNotEnough);
+
+        let mut user_processor = UserProcessor { user };
+        user_processor.sub_user_token_amount(&pool.pool_mint, mint_amount)?;
+        validate!(  user_processor.get_available_value(&mut account_maps.oracle_map, &account_maps.trade_token_map)?>0, BumpErrorCode::AmountNotEnough);
         if self.pool.total_supply > 0 {
-            let oracle_price_data = oracle_map.get_price_data(&self.pool.pool_mint)?;
+            let oracle_price_data = account_maps.oracle_map.get_price_data(&self.pool.pool_mint)?;
 
             stake_amount = cal_utils::token_to_usd_u(mint_amount, trade_token.decimals, oracle_price_data.price)?.
-                safe_div(self.get_pool_net_price(oracle_map, market_vec)?)?;
+                safe_div(self.get_pool_net_price(&mut account_maps.oracle_map, &account_maps.market_map)?)?;
         }
         self.pool.add_supply(stake_amount)?;
         self.pool.add_amount(mint_amount)?;
+        let user_stake = user.get_user_stake_mut(pool.pool_index)?;
+        user_stake.add_user_stake(stake_amount)?;
+        Ok(stake_amount)
+    }
+    pub fn stake(&mut self, user_loader: &AccountLoader<User>, pool_loader: &AccountLoader<Pool>, mint_amount: u128, trade_token: &TradeToken, account_maps: &mut AccountMaps) -> BumpResult<u128> {
+        let mut stake_amount = mint_amount;
+        let mut user = user_loader.load_mut().unwrap();
+        let pool = pool_loader.load_mut().unwrap();
+        if self.pool.total_supply > 0 {
+            let oracle_price_data = account_maps.oracle_map.get_price_data(&self.pool.pool_mint)?;
+
+            stake_amount = cal_utils::token_to_usd_u(mint_amount, trade_token.decimals, oracle_price_data.price)?.
+                safe_div(self.get_pool_net_price(&mut account_maps.oracle_map, &account_maps.market_map)?)?;
+        }
+        self.pool.add_supply(stake_amount)?;
+        self.pool.add_amount(mint_amount)?;
+        let user_stake = user.get_user_stake_mut(pool.pool_index)?;
+        user_stake.add_user_stake(stake_amount)?;
         Ok(stake_amount)
     }
     pub fn un_stake(&mut self, un_stake_amount: u128, oracle_map: &mut OracleMap, pool_value: u128) -> BumpResult<u128> {

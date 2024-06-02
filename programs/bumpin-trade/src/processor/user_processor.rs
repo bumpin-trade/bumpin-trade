@@ -36,14 +36,15 @@ impl<'a> UserProcessor<'a> {
         self.update_cross_position_balance(mint, amount, false)?;
         Ok(())
     }
-    pub fn sub_user_token_amount(&self, user_token: &mut UserToken, mut amount: u128) -> BumpResult {
-        user_token.sub_token_amount(amount)?;
+    pub fn sub_user_token_amount(&mut self, mint: &Pubkey, mut amount: u128) -> BumpResult {
         for mut user_position in self.user.user_positions {
-            if user_position.cross_margin && user_position.margin_mint.eq(&user_token.token_mint) && amount > 0 {
+            if user_position.cross_margin && user_position.margin_mint.eq(mint) && amount > 0 {
                 let reduce_amount = user_position.reduce_position_portfolio_balance(amount)?;
                 amount = amount.safe_sub(reduce_amount)?;
             }
         }
+        let user_token = self.user.get_user_token_mut(mint)?;
+        user_token.sub_token_amount(amount)?;
         Ok(())
     }
     pub fn get_user_cross_position_value(&self, state: &State, market_map: &MarketMap, pool_map: &PoolMap, price_map: &mut OracleMap) -> BumpResult<(u128, i128, i128, u128)> {

@@ -92,7 +92,7 @@ pub fn handle_pool_un_stake(ctx: Context<PoolUnStake>, pool_index: usize, un_sta
 
     let un_stake_token_amount_fee = pool_processor.collect_un_stake_fee(&mut ctx.accounts.state, un_stake_token_amount)?;
 
-    update_account_fee_reward(user_stake, &pool)?;
+    update_account_fee_reward(&ctx.accounts.user, &ctx.accounts.pool)?;
     let user_stake = user.get_user_stake_mut(pool_index)?;
 
     let transfer_amount = un_stake_token_amount.safe_sub(un_stake_token_amount_fee)?;

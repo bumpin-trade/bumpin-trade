@@ -90,22 +90,17 @@ pub fn handle_pool_stake(mut ctx: Context<PoolStake>, pool_index: usize, trade_t
     let trade_token = ctx.accounts.trade_token.load()?;
 
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
-    let AccountMaps {
-        market_map,
-        mut trade_token_map,
-        mut oracle_map
-    } = load_maps(remaining_accounts_iter)?;
+    let mut account_maps = load_maps(remaining_accounts_iter)?;
 
-    let user_stake = user.get_user_stake_mut(pool_index)?;
-    update_account_fee_reward(user_stake, &pool)?;
+    update_account_fee_reward(&ctx.accounts.user, &ctx.accounts.pool)?;
 
+    let stake_fee = fee_processor::collect_stake_fee(&mut pool,
+                                                     &mut ctx.accounts.state,
+                                                     stake_params.request_token_amount)?;
+    let base_mint_amount = stake_params.request_token_amount.safe_sub(stake_fee)?;
     if stake_params.portfolio {
-        let mut user_processor = UserProcessor { user };
-
-        let mut user_token = user.get_user_token_mut(&pool.pool_mint)?;
-        validate!(user_token.amount>stake_params.request_token_amount, BumpErrorCode::AmountNotEnough);
-
-        validate!(  user_processor.get_available_value(&mut oracle_map, &trade_token_map)?>0, BumpErrorCode::AmountNotEnough);
+        let mut pool_processor = PoolProcessor { pool };
+        pool_processor.portfolio_to_stake(&ctx.accounts.user, &ctx.accounts.pool, base_mint_amount, &trade_token, &mut account_maps)?;
 
         utils::token::receive(
             &ctx.accounts.token_program,
@@ -115,8 +110,9 @@ pub fn handle_pool_stake(mut ctx: Context<PoolStake>, pool_index: usize, trade_t
             stake_params.request_token_amount,
         )?;
         ctx.accounts.trade_token_vault.reload()?;
-        user_processor.sub_user_token_amount(user_token, stake_params.request_token_amount)?;
     } else {
+        let mut pool_processor = PoolProcessor { pool };
+        pool_processor.stake(&ctx.accounts.user, &ctx.accounts.pool, base_mint_amount, &trade_token, &mut account_maps)?;
         utils::token::receive(
             &ctx.accounts.token_program,
             &ctx.accounts.user_token_account,
@@ -124,18 +120,8 @@ pub fn handle_pool_stake(mut ctx: Context<PoolStake>, pool_index: usize, trade_t
             &ctx.accounts.authority,
             stake_params.request_token_amount,
         )?;
+        ctx.accounts.pool_vault.reload()?;
     }
-    ctx.accounts.pool_vault.reload()?;
 
-    let stake_fee = fee_processor::collect_stake_fee(&mut pool,
-                                                     &mut ctx.accounts.state,
-                                                     stake_params.request_token_amount)?;
-    let base_mint_amount = stake_params.request_token_amount.safe_sub(stake_fee)?;
-
-    let mut pool_processor = PoolProcessor { pool };
-    let stake_amount = pool_processor.stake(base_mint_amount, &mut oracle_map, &market_map, &trade_token)?;
-    validate!(stake_amount < stake_params.min_stake_amount, BumpErrorCode::StakeToSmall);
-
-    user_stake.add_user_stake(stake_amount)?;
     Ok(())
 }
