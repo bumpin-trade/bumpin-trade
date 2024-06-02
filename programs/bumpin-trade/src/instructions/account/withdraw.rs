@@ -60,7 +60,9 @@ pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) -
 
     let mut user_processor = UserProcessor { user };
 
-    user_processor.withdraw(amount, mint, &oracle_map, &trade_token_map)?;
+    user_processor.withdraw(amount, mint, &mut oracle_map, &trade_token_map)?;
+    drop(user_processor);
+
     let bump_signer_nonce = ctx.accounts.state.bump_signer_nonce;
     utils::token::send_from_program_vault(
         &ctx.accounts.token_program,

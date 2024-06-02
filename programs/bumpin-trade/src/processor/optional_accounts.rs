@@ -12,7 +12,7 @@ pub struct AccountMaps<'a> {
     pub oracle_map: OracleMap<'a>,
 }
 
-pub fn load_maps<'a, 'b>(
+pub fn load_maps<'a>(
     account_info_iter: &mut Peekable<Iter<AccountInfo<'a>>>
 ) -> BumpResult<AccountMaps<'a>> {
     let market_map = MarketMap::load(account_info_iter)?;

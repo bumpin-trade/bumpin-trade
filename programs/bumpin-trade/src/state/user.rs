@@ -210,6 +210,14 @@ impl User {
         Ok(())
     }
 
+    pub fn cancel_user_order(&mut self, user_order_index: usize) -> BumpResult {
+        let user_order = self.user_orders[user_order_index];
+        if user_order.cross_margin {
+            self.sub_order_hold_in_usd(user_order.order_margin)?;
+        }
+        self.user_orders[user_order_index] = UserOrder::default();
+        Ok(())
+    }
     fn get_order_index_by_id(&self, order_id: u128) -> usize {
         self.user_orders.iter().position(|user_order| user_order.order_id == order_id).ok_or(BumpErrorCode::OrderNotExist).unwrap()
     }

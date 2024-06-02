@@ -14,7 +14,7 @@ use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 use crate::{utils, validate};
 use solana_program::msg;
-use crate::errors::BumpErrorCode::CouldNotFindUserToken;
+use crate::errors::BumpErrorCode::{CouldNotFindUserPosition, CouldNotFindUserToken};
 use crate::processor::optional_accounts::AccountMaps;
 
 pub struct UserProcessor<'a> {
@@ -22,18 +22,19 @@ pub struct UserProcessor<'a> {
 }
 
 impl<'a> UserProcessor<'a> {
-    pub fn withdraw(&mut self, amount: u128, mint: &Pubkey, mut oracle_map: &OracleMap, &trade_token_map: &TradeTokenMap) -> BumpResult {
+    pub fn withdraw(&mut self, amount: u128, mint: &Pubkey, oracle_map: &mut OracleMap, trade_token_map: &TradeTokenMap) -> BumpResult {
         let price_data = oracle_map.get_price_data(mint)?;
         let withdraw_usd = price_data.price.cast::<i128>()?
             .safe_mul(amount.cast()?)?;
 
-        let available_value = self.get_available_value(&mut oracle_map, &trade_token_map)?;
+        let available_value = self.get_available_value(oracle_map, trade_token_map)?;
         validate!(available_value>withdraw_usd, BumpErrorCode::UserNotEnoughValue)?;
 
         let user_token = self.user.get_user_token_mut(mint)?;
         user_token.sub_token_amount(amount)?;
 
         self.update_cross_position_balance(mint, amount, false)?;
+        Ok(())
     }
     pub fn sub_user_token_amount(&self, user_token: &mut UserToken, mut amount: u128) -> BumpResult {
         user_token.sub_token_amount(amount)?;
@@ -111,29 +112,24 @@ impl<'a> UserProcessor<'a> {
             let token_used_value = user_token.get_token_used_value(&trade_token, &oracle_price_data)?;
             total_used_value = total_used_value.safe_add(token_used_value)?;
 
-            let token_borrowing_value = user_token.get_token_borrowing_value(&trade_token, &oracle_price_data);
-            total_borrowing_value = total_borrowing_value.safe_add(token_borrowing_value?)?;
+            let token_borrowing_value = user_token.get_token_borrowing_value(&trade_token, &oracle_price_data)?;
+            total_borrowing_value = total_borrowing_value.safe_add(token_borrowing_value)?;
         }
 
         let positions_count = self.user.user_positions.len();
 
-        // 使用索引进行迭代，避免重复借用
         for i in 0..positions_count {
-            // 获取 user_position 的可变引用
             let user_position = &mut self.user.user_positions[i];
+
             let position_processor = PositionProcessor { position: user_position };
-            if user_position.cross_margin {
-                let trade_token = trade_token_map.get_trade_token(&user_position.margin_mint)?;
-                let mint_price_data = oracle_map.get_price_data(&user_position.index_mint)?;
-                let index_price_data = oracle_map.get_price_data(&user_position.margin_mint)?;
-                total_im_from_portfolio_value = total_im_from_portfolio_value.
-                    safe_add(user_position.initial_margin_usd_from_portfolio)?;
+            let (initial_margin_usd_from_portfolio, position_un_pnl, mm_usd) = position_processor.get_position_value(oracle_map)?;
 
-                let position_un_pnl = position_processor.get_position_un_pnl_token(&trade_token, mint_price_data.price, index_price_data.price)?;
-                total_un_pnl_value = total_un_pnl_value.safe_add(position_un_pnl)?;
+            total_im_from_portfolio_value = total_im_from_portfolio_value.
+                safe_add(initial_margin_usd_from_portfolio)?;
+            total_un_pnl_value = total_un_pnl_value.safe_add(position_un_pnl)?;
+            total_mm_usd_value = total_mm_usd_value.safe_add(mm_usd)?;
 
-                total_mm_usd_value = total_mm_usd_value.safe_add(user_position.mm_usd)?;
-            }
+            drop(position_processor);
         }
         let available_value = total_net_value.
             safe_add(total_im_from_portfolio_value)?.
@@ -161,17 +157,9 @@ impl<'a> UserProcessor<'a> {
         Ok(())
     }
 
-    pub fn delete_position(&self, position_key: &Pubkey) -> BumpResult<> {
-        let mut position_index = -1i8;
-        for (index, position) in self.user.user_positions.iter().enumerate() {
-            if position.position_key.eq(position_key) {
-                position_index = index as i8;
-            }
-        }
-        if position_index == -1i8 {
-            return Err(BumpErrorCode::AmountNotEnough);
-        }
-        self.user.user_positions[position_index as usize] = UserPosition::default();
+    pub fn delete_position(&mut self, user: &Pubkey, symbol: [u8; 32], token: &Pubkey, is_cross_margin: bool, program_id: &Pubkey) -> BumpResult<> {
+        let position_index = self.user.user_positions.iter().position(|user_position: &UserPosition| user_position.position_key.eq(position_key)).ok_or(CouldNotFindUserPosition)?;
+        self.user.user_positions[position_index] = UserPosition::default();
         Ok(())
     }
 
@@ -187,12 +175,10 @@ impl<'a> UserProcessor<'a> {
         Ok(())
     }
 
-    pub fn cancel_all_orders(&self) -> BumpResult<()> {
-        for (index, user_order) in self.user.user_orders.iter().enumerate() {
-            if user_order.cross_margin {
-                self.user.sub_order_hold_in_usd(user_order.order_margin)?;
-            }
-            self.user.user_orders[index] = UserOrder::default();
+    pub fn cancel_all_orders(&mut self) -> BumpResult<()> {
+        let user_orders_length = self.user.user_orders.len();
+        for index in 0..user_orders_length {
+            self.user.cancel_user_order(index);
         }
         Ok(())
     }

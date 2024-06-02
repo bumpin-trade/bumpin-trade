@@ -21,12 +21,22 @@ use crate::state::user::User;
 use crate::utils::token;
 use crate::validate;
 use solana_program::msg;
+use crate::state::trade_token_map::TradeTokenMap;
 
 pub struct PositionProcessor<'a> {
     pub(crate) position: &'a mut UserPosition,
 }
 
 impl PositionProcessor<'_> {
+    pub fn get_position_value(&self, mut oracle_map: &mut OracleMap) -> BumpResult<(u128, i128, u128)> {
+        if (self.position.cross_margin) {
+            let index_price_data = oracle_map.get_price_data(&&self.position.margin_mint)?;
+
+            let position_un_pnl = self.get_position_un_pnl_usd(index_price_data.price)?;
+
+            Ok((self.position.initial_margin_usd_from_portfolio, position_un_pnl, self.position.mm_usd))
+        } else { Ok((0u128, 0i128, 0u128)) }
+    }
     pub fn get_liquidation_price(&mut self, market: &Market, pool: &Pool, state: &State, oracle_map: &mut OracleMap) -> BumpResult<u128> {
         let mm_usd = self.get_position_mm(market, state)?;
         let position_fee_usd = self.get_position_fee(market, pool, oracle_map)?;
@@ -182,7 +192,7 @@ impl PositionProcessor<'_> {
         fee_processor::collect_borrowing_fee(pool, state, response.settle_borrowing_fee, params.is_cross_margin)?;
 
         //update total borrowing fee and funding fee
-        let mut market_processor = MarketProcessor { market: &mut market };
+        let mut market_processor = MarketProcessor { market };
         pool.borrowing_fee.update_total_borrowing_fee(response.settle_borrowing_fee, true, response.settle_borrowing_fee, false)?;
         market_processor.update_market_total_funding_fee(response.settle_funding_fee, !self.position.cross_margin, self.position.is_long, false, pool)?;
         market_processor.update_oi(false, UpdateOIParams {

@@ -15,6 +15,7 @@ use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 use crate::can_sign_for_user;
+use crate::processor::optional_accounts::{AccountMaps, load_maps};
 
 #[derive(Accounts)]
 #[instruction(pool_index: u16, trade_token_index: u16)]
@@ -87,9 +88,13 @@ pub fn handle_pool_stake(mut ctx: Context<PoolStake>, pool_index: usize, trade_t
 
     let mut user = &mut ctx.accounts.user.load_mut()?;
     let trade_token = ctx.accounts.trade_token.load()?;
-    let remaining_accounts = &mut ctx.remaining_accounts.iter().peekable();
-    let mut oracle_map = OracleMap::load(remaining_accounts)?;
-    let market_map = MarketMap::load(remaining_accounts)?;
+
+    let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
+    let AccountMaps {
+        market_map,
+        mut trade_token_map,
+        mut oracle_map
+    } = load_maps(remaining_accounts_iter)?;
 
     let user_stake = user.get_user_stake_mut(pool_index)?;
     update_account_fee_reward(user_stake, &pool)?;
@@ -100,8 +105,7 @@ pub fn handle_pool_stake(mut ctx: Context<PoolStake>, pool_index: usize, trade_t
         let mut user_token = user.get_user_token_mut(&pool.pool_mint)?;
         validate!(user_token.amount>stake_params.request_token_amount, BumpErrorCode::AmountNotEnough);
 
-        let mut trade_token_map = TradeTokenMap::load(remaining_accounts)?;
-        validate!(  user_processor.get_available_value(&mut oracle_map, &mut trade_token_map)?>0, BumpErrorCode::AmountNotEnough);
+        validate!(  user_processor.get_available_value(&mut oracle_map, &trade_token_map)?>0, BumpErrorCode::AmountNotEnough);
 
         utils::token::receive(
             &ctx.accounts.token_program,
