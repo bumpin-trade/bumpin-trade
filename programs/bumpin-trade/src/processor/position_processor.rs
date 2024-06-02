@@ -1,4 +1,5 @@
 use anchor_lang::context::Context;
+use anchor_lang::prelude::AccountLoader;
 
 use solana_program::pubkey::Pubkey;
 
@@ -145,7 +146,7 @@ impl PositionProcessor<'_> {
     pub fn decrease_position(&mut self,
                              params: DecreasePositionParams,
                              trade_token: &TradeToken,
-                             user: &mut User,
+                             user_loader: AccountLoader<User>,
                              state: &mut State,
                              market: &mut Market,
                              pool: &mut Pool,
@@ -168,7 +169,7 @@ impl PositionProcessor<'_> {
         if response.settle_margin < 0i128 && !params.is_liquidation && !self.position.cross_margin {
             return Err(BumpErrorCode::AmountNotEnough);
         }
-
+        let user = &mut user_loader.load_mut().unwrap();
         let mut user_processor = UserProcessor { user };
         if params.decrease_size == self.position.position_size {
             user_processor.delete_position(market.symbol, &trade_token.mint, self.position.cross_margin, &ctx.program_id)?;
@@ -200,7 +201,7 @@ impl PositionProcessor<'_> {
             is_long: self.position.is_long,
             entry_price: 0u128,
         })?;
-
+        let user = &mut user_loader.load_mut().unwrap();
         //settle
         self.settle(&response, user, pool, ctx)?;
 
