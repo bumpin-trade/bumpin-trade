@@ -1,5 +1,7 @@
 use anchor_lang::context::Context;
-use anchor_lang::prelude::AccountLoader;
+use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
+use anchor_spl::token::{Token, TokenAccount};
+use solana_program::account_info::AccountInfo;
 
 use solana_program::pubkey::Pubkey;
 
@@ -84,8 +86,8 @@ impl PositionProcessor<'_> {
     }
 
 
-    pub fn increase_position(&mut self, params: IncreasePositionParams, trade_token: &TradeToken, mut user: &mut User, state: &mut State, market: &mut Market, pool: &mut Pool, market_processor: &mut MarketProcessor) -> BumpResult<> {
-        let fee = fee_processor::collect_open_position_fee(market, pool, state, params.increase_margin, params.is_cross_margin)?;
+    pub fn increase_position(&mut self, params: IncreasePositionParams, trade_token: &TradeToken, mut user: &mut User, state: &State, pool: &mut Pool, market_processor: &mut MarketProcessor) -> BumpResult<> {
+        let fee = fee_processor::collect_open_position_fee(market_processor.market, pool, state, params.increase_margin, params.is_cross_margin)?;
 
         let mut user_processor = UserProcessor { user: &mut user };
 
@@ -106,17 +108,17 @@ impl PositionProcessor<'_> {
             self.position.set_initial_margin(increase_margin)?;
             self.position.set_initial_margin_usd(cal_utils::token_to_usd_u(increase_margin, decimal, params.margin_token_price)?)?;
             self.position.set_initial_margin_usd_from_portfolio(cal_utils::token_to_usd_u(increase_margin_from_balance, decimal, params.margin_token_price)?)?;
-            self.position.set_close_fee_in_usd(cal_utils::mul_rate_u(increase_size, market.market_trade_config.close_fee_rate)?)?;
+            self.position.set_close_fee_in_usd(cal_utils::mul_rate_u(increase_size, market_processor.market.market_trade_config.close_fee_rate)?)?;
             self.position.set_position_size(increase_size)?;
             self.position.set_leverage(params.leverage)?;
             self.position.set_realized_pnl(-cal_utils::token_to_usd_u(fee, decimal, params.margin_token_price)?.cast::<i128>()?)?;
             self.position.set_open_borrowing_fee_per_token(pool.borrowing_fee.cumulative_borrowing_fee_per_token)?;
-            self.position.set_open_funding_fee_amount_per_size(if params.is_long { market.funding_fee.long_funding_fee_amount_per_size } else { market.funding_fee.short_funding_fee_amount_per_size })?;
+            self.position.set_open_funding_fee_amount_per_size(if params.is_long { market_processor.market.funding_fee.long_funding_fee_amount_per_size } else { market_processor.market.funding_fee.short_funding_fee_amount_per_size })?;
         } else {
             //increase position
             self.update_borrowing_fee(pool, params.margin_token_price, trade_token)?;
-            self.update_funding_fee(market, params.margin_token_price, trade_token, pool)?;
-            self.position.set_entry_price(cal_utils::compute_avg_entry_price(self.position.position_size, self.position.entry_price, increase_size, params.margin_token_price, market.ticker_size, params.is_long)?)?;
+            self.update_funding_fee(market_processor.market, params.margin_token_price, trade_token, pool)?;
+            self.position.set_entry_price(cal_utils::compute_avg_entry_price(self.position.position_size, self.position.entry_price, increase_size, params.margin_token_price, market_processor.market.ticker_size, params.is_long)?)?;
             self.position.add_initial_margin(increase_margin)?;
             self.position.add_initial_margin_usd(cal_utils::token_to_usd_u(increase_margin, trade_token.decimals, params.margin_token_price)?)?;
             self.position.add_initial_margin_usd_from_portfolio(cal_utils::token_to_usd_u(increase_margin_from_balance, trade_token.decimals, params.margin_token_price)?)?;
@@ -145,13 +147,21 @@ impl PositionProcessor<'_> {
 
     pub fn decrease_position(&mut self,
                              params: DecreasePositionParams,
-                             trade_token: &TradeToken,
-                             user_loader: AccountLoader<User>,
-                             state: &mut State,
-                             market: &mut Market,
-                             pool: &mut Pool,
-                             oracle_map: &mut OracleMap,
-                             ctx: Context<PlaceOrder>) -> BumpResult<()> {
+                             user_account_loader: &AccountLoader<User>,
+                             authority_signer: &Signer,
+                             pool_account_loader: &AccountLoader<Pool>,
+                             market_account_loader: &AccountLoader<Market>,
+                             state_account: &Account<State>,
+                             user_token_account: &Account<TokenAccount>,
+                             pool_vault_account: &Account<TokenAccount>,
+                             trade_token_loader: &AccountLoader<TradeToken>,
+                             bump_signer: &AccountInfo,
+                             token_program: &Program<Token>,
+                             program_id: &Pubkey,
+                             oracle_map: &mut OracleMap) -> BumpResult<()> {
+        let pool = &mut pool_account_loader.load_mut().unwrap();
+        let trade_token = &mut trade_token_loader.load_mut().unwrap();
+        let market = &mut market_account_loader.load_mut().unwrap();
         let position_un_pnl_usd = self.get_position_un_pnl_usd(params.execute_price)?;
         self.update_borrowing_fee(pool, params.execute_price, trade_token)?;
         self.update_funding_fee(market, params.execute_price, trade_token, pool)?;
@@ -162,17 +172,17 @@ impl PositionProcessor<'_> {
                                                      trade_token.decimals,
                                                      oracle_map.get_price_data(&self.position.margin_mint)?.price,
                                                      market,
-                                                     state,
+                                                     state_account,
                                                      trade_token)?;
 
 
         if response.settle_margin < 0i128 && !params.is_liquidation && !self.position.cross_margin {
             return Err(BumpErrorCode::AmountNotEnough);
         }
-        let user = &mut user_loader.load_mut().unwrap();
+        let user = &mut user_account_loader.load_mut().unwrap();
         let mut user_processor = UserProcessor { user };
         if params.decrease_size == self.position.position_size {
-            user_processor.delete_position(market.symbol, &trade_token.mint, self.position.cross_margin, &ctx.program_id)?;
+            user_processor.delete_position(market.symbol, &trade_token.mint, self.position.cross_margin, program_id)?;
         } else {
             self.position.sub_position_size(params.decrease_size)?;
             self.position.sub_initial_margin(response.decrease_margin)?;
@@ -188,8 +198,8 @@ impl PositionProcessor<'_> {
             self.position.set_last_update(cal_utils::current_time())?;
         }
         //collect fee
-        fee_processor::collect_close_position_fee(pool, state, response.settle_close_fee, params.is_cross_margin)?;
-        fee_processor::collect_borrowing_fee(pool, state, response.settle_borrowing_fee, params.is_cross_margin)?;
+        fee_processor::collect_close_position_fee(pool, state_account, response.settle_close_fee, params.is_cross_margin)?;
+        fee_processor::collect_borrowing_fee(pool, state_account, response.settle_borrowing_fee, params.is_cross_margin)?;
 
         //update total borrowing fee and funding fee
         let mut market_processor = MarketProcessor { market };
@@ -201,16 +211,23 @@ impl PositionProcessor<'_> {
             is_long: self.position.is_long,
             entry_price: 0u128,
         })?;
-        let user = &mut user_loader.load_mut().unwrap();
         //settle
-        self.settle(&response, user, pool, ctx)?;
+        self.settle(&response,
+                    user_account_loader,
+                    authority_signer,
+                    pool_account_loader,
+                    state_account,
+                    user_token_account,
+                    pool_vault_account,
+                    bump_signer,
+                    token_program)?;
 
         //cancel stop order
         user_processor.cancel_stop_orders(params.order_id, self.position.symbol, &self.position.margin_mint, self.position.cross_margin)?;
 
         //add insurance fund
         if params.is_liquidation {
-            self.add_insurance_fund(market, state, trade_token, &response, pool)?;
+            self.add_insurance_fund(market, state_account, trade_token, &response, pool)?;
         }
         Ok(())
     }
@@ -469,16 +486,37 @@ impl PositionProcessor<'_> {
         Ok(())
     }
 
-    fn settle(&mut self, response: &UpdateDecreasePositionResponse, user: &mut User, mut pool: &mut Pool, ctx: Context<PlaceOrder>) -> BumpResult<()> {
-        let mut pool_processor = PoolProcessor { pool: &mut pool };
+    fn settle(&mut self,
+              response: &UpdateDecreasePositionResponse,
+              user_account_loader: &AccountLoader<User>,
+              authority_signer: &Signer,
+              pool_account_loader: &AccountLoader<Pool>,
+              state_account: &Account<State>,
+              user_token_account: &Account<TokenAccount>,
+              pool_vault_account: &Account<TokenAccount>,
+              bump_signer: &AccountInfo,
+              token_program: &Program<Token>) -> BumpResult<()> {
+        let pool = &mut pool_account_loader.load_mut().unwrap();
+        let user = &mut user_account_loader.load_mut().unwrap();
+        let mut pool_processor = PoolProcessor { pool };
 
         if self.position.cross_margin {
-            let add_liability = self.settle_cross(response, user, ctx)?;
+            let add_liability = self.settle_cross(response,
+                                                  user_account_loader,
+                                                  authority_signer,
+                                                  state_account,
+                                                  user_token_account,
+                                                  pool_vault_account,
+                                                  bump_signer, token_program)?;
             let user_token = user.get_user_token_mut(&self.position.margin_mint)?;
             user_token.repay_liability(user_token.amount)?;
             pool_processor.update_pnl_and_un_hold_pool_amount(response.un_hold_pool_amount, response.pool_pnl_token, add_liability)?;
         } else {
-            self.settle_isolate(response, ctx)?;
+            self.settle_isolate(response, authority_signer,
+                                state_account,
+                                user_token_account,
+                                pool_vault_account,
+                                bump_signer, token_program)?;
             pool_processor.update_pnl_and_un_hold_pool_amount(response.un_hold_pool_amount, response.pool_pnl_token, 0u128)?;
         }
         Ok(())
@@ -486,9 +524,15 @@ impl PositionProcessor<'_> {
 
     fn settle_cross(&mut self,
                     response: &UpdateDecreasePositionResponse,
-                    mut user: &mut User,
-                    ctx: Context<PlaceOrder>) -> BumpResult<u128> {
-        let mut user_processor = UserProcessor { user: &mut user };
+                    user_account_loader: &AccountLoader<User>,
+                    authority_signer: &Signer,
+                    state_account: &Account<State>,
+                    user_token_account: &Account<TokenAccount>,
+                    pool_vault_account: &Account<TokenAccount>,
+                    bump_signer: &AccountInfo,
+                    token_program: &Program<Token>) -> BumpResult<u128> {
+        let user = &mut user_account_loader.load_mut().unwrap();
+        let mut user_processor = UserProcessor { user };
         let mut add_liability = 0u128;
         if response.settle_fee > 0i128 {
             user_processor.sub_token_with_liability(&self.position.margin_mint, response.settle_fee.abs().cast::<u128>()?)?;
@@ -502,21 +546,21 @@ impl PositionProcessor<'_> {
             user_processor.add_token(&self.position.margin_mint, response.record_pnl_token.cast::<i128>()?.safe_add(response.settle_fee.cast::<i128>()?)?.cast::<u128>()?)?;
             //transfer pnl from pool to portfolio
             token::send_from_program_vault(
-                &ctx.accounts.token_program,
-                &ctx.accounts.pool_vault,
-                &ctx.accounts.user_token_account,
-                &ctx.accounts.bump_signer,
-                ctx.accounts.state.bump_signer_nonce,
+                token_program,
+                pool_vault_account,
+                user_token_account,
+                bump_signer,
+                state_account.bump_signer_nonce,
                 response.record_pnl_token.abs().cast::<u128>()?,
             ).unwrap();
         } else {
             add_liability = user_processor.sub_token_with_liability(&self.position.margin_mint, response.record_pnl_token.abs().cast::<u128>()?)?;
             //transfer pnl from portfolio to pool
             token::receive(
-                &ctx.accounts.token_program,
-                &ctx.accounts.user_token_account,
-                &ctx.accounts.pool_vault,
-                &ctx.accounts.authority,
+                token_program,
+                user_token_account,
+                pool_vault_account,
+                authority_signer,
                 response.record_pnl_token.abs().cast::<u128>()?.safe_sub(add_liability)?,
             ).unwrap();
         }
@@ -536,16 +580,21 @@ impl PositionProcessor<'_> {
 
     fn settle_isolate(&mut self,
                       response: &UpdateDecreasePositionResponse,
-                      ctx: Context<PlaceOrder>) -> BumpResult<()> {
+                      authority_signer: &Signer,
+                      state_account: &Account<State>,
+                      user_token_account: &Account<TokenAccount>,
+                      pool_vault_account: &Account<TokenAccount>,
+                      bump_signer: &AccountInfo,
+                      token_program: &Program<Token>) -> BumpResult<()> {
         if response.is_liquidation {
             return Ok(());
         }
         token::send_from_program_vault(
-            &ctx.accounts.token_program,
-            &ctx.accounts.pool_vault,
-            &ctx.accounts.user_token_account,
-            &ctx.accounts.bump_signer,
-            ctx.accounts.state.bump_signer_nonce,
+            token_program,
+            pool_vault_account,
+            user_token_account,
+            bump_signer,
+            state_account.bump_signer_nonce,
             response.settle_margin.abs().cast::<u128>()?,
         ).unwrap();
         Ok(())

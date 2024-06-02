@@ -91,7 +91,7 @@ pub fn handle_pool_un_stake(ctx: Context<PoolUnStake>, pool_index: usize, un_sta
                                                         &account_maps.market_map)?;
 
     let un_stake_token_amount_fee = pool_processor.
-        collect_un_stake_fee(&mut ctx.accounts.state, un_stake_token_amount)?;
+        collect_un_stake_fee(&ctx.accounts.state, un_stake_token_amount)?;
 
     update_account_fee_reward(&ctx.accounts.user, &ctx.accounts.pool)?;
 

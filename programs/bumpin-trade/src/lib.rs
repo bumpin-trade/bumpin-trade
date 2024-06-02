@@ -14,6 +14,8 @@ declare_id!("GhzHdLjZ1qLLPnPq6YdeqJAszuBRN8WnLnK455yBbig6");
 
 #[program]
 pub mod bumpin_trade {
+    use crate::processor::optional_accounts::{AccountMaps, load_maps};
+    use crate::state::infrastructure::user_order::UserOrder;
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
@@ -42,7 +44,42 @@ pub mod bumpin_trade {
 
     pub fn execute_order(ctx: Context<PlaceOrder>, order_id: u128,
     ) -> Result<()> {
-        handle_execute_order(ctx, state::infrastructure::user_order::UserOrder::default(), order_id, true)
+        let user_account_loader = &ctx.accounts.user_account;
+        let authority_signer = &ctx.accounts.authority;
+        let margin_token_account = &ctx.accounts.margin_token;
+        let pool_account_loader = &ctx.accounts.pool;
+        let market_account_loader = &ctx.accounts.market;
+        let state_account = &ctx.accounts.state;
+        let user_token_account = &ctx.accounts.user_token_account;
+        let pool_vault_account = &ctx.accounts.pool_vault;
+        let trade_token_loader = &ctx.accounts.trade_token;
+        let bump_signer_account_info = &ctx.accounts.bump_signer;
+        let token_program = &ctx.accounts.token_program;
+        let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
+        let AccountMaps {
+            market_map,
+            trade_token_map,
+            mut oracle_map,
+            pool_map
+        } = load_maps(remaining_accounts_iter)?;
+
+        handle_execute_order(user_account_loader,
+                             authority_signer,
+                             margin_token_account,
+                             pool_account_loader,
+                             market_account_loader,
+                             state_account,
+                             user_token_account,
+                             pool_vault_account,
+                             trade_token_loader,
+                             bump_signer_account_info,
+                             token_program,
+                             ctx.program_id,
+                             &trade_token_map,
+                             &mut oracle_map,
+                             &mut UserOrder::default(),
+                             order_id,
+                             false)
     }
 
     pub fn cancel_order(ctx: Context<CancelOrderCtx>, order_id: u128, reason_code: u128) -> Result<()> {

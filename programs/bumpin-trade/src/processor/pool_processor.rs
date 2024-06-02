@@ -21,10 +21,10 @@ pub struct PoolProcessor<'a> {
 }
 
 impl<'a> PoolProcessor<'_> {
-    pub fn collect_stake_fee(&mut self, state: &mut State, amount: u128) -> BumpResult<u128> {
+    pub fn collect_stake_fee(&mut self, state: &State, amount: u128) -> BumpResult<u128> {
         Ok(fee_processor::collect_stake_fee(&mut self.pool, state, amount)?)
     }
-    pub fn collect_un_stake_fee(&mut self, state: &mut State, amount: u128) -> BumpResult<u128> {
+    pub fn collect_un_stake_fee(&mut self, state: &State, amount: u128) -> BumpResult<u128> {
         Ok(fee_processor::collect_un_stake_fee(&mut self.pool, state, amount)?)
     }
     pub fn portfolio_to_stake(&mut self, user_loader: &AccountLoader<User>,
