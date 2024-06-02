@@ -6,3 +6,4 @@ pub mod pool_processor;
 pub mod market_processor;
 pub mod liquidate_processor;
 pub mod reward_processor;
+pub mod optional_accounts;

@@ -40,7 +40,7 @@ pub struct CancelOrderCtx<'info> {
 
 pub fn handle_cancel_order(ctx: Context<CancelOrderCtx>, order_id: u128, reason_code: u128) -> anchor_lang::Result<()> {
     let mut user = load_mut!(ctx.accounts.user_account)?;
-    let order = user.find_order_by_id(order_id)?;
+    let order = user.find_mut_order_by_id(order_id)?;
     if order.status.eq(&OrderStatus::INIT) {
         return Err(BumpErrorCode::InvalidParam.into());
     }

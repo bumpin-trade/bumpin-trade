@@ -197,7 +197,7 @@ pub fn handle_execute_order(ctx: Context<PlaceOrder>, mut user_order: UserOrder,
     let mut pool = ctx.accounts.pool.load_mut()?;
     let mut pool_processor = PoolProcessor { pool: &mut pool };
 
-    let order = if execute_from_remote { user.find_order_by_id(order_id)? } else { &mut user_order };
+    let order = if execute_from_remote { user.find_mut_order_by_id(order_id)? } else { &mut user_order };
 
     //validate order
     validate_execute_order(order, &market, &pool)?;

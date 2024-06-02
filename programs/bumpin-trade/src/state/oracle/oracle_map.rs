@@ -49,7 +49,7 @@ impl<'a> OracleMap<'a> {
     }
 
     pub fn load<'c>(
-        account_info_iter: &'c mut Peekable<Iter<AccountInfo<'a>>>) -> anchor_lang::Result<OracleMap<'a>> {
+        account_info_iter: &'c mut Peekable<Iter<AccountInfo<'a>>>) -> BumpResult<OracleMap<'a>> {
         let mut oracles: BTreeMap<Pubkey, AccountInfoAndOracleSource<'a>> = BTreeMap::new();
 
         while let Some(account_info) = account_info_iter.peek() {

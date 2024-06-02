@@ -12,15 +12,29 @@ use crate::state::pool_map::PoolMap;
 use crate::state::state::State;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
-use crate::validate;
+use crate::{utils, validate};
 use solana_program::msg;
 use crate::errors::BumpErrorCode::CouldNotFindUserToken;
+use crate::processor::optional_accounts::AccountMaps;
 
 pub struct UserProcessor<'a> {
     pub(crate) user: &'a mut User,
 }
 
 impl<'a> UserProcessor<'a> {
+    pub fn withdraw(&mut self, amount: u128, mint: &Pubkey, mut oracle_map: &OracleMap, &trade_token_map: &TradeTokenMap) -> BumpResult {
+        let price_data = oracle_map.get_price_data(mint)?;
+        let withdraw_usd = price_data.price.cast::<i128>()?
+            .safe_mul(amount.cast()?)?;
+
+        let available_value = self.get_available_value(&mut oracle_map, &trade_token_map)?;
+        validate!(available_value>withdraw_usd, BumpErrorCode::UserNotEnoughValue)?;
+
+        let user_token = self.user.get_user_token_mut(mint)?;
+        user_token.sub_token_amount(amount)?;
+
+        self.update_cross_position_balance(mint, amount, false)?;
+    }
     pub fn sub_user_token_amount(&self, user_token: &mut UserToken, mut amount: u128) -> BumpResult {
         user_token.sub_token_amount(amount)?;
         for mut user_position in self.user.user_positions {

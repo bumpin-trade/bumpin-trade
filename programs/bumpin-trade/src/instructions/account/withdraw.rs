@@ -5,6 +5,7 @@ use crate::{utils, validate};
 use crate::errors::{BumpErrorCode};
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
+use crate::processor::optional_accounts::{AccountMaps, load_maps};
 use crate::processor::user_processor::UserProcessor;
 use crate::state::oracle::oracle_map::OracleMap;
 use crate::state::state::State;
@@ -44,24 +45,22 @@ pub struct Withdraw<'info> {
 pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) -> Result<()> {
     validate!(amount>0, BumpErrorCode::AmountZero);
 
-    let mut user = &mut ctx.accounts.user.load_mut()?;
+    let user = &mut ctx.accounts.user.load_mut()?;
+    let mint = &ctx.accounts.user_token_account.mint.key();
 
-    let user_token = user.get_user_token_mut(&ctx.accounts.user_token_account.mint.key())?;
-
+    let user_token = user.get_user_token_ref(mint)?;
     validate!(user_token.amount>amount, BumpErrorCode::AmountNotEnough)?;
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
 
-    let mut oracle_map = OracleMap::load(remaining_accounts_iter)?;
-    let trade_token_map = TradeTokenMap::load(remaining_accounts_iter)?;
-
-    let price_data = oracle_map.get_price_data(&ctx.accounts.trade_token_vault.mint)?;
-    let withdraw_usd = price_data.price.cast::<i128>()?
-        .safe_mul(amount.cast()?)?;
+    let AccountMaps {
+        market_map,
+        trade_token_map,
+        mut oracle_map
+    } = load_maps(remaining_accounts_iter)?;
 
     let mut user_processor = UserProcessor { user };
-    let available_value = user_processor.get_available_value(&mut oracle_map, &trade_token_map)?;
-    validate!(available_value>withdraw_usd, BumpErrorCode::UserNotEnoughValue)?;
 
+    user_processor.withdraw(amount, mint, &oracle_map, &trade_token_map)?;
     let bump_signer_nonce = ctx.accounts.state.bump_signer_nonce;
     utils::token::send_from_program_vault(
         &ctx.accounts.token_program,
@@ -72,10 +71,6 @@ pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) -
         amount,
     )?;
 
-    //   user_token.sub_token_amount(amount)?;
 
-    user_processor.update_cross_position_balance(&ctx.accounts.user_token_account.mint,
-                                                 amount,
-                                                 false)?;
     Ok(())
 }
