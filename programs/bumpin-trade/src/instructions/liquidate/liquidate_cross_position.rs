@@ -3,6 +3,7 @@ use solana_program::pubkey::Pubkey;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::processor::market_processor::MarketProcessor;
+use crate::processor::optional_accounts::{AccountMaps, load_maps};
 use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::user_processor::UserProcessor;
 use crate::state::market_map::MarketMap;
@@ -31,11 +32,9 @@ pub struct LiquidateCrossPosition<'info> {
 pub fn handle_liquidate_cross_position(ctx: Context<LiquidateCrossPosition>, user: Pubkey) -> Result<()> {
     let user = &mut ctx.accounts.user.load_mut()?;
 
-    let mut remaining_accounts = &mut ctx.remaining_accounts.iter().peekable();
-    let mut oracle_map = OracleMap::load(remaining_accounts)?;
-    let mut market_map = MarketMap::load(remaining_accounts)?;
-    let mut pool_map = PoolMap::load(remaining_accounts)?;
-    let trade_token_map = TradeTokenMap::load(remaining_accounts)?;
+    let remaining_accounts = &mut ctx.remaining_accounts.iter().peekable();
+
+    let AccountMaps { market_map, trade_token_map, mut oracle_map, pool_map } = load_maps(remaining_accounts)?;
 
     let mut user_processor = UserProcessor { user };
     user_processor.cancel_all_orders()?;

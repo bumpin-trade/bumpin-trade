@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 pub type BumpResult<T = ()> = std::result::Result<T, BumpErrorCode>;
 
 #[error_code]
+#[derive(PartialEq, Eq)]
 pub enum BumpErrorCode {
     #[msg("AmountNotEnough")]
     AmountNotEnough,

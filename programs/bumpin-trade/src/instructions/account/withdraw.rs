@@ -49,9 +49,8 @@ pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) -
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
 
     let AccountMaps {
-        trade_token_map,
-        mut oracle_map,
-        ..
+        market_map, trade_token_map,
+        mut oracle_map, pool_map,
     } = load_maps(remaining_accounts_iter)?;
 
     let mut user_processor = UserProcessor { user };
