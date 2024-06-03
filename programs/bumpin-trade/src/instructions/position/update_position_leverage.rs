@@ -15,7 +15,7 @@ use crate::utils::token;
 use crate::{can_sign_for_user, validate};
 use crate::errors::BumpErrorCode;
 use crate::math::casting::Cast;
-use crate::processor::optional_accounts::load_maps;
+use crate::processor::optional_accounts::{AccountMaps, load_maps};
 
 #[derive(Accounts)]
 pub struct UpdatePositionLeverage<'info> {
@@ -54,9 +54,12 @@ pub fn handle_update_position_leverage(ctx: Context<UpdatePositionLeverage>, par
     let trade_token = ctx.accounts.trade_token.load_mut()?;
 
     let remaining_accounts = &mut ctx.remaining_accounts.iter().peekable();
-    let mut account_maps = load_maps(remaining_accounts)?;
+    let AccountMaps {
+        trade_token_map,
+        mut oracle_map,
+        ..
+    } = load_maps(remaining_accounts)?;
 
-    let mut pool = ctx.accounts.pool.load_mut()?;
     let market = ctx.accounts.market.load_mut()?;
     validate!(params.leverage <= market.market_trade_config.max_leverage, BumpErrorCode::AmountNotEnough.into());
 
@@ -66,66 +69,23 @@ pub fn handle_update_position_leverage(ctx: Context<UpdatePositionLeverage>, par
     let mut position_processor = PositionProcessor { position: position_mut };
     validate!(position_processor.position.leverage != params.leverage, BumpErrorCode::AmountNotEnough.into());
 
-    let token_price = account_maps.oracle_map.get_price_data(&trade_token.mint)?.price;
 
+    let token_price = oracle_map.get_price_data(&trade_token.mint)?.price;
 
-    if position_processor.position.position_size != 0u128 {
-        if position_processor.position.leverage > params.leverage {
-            let mut add_margin_amount;
-            let mut add_initial_margin_from_portfolio;
-            if position_processor.position.cross_margin {
-                position_processor.position.set_leverage(params.leverage)?;
-                let new_initial_margin_in_usd = cal_utils::div_rate_u(position_processor.position.position_size, position_processor.position.leverage)?;
-                let add_margin_in_usd = if new_initial_margin_in_usd > position_processor.position.initial_margin_usd { new_initial_margin_in_usd.safe_sub(position_processor.position.initial_margin_usd)? } else { 0u128 };
-                let cross_available_value = user_processor.get_available_value(&mut account_maps.oracle_map, &mut account_maps.trade_token_map)?;
-                validate!(add_margin_in_usd.cast::<i128>()? > cross_available_value, BumpErrorCode::AmountNotEnough.into());
-
-                add_margin_amount = cal_utils::usd_to_token_u(add_margin_in_usd, trade_token.decimals, token_price)?;
-                let available_amount = user_processor.user.get_user_token_ref(&trade_token.mint)?.get_token_available_amount()?;
-                add_initial_margin_from_portfolio = cal_utils::token_to_usd_u(add_margin_amount.min(available_amount), trade_token.decimals, token_price)?;
-                user_processor.use_token(&trade_token.mint, add_margin_amount, false)?;
-            } else {
-                add_margin_amount = params.add_margin_amount;
-            }
-
-            position_processor.execute_add_position_margin(&UpdatePositionMarginParams {
-                position_key,
-                is_add: true,
-                update_margin_amount: add_margin_amount,
-            }, &trade_token, &mut account_maps.oracle_map, &mut pool)?;
-            if !params.is_cross_margin {
-                token::receive(
-                    &ctx.accounts.token_program,
-                    &ctx.accounts.user_token_account,
-                    &ctx.accounts.pool_vault,
-                    &ctx.accounts.authority,
-                    params.add_margin_amount,
-                )?;
-            }
-        } else {
-            position_processor.position.set_leverage(params.leverage)?;
-            let reduce_margin = position_processor.position.initial_margin_usd.safe_sub(cal_utils::div_rate_u(position_processor.position.position_size, position_processor.position.leverage)?)?;
-
-            let mut position = user_processor.user.find_position_mut_by_key(&position_key)?;
-            let mut position_processor = PositionProcessor { position };
-            let reduce_margin_amount = position_processor.execute_reduce_position_margin(&UpdatePositionMarginParams {
-                position_key,
-                is_add: false,
-                update_margin_amount: reduce_margin,
-            }, false, &trade_token, &mut account_maps.oracle_map, &mut pool, &market, &ctx.accounts.state)?;
-            if position.cross_margin {
-                user_processor.un_use_token(&position.margin_mint, reduce_margin_amount)?;
-            } else {
-                token::send_from_program_vault(
-                    &ctx.accounts.token_program,
-                    &ctx.accounts.pool_vault,
-                    &ctx.accounts.user_token_account,
-                    &ctx.accounts.bump_signer,
-                    ctx.accounts.state.bump_signer_nonce,
-                    reduce_margin_amount,
-                )?;
-            }
-        }
-    }
+    position_processor.update_leverage(token_price,
+                                       params,
+                                       position_key,
+                                       &ctx.accounts.user_account,
+                                       &ctx.accounts.authority,
+                                       &ctx.accounts.trade_token,
+                                       &ctx.accounts.pool,
+                                       &ctx.accounts.state,
+                                       &ctx.accounts.market,
+                                       &ctx.accounts.user_token_account,
+                                       &ctx.accounts.pool_vault,
+                                       &ctx.accounts.bump_signer,
+                                       &ctx.accounts.token_program,
+                                       &trade_token_map,
+                                       &mut oracle_map)?;
     Ok(())
 }

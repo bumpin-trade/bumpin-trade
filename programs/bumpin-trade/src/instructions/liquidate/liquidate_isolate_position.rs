@@ -69,13 +69,9 @@ pub fn handle_liquidate_isolate_position(ctx: Context<LiquidateIsolatePosition>,
     let mut market_processor = MarketProcessor { market };
     market_processor.update_market_funding_fee_rate(&ctx.accounts.state, &mut oracle_map)?;
 
-    let mut pool;
-    if user_position.is_long {
-        pool = &mut ctx.accounts.pool.load_mut()?;
-    } else {
-        pool = &mut ctx.accounts.stable_pool.load_mut()?;
-    }
-    let mut pool_processor = PoolProcessor { pool };
+    let mut pool = &mut ctx.accounts.pool.load_mut().unwrap();
+    let mut stable_pool = &mut ctx.accounts.stable_pool.load_mut().unwrap();
+    let mut pool_processor = if user_position.is_long { PoolProcessor { pool } } else { PoolProcessor { pool: stable_pool } };
     pool_processor.update_pool_borrowing_fee_rate()?;
 
     let mut position_processor = PositionProcessor { position: user_position };

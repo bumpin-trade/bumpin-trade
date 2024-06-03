@@ -148,10 +148,9 @@ pub fn handle_place_order(ctx: Context<PlaceOrder>, order: PlaceOrderParams) -> 
         let token_program = &ctx.accounts.token_program;
         let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
         let AccountMaps {
-            market_map,
             trade_token_map,
             mut oracle_map,
-            pool_map
+            ..
         } = load_maps(remaining_accounts_iter)?;
 
         return handle_execute_order(user_account_loader,

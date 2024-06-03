@@ -5,11 +5,11 @@ use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
 
 use crate::errors::{BumpErrorCode, BumpResult};
-use crate::instructions::{cal_utils, UpdatePositionMarginParams};
+use crate::instructions::{cal_utils, UpdatePositionLeverageParams, UpdatePositionMarginParams};
 use crate::math::casting::Cast;
 use crate::math::constants::RATE_PRECISION;
 use crate::math::safe_math::SafeMath;
-use crate::processor::fee_processor;
+use crate::processor::{fee_processor, user_processor};
 use crate::processor::market_processor::{MarketProcessor, UpdateOIParams};
 use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::user_processor::UserProcessor;
@@ -23,12 +23,99 @@ use crate::state::user::User;
 use crate::utils::token;
 use crate::validate;
 use solana_program::msg;
+use crate::processor::optional_accounts::AccountMaps;
+use crate::state::trade_token_map::TradeTokenMap;
 
 pub struct PositionProcessor<'a> {
     pub(crate) position: &'a mut UserPosition,
 }
 
 impl PositionProcessor<'_> {
+    pub fn update_leverage<'info>(&mut self,
+                                  token_price: u128,
+                                  params: UpdatePositionLeverageParams,
+                                  position_key:Pubkey,
+                                  user_account: &AccountLoader<'info, User>,
+                                  authority: &Signer<'info>,
+                                  trade_token: &AccountLoader<'info, TradeToken>,
+                                  pool: &AccountLoader<'info, Pool>,
+                                  state: &Account<'info, State>,
+                                  market: &AccountLoader<'info, Market>,
+                                  user_token_account: &Account<'info, TokenAccount>,
+                                  pool_vault: &Account<'info, TokenAccount>,
+                                  bump_signer: &AccountInfo<'info>,
+                                  token_program: &Program<'info, Token>,
+                                  trade_token_map: &TradeTokenMap,
+                                  oracle_map: &mut OracleMap
+    ) -> BumpResult<()> {
+        let trade_token = trade_token.load().unwrap();
+        let pool = &mut pool.load_mut().unwrap();
+
+        if self.position.position_size != 0u128 {
+            if self.position.leverage > params.leverage {
+                let mut add_margin_amount;
+                let mut add_initial_margin_from_portfolio;
+                if self.position.cross_margin {
+                    let user = &mut user_account.load_mut().unwrap();
+                    let available_amount = user.get_user_token_ref(&trade_token.mint)?.get_token_available_amount()?;
+                    let mut user_processor = UserProcessor{user};
+                    self.position.set_leverage(params.leverage)?;
+                    let new_initial_margin_in_usd = cal_utils::div_rate_u(self.position.position_size, self.position.leverage)?;
+                    let add_margin_in_usd = if new_initial_margin_in_usd > self.position.initial_margin_usd { new_initial_margin_in_usd.safe_sub(self.position.initial_margin_usd)? } else { 0u128 };
+                    let cross_available_value = user_processor.get_available_value(oracle_map, trade_token_map)?;
+                    validate!(add_margin_in_usd.cast::<i128>()? > cross_available_value, BumpErrorCode::AmountNotEnough.into());
+
+                    drop(user_processor);
+                    let user = &mut user_account.load_mut().unwrap();
+                    let mut user_processor = UserProcessor{user};
+                    add_margin_amount = cal_utils::usd_to_token_u(add_margin_in_usd, trade_token.decimals, token_price)?;
+                    add_initial_margin_from_portfolio = cal_utils::token_to_usd_u(add_margin_amount.min(available_amount), trade_token.decimals, token_price)?;
+                    user_processor.use_token(&trade_token.mint, add_margin_amount, false)?;
+                } else {
+                    add_margin_amount = params.add_margin_amount;
+                }
+
+                self.execute_add_position_margin(&UpdatePositionMarginParams {
+                    position_key,
+                    is_add: true,
+                    update_margin_amount: add_margin_amount,
+                }, &trade_token, oracle_map, pool)?;
+                if !params.is_cross_margin {
+                    token::receive(
+                        token_program,
+                        user_token_account,
+                        pool_vault,
+                        authority,
+                        params.add_margin_amount,
+                    ).unwrap();
+                }
+            } else {
+                self.position.set_leverage(params.leverage)?;
+                let reduce_margin = self.position.initial_margin_usd.safe_sub(cal_utils::div_rate_u(self.position.position_size, self.position.leverage)?)?;
+                let reduce_margin_amount = self.execute_reduce_position_margin(&UpdatePositionMarginParams {
+                    position_key,
+                    is_add: false,
+                    update_margin_amount: reduce_margin,
+                }, false, &trade_token, oracle_map, pool, &market.load().unwrap(), state)?;
+                if self.position.cross_margin {
+                    let user = &mut user_account.load_mut().unwrap();
+                    let mut user_processor = UserProcessor{user};
+                    user_processor.un_use_token(&self.position.margin_mint, reduce_margin_amount)?;
+                } else {
+                    token::send_from_program_vault(
+                        token_program,
+                        pool_vault,
+                        user_token_account,
+                        bump_signer,
+                        state.bump_signer_nonce,
+                        reduce_margin_amount,
+                    ).unwrap();
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub fn get_position_value(&self, oracle_map: &mut OracleMap) -> BumpResult<(u128, i128, u128)> {
         if self.position.cross_margin {
             let index_price_data = oracle_map.get_price_data(&&self.position.margin_mint)?;

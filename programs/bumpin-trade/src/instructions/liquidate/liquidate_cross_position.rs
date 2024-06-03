@@ -40,7 +40,7 @@ pub fn handle_liquidate_cross_position(ctx: Context<LiquidateCrossPosition>, use
     let mut user_processor = UserProcessor { user };
     user_processor.cancel_all_orders()?;
 
-    for user_position in user.user_positions {
+    for user_position in user_processor.user.user_positions {
         let mut pool = &mut pool_map.get_mut_ref(&user_position.margin_mint)?;
         let mut pool_processor = PoolProcessor { pool };
         pool_processor.update_pool_borrowing_fee_rate()?;
