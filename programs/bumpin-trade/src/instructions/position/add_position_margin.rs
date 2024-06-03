@@ -80,6 +80,7 @@ pub fn handle_add_position_margin(ctx: Context<AddPositionMargin>, params: Updat
             reduce_margin_amount,
         )?;
     }
+    let mut user = ctx.accounts.user_account.load_mut()?;
     user.update_all_orders_leverage(position_processor.position.leverage, position_processor.position.symbol, &position_processor.position.margin_mint, position_processor.position.is_long, position_processor.position.cross_margin)?;
     Ok(())
 }
