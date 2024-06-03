@@ -55,7 +55,7 @@ pub fn handle_add_position_margin(ctx: Context<AddPositionMargin>, params: Updat
     let mut position_processor = PositionProcessor { position: &mut position };
     let mut pool = ctx.accounts.pool.load_mut()?;
     let market = ctx.accounts.market.load_mut()?;
-    validate!(position.cross_margin, BumpErrorCode::AmountNotEnough.into());
+    validate!(position_processor.position.cross_margin, BumpErrorCode::AmountNotEnough.into());
     if params.is_add {
         token::receive(
             &ctx.accounts.token_program,
@@ -65,7 +65,7 @@ pub fn handle_add_position_margin(ctx: Context<AddPositionMargin>, params: Updat
             params.update_margin_amount,
         )?;
     }
-    validate!(trade_token.mint.eq(&position.margin_mint), BumpErrorCode::AmountNotEnough.into());
+    validate!(trade_token.mint.eq(&position_processor.position.margin_mint), BumpErrorCode::AmountNotEnough.into());
 
     if params.is_add {
         position_processor.execute_add_position_margin(&params, &trade_token, &mut oracle_map, &mut pool)?;
@@ -80,6 +80,6 @@ pub fn handle_add_position_margin(ctx: Context<AddPositionMargin>, params: Updat
             reduce_margin_amount,
         )?;
     }
-    user.update_all_orders_leverage(position.leverage, position.symbol, &position.margin_mint, position.is_long, position.cross_margin)?;
+    user.update_all_orders_leverage(position_processor.position.leverage, position_processor.position.symbol, &position_processor.position.margin_mint, position_processor.position.is_long, position_processor.position.cross_margin)?;
     Ok(())
 }

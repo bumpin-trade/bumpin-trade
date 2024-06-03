@@ -57,10 +57,9 @@ pub mod bumpin_trade {
         let token_program = &ctx.accounts.token_program;
         let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
         let AccountMaps {
-            market_map,
             trade_token_map,
             mut oracle_map,
-            pool_map
+            ..
         } = load_maps(remaining_accounts_iter)?;
 
         handle_execute_order(user_account_loader,
@@ -82,8 +81,8 @@ pub mod bumpin_trade {
                              false)
     }
 
-    pub fn cancel_order(ctx: Context<CancelOrderCtx>, order_id: u128, reason_code: u128) -> Result<()> {
-        handle_cancel_order(ctx, order_id, reason_code)
+    pub fn cancel_order(ctx: Context<CancelOrderCtx>, order_id: u128) -> Result<()> {
+        handle_cancel_order(ctx, order_id)
     }
 
     /*-----position------*/

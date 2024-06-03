@@ -219,23 +219,23 @@ fn validate_place_order(order: PlaceOrderParams, token: &Pubkey, market: &Ref<Ma
     Ok(res)
 }
 
-pub fn handle_execute_order(user_account_loader: &AccountLoader<User>,
-                            authority_signer: &Signer,
-                            margin_token_account: &Account<TokenAccount>,
-                            pool_account_loader: &AccountLoader<Pool>,
-                            market_account_loader: &AccountLoader<Market>,
-                            state_account: &Account<State>,
-                            user_token_account: &Account<TokenAccount>,
-                            pool_vault_account: &Account<TokenAccount>,
-                            trade_token_loader: &AccountLoader<TradeToken>,
-                            bump_signer: &AccountInfo,
-                            token_program: &Program<Token>,
-                            program_id: &Pubkey,
-                            trade_token_map: &TradeTokenMap,
-                            oracle_map: &mut OracleMap,
-                            user_order: &mut UserOrder,
-                            order_id: u128,
-                            execute_from_remote: bool) -> Result<()> {
+pub fn handle_execute_order<'info>(user_account_loader: &AccountLoader<'info, User>,
+                                   authority_signer: &Signer<'info>,
+                                   margin_token_account: &Account<'info, TokenAccount>,
+                                   pool_account_loader: &AccountLoader<'info, Pool>,
+                                   market_account_loader: &AccountLoader<'info, Market>,
+                                   state_account: &Account<'info, State>,
+                                   user_token_account: &Account<'info, TokenAccount>,
+                                   pool_vault_account: &Account<'info, TokenAccount>,
+                                   trade_token_loader: &AccountLoader<'info, TradeToken>,
+                                   bump_signer: &AccountInfo<'info, >,
+                                   token_program: &Program<'info, Token>,
+                                   program_id: &Pubkey,
+                                   trade_token_map: &TradeTokenMap,
+                                   oracle_map: &mut OracleMap,
+                                   user_order: &mut UserOrder,
+                                   order_id: u128,
+                                   execute_from_remote: bool) -> Result<()> {
     let user = user_account_loader.load().unwrap();
     let margin_token = margin_token_account;
     let market = &mut market_account_loader.load_mut().unwrap();

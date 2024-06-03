@@ -1,14 +1,14 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
+
 use crate::errors::BumpErrorCode;
 use crate::instructions::constraints::*;
-use crate::load_mut;
-use crate::state::user::User;
-use crate::state::infrastructure::user_order::{OrderStatus, PositionSide};
+use crate::processor::user_processor::UserProcessor;
+use crate::state::infrastructure::user_order::OrderStatus;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
-use crate::utils::token;
+use crate::state::user::User;
 
 #[derive(Accounts)]
 pub struct CancelOrderCtx<'info> {
@@ -33,29 +33,26 @@ pub struct CancelOrderCtx<'info> {
     pub bump_signer: AccountInfo<'info>,
 
     pub token_program: Program<'info, Token>,
-    
+
     pub state: Account<'info, State>,
 }
 
 
-pub fn handle_cancel_order(ctx: Context<CancelOrderCtx>, order_id: u128, reason_code: u128) -> anchor_lang::Result<()> {
-    let mut user = load_mut!(ctx.accounts.user_account)?;
-    let order = user.find_mut_order_by_id(order_id)?;
+pub fn handle_cancel_order(ctx: Context<CancelOrderCtx>, order_id: u128) -> Result<()> {
+    let user = ctx.accounts.user_account.load().unwrap();
+    let order = user.find_ref_order_by_id(order_id)?;
     if order.status.eq(&OrderStatus::INIT) {
         return Err(BumpErrorCode::InvalidParam.into());
     }
-    user.delete_order(order_id)?;
-    if order.position_side.eq(&PositionSide::INCREASE) && order.cross_margin {
-        user.sub_order_hold_in_usd(order.order_size)?;
-    } else if order.position_side.eq(&PositionSide::INCREASE) && !order.cross_margin {
-        token::send_from_program_vault(
-            &ctx.accounts.token_program,
-            &ctx.accounts.pool_vault,
-            &ctx.accounts.user_token_account,
-            &ctx.accounts.bump_signer,
-            ctx.accounts.state.bump_signer_nonce,
-            order.order_margin,
-        )?;
-    }
+
+
+    let user = &mut ctx.accounts.user_account.load_mut().unwrap();
+    let mut user_processor = UserProcessor { user };
+    user_processor.cancel_order(order,
+                                &ctx.accounts.token_program,
+                                &ctx.accounts.pool_vault,
+                                &ctx.accounts.user_token_account,
+                                &ctx.accounts.bump_signer,
+                                &ctx.accounts.state)?;
     Ok(())
 }

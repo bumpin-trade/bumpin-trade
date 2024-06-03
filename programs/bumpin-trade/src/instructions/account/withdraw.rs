@@ -3,11 +3,9 @@ use anchor_spl::token::{Token, TokenAccount};
 use crate::instructions::constraints::*;
 use crate::{utils, validate};
 use crate::errors::{BumpErrorCode};
-use crate::math::safe_math::SafeMath;
 use crate::processor::optional_accounts::{AccountMaps, load_maps};
 use crate::processor::user_processor::UserProcessor;
 use crate::state::state::State;
-use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 
 #[derive(Accounts)]
@@ -51,10 +49,9 @@ pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) -
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
 
     let AccountMaps {
-        market_map,
         trade_token_map,
         mut oracle_map,
-        pool_map,
+        ..
     } = load_maps(remaining_accounts_iter)?;
 
     let mut user_processor = UserProcessor { user };

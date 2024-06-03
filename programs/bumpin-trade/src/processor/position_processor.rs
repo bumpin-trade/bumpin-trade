@@ -1,4 +1,3 @@
-use anchor_lang::context::Context;
 use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
@@ -6,7 +5,7 @@ use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
 
 use crate::errors::{BumpErrorCode, BumpResult};
-use crate::instructions::{cal_utils, PlaceOrder, UpdatePositionMarginParams};
+use crate::instructions::{cal_utils, UpdatePositionMarginParams};
 use crate::math::casting::Cast;
 use crate::math::constants::RATE_PRECISION;
 use crate::math::safe_math::SafeMath;
@@ -24,15 +23,14 @@ use crate::state::user::User;
 use crate::utils::token;
 use crate::validate;
 use solana_program::msg;
-use crate::state::trade_token_map::TradeTokenMap;
 
 pub struct PositionProcessor<'a> {
     pub(crate) position: &'a mut UserPosition,
 }
 
 impl PositionProcessor<'_> {
-    pub fn get_position_value(&self, mut oracle_map: &mut OracleMap) -> BumpResult<(u128, i128, u128)> {
-        if (self.position.cross_margin) {
+    pub fn get_position_value(&self, oracle_map: &mut OracleMap) -> BumpResult<(u128, i128, u128)> {
+        if self.position.cross_margin {
             let index_price_data = oracle_map.get_price_data(&&self.position.margin_mint)?;
 
             let position_un_pnl = self.get_position_un_pnl_usd(index_price_data.price)?;
@@ -145,20 +143,20 @@ impl PositionProcessor<'_> {
         Ok(())
     }
 
-    pub fn decrease_position(&mut self,
-                             params: DecreasePositionParams,
-                             user_account_loader: &AccountLoader<User>,
-                             authority_signer: &Signer,
-                             pool_account_loader: &AccountLoader<Pool>,
-                             market_account_loader: &AccountLoader<Market>,
-                             state_account: &Account<State>,
-                             user_token_account: &Account<TokenAccount>,
-                             pool_vault_account: &Account<TokenAccount>,
-                             trade_token_loader: &AccountLoader<TradeToken>,
-                             bump_signer: &AccountInfo,
-                             token_program: &Program<Token>,
-                             program_id: &Pubkey,
-                             oracle_map: &mut OracleMap) -> BumpResult<()> {
+    pub fn decrease_position<'info>(&mut self,
+                                    params: DecreasePositionParams,
+                                    user_account_loader: &AccountLoader<'info, User>,
+                                    authority_signer: &Signer<'info>,
+                                    pool_account_loader: &AccountLoader<'info, Pool>,
+                                    market_account_loader: &AccountLoader<'info, Market>,
+                                    state_account: &Account<'info, State>,
+                                    user_token_account: &Account<'info, TokenAccount>,
+                                    pool_vault_account: &Account<'info, TokenAccount>,
+                                    trade_token_loader: &AccountLoader<'info, TradeToken>,
+                                    bump_signer: &AccountInfo<'info>,
+                                    token_program: &Program<'info, Token>,
+                                    program_id: &Pubkey,
+                                    oracle_map: &mut OracleMap) -> BumpResult<()> {
         let pool = &mut pool_account_loader.load_mut().unwrap();
         let trade_token = &mut trade_token_loader.load_mut().unwrap();
         let market = &mut market_account_loader.load_mut().unwrap();
@@ -486,16 +484,16 @@ impl PositionProcessor<'_> {
         Ok(())
     }
 
-    fn settle(&mut self,
-              response: &UpdateDecreasePositionResponse,
-              user_account_loader: &AccountLoader<User>,
-              authority_signer: &Signer,
-              pool_account_loader: &AccountLoader<Pool>,
-              state_account: &Account<State>,
-              user_token_account: &Account<TokenAccount>,
-              pool_vault_account: &Account<TokenAccount>,
-              bump_signer: &AccountInfo,
-              token_program: &Program<Token>) -> BumpResult<()> {
+    fn settle<'info>(&mut self,
+                     response: &UpdateDecreasePositionResponse,
+                     user_account_loader: &AccountLoader<'info, User>,
+                     authority_signer: &Signer<'info>,
+                     pool_account_loader: &AccountLoader<'info, Pool>,
+                     state_account: &Account<'info, State>,
+                     user_token_account: &Account<'info, TokenAccount>,
+                     pool_vault_account: &Account<'info, TokenAccount>,
+                     bump_signer: &AccountInfo<'info>,
+                     token_program: &Program<'info, Token>) -> BumpResult<()> {
         let pool = &mut pool_account_loader.load_mut().unwrap();
         let user = &mut user_account_loader.load_mut().unwrap();
         let mut pool_processor = PoolProcessor { pool };
@@ -512,7 +510,7 @@ impl PositionProcessor<'_> {
             user_token.repay_liability(user_token.amount)?;
             pool_processor.update_pnl_and_un_hold_pool_amount(response.un_hold_pool_amount, response.pool_pnl_token, add_liability)?;
         } else {
-            self.settle_isolate(response, authority_signer,
+            self.settle_isolate(response,
                                 state_account,
                                 user_token_account,
                                 pool_vault_account,
@@ -522,15 +520,15 @@ impl PositionProcessor<'_> {
         Ok(())
     }
 
-    fn settle_cross(&mut self,
-                    response: &UpdateDecreasePositionResponse,
-                    user_account_loader: &AccountLoader<User>,
-                    authority_signer: &Signer,
-                    state_account: &Account<State>,
-                    user_token_account: &Account<TokenAccount>,
-                    pool_vault_account: &Account<TokenAccount>,
-                    bump_signer: &AccountInfo,
-                    token_program: &Program<Token>) -> BumpResult<u128> {
+    fn settle_cross<'info>(&mut self,
+                           response: &UpdateDecreasePositionResponse,
+                           user_account_loader: &AccountLoader<'info, User>,
+                           authority_signer: &Signer<'info>,
+                           state_account: &Account<'info, State>,
+                           user_token_account: &Account<'info, TokenAccount>,
+                           pool_vault_account: &Account<'info, TokenAccount>,
+                           bump_signer: &AccountInfo<'info>,
+                           token_program: &Program<'info, Token>) -> BumpResult<u128> {
         let user = &mut user_account_loader.load_mut().unwrap();
         let mut user_processor = UserProcessor { user };
         let mut add_liability = 0u128;
@@ -578,14 +576,13 @@ impl PositionProcessor<'_> {
         Ok(add_liability)
     }
 
-    fn settle_isolate(&mut self,
-                      response: &UpdateDecreasePositionResponse,
-                      authority_signer: &Signer,
-                      state_account: &Account<State>,
-                      user_token_account: &Account<TokenAccount>,
-                      pool_vault_account: &Account<TokenAccount>,
-                      bump_signer: &AccountInfo,
-                      token_program: &Program<Token>) -> BumpResult<()> {
+    fn settle_isolate<'info>(&mut self,
+                             response: &UpdateDecreasePositionResponse,
+                             state_account: &Account<'info, State>,
+                             user_token_account: &Account<'info, TokenAccount>,
+                             pool_vault_account: &Account<'info, TokenAccount>,
+                             bump_signer: &AccountInfo<'info>,
+                             token_program: &Program<'info, Token>) -> BumpResult<()> {
         if response.is_liquidation {
             return Ok(());
         }
@@ -604,7 +601,7 @@ impl PositionProcessor<'_> {
         let mut reduce_amount = change_token_amount;
         for mut position in user.user_positions {
             if position.margin_mint.eq(token_mint) && position.cross_margin {
-                let mut change_amount;
+                let change_amount;
 
                 if change_token_amount > 0i128 {
                     let borrowing_margin = position.initial_margin_usd

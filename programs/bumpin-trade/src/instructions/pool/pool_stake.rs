@@ -6,7 +6,6 @@ use crate::math::safe_math::SafeMath;
 use crate::processor::fee_processor;
 use crate::processor::fee_reward_processor::update_account_fee_reward;
 use crate::processor::pool_processor::PoolProcessor;
-use crate::processor::user_processor::UserProcessor;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle::oracle_map::OracleMap;
 use crate::state::pool::Pool;

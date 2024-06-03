@@ -1,9 +1,12 @@
+use anchor_lang::prelude::{Account, Program};
+use anchor_spl::token::{Token, TokenAccount};
+use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::processor::position_processor::PositionProcessor;
-use crate::state::infrastructure::user_order::{OrderType, UserOrder};
+use crate::state::infrastructure::user_order::{OrderType, PositionSide, UserOrder};
 use crate::state::infrastructure::user_position::UserPosition;
 use crate::state::infrastructure::user_token::UserToken;
 use crate::state::market_map::MarketMap;
@@ -16,6 +19,7 @@ use crate::{utils, validate};
 use solana_program::msg;
 use crate::errors::BumpErrorCode::{CouldNotFindUserPosition, CouldNotFindUserToken};
 use crate::processor::optional_accounts::AccountMaps;
+use crate::utils::token;
 
 pub struct UserProcessor<'a> {
     pub(crate) user: &'a mut User,
@@ -89,7 +93,7 @@ impl<'a> UserProcessor<'a> {
         Ok(total_used_value)
     }
     pub fn get_portfolio_net_value(&self, trade_token_map: &TradeTokenMap, oracle_map: &mut OracleMap) -> BumpResult<u128> {
-        let mut total_token_net_value = 0u128;
+        let total_token_net_value = 0u128;
         for user_token in self.user.user_tokens {
             let trade_token = trade_token_map.get_trade_token(&user_token.token_mint)?;
             let oracle_price = oracle_map.get_price_data(&user_token.token_mint)?;
@@ -99,7 +103,7 @@ impl<'a> UserProcessor<'a> {
         }
         Ok(total_token_net_value)
     }
-    pub fn get_available_value(&self, oracle_map: &mut OracleMap, trade_token_map: &TradeTokenMap) -> BumpResult<i128> {
+    pub fn get_available_value(&mut self, oracle_map: &mut OracleMap, trade_token_map: &TradeTokenMap) -> BumpResult<i128> {
         let mut total_net_value = 0u128;
         let mut total_used_value = 0u128;
         let mut total_borrowing_value = 0u128;
@@ -229,6 +233,28 @@ impl<'a> UserProcessor<'a> {
         // Find the program address
         let (address, _bump_seed) = Pubkey::find_program_address(seeds, program_id);
         Ok(address)
+    }
+
+    pub fn cancel_order<'info>(&mut self, order: &UserOrder,
+                               token_program: &Program<'info, Token>,
+                               pool_vault: &Account<'info, TokenAccount>,
+                               user_token_account: &Account<'info, TokenAccount>,
+                               bump_signer: &AccountInfo<'info>,
+                               state: &Account<'info, State>) -> BumpResult<()> {
+        self.user.delete_order(order.order_id)?;
+        if order.position_side.eq(&PositionSide::INCREASE) && order.cross_margin {
+            self.user.sub_order_hold_in_usd(order.order_size)?;
+        } else if order.position_side.eq(&PositionSide::INCREASE) && !order.cross_margin {
+            token::send_from_program_vault(
+                token_program,
+                pool_vault,
+                user_token_account,
+                bump_signer,
+                state.bump_signer_nonce,
+                order.order_margin,
+            ).unwrap();
+        }
+        Ok(())
     }
 }
 
