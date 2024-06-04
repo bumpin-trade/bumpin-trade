@@ -10,7 +10,6 @@ use solana_program::msg;
 
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::errors::BumpErrorCode::{CouldNotLoadTradeTokenData, TradeTokenNotFind};
-use crate::math::safe_unwrap::SafeUnwrap;
 use crate::state::market::Market;
 use crate::traits::Size;
 
@@ -60,8 +59,11 @@ impl<'a> MarketMap<'a> {
             }
         }
     }
+}
+
+impl<'a> MarketMap<'a> {
     pub fn load<'c>(
-        account_info_iter: &'c mut Peekable<Iter<AccountInfo<'a>>>,
+        account_info_iter: &'c mut Peekable<Iter<'a, AccountInfo<'a>>>,
     ) -> BumpResult<MarketMap<'a>> {
         let mut perp_market_map: MarketMap = MarketMap(BTreeMap::new());
         let market_discriminator: [u8; 8] = Market::discriminator();
@@ -80,7 +82,7 @@ impl<'a> MarketMap<'a> {
             }
             let symbol = *array_ref![data, 8, 32];
 
-            let account_info = account_info_iter.next().safe_unwrap()?;
+            let account_info = account_info_iter.next().ok_or(BumpErrorCode::InvalidMarketAccount)?;
             let account_loader: AccountLoader<'a, Market> =
                 AccountLoader::try_from(account_info).or(Err(BumpErrorCode::InvalidMarketAccount))?;
             perp_market_map.0.insert(symbol, account_loader);

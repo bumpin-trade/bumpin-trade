@@ -81,7 +81,7 @@ impl<'a> PoolMap<'a> {
             }
         }
     }
-    pub fn load<'c>(account_info_iter: &'c mut Peekable<Iter<AccountInfo<'a>>>) -> BumpResult<PoolMap<'a>> {
+    pub fn load<'c>(account_info_iter: &'c mut Peekable<Iter<'a, AccountInfo<'a>>>) -> BumpResult<PoolMap<'a>> {
         let mut pool_map = PoolMap(BTreeMap::new());
         let pool_discriminator = Pool::discriminator();
         while let Some(account_info) = account_info_iter.peek() {

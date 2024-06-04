@@ -51,7 +51,7 @@ impl<'a> TradeTokenMap<'a> {
             }
         }
     }
-    pub fn load<'c>(account_info_iter: &'c mut Peekable<Iter<AccountInfo<'a>>>) -> BumpResult<TradeTokenMap<'a>> {
+    pub fn load<'c>(account_info_iter: &'c mut Peekable<Iter<'a, AccountInfo<'a>>>) -> BumpResult<TradeTokenMap<'a>> {
         let mut trade_token_vec: TradeTokenMap = TradeTokenMap(BTreeMap::new());
         let trade_token_discriminator = TradeToken::discriminator();
         while let Some(account_info) = account_info_iter.peek() {
