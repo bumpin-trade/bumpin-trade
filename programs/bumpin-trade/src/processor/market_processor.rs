@@ -39,7 +39,7 @@ impl<'a> MarketProcessor<'_> {
     fn add_oi(&self, params: UpdateOIParams) -> BumpResult<()> {
         let mut market_position = if params.is_long { self.market.long_open_interest } else { self.market.short_open_interest };
         if market_position.open_interest == 0u128 {
-            market_position.add_open_interest(params.size, params.entry_price);
+            market_position.add_open_interest(params.size, params.entry_price)?;
         } else {
             let entry_price = cal_utils::compute_avg_entry_price(market_position.open_interest,
                                                                  market_position.entry_price,
@@ -48,14 +48,14 @@ impl<'a> MarketProcessor<'_> {
                                                                  self.market.ticker_size,
                                                                  params.is_long)?;
 
-            market_position.add_open_interest(params.size, entry_price);
+            market_position.add_open_interest(params.size, entry_price)?;
         }
         Ok(())
     }
 
     fn sub_oi(&self, params: UpdateOIParams) -> BumpResult<()> {
         let mut market_position = if params.is_long { self.market.long_open_interest } else { self.market.short_open_interest };
-        market_position.sub_open_interest(params.size);
+        market_position.sub_open_interest(params.size)?;
         Ok(())
     }
     pub fn update_market_funding_fee_rate(&mut self, state: &State, oracle_price: &mut OracleMap) -> BumpResult<()> {
@@ -93,7 +93,7 @@ impl<'a> MarketProcessor<'_> {
             self.market.funding_fee.update_market_funding_fee_rate(short_funding_fee_amount_per_size_delta, long_funding_fee_amount_per_size_delta, fee_durations)?;
         }
 
-        self.market.funding_fee.update_last_update();
+        self.market.funding_fee.update_last_update()?;
         Ok(())
     }
 

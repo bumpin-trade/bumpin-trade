@@ -1,3 +1,5 @@
+use std::iter::Peekable;
+use std::slice::Iter;
 use anchor_lang::prelude::*;
 use solana_program::pubkey::Pubkey;
 use crate::math::casting::Cast;
@@ -29,10 +31,10 @@ pub struct LiquidateCrossPosition<'info> {
     pub keeper_signer: Signer<'info>,
 }
 
-pub fn handle_liquidate_cross_position(ctx: Context<LiquidateCrossPosition>, user: Pubkey) -> Result<()> {
+pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, LiquidateCrossPosition>, user: Pubkey) -> Result<()> {
     let user = &mut ctx.accounts.user.load_mut()?;
 
-    let remaining_accounts = &mut ctx.remaining_accounts.iter().peekable();
+    let remaining_accounts:&mut Peekable<Iter<'info, AccountInfo<'info>>> = &mut ctx.remaining_accounts.iter().peekable();
 
     let AccountMaps { market_map, trade_token_map, mut oracle_map, pool_map } = load_maps(remaining_accounts)?;
 
@@ -40,7 +42,7 @@ pub fn handle_liquidate_cross_position(ctx: Context<LiquidateCrossPosition>, use
     user_processor.cancel_all_orders()?;
 
     for user_position in user_processor.user.user_positions {
-        let mut pool = &mut pool_map.get_mut_ref(&user_position.margin_mint)?;
+        let pool = &mut pool_map.get_mut_ref(&user_position.margin_mint)?;
         let mut pool_processor = PoolProcessor { pool };
         pool_processor.update_pool_borrowing_fee_rate()?;
         drop(pool_processor);

@@ -1,8 +1,12 @@
+use std::iter::Peekable;
+use std::slice::Iter;
+
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
-use crate::instructions::constraints::*;
+
 use crate::{utils, validate};
-use crate::errors::{BumpErrorCode};
+use crate::errors::BumpErrorCode;
+use crate::instructions::constraints::*;
 use crate::processor::optional_accounts::{AccountMaps, load_maps};
 use crate::processor::user_processor::UserProcessor;
 use crate::state::state::State;
@@ -38,7 +42,7 @@ pub struct Withdraw<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) -> Result<()> {
+pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, Withdraw>, token_index: u16, amount: u128) -> Result<()> {
     validate!(amount>0, BumpErrorCode::AmountZero);
 
     let user = &mut ctx.accounts.user.load_mut()?;
@@ -46,7 +50,7 @@ pub fn handle_withdraw(ctx: Context<Withdraw>, token_index: u16, amount: u128) -
 
     let user_token = user.get_user_token_ref(mint)?;
     validate!(user_token.amount>amount, BumpErrorCode::AmountNotEnough)?;
-    let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
+    let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> = &mut ctx.remaining_accounts.iter().peekable();
 
     let AccountMaps {
         market_map, trade_token_map,

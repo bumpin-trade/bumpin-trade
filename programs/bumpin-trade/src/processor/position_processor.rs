@@ -9,7 +9,7 @@ use crate::instructions::{cal_utils, UpdatePositionLeverageParams, UpdatePositio
 use crate::math::casting::Cast;
 use crate::math::constants::RATE_PRECISION;
 use crate::math::safe_math::SafeMath;
-use crate::processor::{fee_processor, user_processor};
+use crate::processor::{fee_processor};
 use crate::processor::market_processor::{MarketProcessor, UpdateOIParams};
 use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::user_processor::UserProcessor;
@@ -23,7 +23,6 @@ use crate::state::user::User;
 use crate::utils::token;
 use crate::validate;
 use solana_program::msg;
-use crate::processor::optional_accounts::AccountMaps;
 use crate::state::trade_token_map::TradeTokenMap;
 
 pub struct PositionProcessor<'a> {

@@ -5,14 +5,13 @@ use crate::errors::{BumpErrorCode};
 use crate::math::safe_math::SafeMath;
 use crate::processor::fee_reward_processor::update_account_fee_reward;
 use crate::processor::pool_processor::PoolProcessor;
-use crate::state::market_map::MarketMap;
-use crate::state::oracle::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::user::User;
 use crate::can_sign_for_user;
 use crate::processor::optional_accounts::load_maps;
-
+use std::iter::Peekable;
+use std::slice::Iter;
 #[derive(Accounts)]
 #[instruction(pool_index: u16, trade_token_index: u16)]
 pub struct PoolUnStake<'info> {
@@ -69,14 +68,14 @@ pub struct UnStakeParams {
     portfolio: bool,
 }
 
-pub fn handle_pool_un_stake(ctx: Context<PoolUnStake>, pool_index: usize, un_stake_params: UnStakeParams) -> Result<()> {
+pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info,PoolUnStake>, pool_index: usize, un_stake_params: UnStakeParams) -> Result<()> {
     let pool = &mut ctx.accounts.pool.load_mut()?;
-    let mut user = &mut ctx.accounts.user.load_mut()?;
+    let user = &mut ctx.accounts.user.load_mut()?;
 
     let user_stake = user.get_user_stake_mut(pool_index)?;
     validate!(user_stake.amount>=un_stake_params.un_stake_token_amount, BumpErrorCode::UnStakeNotEnough);
 
-    let remaining_accounts = &mut ctx.remaining_accounts.iter().peekable();
+    let remaining_accounts :&mut Peekable<Iter<'info, AccountInfo<'info>>>= &mut ctx.remaining_accounts.iter().peekable();
     let mut account_maps = load_maps(remaining_accounts)?;
 
 

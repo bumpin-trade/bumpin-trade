@@ -1,22 +1,17 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
-use crate::instructions::{cal_utils, UpdatePositionMarginParams};
-use crate::math::safe_math::SafeMath;
 use crate::processor::position_processor::PositionProcessor;
 use crate::processor::user_processor::UserProcessor;
 use crate::state::market::Market;
-use crate::state::oracle::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
-use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
-use crate::utils::token;
 use crate::{can_sign_for_user, validate};
 use crate::errors::BumpErrorCode;
-use crate::math::casting::Cast;
 use crate::processor::optional_accounts::{AccountMaps, load_maps};
-
+use std::iter::Peekable;
+use std::slice::Iter;
 #[derive(Accounts)]
 pub struct UpdatePositionLeverage<'info> {
     #[account(
@@ -49,11 +44,11 @@ pub struct UpdatePositionLeverageParams {
     pub add_margin_amount: u128,
 }
 
-pub fn handle_update_position_leverage(ctx: Context<UpdatePositionLeverage>, params: UpdatePositionLeverageParams) -> anchor_lang::Result<()> {
-    let mut user_mut = &mut ctx.accounts.user_account.load_mut()?;
+pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info,UpdatePositionLeverage>, params: UpdatePositionLeverageParams) -> anchor_lang::Result<()> {
+    let user_mut = &mut ctx.accounts.user_account.load_mut()?;
     let trade_token = ctx.accounts.trade_token.load_mut()?;
 
-    let remaining_accounts = &mut ctx.remaining_accounts.iter().peekable();
+    let remaining_accounts :&mut Peekable<Iter<'info, AccountInfo<'info>>>= &mut ctx.remaining_accounts.iter().peekable();
     let AccountMaps {
         trade_token_map,
         mut oracle_map,
@@ -63,9 +58,9 @@ pub fn handle_update_position_leverage(ctx: Context<UpdatePositionLeverage>, par
     let market = ctx.accounts.market.load_mut()?;
     validate!(params.leverage <= market.market_trade_config.max_leverage, BumpErrorCode::AmountNotEnough.into());
 
-    let mut user_processor = UserProcessor { user: user_mut };
+    let user_processor = UserProcessor { user: user_mut };
     let position_key = user_processor.user.generate_position_key(&user_processor.user.authority, params.symbol, &trade_token.mint, params.is_cross_margin, &ctx.program_id)?;
-    let mut position_mut = user_processor.user.find_position_mut_by_key(&position_key)?;
+    let position_mut = user_processor.user.find_position_mut_by_key(&position_key)?;
     let mut position_processor = PositionProcessor { position: position_mut };
     validate!(position_processor.position.leverage != params.leverage, BumpErrorCode::AmountNotEnough.into());
 

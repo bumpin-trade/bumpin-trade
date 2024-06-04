@@ -1,13 +1,16 @@
 use std::cell::Ref;
-use std::ops::{DerefMut};
+use std::iter::Peekable;
+use std::slice::Iter;
+use std::ops::DerefMut;
+
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
+
 use crate::{get_then_update_id, validate};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
-
 use crate::instructions::constraints::*;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
@@ -86,7 +89,7 @@ pub struct PlaceOrderParams {
 }
 
 
-pub fn handle_place_order(ctx: Context<PlaceOrder>, order: PlaceOrderParams) -> anchor_lang::Result<()> {
+pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>, order: PlaceOrderParams) -> anchor_lang::Result<()> {
     if order.position_side == PositionSide::INCREASE && !order.is_cross_margin {
         //isolate order, transfer order_margin into pool
         token::receive(
@@ -146,7 +149,7 @@ pub fn handle_place_order(ctx: Context<PlaceOrder>, order: PlaceOrderParams) -> 
         let trade_token_loader = &ctx.accounts.trade_token;
         let bump_signer_account_info = &ctx.accounts.bump_signer;
         let token_program = &ctx.accounts.token_program;
-        let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
+        let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> = &mut ctx.remaining_accounts.iter().peekable();
         let AccountMaps {
             trade_token_map,
             mut oracle_map,

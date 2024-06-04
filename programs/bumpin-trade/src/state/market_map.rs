@@ -81,7 +81,7 @@ impl<'a> MarketMap<'a> {
             let symbol = *array_ref![data, 8, 32];
 
             let account_info = account_info_iter.next().safe_unwrap()?;
-            let account_loader: AccountLoader<Market> =
+            let account_loader: AccountLoader<'a, Market> =
                 AccountLoader::try_from(account_info).or(Err(BumpErrorCode::InvalidMarketAccount))?;
             perp_market_map.0.insert(symbol, account_loader);
         }

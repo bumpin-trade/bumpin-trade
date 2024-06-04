@@ -15,10 +15,9 @@ use crate::state::pool_map::PoolMap;
 use crate::state::state::State;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
-use crate::{utils, validate};
+use crate::{validate};
 use solana_program::msg;
 use crate::errors::BumpErrorCode::{CouldNotFindUserPosition, CouldNotFindUserToken};
-use crate::processor::optional_accounts::AccountMaps;
 use crate::utils::token;
 
 pub struct UserProcessor<'a> {
@@ -27,10 +26,10 @@ pub struct UserProcessor<'a> {
 
 impl<'a> UserProcessor<'a> {
     pub fn un_use_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
-        Ok((self.user.un_use_token(token, amount)?))
+        Ok(self.user.un_use_token(token, amount)?)
     }
     pub fn use_token(&mut self, token: &Pubkey, amount: u128, is_check: bool) -> BumpResult<u128> {
-        Ok((self.user.use_token(token, amount, is_check)?))
+        Ok(self.user.use_token(token, amount, is_check)?)
     }
     pub fn withdraw(&mut self, amount: u128, mint: &Pubkey, oracle_map: &mut OracleMap, trade_token_map: &TradeTokenMap) -> BumpResult {
         let price_data = oracle_map.get_price_data(mint)?;

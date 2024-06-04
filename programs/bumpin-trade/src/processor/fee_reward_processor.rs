@@ -1,15 +1,13 @@
 use anchor_lang::prelude::AccountLoader;
+
 use crate::errors::BumpResult;
 use crate::math::safe_math::SafeMath;
-use crate::processor::optional_accounts::{AccountMaps, load_maps};
-use crate::state::infrastructure::user_stake::UserStake;
 use crate::state::pool::Pool;
-use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 
 pub fn update_account_fee_reward(user_loader: &AccountLoader<User>,
                                  pool_loader: &AccountLoader<Pool>) -> BumpResult {
-    let mut user = &mut user_loader.load_mut().unwrap();
+    let user = &mut user_loader.load_mut().unwrap();
     let stake_pool = pool_loader.load().unwrap();
 
     let user_stake = user.get_user_stake_mut(stake_pool.pool_index)?;
