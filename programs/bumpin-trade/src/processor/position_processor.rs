@@ -33,7 +33,7 @@ impl PositionProcessor<'_> {
     pub fn update_leverage<'info>(&mut self,
                                   token_price: u128,
                                   params: UpdatePositionLeverageParams,
-                                  position_key:Pubkey,
+                                  position_key: Pubkey,
                                   user_account: &AccountLoader<'info, User>,
                                   authority: &Signer<'info>,
                                   trade_token: &AccountLoader<'info, TradeToken>,
@@ -45,7 +45,7 @@ impl PositionProcessor<'_> {
                                   bump_signer: &AccountInfo<'info>,
                                   token_program: &Program<'info, Token>,
                                   trade_token_map: &TradeTokenMap,
-                                  oracle_map: &mut OracleMap
+                                  oracle_map: &mut OracleMap,
     ) -> BumpResult<()> {
         let trade_token = trade_token.load().unwrap();
         let pool = &mut pool.load_mut().unwrap();
@@ -57,7 +57,7 @@ impl PositionProcessor<'_> {
                 if self.position.cross_margin {
                     let user = &mut user_account.load_mut().unwrap();
                     let available_amount = user.get_user_token_ref(&trade_token.mint)?.get_token_available_amount()?;
-                    let mut user_processor = UserProcessor{user};
+                    let mut user_processor = UserProcessor { user };
                     self.position.set_leverage(params.leverage)?;
                     let new_initial_margin_in_usd = cal_utils::div_rate_u(self.position.position_size, self.position.leverage)?;
                     let add_margin_in_usd = if new_initial_margin_in_usd > self.position.initial_margin_usd { new_initial_margin_in_usd.safe_sub(self.position.initial_margin_usd)? } else { 0u128 };
@@ -66,7 +66,7 @@ impl PositionProcessor<'_> {
 
                     drop(user_processor);
                     let user = &mut user_account.load_mut().unwrap();
-                    let mut user_processor = UserProcessor{user};
+                    let mut user_processor = UserProcessor { user };
                     add_margin_amount = cal_utils::usd_to_token_u(add_margin_in_usd, trade_token.decimals, token_price)?;
                     add_initial_margin_from_portfolio = cal_utils::token_to_usd_u(add_margin_amount.min(available_amount), trade_token.decimals, token_price)?;
                     user_processor.use_token(&trade_token.mint, add_margin_amount, false)?;
@@ -98,7 +98,7 @@ impl PositionProcessor<'_> {
                 }, false, &trade_token, oracle_map, pool, &market.load().unwrap(), state)?;
                 if self.position.cross_margin {
                     let user = &mut user_account.load_mut().unwrap();
-                    let mut user_processor = UserProcessor{user};
+                    let mut user_processor = UserProcessor { user };
                     user_processor.un_use_token(&self.position.margin_mint, reduce_margin_amount)?;
                 } else {
                     token::send_from_program_vault(
@@ -170,10 +170,16 @@ impl PositionProcessor<'_> {
     }
 
 
-    pub fn increase_position(&mut self, params: IncreasePositionParams, trade_token: &TradeToken, mut user: &mut User, state: &State, pool: &mut Pool, market_processor: &mut MarketProcessor) -> BumpResult<> {
+    pub fn increase_position(&mut self,
+                             params: IncreasePositionParams,
+                             trade_token: &TradeToken,
+                             user: &mut User,
+                             state: &State,
+                             pool: &mut Pool,
+                             market_processor: &mut MarketProcessor) -> BumpResult<> {
         let fee = fee_processor::collect_open_position_fee(market_processor.market, pool, state, params.increase_margin, params.is_cross_margin)?;
 
-        let mut user_processor = UserProcessor { user: &mut user };
+        let mut user_processor = UserProcessor { user };
 
         if params.is_cross_margin {
             user_processor.un_use_token(&params.margin_token, fee)?;
@@ -750,22 +756,6 @@ impl PositionProcessor<'_> {
         };
         let un_pnl_usd = self.get_position_un_pnl_usd(index_price)?;
         Ok(cal_utils::usd_to_token_i(un_pnl_usd, trade_token.decimals, mint_token_price)?)
-    }
-
-    pub fn generate_position_key(&self, user: &Pubkey, symbol: [u8; 32], token: &Pubkey, is_cross_margin: bool, program_id: &Pubkey) -> BumpResult<Pubkey> {
-        // Convert is_cross_margin to a byte array
-        let is_cross_margin_bytes: &[u8] = if is_cross_margin { &[1] } else { &[0] };
-        // Create the seeds array by concatenating the byte representations
-        let seeds: &[&[u8]] = &[
-            user.as_ref(),
-            &symbol,
-            token.as_ref(),
-            is_cross_margin_bytes,
-        ];
-
-        // Find the program address
-        let (address, _bump_seed) = Pubkey::find_program_address(seeds, program_id);
-        Ok(address)
     }
 }
 

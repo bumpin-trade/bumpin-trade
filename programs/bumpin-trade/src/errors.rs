@@ -85,6 +85,8 @@ pub enum BumpErrorCode {
     StakeToSmall,
     #[msg("UnStakeNotEnough")]
     UnStakeNotEnough,
+    #[msg("PositionSideNotSupport")]
+    PositionSideNotSupport,
 }
 #[macro_export]
 macro_rules! print_error {

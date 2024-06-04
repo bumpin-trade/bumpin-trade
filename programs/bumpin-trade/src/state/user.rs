@@ -9,6 +9,7 @@ use crate::state::traits::Size;
 use crate::validate;
 use solana_program::msg;
 use crate::instructions::cal_utils;
+use crate::math::safe_math::SafeMath;
 
 
 #[account(zero_copy(unsafe))]
@@ -57,7 +58,7 @@ impl User {
     }
 
     pub fn add_order_hold_in_usd(&mut self, amount: u128) -> BumpResult<()> {
-        self.hold += amount;
+        self.hold = self.hold.safe_add(amount)?;
         Ok(())
     }
 
@@ -88,9 +89,9 @@ impl User {
         Ok(())
     }
 
-    pub fn find_position_by_seed(&self, user: &Pubkey, symbol: [u8; 32], token: &Pubkey, is_cross_margin: bool, program_id: &Pubkey) -> BumpResult<Option<&UserPosition>> {
+    pub fn find_position_by_seed(&mut self, user: &Pubkey, symbol: [u8; 32], token: &Pubkey, is_cross_margin: bool, program_id: &Pubkey) -> BumpResult<&mut UserPosition> {
         let position_key = self.generate_position_key(user, symbol, token, is_cross_margin, program_id)?;
-        Ok(self.user_positions.iter().find(|position| position.position_key.eq(&position_key)))
+        Ok(self.user_positions.iter_mut().find(|position| position.position_key.eq(&position_key)).ok_or(&mut UserPosition::default()).unwrap())
     }
 
     pub fn generate_position_key(&self, user: &Pubkey, symbol: [u8; 32], token: &Pubkey, is_cross_margin: bool, program_id: &Pubkey) -> BumpResult<Pubkey> {
@@ -177,8 +178,8 @@ impl User {
     }
 
 
-    pub fn add_position(&mut self, position: UserPosition, index: usize) -> BumpResult<> {
-        self.user_positions[index] = position;
+    pub fn add_position(&mut self, position: &UserPosition, index: usize) -> BumpResult<> {
+        self.user_positions[index] = *position;
         Ok(())
     }
 
