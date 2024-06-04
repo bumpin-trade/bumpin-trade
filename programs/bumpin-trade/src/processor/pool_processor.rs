@@ -37,11 +37,11 @@ impl<'a> PoolProcessor<'_> {
         let pool = pool_loader.load().unwrap();
 
         let user_token = user.get_user_token_mut(&pool.pool_mint)?;
-        validate!(user_token.amount>mint_amount, BumpErrorCode::AmountNotEnough);
+        validate!(user_token.amount>mint_amount, BumpErrorCode::AmountNotEnough)?;
 
         let mut user_processor = UserProcessor { user };
         user_processor.sub_user_token_amount(&pool.pool_mint, mint_amount)?;
-        validate!(  user_processor.get_available_value(&mut account_maps.oracle_map, &account_maps.trade_token_map)?>0, BumpErrorCode::AmountNotEnough);
+        validate!(  user_processor.get_available_value(&mut account_maps.oracle_map, &account_maps.trade_token_map)?>0, BumpErrorCode::AmountNotEnough)?;
         if self.pool.total_supply > 0 {
             let oracle_price_data = account_maps.oracle_map.get_price_data(&self.pool.pool_mint)?;
 
@@ -77,10 +77,10 @@ impl<'a> PoolProcessor<'_> {
         let un_stake_usd = cal_utils::mul_div_u(un_stake_amount, pool_value, self.pool.total_supply)?;
         let pool_price = oracle_map.get_price_data(&self.pool.pool_mint)?;
         let token_amount = cal_utils::div_u128(un_stake_usd, pool_price.price)?;
-        validate!(token_amount>pool.pool_config.mini_un_stake_amount, BumpErrorCode::UnStakeNotEnough);
+        validate!(token_amount>pool.pool_config.mini_un_stake_amount, BumpErrorCode::UnStakeNotEnough)?;
 
         let max_un_stake_amount = pool.get_current_max_un_stake()?;
-        validate!(token_amount<max_un_stake_amount, BumpErrorCode::UnStakeNotEnough);
+        validate!(token_amount<max_un_stake_amount, BumpErrorCode::UnStakeNotEnough)?;
 
         let user_stake = user.get_user_stake_mut(pool.pool_index)?;
         user_stake.sub_user_stake(un_stake_amount)?;

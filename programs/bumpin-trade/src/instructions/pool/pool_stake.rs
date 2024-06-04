@@ -84,7 +84,7 @@ pub struct StakeParams {
 
 pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, PoolStake>, pool_index: usize, trade_token_index: u16, stake_params: StakeParams) -> anchor_lang::Result<()> {
     let mut pool = &mut ctx.accounts.pool.load_mut()?;
-    validate!(pool.pool_config.mini_stake_amount>stake_params.request_token_amount, BumpErrorCode::StakeToSmall);
+    validate!(pool.pool_config.mini_stake_amount>stake_params.request_token_amount, BumpErrorCode::StakeToSmall)?;
     let trade_token = ctx.accounts.trade_token.load()?;
 
     let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> = &mut ctx.remaining_accounts.iter().peekable();

@@ -51,7 +51,7 @@ impl User {
     }
 
     pub fn sub_order_hold_in_usd(&mut self, amount: u128) -> BumpResult<()> {
-        validate!(self.hold >= amount,BumpErrorCode::AmountNotEnough.into());
+        validate!(self.hold >= amount,BumpErrorCode::AmountNotEnough.into())?;
         self.hold = cal_utils::sub_u128(self.hold, amount)?;
         Ok(())
     }
@@ -65,16 +65,16 @@ impl User {
         let use_from_balance;
         let token_balance = self.get_user_token_mut(token)?;
         if is_check {
-            validate!(token_balance.amount >= token_balance.used_amount, BumpErrorCode::AmountNotEnough.into());
+            validate!(token_balance.amount >= token_balance.used_amount, BumpErrorCode::AmountNotEnough.into())?;
         };
         if token_balance.amount >= token_balance.used_amount + amount {
-            token_balance.add_token_used_amount(amount);
+            token_balance.add_token_used_amount(amount)?;
             use_from_balance = amount;
         } else if token_balance.amount > token_balance.used_amount {
             use_from_balance = token_balance.amount - token_balance.used_amount;
-            token_balance.add_token_used_amount(amount);
+            token_balance.add_token_used_amount(amount)?;
         } else {
-            token_balance.add_token_used_amount(amount);
+            token_balance.add_token_used_amount(amount)?;
             use_from_balance = 0u128;
         }
 
@@ -83,7 +83,7 @@ impl User {
 
     pub fn un_use_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
         let token_balance = self.get_user_token_mut(token)?;
-        validate!(token_balance.used_amount > amount, BumpErrorCode::AmountNotEnough.into());
+        validate!(token_balance.used_amount > amount, BumpErrorCode::AmountNotEnough.into())?;
         token_balance.sub_token_used_amount(amount)?;
         Ok(())
     }

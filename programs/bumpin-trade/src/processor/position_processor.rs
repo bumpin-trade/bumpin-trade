@@ -52,8 +52,8 @@ impl PositionProcessor<'_> {
 
         if self.position.position_size != 0u128 {
             if self.position.leverage > params.leverage {
-                let mut add_margin_amount;
-                let mut add_initial_margin_from_portfolio;
+                let add_margin_amount;
+                let add_initial_margin_from_portfolio;
                 if self.position.cross_margin {
                     let user = &mut user_account.load_mut().unwrap();
                     let available_amount = user.get_user_token_ref(&trade_token.mint)?.get_token_available_amount()?;
@@ -62,7 +62,7 @@ impl PositionProcessor<'_> {
                     let new_initial_margin_in_usd = cal_utils::div_rate_u(self.position.position_size, self.position.leverage)?;
                     let add_margin_in_usd = if new_initial_margin_in_usd > self.position.initial_margin_usd { new_initial_margin_in_usd.safe_sub(self.position.initial_margin_usd)? } else { 0u128 };
                     let cross_available_value = user_processor.get_available_value(oracle_map, trade_token_map)?;
-                    validate!(add_margin_in_usd.cast::<i128>()? > cross_available_value, BumpErrorCode::AmountNotEnough.into());
+                    validate!(add_margin_in_usd.cast::<i128>()? > cross_available_value, BumpErrorCode::AmountNotEnough.into())?;
 
                     drop(user_processor);
                     let user = &mut user_account.load_mut().unwrap();
@@ -326,7 +326,7 @@ impl PositionProcessor<'_> {
                                           state: &State, ) -> BumpResult<u128> {
         let token_price = oracle_map.get_price_data(&self.position.margin_mint)?.price;
         let max_reduce_margin_in_usd = self.position.initial_margin_usd.safe_sub(cal_utils::div_rate_u(self.position.position_size, market.market_trade_config.max_leverage)?.max(state.min_order_margin_usd))?;
-        validate!(max_reduce_margin_in_usd > params.update_margin_amount, BumpErrorCode::AmountNotEnough.into());
+        validate!(max_reduce_margin_in_usd > params.update_margin_amount, BumpErrorCode::AmountNotEnough.into())?;
         let reduce_margin_amount = cal_utils::usd_to_token_u(params.update_margin_amount, trade_token.decimals, token_price)?;
 
         if self.position.cross_margin && self.position.initial_margin_usd.safe_sub(self.position.initial_margin_usd_from_portfolio)? < reduce_margin_amount {
@@ -349,7 +349,7 @@ impl PositionProcessor<'_> {
     pub fn execute_add_position_margin(&mut self, params: &UpdatePositionMarginParams, trade_token: &TradeToken, oracle_map: &mut OracleMap, mut pool: &mut Pool) -> BumpResult<()> {
         let token_price = oracle_map.get_price_data(&self.position.margin_mint)?.price;
 
-        validate!(params.update_margin_amount < cal_utils::usd_to_token_u(self.position.position_size.safe_sub(self.position.initial_margin_usd)?,trade_token.decimals,token_price)?, BumpErrorCode::AmountNotEnough);
+        validate!(params.update_margin_amount < cal_utils::usd_to_token_u(self.position.position_size.safe_sub(self.position.initial_margin_usd)?,trade_token.decimals,token_price)?, BumpErrorCode::AmountNotEnough)?;
         self.position.add_initial_margin(params.update_margin_amount)?;
         if self.position.cross_margin {
             self.position.add_initial_margin_usd(cal_utils::div_rate_u(self.position.position_size, self.position.leverage)?)?;

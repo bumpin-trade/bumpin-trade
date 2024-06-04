@@ -43,7 +43,7 @@ pub struct Withdraw<'info> {
 }
 
 pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, Withdraw>, token_index: u16, amount: u128) -> Result<()> {
-    validate!(amount>0, BumpErrorCode::AmountZero);
+    validate!(amount>0, BumpErrorCode::AmountZero)?;
 
     let user = &mut ctx.accounts.user.load_mut()?;
     let mint = &ctx.accounts.user_token_account.mint.key();
@@ -53,8 +53,8 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info,
     let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> = &mut ctx.remaining_accounts.iter().peekable();
 
     let AccountMaps {
-        market_map, trade_token_map,
-        mut oracle_map, pool_map,
+        trade_token_map,
+        mut oracle_map, ..
     } = load_maps(remaining_accounts_iter)?;
 
     let mut user_processor = UserProcessor { user };

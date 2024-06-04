@@ -102,7 +102,7 @@ impl Pool {
     }
 
     pub fn sub_amount(&mut self, amount: u128) -> BumpResult<()> {
-        validate!( self.pool_balance.amount >= amount, BumpErrorCode::AmountNotEnough.into());
+        validate!( self.pool_balance.amount >= amount, BumpErrorCode::AmountNotEnough.into())?;
         self.pool_balance.amount = self.pool_balance.amount.safe_sub(amount)?;
         Ok(())
     }
@@ -112,13 +112,13 @@ impl Pool {
         Ok(())
     }
     pub fn hold_pool(&mut self, amount: u128) -> BumpResult<()> {
-        validate!(self.check_hold_is_allowed(amount)?, BumpErrorCode::AmountNotEnough.into());
+        validate!(self.check_hold_is_allowed(amount)?, BumpErrorCode::AmountNotEnough.into())?;
         self.pool_balance.hold_amount = add_u128(self.pool_balance.hold_amount, amount)?;
         Ok(())
     }
 
     pub fn un_hold_pool(&mut self, amount: u128) -> BumpResult<()> {
-        validate!(self.pool_balance.hold_amount>=amount, BumpErrorCode::AmountNotEnough.into());
+        validate!(self.pool_balance.hold_amount>=amount, BumpErrorCode::AmountNotEnough.into())?;
         self.pool_balance.hold_amount = add_u128(self.pool_balance.hold_amount, amount)?;
         Ok(())
     }

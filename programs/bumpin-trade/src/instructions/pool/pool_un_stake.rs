@@ -73,13 +73,13 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, '
     let user = &mut ctx.accounts.user.load_mut()?;
 
     let user_stake = user.get_user_stake_mut(pool_index)?;
-    validate!(user_stake.amount>=un_stake_params.un_stake_token_amount, BumpErrorCode::UnStakeNotEnough);
+    validate!(user_stake.amount>=un_stake_params.un_stake_token_amount, BumpErrorCode::UnStakeNotEnough)?;
 
     let remaining_accounts :&mut Peekable<Iter<'info, AccountInfo<'info>>>= &mut ctx.remaining_accounts.iter().peekable();
     let mut account_maps = load_maps(remaining_accounts)?;
 
 
-    validate!(pool.total_supply==0, BumpErrorCode::UnStakeNotEnough);
+    validate!(pool.total_supply==0, BumpErrorCode::UnStakeNotEnough)?;
 
     let mut pool_processor = PoolProcessor { pool };
 

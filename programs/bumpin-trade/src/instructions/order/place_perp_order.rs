@@ -105,7 +105,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'in
     let mut user = ctx.accounts.user_account.load_mut()?;
     let pool = ctx.accounts.pool.load()?;
     let token = &ctx.accounts.margin_token;
-    validate!(validate_place_order(order, &token.mint, &market, &pool, &ctx.accounts.state)?, BumpErrorCode::InvalidParam.into());
+    validate!(validate_place_order(order, &token.mint, &market, &pool, &ctx.accounts.state)?, BumpErrorCode::InvalidParam.into())?;
 
     if user.has_other_short_order(order.symbol, token.mint, order.is_cross_margin)? {
         return Err(BumpErrorCode::OnlyOneShortOrderAllowed.into());
@@ -368,7 +368,7 @@ fn execute_increase_order_margin(order: &UserOrder,
         let order_margin_temp;
         if available_value < 0i128 {
             let fix_order_margin_in_usd = order.order_size.cast::<i128>().unwrap().safe_add(available_value).unwrap().cast::<i128>().unwrap();
-            validate!(fix_order_margin_in_usd > 0i128, BumpErrorCode::BalanceNotEnough.into());
+            validate!(fix_order_margin_in_usd > 0i128, BumpErrorCode::BalanceNotEnough.into()).unwrap();
             user.sub_order_hold_in_usd(order.order_size).unwrap();
             order_margin_temp = fix_order_margin_in_usd.cast::<u128>().unwrap();
         } else {
@@ -379,7 +379,7 @@ fn execute_increase_order_margin(order: &UserOrder,
         order_margin_from_balance = user.use_token(margin_token, order_margin, false).unwrap();
     } else {
         let order_margin_in_usd = cal_utils::token_to_usd_u(order.order_margin, decimals, margin_token_price).unwrap();
-        validate!(order_margin_in_usd >= state.min_order_margin_usd, BumpErrorCode::AmountNotEnough.into());
+        validate!(order_margin_in_usd >= state.min_order_margin_usd, BumpErrorCode::AmountNotEnough.into()).unwrap();
         order_margin = order.order_margin;
         order_margin_from_balance = order.order_margin;
     }

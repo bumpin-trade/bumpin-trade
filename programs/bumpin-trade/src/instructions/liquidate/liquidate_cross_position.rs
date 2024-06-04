@@ -1,18 +1,16 @@
 use std::iter::Peekable;
 use std::slice::Iter;
+
 use anchor_lang::prelude::*;
 use solana_program::pubkey::Pubkey;
+
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::processor::market_processor::MarketProcessor;
 use crate::processor::optional_accounts::{AccountMaps, load_maps};
 use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::user_processor::UserProcessor;
-use crate::state::market_map::MarketMap;
-use crate::state::oracle::oracle_map::OracleMap;
-use crate::state::pool_map::PoolMap;
 use crate::state::state::State;
-use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 
 #[derive(Accounts)]

@@ -60,7 +60,7 @@ pub fn handle_liquidate_isolate_position(ctx: Context<LiquidateIsolatePosition>,
     let user = &mut ctx.accounts.user.load_mut()?;
     let user_position = user.find_position_mut_by_key(&position_key)?;
 
-    validate!(!user_position.cross_margin, BumpErrorCode::OnlyLiquidateIsolatePosition);
+    validate!(!user_position.cross_margin, BumpErrorCode::OnlyLiquidateIsolatePosition)?;
     let market = &mut ctx.accounts.market.load_mut()?;
 
     let remaining_accounts = &mut ctx.remaining_accounts.iter().peekable();

@@ -56,13 +56,13 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a
     } = load_maps(remaining_accounts)?;
 
     let market = ctx.accounts.market.load_mut()?;
-    validate!(params.leverage <= market.market_trade_config.max_leverage, BumpErrorCode::AmountNotEnough.into());
+    validate!(params.leverage <= market.market_trade_config.max_leverage, BumpErrorCode::AmountNotEnough.into())?;
 
     let user_processor = UserProcessor { user: user_mut };
     let position_key = user_processor.user.generate_position_key(&user_processor.user.authority, params.symbol, &trade_token.mint, params.is_cross_margin, &ctx.program_id)?;
     let position_mut = user_processor.user.find_position_mut_by_key(&position_key)?;
     let mut position_processor = PositionProcessor { position: position_mut };
-    validate!(position_processor.position.leverage != params.leverage, BumpErrorCode::AmountNotEnough.into());
+    validate!(position_processor.position.leverage != params.leverage, BumpErrorCode::AmountNotEnough.into())?;
 
 
     let token_price = oracle_map.get_price_data(&trade_token.mint)?.price;

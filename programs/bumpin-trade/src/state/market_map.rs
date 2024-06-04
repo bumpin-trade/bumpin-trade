@@ -54,7 +54,7 @@ impl<'a> MarketMap<'a> {
         };
         match loader.load_mut() {
             Ok(market) => Ok(market),
-            Err(e) => {
+            Err(_e) => {
                 Err(CouldNotLoadTradeTokenData)
             }
         }

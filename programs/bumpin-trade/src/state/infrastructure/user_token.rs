@@ -76,7 +76,7 @@ impl UserToken {
         Ok(0u128)
     }
 
-    pub fn get_token_borrowing_value(&self, trade_token: &TradeToken, oracle_price_data: &OraclePriceData) -> BumpResult<u128> {
+    pub fn get_token_borrowing_value(&self,  oracle_price_data: &OraclePriceData) -> BumpResult<u128> {
         let borrowing_amount = self.amount
             .safe_sub(self.used_amount)?
             .safe_sub(self.liability)?;

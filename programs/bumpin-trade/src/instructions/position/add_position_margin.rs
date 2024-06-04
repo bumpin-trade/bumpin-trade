@@ -46,7 +46,7 @@ pub struct UpdatePositionMarginParams {
 }
 
 pub fn handle_add_position_margin(ctx: Context<AddPositionMargin>, params: UpdatePositionMarginParams) -> Result<()> {
-    validate!(params.update_margin_amount > 0u128, BumpErrorCode::AmountNotEnough.into());
+    validate!(params.update_margin_amount > 0u128, BumpErrorCode::AmountNotEnough.into())?;
     let mut user = ctx.accounts.user_account.load_mut()?;
     let trade_token = ctx.accounts.trade_token.load_mut()?;
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
@@ -55,7 +55,7 @@ pub fn handle_add_position_margin(ctx: Context<AddPositionMargin>, params: Updat
     let mut position_processor = PositionProcessor { position: &mut position };
     let mut pool = ctx.accounts.pool.load_mut()?;
     let market = ctx.accounts.market.load_mut()?;
-    validate!(position_processor.position.cross_margin, BumpErrorCode::AmountNotEnough.into());
+    validate!(position_processor.position.cross_margin, BumpErrorCode::AmountNotEnough.into())?;
     if params.is_add {
         token::receive(
             &ctx.accounts.token_program,
@@ -65,7 +65,7 @@ pub fn handle_add_position_margin(ctx: Context<AddPositionMargin>, params: Updat
             params.update_margin_amount,
         )?;
     }
-    validate!(trade_token.mint.eq(&position_processor.position.margin_mint), BumpErrorCode::AmountNotEnough.into());
+    validate!(trade_token.mint.eq(&position_processor.position.margin_mint), BumpErrorCode::AmountNotEnough.into())?;
 
     if params.is_add {
         position_processor.execute_add_position_margin(&params, &trade_token, &mut oracle_map, &mut pool)?;

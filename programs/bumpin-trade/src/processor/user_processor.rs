@@ -8,7 +8,6 @@ use crate::math::safe_math::SafeMath;
 use crate::processor::position_processor::PositionProcessor;
 use crate::state::infrastructure::user_order::{OrderType, PositionSide, UserOrder};
 use crate::state::infrastructure::user_position::UserPosition;
-use crate::state::infrastructure::user_token::UserToken;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle::oracle_map::OracleMap;
 use crate::state::pool_map::PoolMap;
@@ -122,7 +121,7 @@ impl<'a> UserProcessor<'a> {
             let token_used_value = user_token.get_token_used_value(&trade_token, &oracle_price_data)?;
             total_used_value = total_used_value.safe_add(token_used_value)?;
 
-            let token_borrowing_value = user_token.get_token_borrowing_value(&trade_token, &oracle_price_data)?;
+            let token_borrowing_value = user_token.get_token_borrowing_value(&oracle_price_data)?;
             total_borrowing_value = total_borrowing_value.safe_add(token_borrowing_value)?;
         }
 
@@ -196,7 +195,7 @@ impl<'a> UserProcessor<'a> {
 
     pub fn sub_token_with_liability(&mut self, token: &Pubkey, amount: u128) -> BumpResult<u128> {
         let mut liability = 0u128;
-        validate!(self.user.user_tokens.map(|mint|mint.token_mint).contains(&token), BumpErrorCode::AmountNotEnough.into());
+        validate!(self.user.user_tokens.map(|mint|mint.token_mint).contains(&token), BumpErrorCode::AmountNotEnough.into())?;
         let token_balance = self.user.user_tokens.iter_mut().find(|mint| mint.token_mint.eq(token)).ok_or(CouldNotFindUserToken)?;
         if token_balance.amount >= amount {
             token_balance.amount = token_balance.amount.safe_sub(amount)?;
