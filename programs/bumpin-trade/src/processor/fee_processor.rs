@@ -34,7 +34,7 @@ pub fn collect_un_stake_fee(stake_pool: &mut Pool, state: &State, un_stake_amoun
     Ok(fee_amount)
 }
 
-pub fn collect_open_position_fee(market: &Market, stake_pool: &mut Pool, state: &State, margin: u128, cross_margin: bool) -> BumpResult<u128> {
+pub fn collect_open_position_fee(market: &Market, pool: &mut Pool, state: &State, margin: u128, cross_margin: bool) -> BumpResult<u128> {
     let fee_amount = margin.safe_mul(market.market_trade_config.open_fee_rate)?;
 
     let pool_rewards_fee = fee_amount.safe_mul(state.trading_fee_pool_rewards_ratio)?;
@@ -42,12 +42,12 @@ pub fn collect_open_position_fee(market: &Market, stake_pool: &mut Pool, state: 
     // let dao_rewards_fee = fee_amount.safe_sub(pool_rewards_fee)?.safe_sub(staking_rewards_fee)?;
 
 
-    stake_pool.fee_reward.add_fee_amount(pool_rewards_fee)?;
+    pool.fee_reward.add_fee_amount(pool_rewards_fee)?;
     // state.dao_fee_reward.add_fee_amount(dao_rewards_fee)?;
     // state.staking_fee_reward.add_fee_amount(staking_rewards_fee)?;
 
     if cross_margin {
-        stake_pool.fee_reward.add_un_settle_amount(pool_rewards_fee)?;
+        pool.fee_reward.add_un_settle_amount(pool_rewards_fee)?;
         // state.dao_fee_reward.add_un_settle_amount(dao_rewards_fee)?;
         // state.staking_fee_reward.add_un_settle_amount(staking_rewards_fee)?;
     }

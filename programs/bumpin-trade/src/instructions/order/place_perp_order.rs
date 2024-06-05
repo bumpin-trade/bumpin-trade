@@ -229,24 +229,23 @@ pub fn handle_execute_order<'info>(user_account_loader: &AccountLoader<'info, Us
         PositionSide::NONE => { Err(BumpErrorCode::PositionSideNotSupport) }
         PositionSide::INCREASE => Ok({
             let margin_token_price;
-
             if market.index_mint_key == margin_token.mint {
                 margin_token_price = execute_price;
             } else {
                 margin_token_price = oracle_map.get_price_data(&margin_token.mint)?.price;
             }
 
-            let (order_margin, order_margin_from_balance) =
-                execute_increase_order_margin(
-                    order,
-                    &margin_token.mint,
-                    trade_token.decimals,
-                    user,
-                    margin_token_price,
-                    oracle_map,
-                    trade_token_map,
-                    state_account,
-                );
+
+            let (order_margin, order_margin_from_balance) = execute_increase_order_margin(
+                order,
+                &margin_token.mint,
+                trade_token.decimals,
+                user,
+                margin_token_price,
+                oracle_map,
+                trade_token_map,
+                state_account,
+            )?;
 
 
             if position.position_size == 0u128 && position.status.eq(&PositionStatus::INIT) {
@@ -269,15 +268,15 @@ pub fn handle_execute_order<'info>(user_account_loader: &AccountLoader<'info, Us
             let mut position_processor = PositionProcessor { position };
             position_processor.increase_position(IncreasePositionParams {
                 margin_token: order.margin_token,
-                increase_margin: order_margin?,
-                increase_margin_from_balance: order_margin_from_balance?,
+                increase_margin: order_margin,
+                increase_margin_from_balance: order_margin_from_balance,
                 margin_token_price,
                 index_token_price: execute_price,
                 leverage: order.leverage,
                 is_long,
                 is_cross_margin: order.cross_margin,
                 decimals: trade_token.decimals,
-            }, &trade_token, user, state_account, pool, &mut market_processor)?;
+            }, user_account_loader, pool_account_loader, market_account_loader, state_account, trade_token_loader)?;
         }),
 
         PositionSide::DECREASE => Ok({
@@ -375,35 +374,35 @@ fn execute_increase_order_margin(order: &UserOrder,
                                  margin_token_price: u128,
                                  oracle_map: &mut OracleMap,
                                  trade_token_map: &TradeTokenMap,
-                                 state: &Account<State>) -> (BumpResult<u128>, BumpResult<u128>) {
+                                 state: &Account<State>) -> BumpResult<(u128, u128)> {
     let order_margin;
     let order_margin_from_balance;
 
     let mut user_processor = UserProcessor { user };
 
     if order.cross_margin {
-        let available_value = user_processor.get_available_value(oracle_map, trade_token_map).unwrap();
+        let available_value = user_processor.get_available_value(oracle_map, trade_token_map)?;
         let order_margin_temp;
         if available_value < 0i128 {
-            let fix_order_margin_in_usd = order.order_size.cast::<i128>().unwrap().safe_add(available_value).unwrap().cast::<i128>().unwrap();
-            validate!(fix_order_margin_in_usd > 0i128, BumpErrorCode::BalanceNotEnough.into()).unwrap();
+            let fix_order_margin_in_usd = order.order_size.cast::<i128>()?.safe_add(available_value)?.cast::<i128>()?;
+            validate!(fix_order_margin_in_usd > 0i128, BumpErrorCode::BalanceNotEnough.into())?;
             user.sub_order_hold_in_usd(order.order_size).unwrap();
-            order_margin_temp = fix_order_margin_in_usd.abs().cast::<u128>().unwrap();
+            order_margin_temp = fix_order_margin_in_usd.abs().cast::<u128>()?;
         } else {
             order_margin_temp = order.order_size;
-            user.sub_order_hold_in_usd(order.order_size).unwrap();
+            user.sub_order_hold_in_usd(order.order_size)?;
         }
-        order_margin = cal_utils::usd_to_token_u(order_margin_temp, decimals, margin_token_price).unwrap();
-        order_margin_from_balance = user.use_token(margin_token, order_margin, false).unwrap();
+        order_margin = cal_utils::usd_to_token_u(order_margin_temp, decimals, margin_token_price)?;
+        order_margin_from_balance = user.use_token(margin_token, order_margin, false)?;
     } else {
-        let order_margin_in_usd = cal_utils::token_to_usd_u(order.order_margin, decimals, margin_token_price).unwrap();
-        validate!(order_margin_in_usd >= state.min_order_margin_usd, BumpErrorCode::AmountNotEnough.into()).unwrap();
+        let order_margin_in_usd = cal_utils::token_to_usd_u(order.order_margin, decimals, margin_token_price)?;
+        validate!(order_margin_in_usd >= state.min_order_margin_usd, BumpErrorCode::AmountNotEnough.into())?;
         order_margin = order.order_margin;
         order_margin_from_balance = order.order_margin;
     }
 
 
-    return (Ok(order_margin), Ok(order_margin_from_balance));
+    Ok((order_margin, order_margin_from_balance))
 }
 
 

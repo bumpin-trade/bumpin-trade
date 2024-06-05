@@ -172,14 +172,22 @@ impl PositionProcessor<'_> {
 
     pub fn increase_position(&mut self,
                              params: IncreasePositionParams,
-                             trade_token: &TradeToken,
-                             user: &mut User,
-                             state: &State,
-                             pool: &mut Pool,
-                             market_processor: &mut MarketProcessor) -> BumpResult<> {
-        let fee = fee_processor::collect_open_position_fee(market_processor.market, pool, state, params.increase_margin, params.is_cross_margin)?;
+                             user_account_loader: &AccountLoader<User>,
+                             pool_account_loader: &AccountLoader<Pool>,
+                             market_account_loader: &AccountLoader<Market>,
+                             state_account: &Account<State>,
+                             trade_token_loader: &AccountLoader<TradeToken>) -> BumpResult<> {
+        let trade_token = trade_token_loader.load().unwrap();
+        let market = market_account_loader.load().unwrap();
+        let pool = &mut pool_account_loader.load_mut().unwrap();
+        let fee = fee_processor::collect_open_position_fee(&market, pool, state_account, params.increase_margin, params.is_cross_margin)?;
 
+
+        let market = &mut market_account_loader.load_mut().unwrap();
+        let user = &mut user_account_loader.load_mut().unwrap();
+        let mut market_processor = MarketProcessor { market };
         let mut user_processor = UserProcessor { user };
+
 
         if params.is_cross_margin {
             user_processor.un_use_token(&params.margin_token, fee)?;
@@ -206,8 +214,8 @@ impl PositionProcessor<'_> {
             self.position.set_open_funding_fee_amount_per_size(if params.is_long { market_processor.market.funding_fee.long_funding_fee_amount_per_size } else { market_processor.market.funding_fee.short_funding_fee_amount_per_size })?;
         } else {
             //increase position
-            self.update_borrowing_fee(pool, params.margin_token_price, trade_token)?;
-            self.update_funding_fee(market_processor.market, params.margin_token_price, trade_token, pool)?;
+            self.update_borrowing_fee(pool, params.margin_token_price, &trade_token)?;
+            self.update_funding_fee(market_processor.market, params.margin_token_price, &trade_token, pool)?;
             self.position.set_entry_price(cal_utils::compute_avg_entry_price(self.position.position_size, self.position.entry_price, increase_size, params.margin_token_price, market_processor.market.ticker_size, params.is_long)?)?;
             self.position.add_initial_margin(increase_margin)?;
             self.position.add_initial_margin_usd(cal_utils::token_to_usd_u(increase_margin, trade_token.decimals, params.margin_token_price)?)?;
@@ -387,16 +395,16 @@ impl PositionProcessor<'_> {
         response.margin_token_price = token_price;
 
 
-        let (settle_borrowing_fee, settle_borrowing_fee_in_usd) = self.cal_decrease_borrowing_fee(decrease_size);
-        let (settle_funding_fee, settle_funding_fee_in_usd) = self.cal_decrease_funding_fee(decrease_size);
-        let (settle_close_fee, settle_close_fee_in_usd) = self.cal_decrease_close_fee(decrease_size, trade_token, token_price, market.market_trade_config.close_fee_rate);
+        let (settle_borrowing_fee, settle_borrowing_fee_in_usd) = self.cal_decrease_borrowing_fee(decrease_size)?;
+        let (settle_funding_fee, settle_funding_fee_in_usd) = self.cal_decrease_funding_fee(decrease_size)?;
+        let (settle_close_fee, settle_close_fee_in_usd) = self.cal_decrease_close_fee(decrease_size, trade_token, token_price, market.market_trade_config.close_fee_rate)?;
 
-        response.settle_borrowing_fee = settle_borrowing_fee?;
-        response.settle_borrowing_fee_in_usd = settle_borrowing_fee_in_usd?;
-        response.settle_funding_fee = settle_funding_fee?;
-        response.settle_funding_fee_in_usd = settle_funding_fee_in_usd?;
-        response.settle_close_fee = settle_close_fee?;
-        response.settle_close_fee_in_usd = settle_close_fee_in_usd?;
+        response.settle_borrowing_fee = settle_borrowing_fee;
+        response.settle_borrowing_fee_in_usd = settle_borrowing_fee_in_usd;
+        response.settle_funding_fee = settle_funding_fee;
+        response.settle_funding_fee_in_usd = settle_funding_fee_in_usd;
+        response.settle_close_fee = settle_close_fee;
+        response.settle_close_fee_in_usd = settle_close_fee_in_usd;
         response.settle_fee = response.settle_close_fee.cast::<i128>()?
             .safe_add(response.settle_funding_fee)?
             .safe_add(response.settle_borrowing_fee.cast::<i128>()?)?
@@ -417,7 +425,7 @@ impl PositionProcessor<'_> {
             response.settle_margin = if is_cross_margin {
                 //(initial_margin_usd - pos_fee_usd + pnl - mm) * decimals / price
                 self.position.initial_margin_usd.cast::<i128>()?
-                    .safe_sub(self.get_pos_fee_in_usd(settle_funding_fee?, settle_borrowing_fee?, settle_close_fee?)?)?
+                    .safe_sub(self.get_pos_fee_in_usd(settle_funding_fee, settle_borrowing_fee, settle_close_fee)?)?
                     .safe_add(pnl)?
                     .safe_sub(self.get_position_mm(market, state)?.cast::<i128>()?)?
                     .safe_mul(decimals.cast::<i128>()?)?
@@ -429,7 +437,7 @@ impl PositionProcessor<'_> {
         } else {
             //(initial_margin_usd - pos_fee + pnl) * decrease_percent * decimals / price
             response.settle_margin = self.position.initial_margin_usd.cast::<i128>()?
-                .safe_sub(self.get_pos_fee_in_usd(settle_funding_fee?, settle_borrowing_fee?, settle_close_fee?)?)?
+                .safe_sub(self.get_pos_fee_in_usd(settle_funding_fee, settle_borrowing_fee, settle_close_fee)?)?
                 .safe_add(pnl)?
                 .safe_mul(decrease_size.cast()?)?
                 .safe_div(self.position.position_size.cast()?)?
@@ -468,34 +476,32 @@ impl PositionProcessor<'_> {
                 .cast::<i128>()?
         )
     }
-    fn cal_decrease_borrowing_fee(&self, decrease_size: u128) -> (BumpResult<u128>, BumpResult<u128>) {
+    fn cal_decrease_borrowing_fee(&self, decrease_size: u128) -> BumpResult<(u128, u128)> {
         if self.position.position_size == decrease_size {
-            return (Ok(self.position.realized_borrowing_fee), Ok(self.position.realized_borrowing_fee_in_usd));
+            return Ok((self.position.realized_borrowing_fee, self.position.realized_borrowing_fee_in_usd));
         }
-        return (Ok(self.position.realized_borrowing_fee
-            .safe_mul(decrease_size).unwrap()
-            .safe_div(self.position.position_size).unwrap()),
-                Ok(self.position.realized_borrowing_fee_in_usd
-                    .safe_mul(decrease_size).unwrap()
-                    .safe_div(self.position.position_size).unwrap()));
+        return Ok((self.position.realized_borrowing_fee
+                       .safe_mul(decrease_size)?
+                       .safe_div(self.position.position_size)?, self.position.realized_borrowing_fee_in_usd
+                       .safe_mul(decrease_size)?
+                       .safe_div(self.position.position_size)?));
     }
 
-    fn cal_decrease_funding_fee(&self, decrease_size: u128) -> (BumpResult<i128>, BumpResult<i128>) {
+    fn cal_decrease_funding_fee(&self, decrease_size: u128) -> BumpResult<(i128, i128)> {
         if self.position.position_size == decrease_size {
-            return (Ok(self.position.realized_funding_fee), Ok(self.position.realized_funding_fee_in_usd));
+            return Ok((self.position.realized_funding_fee, self.position.realized_funding_fee_in_usd));
         }
-        return (Ok(self.position.realized_funding_fee
-            .safe_mul(decrease_size.cast().unwrap()).unwrap()
-            .safe_div(self.position.position_size.cast().unwrap()).unwrap()),
-                Ok(self.position.realized_funding_fee_in_usd
-                    .safe_mul(decrease_size.cast().unwrap()).unwrap()
-                    .safe_div(self.position.position_size.cast().unwrap()).unwrap()));
+        return Ok((self.position.realized_funding_fee
+                       .safe_mul(decrease_size.cast()?)?
+                       .safe_div(self.position.position_size.cast()?)?, self.position.realized_funding_fee_in_usd
+                       .safe_mul(decrease_size.cast()?)?
+                       .safe_div(self.position.position_size.cast()?)?));
     }
 
 
-    fn cal_decrease_close_fee(&self, decrease_size: u128, trade_token: &TradeToken, token_price: u128, close_fee_rate: u128) -> (BumpResult<u128>, BumpResult<u128>) {
+    fn cal_decrease_close_fee(&self, decrease_size: u128, trade_token: &TradeToken, token_price: u128, close_fee_rate: u128) -> BumpResult<(u128, u128)> {
         if self.position.position_size == decrease_size {
-            return (Ok(cal_utils::usd_to_token_u(self.position.close_fee_in_usd, trade_token.decimals, token_price).unwrap()), Ok(self.position.close_fee_in_usd));
+            return Ok((cal_utils::usd_to_token_u(self.position.close_fee_in_usd, trade_token.decimals, token_price).unwrap(), self.position.close_fee_in_usd));
         }
 
         let mut close_fee_in_usd = cal_utils::mul_rate_u(decrease_size, close_fee_rate).unwrap();
@@ -503,12 +509,11 @@ impl PositionProcessor<'_> {
             close_fee_in_usd = self.position.close_fee_in_usd;
         }
 
-        return (Ok(cal_utils::usd_to_token_u(close_fee_in_usd, trade_token.decimals, token_price).unwrap()
-            .safe_mul(decrease_size).unwrap()
-            .safe_div(self.position.position_size).unwrap()),
-                Ok(close_fee_in_usd
-                    .safe_mul(decrease_size).unwrap()
-                    .safe_div(self.position.position_size).unwrap()));
+        return Ok((cal_utils::usd_to_token_u(close_fee_in_usd, trade_token.decimals, token_price)?
+                       .safe_mul(decrease_size)?
+                       .safe_div(self.position.position_size)?, close_fee_in_usd
+                       .safe_mul(decrease_size)?
+                       .safe_div(self.position.position_size)?));
     }
 
 
