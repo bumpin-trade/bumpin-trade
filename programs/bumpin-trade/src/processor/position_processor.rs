@@ -424,44 +424,39 @@ impl PositionProcessor<'_> {
         if self.position.position_size == decrease_size && is_liquidation {
             response.settle_margin = if is_cross_margin {
                 //(initial_margin_usd - pos_fee_usd + pnl - mm) * decimals / price
-                self.position.initial_margin_usd.cast::<i128>()?
-                    .safe_sub(self.get_pos_fee_in_usd(settle_funding_fee, settle_borrowing_fee, settle_close_fee)?)?
-                    .safe_add(pnl)?
-                    .safe_sub(self.get_position_mm(market, state)?.cast::<i128>()?)?
-                    .safe_mul(decimals.cast::<i128>()?)?
-                    .safe_div(token_price.cast::<i128>()?)?
-                    .cast::<i128>()?
+                cal_utils::usd_to_token_i(self.position.initial_margin_usd.cast::<i128>()?
+                                              .safe_sub(self.get_pos_fee_in_usd(settle_funding_fee, settle_borrowing_fee, settle_close_fee)?)?
+                                              .safe_add(pnl)?
+                                              .safe_sub(self.get_position_mm(market, state)?.cast::<i128>()?)?,
+                                          decimals,
+                                          token_price)?
             } else {
                 0i128
             };
         } else {
             //(initial_margin_usd - pos_fee + pnl) * decrease_percent * decimals / price
-            response.settle_margin = self.position.initial_margin_usd.cast::<i128>()?
-                .safe_sub(self.get_pos_fee_in_usd(settle_funding_fee, settle_borrowing_fee, settle_close_fee)?)?
-                .safe_add(pnl)?
-                .safe_mul(decrease_size.cast()?)?
-                .safe_div(self.position.position_size.cast()?)?
-                .safe_mul(decimals.cast::<i128>()?)?
-                .safe_div(token_price.cast::<i128>()?)?
-                .cast::<i128>()?
+            response.settle_margin = cal_utils::usd_to_token_i(self.position.initial_margin_usd.cast::<i128>()?
+                                                                   .safe_sub(self.get_pos_fee_in_usd(settle_funding_fee, settle_borrowing_fee, settle_close_fee)?)?
+                                                                   .safe_add(pnl)?
+                                                                   .safe_mul(decrease_size.cast()?)?
+                                                                   .safe_div(self.position.position_size.cast()?)?,
+                                                               decimals,
+                                                               token_price)?;
         }
 
-        response.record_pnl_token = response.settle_margin.safe_sub(response.decrease_margin.cast::<i128>()?)?.cast::<i128>()?;
+        response.record_pnl_token = response.settle_margin.safe_sub(response.decrease_margin.cast::<i128>()?)?;
         //decrease_margin - (initial_margin_usd + pnl) * decrease_percent * decimals / price
         response.pool_pnl_token = response.decrease_margin.cast::<i128>()?
             .safe_sub(
-                self.position.initial_margin_usd.cast::<i128>()?
-                    .safe_add(pnl.cast()?)?
-                    .safe_mul(decrease_size.cast()?)?
-                    .safe_mul(self.position.position_size.cast()?)?
-                    .safe_mul(decimals.cast()?)?
-                    .safe_div(token_price.cast()?)?
+                cal_utils::usd_to_token_i(self.position.initial_margin_usd.cast::<i128>()?
+                                              .safe_add(pnl.cast()?)?
+                                              .safe_mul(decrease_size.cast()?)?
+                                              .safe_div(self.position.position_size.cast()?)?,
+                                          decimals,
+                                          token_price)?
             )?;
         //(settle_margin - decrease_margin) * price / decimal
-        response.realized_pnl = response.record_pnl_token
-            .safe_mul(token_price.cast::<i128>()?)?
-            .safe_div(decimals.cast::<i128>()?)?;
-
+        response.realized_pnl = cal_utils::token_to_usd_i(response.record_pnl_token, decimals, token_price)?;
         response.decrease_margin_in_usd_from_portfolio = if cal_utils::add_u128(response.decrease_margin_in_usd, self.position.initial_margin_usd_from_portfolio)? > self.position.initial_margin_usd
         { cal_utils::sub_u128(cal_utils::add_u128(response.decrease_margin_in_usd, self.position.initial_margin_usd_from_portfolio)?, self.position.initial_margin_usd)? } else { 0u128 };
 
@@ -638,7 +633,7 @@ impl PositionProcessor<'_> {
         user_processor.un_use_token(&self.position.margin_mint, response.decrease_margin)?;
 
         if response.record_pnl_token >= 0i128 {
-            user_processor.add_token(&self.position.margin_mint, response.record_pnl_token.cast::<i128>()?.safe_add(response.settle_fee.cast::<i128>()?)?.cast::<u128>()?)?;
+            user_processor.add_token(&self.position.margin_mint, response.record_pnl_token.safe_add(response.settle_fee)?.abs().cast::<u128>()?)?;
             //transfer pnl from pool to portfolio
             token::send_from_program_vault(
                 token_program,

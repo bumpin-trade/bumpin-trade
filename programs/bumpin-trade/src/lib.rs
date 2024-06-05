@@ -7,6 +7,7 @@ pub mod math;
 pub mod traits;
 pub mod utils;
 pub mod processor;
+
 use std::iter::Peekable;
 use std::slice::Iter;
 use anchor_lang::prelude::*;
@@ -24,26 +25,26 @@ pub mod bumpin_trade {
     }
 
     /*-----pool pool------*/
-    pub fn pool_stake<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info,PoolStake>, pool_index: usize, trade_index: u16, params: StakeParams) -> Result<()> {
-        handle_pool_stake(ctx, pool_index, trade_index, params)
+    pub fn pool_stake<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, PoolStake>,  params: StakeParams) -> Result<()> {
+        handle_pool_stake(ctx, params)
     }
 
-    pub fn pool_un_stake<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info,PoolUnStake>, pool_index: usize, params: UnStakeParams) -> Result<()> {
+    pub fn pool_un_stake<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, PoolUnStake>, pool_index: usize, params: UnStakeParams) -> Result<()> {
         handle_pool_un_stake(ctx, pool_index, params)
     }
 
     /*-----account------*/
-    pub fn deposit(ctx: Context<Deposit>, amount: u128) -> Result<()> { Ok(()) }
+    pub fn deposit<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, Deposit>, amount: u128) -> Result<()> { handle_deposit(ctx, amount) }
 
-    pub fn withdraw(ctx: Context<Deposit>, amount: u128) -> Result<()> { Ok(()) }
+    pub fn withdraw<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, Withdraw>, amount: u128) -> Result<()> { handle_withdraw(ctx, amount) }
 
     /*-----order------*/
-    pub fn place_order<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info,PlaceOrder>, params: PlaceOrderParams,
+    pub fn place_order<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>, params: PlaceOrderParams,
     ) -> Result<()> {
         handle_place_order(ctx, params)
     }
 
-    pub fn execute_order<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info,PlaceOrder>, order_id: u128,
+    pub fn execute_order<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>, order_id: u128,
     ) -> Result<()> {
         let user_account_loader = &ctx.accounts.user_account;
         let authority_signer = &ctx.accounts.authority;
@@ -56,7 +57,7 @@ pub mod bumpin_trade {
         let trade_token_loader = &ctx.accounts.trade_token;
         let bump_signer_account_info = &ctx.accounts.bump_signer;
         let token_program = &ctx.accounts.token_program;
-        let remaining_accounts_iter :&mut Peekable<Iter<'info, AccountInfo<'info>>>= &mut ctx.remaining_accounts.iter().peekable();
+        let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> = &mut ctx.remaining_accounts.iter().peekable();
         let AccountMaps {
             trade_token_map,
             mut oracle_map,
@@ -87,11 +88,11 @@ pub mod bumpin_trade {
     }
 
     /*-----position------*/
-    pub fn add_position_margin<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info,AddPositionMargin>, params: UpdatePositionMarginParams) -> Result<()> {
+    pub fn add_position_margin<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, AddPositionMargin>, params: UpdatePositionMarginParams) -> Result<()> {
         handle_add_position_margin(ctx, params)
     }
 
-    pub fn update_position_leverage<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info,UpdatePositionLeverage>, params: UpdatePositionLeverageParams) -> Result<()> {
+    pub fn update_position_leverage<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, UpdatePositionLeverage>, params: UpdatePositionLeverageParams) -> Result<()> {
         handle_update_position_leverage(ctx, params)
     }
 }

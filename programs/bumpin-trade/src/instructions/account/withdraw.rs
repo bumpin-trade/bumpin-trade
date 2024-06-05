@@ -42,7 +42,7 @@ pub struct Withdraw<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, Withdraw>, token_index: u16, amount: u128) -> Result<()> {
+pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, Withdraw>, amount: u128) -> Result<()> {
     validate!(amount>0, BumpErrorCode::AmountZero)?;
 
     let user = &mut ctx.accounts.user.load_mut()?;

@@ -34,7 +34,7 @@ pub struct Deposit<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> anchor_lang::Result<()> {
+pub fn handle_deposit(ctx: Context<Deposit>, amount: u128) -> Result<()> {
     let user = &mut ctx.accounts.user.load_mut()?;
 
     token::receive(
