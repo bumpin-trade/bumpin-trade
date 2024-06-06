@@ -136,8 +136,8 @@ impl<'a> PoolProcessor<'_> {
         } else {
             let u_token_pnl = token_pnl.abs().cast::<u128>()?;
 
-            self.pool.add_amount(if u_token_pnl > add_liability { u_token_pnl.cast::<u128>()?.safe_sub(add_liability.cast::<u128>()?)?.cast::<u128>()? } else { 0u128 })?;
-            self.pool.add_unsettle(if u_token_pnl > add_liability { add_liability } else { token_pnl.abs().cast::<u128>()? })?;
+            self.pool.add_amount(if u_token_pnl > add_liability { u_token_pnl.safe_sub(add_liability)? } else { 0u128 })?;
+            self.pool.add_unsettle(if u_token_pnl > add_liability { add_liability } else { u_token_pnl })?;
         }
         Ok(())
     }

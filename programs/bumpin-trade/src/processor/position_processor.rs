@@ -287,7 +287,7 @@ impl PositionProcessor<'_> {
             self.position.sub_initial_margin_usd(response.decrease_margin_in_usd)?;
             self.position.sub_initial_margin_usd_from_portfolio(response.decrease_margin_in_usd_from_portfolio)?;
             self.position.sub_hold_pool_amount(response.un_hold_pool_amount)?;
-            self.position.add_realized_pnl(response.realized_pnl)?;
+            self.position.add_realized_pnl(response.user_realized_pnl)?;
             self.position.sub_realized_borrowing_fee(response.settle_borrowing_fee)?;
             self.position.sub_realized_borrowing_fee_usd(response.settle_borrowing_fee_in_usd)?;
             self.position.sub_realized_funding_fee(response.settle_funding_fee)?;
@@ -389,8 +389,8 @@ impl PositionProcessor<'_> {
                                 token_price: u128,
                                 market: &Market,
                                 state: &State,
-                                trade_token: &TradeToken) -> BumpResult<UpdateDecreasePositionResponse> {
-        let mut response = UpdateDecreasePositionResponse::default();
+                                trade_token: &TradeToken) -> BumpResult<UpdateDecreaseResponse> {
+        let mut response = UpdateDecreaseResponse::default();
         response.is_liquidation = is_liquidation;
         response.margin_token_price = token_price;
 
@@ -425,7 +425,7 @@ impl PositionProcessor<'_> {
             response.settle_margin = if is_cross_margin {
                 //(initial_margin_usd - pos_fee_usd + pnl - mm) * decimals / price
                 cal_utils::usd_to_token_i(self.position.initial_margin_usd.cast::<i128>()?
-                                              .safe_sub(self.get_pos_fee_in_usd(settle_funding_fee, settle_borrowing_fee, settle_close_fee)?)?
+                                              .safe_sub(self.get_pos_fee_in_usd(settle_funding_fee_in_usd, settle_borrowing_fee_in_usd, settle_close_fee_in_usd)?)?
                                               .safe_add(pnl)?
                                               .safe_sub(self.get_position_mm(market, state)?.cast::<i128>()?)?,
                                           decimals,
@@ -436,27 +436,20 @@ impl PositionProcessor<'_> {
         } else {
             //(initial_margin_usd - pos_fee + pnl) * decrease_percent * decimals / price
             response.settle_margin = cal_utils::usd_to_token_i(self.position.initial_margin_usd.cast::<i128>()?
-                                                                   .safe_sub(self.get_pos_fee_in_usd(settle_funding_fee, settle_borrowing_fee, settle_close_fee)?)?
                                                                    .safe_add(pnl)?
                                                                    .safe_mul(decrease_size.cast()?)?
-                                                                   .safe_div(self.position.position_size.cast()?)?,
+                                                                   .safe_div(self.position.position_size.cast()?)?
+                                                                   .safe_sub(self.get_pos_fee_in_usd(settle_funding_fee_in_usd, settle_borrowing_fee_in_usd, settle_close_fee_in_usd)?)?,
                                                                decimals,
                                                                token_price)?;
         }
 
-        response.record_pnl_token = response.settle_margin.safe_sub(response.decrease_margin.cast::<i128>()?)?;
+        response.user_realized_pnl_token = response.settle_margin.safe_sub(response.decrease_margin.cast::<i128>()?)?;
         //decrease_margin - (initial_margin_usd + pnl) * decrease_percent * decimals / price
         response.pool_pnl_token = response.decrease_margin.cast::<i128>()?
-            .safe_sub(
-                cal_utils::usd_to_token_i(self.position.initial_margin_usd.cast::<i128>()?
-                                              .safe_add(pnl.cast()?)?
-                                              .safe_mul(decrease_size.cast()?)?
-                                              .safe_div(self.position.position_size.cast()?)?,
-                                          decimals,
-                                          token_price)?
-            )?;
+            .safe_sub(response.settle_margin)?;
         //(settle_margin - decrease_margin) * price / decimal
-        response.realized_pnl = cal_utils::token_to_usd_i(response.record_pnl_token, decimals, token_price)?;
+        response.user_realized_pnl = cal_utils::token_to_usd_i(response.user_realized_pnl_token, decimals, token_price)?;
         response.decrease_margin_in_usd_from_portfolio = if cal_utils::add_u128(response.decrease_margin_in_usd, self.position.initial_margin_usd_from_portfolio)? > self.position.initial_margin_usd
         { cal_utils::sub_u128(cal_utils::add_u128(response.decrease_margin_in_usd, self.position.initial_margin_usd_from_portfolio)?, self.position.initial_margin_usd)? } else { 0u128 };
 
@@ -506,8 +499,9 @@ impl PositionProcessor<'_> {
 
         return Ok((cal_utils::usd_to_token_u(close_fee_in_usd, trade_token.decimals, token_price)?
                        .safe_mul(decrease_size)?
-                       .safe_div(self.position.position_size)?, close_fee_in_usd
-                       .safe_mul(decrease_size)?
+                       .safe_div(self.position.position_size)?,
+
+                   close_fee_in_usd.safe_mul(decrease_size)?
                        .safe_div(self.position.position_size)?));
     }
 
@@ -553,7 +547,7 @@ impl PositionProcessor<'_> {
         )
     }
 
-    fn add_insurance_fund(&mut self, market: &Market, state: &State, trade_token: &TradeToken, response: &UpdateDecreasePositionResponse, mut pool: &mut Pool) -> BumpResult<()> {
+    fn add_insurance_fund(&mut self, market: &Market, state: &State, trade_token: &TradeToken, response: &UpdateDecreaseResponse, mut pool: &mut Pool) -> BumpResult<()> {
         let mut pool_processor = PoolProcessor { pool: &mut pool };
         if self.position.cross_margin {
             pool_processor.add_insurance_fund(cal_utils::usd_to_token_u(self.get_position_mm(market, state)?, trade_token.decimals, response.margin_token_price)?)?;
@@ -577,7 +571,7 @@ impl PositionProcessor<'_> {
     }
 
     fn settle<'info>(&mut self,
-                     response: &UpdateDecreasePositionResponse,
+                     response: &UpdateDecreaseResponse,
                      user_account_loader: &AccountLoader<'info, User>,
                      authority_signer: &Signer<'info>,
                      pool_account_loader: &AccountLoader<'info, Pool>,
@@ -613,7 +607,7 @@ impl PositionProcessor<'_> {
     }
 
     fn settle_cross<'info>(&mut self,
-                           response: &UpdateDecreasePositionResponse,
+                           response: &UpdateDecreaseResponse,
                            user_account_loader: &AccountLoader<'info, User>,
                            authority_signer: &Signer<'info>,
                            state_account: &Account<'info, State>,
@@ -623,17 +617,20 @@ impl PositionProcessor<'_> {
                            token_program: &Program<'info, Token>) -> BumpResult<u128> {
         let user = &mut user_account_loader.load_mut().unwrap();
         let mut user_processor = UserProcessor { user };
-        let mut add_liability = 0u128;
+
+        //record pay fee
         if response.settle_fee > 0i128 {
             user_processor.sub_token_with_liability(&self.position.margin_mint, response.settle_fee.abs().cast::<u128>()?)?;
         } else {
             user_processor.add_token(&self.position.margin_mint, response.settle_fee.abs().cast::<u128>()?)?;
         }
 
+        // release token
         user_processor.un_use_token(&self.position.margin_mint, response.decrease_margin)?;
 
-        if response.record_pnl_token >= 0i128 {
-            user_processor.add_token(&self.position.margin_mint, response.record_pnl_token.safe_add(response.settle_fee)?.abs().cast::<u128>()?)?;
+        let mut add_liability = 0u128;
+        if response.user_realized_pnl_token >= 0i128 {
+            user_processor.add_token(&self.position.margin_mint, response.user_realized_pnl_token.abs().cast::<u128>()?)?;
             //transfer pnl from pool to portfolio
             token::send_from_program_vault(
                 token_program,
@@ -641,17 +638,17 @@ impl PositionProcessor<'_> {
                 user_token_account,
                 bump_signer,
                 state_account.bump_signer_nonce,
-                response.record_pnl_token.abs().cast::<u128>()?,
+                response.user_realized_pnl_token.abs().cast::<u128>()?,
             ).unwrap();
         } else {
-            add_liability = user_processor.sub_token_with_liability(&self.position.margin_mint, response.record_pnl_token.abs().cast::<u128>()?)?;
+            add_liability = user_processor.sub_token_with_liability(&self.position.margin_mint, response.user_realized_pnl_token.abs().cast::<u128>()?)?;
             //transfer pnl from portfolio to pool
             token::receive(
                 token_program,
                 user_token_account,
                 pool_vault_account,
                 authority_signer,
-                response.record_pnl_token.abs().cast::<u128>()?.safe_sub(add_liability)?,
+                response.user_realized_pnl_token.abs().cast::<u128>()?.safe_sub(add_liability)?,
             ).unwrap();
         }
 
@@ -669,7 +666,7 @@ impl PositionProcessor<'_> {
     }
 
     fn settle_isolate<'info>(&mut self,
-                             response: &UpdateDecreasePositionResponse,
+                             response: &UpdateDecreaseResponse,
                              state_account: &Account<'info, State>,
                              user_token_account: &Account<'info, TokenAccount>,
                              pool_vault_account: &Account<'info, TokenAccount>,
@@ -699,8 +696,7 @@ impl PositionProcessor<'_> {
                     let borrowing_margin = position.initial_margin_usd
                         .safe_sub(position.initial_margin_usd_from_portfolio)?
                         .safe_mul(position.initial_margin)?
-                        .safe_div(position.initial_margin_usd)?
-                        ;
+                        .safe_div(position.initial_margin_usd)?;
                     change_amount = change_token_amount.abs().cast::<u128>()?.min(borrowing_margin);
                     position.add_initial_margin_usd_from_portfolio(change_amount
                         .safe_mul(position.initial_margin_usd)?
@@ -788,7 +784,7 @@ pub struct DecreasePositionParams {
 
 #[derive(Eq, Default, PartialEq, Debug)]
 #[repr(C)]
-pub struct UpdateDecreasePositionResponse {
+pub struct UpdateDecreaseResponse {
     pub margin_token_price: u128,
     pub decrease_margin: u128,
     pub decrease_margin_in_usd: u128,
@@ -801,9 +797,9 @@ pub struct UpdateDecreasePositionResponse {
     pub settle_close_fee_in_usd: u128,
     pub settle_fee: i128,
     pub settle_margin: i128,
-    pub record_pnl_token: i128,
+    pub user_realized_pnl_token: i128,
     pub pool_pnl_token: i128,
     pub decrease_margin_in_usd_from_portfolio: u128,
-    pub realized_pnl: i128,
+    pub user_realized_pnl: i128,
     pub is_liquidation: bool,
 }
