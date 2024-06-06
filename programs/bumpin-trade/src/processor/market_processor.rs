@@ -7,7 +7,6 @@ use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::state::market::Market;
 use crate::state::oracle::oracle_map::OracleMap;
-use crate::state::pool::Pool;
 use crate::state::state::State;
 
 pub struct MarketProcessor<'a> {
@@ -99,10 +98,8 @@ impl<'a> MarketProcessor<'_> {
 
     pub fn update_market_total_funding_fee(&mut self,
                                            amount: i128,
-                                           update_unsettle: bool,
                                            is_long: bool,
-                                           is_add: bool,
-                                           pool: &mut Pool) -> BumpResult<()> {
+                                           is_add: bool) -> BumpResult<()> {
         if is_long {
             if is_add {
                 self.market.funding_fee.total_long_funding_fee = cal_utils::add_i128(self.market.funding_fee.total_long_funding_fee, amount)?;
@@ -115,10 +112,6 @@ impl<'a> MarketProcessor<'_> {
             } else {
                 self.market.funding_fee.short_funding_fee_rate = cal_utils::sub_i128(self.market.funding_fee.short_funding_fee_rate, amount)?;
             }
-        }
-
-        if update_unsettle {
-            pool.add_unsettle(amount.cast::<u128>()?)?
         }
 
         Ok(())

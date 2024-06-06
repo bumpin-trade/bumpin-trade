@@ -307,7 +307,7 @@ impl PositionProcessor<'_> {
         //update total borrowing fee and funding fee
         let mut market_processor = MarketProcessor { market };
         pool.borrowing_fee.update_total_borrowing_fee(response.settle_borrowing_fee, true, response.settle_borrowing_fee, false)?;
-        market_processor.update_market_total_funding_fee(response.settle_funding_fee, !self.position.cross_margin, self.position.is_long, false, pool)?;
+        market_processor.update_market_total_funding_fee(response.settle_funding_fee, !self.position.cross_margin, self.position.is_long)?;
         market_processor.update_oi(false, UpdateOIParams {
             margin_token: self.position.margin_mint,
             size: params.decrease_size,
@@ -538,10 +538,7 @@ impl PositionProcessor<'_> {
         self.position.add_realized_funding_fee(realized_funding_fee)?;
         self.position.add_realized_funding_fee_in_usd(cal_utils::token_to_usd_i(realized_funding_fee, token.decimals, token_price)?)?;
         self.position.set_open_funding_fee_amount_per_size(market_funding_fee_per_size)?;
-        market_processor.update_market_total_funding_fee(realized_funding_fee,
-                                                         true,
-                                                         self.position.is_long,
-                                                         true, pool)?;
+        market_processor.update_market_total_funding_fee(realized_funding_fee, true, self.position.is_long)?;
         Ok(())
     }
 
