@@ -165,7 +165,7 @@ impl UserPosition {
     }
 
     pub fn add_realized_pnl(&mut self, realized_pnl: i128) -> BumpResult<()> {
-        self.realized_pnl = self.realized_pnl.cast::<i128>()?.safe_add(realized_pnl.cast::<i128>()?)?.cast::<i128>()?;
+        self.realized_pnl = self.realized_pnl.safe_add(realized_pnl)?.cast::<i128>()?;
         Ok(())
     }
 
@@ -180,12 +180,12 @@ impl UserPosition {
     }
 
     pub fn sub_realized_funding_fee(&mut self, realized_funding_fee: i128) -> BumpResult<()> {
-        self.realized_funding_fee = self.realized_funding_fee.cast::<i128>()?.safe_sub(realized_funding_fee.cast::<i128>()?)?.cast::<i128>()?;
+        self.realized_funding_fee = self.realized_funding_fee.safe_sub(realized_funding_fee)?;
         Ok(())
     }
 
     pub fn sub_realized_funding_fee_usd(&mut self, realized_funding_fee_in_usd: i128) -> BumpResult<()> {
-        self.realized_funding_fee_in_usd = self.realized_funding_fee_in_usd.cast::<i128>()?.safe_sub(realized_funding_fee_in_usd.cast::<i128>()?)?.cast::<i128>()?;
+        self.realized_funding_fee_in_usd = self.realized_funding_fee_in_usd.safe_sub(realized_funding_fee_in_usd)?;
         Ok(())
     }
 

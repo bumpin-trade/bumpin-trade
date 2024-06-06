@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use crate::{validate};
 use crate::errors::{BumpErrorCode, BumpResult};
-use crate::instructions::{add_u128};
+use crate::instructions::{add_i128, add_u128};
 use crate::math::safe_math::SafeMath;
 use crate::state::infrastructure::fee_reward::FeeReward;
 use crate::state::infrastructure::pool_borrowing_fee::BorrowingFee;
@@ -21,6 +21,7 @@ pub struct Pool {
     pub pool_name: [u8; 32],
     pub pool_balance: PoolBalance,
     pub stable_balance: PoolBalance,
+    pub funding_fee_hub_amount: i128,
     pub borrowing_fee: BorrowingFee,
     pub fee_reward: FeeReward,
     pub pool_config: PoolConfig,
@@ -54,6 +55,13 @@ pub struct PoolBalance {
     pub loss_amount: u128,
 }
 
+#[zero_copy(unsafe)]
+#[derive(Default, Eq, PartialEq, Debug)]
+#[repr(C)]
+pub struct FundingFeeHub {
+    pub amount: i128,
+}
+
 
 #[zero_copy(unsafe)]
 #[derive(Eq, PartialEq, Debug, Default)]
@@ -81,6 +89,7 @@ impl Default for Pool {
             pool_name: [0; 32],
             pool_balance: PoolBalance::default(),
             stable_balance: Default::default(),
+            funding_fee_hub_amount: 0,
             borrowing_fee: BorrowingFee::default(),
             fee_reward: FeeReward::default(),
             pool_config: PoolConfig::default(),
@@ -134,6 +143,16 @@ impl Pool {
 
     pub fn add_insurance_fund(&mut self, amount: u128) -> BumpResult<()> {
         self.insurance_fund_amount = add_u128(self.insurance_fund_amount, amount)?;
+        Ok(())
+    }
+
+    pub fn add_funding_fee(&mut self, amount: i128) -> BumpResult<()> {
+        self.funding_fee_hub_amount = add_i128(self.funding_fee_hub_amount, amount)?;
+        Ok(())
+    }
+
+    pub fn add_stable_loss_amount(&mut self, amount: u128) -> BumpResult<()> {
+        self.stable_balance.loss_amount = add_u128(self.stable_balance.loss_amount, amount)?;
         Ok(())
     }
 

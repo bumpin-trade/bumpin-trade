@@ -127,15 +127,19 @@ impl<'a> PoolProcessor<'_> {
         Ok(())
     }
 
-    pub fn update_pnl_and_un_hold_pool_amount(&mut self, amount: u128, token_pnl: i128, add_liability: u128) -> BumpResult {
+    pub fn update_pnl_and_un_hold_pool_amount(&mut self, amount: u128, token_pnl: i128, add_liability: u128, base_token_pool: Option<&mut Pool>) -> BumpResult {
         self.pool.un_hold_pool(amount)?;
         if token_pnl < 0i128 {
-            self.pool.sub_amount(token_pnl.abs().cast::<u128>()?)?
+            self.pool.sub_amount(token_pnl.abs().cast::<u128>()?)?;
+            if self.pool.stable && base_token_pool.is_some(){
+                // need count loss on base_token_pool
+                self.pool.add_unsettle(token_pnl.abs().cast::<u128>()?)?;
+                base_token_pool.unwrap().add_stable_loss_amount(token_pnl.abs().cast::<u128>()?)?;
+            }
         } else if add_liability == 0u128 {
             self.pool.add_amount(token_pnl.cast::<u128>()?)?
         } else {
             let u_token_pnl = token_pnl.abs().cast::<u128>()?;
-
             self.pool.add_amount(if u_token_pnl > add_liability { u_token_pnl.safe_sub(add_liability)? } else { 0u128 })?;
             self.pool.add_unsettle(if u_token_pnl > add_liability { add_liability } else { u_token_pnl })?;
         }

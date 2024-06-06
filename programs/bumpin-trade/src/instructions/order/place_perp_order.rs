@@ -50,6 +50,12 @@ pub struct PlaceOrder<'info> {
     )]
     pub pool: AccountLoader<'info, Pool>,
 
+    #[account(
+        mut,
+        constraint = stable_pool.load() ?.pool_mint == market.load() ?.stable_pool_mint_key
+    )]
+    pub stable_pool: AccountLoader<'info, Pool>,
+
     pub market: AccountLoader<'info, Market>,
 
     pub state: Account<'info, State>,
@@ -60,7 +66,17 @@ pub struct PlaceOrder<'info> {
     )]
     pub user_token_account: Account<'info, TokenAccount>,
 
+    #[account(
+        mut,
+        constraint = pool_vault.mint == pool.load() ?.pool_mint
+    )]
     pub pool_vault: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        constraint = stable_pool_vault.mint == stable_pool.load() ?.pool_mint
+    )]
+    pub stable_pool_vault: Account<'info, TokenAccount>,
 
     pub trade_token: AccountLoader<'info, TradeToken>,
 
@@ -106,7 +122,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'in
         token::receive(
             &ctx.accounts.token_program,
             &ctx.accounts.user_token_account,
-            &ctx.accounts.pool_vault,
+            if order.order_side.eq(&OrderSide::LONG) { &ctx.accounts.pool_vault } else { &ctx.accounts.stable_pool_vault },
             &ctx.accounts.authority,
             order.order_margin,
         )?;
@@ -146,10 +162,12 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'in
         let authority_signer = &ctx.accounts.authority;
         let margin_token_account = &ctx.accounts.margin_token;
         let pool_account_loader = &ctx.accounts.pool;
+        let stable_pool_account_loader = &ctx.accounts.stable_pool;
         let market_account_loader = &ctx.accounts.market;
         let state_account = &ctx.accounts.state;
         let user_token_account = &ctx.accounts.user_token_account;
         let pool_vault_account = &ctx.accounts.pool_vault;
+        let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
         let trade_token_loader = &ctx.accounts.trade_token;
         let bump_signer_account_info = &ctx.accounts.bump_signer;
         let token_program = &ctx.accounts.token_program;
@@ -158,10 +176,12 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'in
                                     authority_signer,
                                     margin_token_account,
                                     pool_account_loader,
+                                    stable_pool_account_loader,
                                     market_account_loader,
                                     state_account,
                                     user_token_account,
                                     pool_vault_account,
+                                    stable_pool_vault_account,
                                     trade_token_loader,
                                     bump_signer_account_info,
                                     token_program,
@@ -183,10 +203,12 @@ pub fn handle_execute_order<'info>(user_account_loader: &AccountLoader<'info, Us
                                    authority_signer: &Signer<'info>,
                                    margin_token_account: &Account<'info, TokenAccount>,
                                    pool_account_loader: &AccountLoader<'info, Pool>,
+                                   stable_pool_account_loader: &AccountLoader<'info, Pool>,
                                    market_account_loader: &AccountLoader<'info, Market>,
                                    state_account: &Account<'info, State>,
                                    user_token_account: &Account<'info, TokenAccount>,
                                    pool_vault_account: &Account<'info, TokenAccount>,
+                                   stable_pool_vault_account: &Account<'info, TokenAccount>,
                                    trade_token_loader: &AccountLoader<'info, TradeToken>,
                                    bump_signer: &AccountInfo<'info, >,
                                    token_program: &Program<'info, Token>,
@@ -200,11 +222,14 @@ pub fn handle_execute_order<'info>(user_account_loader: &AccountLoader<'info, Us
     let margin_token = margin_token_account;
     let market = &mut market_account_loader.load_mut().unwrap();
     let trade_token = trade_token_loader.load().unwrap();
-    let pool = &mut pool_account_loader.load_mut().unwrap();
 
     let order = if execute_from_remote { user.find_ref_order_by_id(order_id)? } else { user_order };
     let next_use_index = user.next_usable_position_index()?;
     let user_authority = user.authority;
+
+    let stake_token_pool = &mut pool_account_loader.load_mut().unwrap();
+    let stable_pool = &mut stable_pool_account_loader.load_mut().unwrap();
+    let pool = if order.order_side.eq(&OrderSide::LONG) { stake_token_pool } else { stable_pool };
 
 
     //validate order
@@ -298,10 +323,11 @@ pub fn handle_execute_order<'info>(user_account_loader: &AccountLoader<'info, Us
                 execute_price,
             }, user_account_loader, authority_signer,
                                                  pool_account_loader,
+                                                 stable_pool_account_loader,
                                                  market_account_loader,
                                                  state_account,
                                                  user_token_account,
-                                                 pool_vault_account,
+                                                 if position_processor.position.is_long { pool_vault_account } else { stable_pool_vault_account },
                                                  trade_token_loader,
                                                  bump_signer,
                                                  token_program,

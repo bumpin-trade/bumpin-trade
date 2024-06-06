@@ -17,7 +17,7 @@ declare_id!("GhzHdLjZ1qLLPnPq6YdeqJAszuBRN8WnLnK455yBbig6");
 #[program]
 pub mod bumpin_trade {
     use crate::processor::optional_accounts::{AccountMaps, load_maps};
-    use crate::state::infrastructure::user_order::UserOrder;
+    use crate::state::infrastructure::user_order::{UserOrder};
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
@@ -50,10 +50,12 @@ pub mod bumpin_trade {
         let authority_signer = &ctx.accounts.authority;
         let margin_token_account = &ctx.accounts.margin_token;
         let pool_account_loader = &ctx.accounts.pool;
+        let stable_pool_account_loader = &ctx.accounts.stable_pool;
         let market_account_loader = &ctx.accounts.market;
         let state_account = &ctx.accounts.state;
         let user_token_account = &ctx.accounts.user_token_account;
         let pool_vault_account = &ctx.accounts.pool_vault;
+        let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
         let trade_token_loader = &ctx.accounts.trade_token;
         let bump_signer_account_info = &ctx.accounts.bump_signer;
         let token_program = &ctx.accounts.token_program;
@@ -68,10 +70,12 @@ pub mod bumpin_trade {
                              authority_signer,
                              margin_token_account,
                              pool_account_loader,
+                             stable_pool_account_loader,
                              market_account_loader,
                              state_account,
                              user_token_account,
                              pool_vault_account,
+                             stable_pool_vault_account,
                              trade_token_loader,
                              bump_signer_account_info,
                              token_program,

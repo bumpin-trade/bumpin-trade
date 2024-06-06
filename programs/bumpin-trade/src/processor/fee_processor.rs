@@ -91,3 +91,9 @@ pub fn collect_borrowing_fee(stake_pool: &mut Pool, state: &State, fee_amount: u
 
     Ok(())
 }
+
+
+pub fn collect_funding_fee(pool: &mut Pool, fee_amount: i128) -> BumpResult<()> {
+    pool.add_funding_fee(fee_amount)?;
+    Ok(())
+}
