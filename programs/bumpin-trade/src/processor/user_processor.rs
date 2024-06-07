@@ -32,11 +32,10 @@ impl<'a> UserProcessor<'a> {
     }
     pub fn withdraw(&mut self, amount: u128, mint: &Pubkey, oracle_map: &mut OracleMap, trade_token_map: &TradeTokenMap) -> BumpResult {
         let price_data = oracle_map.get_price_data(mint)?;
-        let withdraw_usd = price_data.price.cast::<i128>()?
-            .safe_mul(amount.cast()?)?;
+        let withdraw_usd = price_data.price.safe_mul(amount)?;
 
         let available_value = self.get_available_value(oracle_map, trade_token_map)?;
-        validate!(available_value>withdraw_usd, BumpErrorCode::UserNotEnoughValue)?;
+        validate!(available_value>withdraw_usd.cast::<i128>()?, BumpErrorCode::UserNotEnoughValue)?;
 
         let user_token = self.user.get_user_token_mut(mint)?;
         user_token.sub_token_amount(amount)?;

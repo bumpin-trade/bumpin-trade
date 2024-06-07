@@ -52,6 +52,7 @@ impl<'a> PoolProcessor<'_> {
         self.pool.add_amount(mint_amount)?;
         let user_stake = user.get_user_stake_mut(pool.pool_index)?;
         user_stake.add_user_stake(stake_amount)?;
+        drop(user_processor);
         Ok(stake_amount)
     }
     pub fn stake(&mut self, user_loader: &AccountLoader<User>, pool_loader: &AccountLoader<Pool>, mint_amount: u128, trade_token: &TradeToken, account_maps: &mut AccountMaps) -> BumpResult<u128> {
@@ -131,7 +132,7 @@ impl<'a> PoolProcessor<'_> {
         self.pool.un_hold_pool(amount)?;
         if token_pnl < 0i128 {
             self.pool.sub_amount(token_pnl.abs().cast::<u128>()?)?;
-            if self.pool.stable && base_token_pool.is_some(){
+            if self.pool.stable && base_token_pool.is_some() {
                 // need count loss on base_token_pool
                 self.pool.add_unsettle(token_pnl.abs().cast::<u128>()?)?;
                 base_token_pool.unwrap().add_stable_loss_amount(token_pnl.abs().cast::<u128>()?)?;

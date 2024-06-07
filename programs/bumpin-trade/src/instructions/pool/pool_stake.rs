@@ -99,7 +99,7 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'inf
     if stake_params.portfolio {
         let mut pool_processor = PoolProcessor { pool };
         pool_processor.portfolio_to_stake(&ctx.accounts.user, &ctx.accounts.pool, base_mint_amount, &trade_token, &mut account_maps)?;
-
+        drop(pool_processor);
         utils::token::receive(
             &ctx.accounts.token_program,
             &ctx.accounts.trade_token_vault,
@@ -111,6 +111,7 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'inf
     } else {
         let mut pool_processor = PoolProcessor { pool };
         pool_processor.stake(&ctx.accounts.user, &ctx.accounts.pool, base_mint_amount, &trade_token, &mut account_maps)?;
+        drop(pool_processor);
         utils::token::receive(
             &ctx.accounts.token_program,
             &ctx.accounts.user_token_account,

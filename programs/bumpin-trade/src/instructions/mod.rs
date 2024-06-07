@@ -3,7 +3,6 @@ pub mod account;
 pub mod order;
 pub mod pool;
 pub mod position;
-mod portfolio;
 mod admin;
 mod utils;
 mod liquidate;

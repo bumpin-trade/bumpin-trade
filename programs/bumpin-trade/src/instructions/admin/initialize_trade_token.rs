@@ -1,10 +1,11 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::rent::Rent;
-use crate::{get_then_update_id};
+use crate::{get_then_update_id, safe_increment};
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use anchor_lang::error;
+use crate::math_error;
 
 #[derive(Accounts)]
 pub struct InitializeTradeToken<'info> {
@@ -44,16 +45,17 @@ pub struct InitializeTradeToken<'info> {
 }
 
 pub fn initialize_trade_token(ctx: Context<InitializeTradeToken>, discount: u128, liquidation_factor: u128) -> anchor_lang::Result<()> {
-    let state = &mut ctx.accounts.state;
-    let trade_token = &mut ctx.accounts.trade_token.load_init()?;
-    **trade_token = TradeToken {
+    let mut state = &mut ctx.accounts.state;
+    let mut trade_token = ctx.accounts.trade_token.load_init()?;
+    *trade_token = TradeToken {
         mint: ctx.accounts.trade_token_mint.key(),
-        oracle: ctx.accounts.oracle.key(),
-        token_index: get_then_update_id!(state, number_of_trade_tokens),
+        oracle: *ctx.accounts.oracle.to_account_info().key,
+        token_index: state.number_of_trade_tokens,
         discount,
         liquidation_factor,
         decimals: ctx.accounts.trade_token_mint.decimals,
         trade_token_vault: *ctx.accounts.trade_token_vault.to_account_info().key,
     };
+    safe_increment!(state.number_of_trade_tokens,1);
     Ok(())
 }

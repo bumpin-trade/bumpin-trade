@@ -36,12 +36,10 @@ pub struct InitializeUser<'info> {
 }
 
 pub fn handle_initialize_user(ctx: Context<InitializeUser>) -> Result<()> {
-    let user_key = ctx.accounts.user.key();
     let mut user = ctx.accounts.user.load_init().or(Err(BumpErrorCode::UnableToLoadAccountLoader))?;
 
-
     *user = User {
-        user_key,
+        user_key: *ctx.accounts.user.to_account_info().key,
         authority: user.authority.key(),
         ..User::default()
     };
