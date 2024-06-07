@@ -16,7 +16,6 @@ pub struct InitializeState<'info> {
         payer = admin
     )]
     pub state: Account<'info, State>,
-    pub admin_signer: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,

@@ -216,7 +216,7 @@ impl PositionProcessor<'_> {
             //increase position
             self.update_borrowing_fee(pool, params.margin_token_price, &trade_token)?;
             self.update_funding_fee(market_processor.market, params.margin_token_price, &trade_token, pool)?;
-            self.position.set_entry_price(cal_utils::compute_avg_entry_price(self.position.position_size, self.position.entry_price, increase_size, params.margin_token_price, market_processor.market.ticker_size, params.is_long)?)?;
+            self.position.set_entry_price(cal_utils::compute_avg_entry_price(self.position.position_size, self.position.entry_price, increase_size, params.margin_token_price, market_processor.market.market_trade_config.tick_size, params.is_long)?)?;
             self.position.add_initial_margin(increase_margin)?;
             self.position.add_initial_margin_usd(cal_utils::token_to_usd_u(increase_margin, trade_token.decimals, params.margin_token_price)?)?;
             self.position.add_initial_margin_usd_from_portfolio(cal_utils::token_to_usd_u(increase_margin_from_balance, trade_token.decimals, params.margin_token_price)?)?;

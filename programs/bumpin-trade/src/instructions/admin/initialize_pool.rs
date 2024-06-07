@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
+use crate::safe_increment;
+use crate::math_error;
 use crate::state::pool::Pool;
 use crate::traits::Size;
 use crate::state::state::State;
@@ -58,6 +60,7 @@ pub struct InitializePool<'info> {
         has_one = admin
     )]
     pub state: Account<'info, State>,
+
     #[account(mut)]
     pub admin: Signer<'info>,
 
@@ -70,6 +73,7 @@ pub struct InitializePool<'info> {
 
 pub fn handle_initialize_pool(ctx: Context<InitializePool>, name: [u8; 32]) -> Result<()> {
     let mut pool = ctx.accounts.pool.load_init()?;
+    let state = &mut ctx.accounts.state;
     *pool = Pool {
         pool_key: ctx.accounts.pool.key(),
         pool_mint: ctx.accounts.pool_mint.key(),
@@ -79,6 +83,7 @@ pub fn handle_initialize_pool(ctx: Context<InitializePool>, name: [u8; 32]) -> R
         pool_name: name,
         ..Pool::default()
     };
+    safe_increment!(state.number_of_pools, 1);
     Ok(())
 }
 

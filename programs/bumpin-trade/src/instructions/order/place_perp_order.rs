@@ -46,13 +46,13 @@ pub struct PlaceOrder<'info> {
 
     #[account(
         mut,
-        constraint = pool.load() ?.pool_mint == market.load() ?.pool_mint_key
+        constraint = pool.load() ?.pool_mint == market.load() ?.pool_mint
     )]
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
         mut,
-        constraint = stable_pool.load() ?.pool_mint == market.load() ?.stable_pool_mint_key
+        constraint = stable_pool.load() ?.pool_mint == market.load() ?.stable_pool_mint
     )]
     pub stable_pool: AccountLoader<'info, Pool>,
 
@@ -235,7 +235,7 @@ pub fn handle_execute_order<'info>(user_account_loader: &AccountLoader<'info, Us
     //validate order
     validate_execute_order(&order, &market)?;
     let is_long = OrderSide::LONG == order.order_side;
-    let execute_price = get_execution_price(oracle_map.get_price_data(&market.index_mint_key).unwrap().price, &order)?;
+    let execute_price = get_execution_price(oracle_map.get_price_data(&market.index_mint).unwrap().price, &order)?;
 
     let user = &mut user_account_loader.load_mut().unwrap();
     let position = user.find_position_by_seed(&user_authority, market.symbol, &margin_token.mint, order.cross_margin, program_id)?;
@@ -254,7 +254,7 @@ pub fn handle_execute_order<'info>(user_account_loader: &AccountLoader<'info, Us
         PositionSide::NONE => { Err(BumpErrorCode::PositionSideNotSupport) }
         PositionSide::INCREASE => Ok({
             let margin_token_price;
-            if market.index_mint_key == margin_token.mint {
+            if market.index_mint == margin_token.mint {
                 margin_token_price = execute_price;
             } else {
                 margin_token_price = oracle_map.get_price_data(&margin_token.mint)?.price;
@@ -278,7 +278,7 @@ pub fn handle_execute_order<'info>(user_account_loader: &AccountLoader<'info, Us
 
                 position.set_position_key(user.generate_position_key(&user.authority, order.symbol, &order.margin_token, order.cross_margin, program_id)?)?;
                 position.set_authority(user.authority)?;
-                position.set_index_mint(market.index_mint_key)?;
+                position.set_index_mint(market.index_mint)?;
                 position.set_symbol(order.symbol)?;
                 position.set_margin_mint(order.margin_token)?;
                 position.set_leverage(order.leverage)?;
@@ -367,11 +367,11 @@ fn validate_place_order(order: &PlaceOrderParams, token: &Pubkey, market: &Marke
         if order.order_margin == 0u128 {
             res = false;
         }
-        if order.order_side.eq(&OrderSide::LONG) && !token.eq(&market.pool_mint_key) {
+        if order.order_side.eq(&OrderSide::LONG) && !token.eq(&market.pool_mint) {
             res = false;
         }
 
-        if order.order_side.eq(&OrderSide::LONG) && !market.pool_mint_key.eq(&pool.pool_mint) {
+        if order.order_side.eq(&OrderSide::LONG) && !market.pool_mint.eq(&pool.pool_mint) {
             res = false;
         }
 
@@ -379,7 +379,7 @@ fn validate_place_order(order: &PlaceOrderParams, token: &Pubkey, market: &Marke
             res = false;
         }
 
-        if order.order_side.eq(&OrderSide::SHORT) && !market.stable_pool_mint_key.eq(&pool.pool_mint) {
+        if order.order_side.eq(&OrderSide::SHORT) && !market.stable_pool_mint.eq(&pool.pool_mint) {
             res = false;
         }
 
@@ -464,11 +464,11 @@ fn validate_execute_order(order: &UserOrder, market: &Market) -> BumpResult<()> 
 
     // token verify
     if order.position_side.eq(&PositionSide::INCREASE) {
-        if order.order_side.eq(&OrderSide::LONG) && order.margin_token != market.pool_mint_key {
+        if order.order_side.eq(&OrderSide::LONG) && order.margin_token != market.pool_mint {
             return Err(BumpErrorCode::TokenNotMatch.into());
         }
 
-        if order.order_side.eq(&OrderSide::SHORT) && order.margin_token != market.stable_pool_mint_key {
+        if order.order_side.eq(&OrderSide::SHORT) && order.margin_token != market.stable_pool_mint {
             return Err(BumpErrorCode::TokenNotMatch.into());
         }
     }

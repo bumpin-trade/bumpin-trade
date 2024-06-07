@@ -9,40 +9,38 @@ use crate::traits::Size;
 #[repr(C)]
 pub struct Market {
     pub symbol: [u8; 32],
-    pub ticker_size: u128,
+    pub market_index: u16,
     pub pool_key: Pubkey,
-    pub pool_mint_key: Pubkey,
-    pub index: u128,
-    pub index_mint_key: Pubkey,
+    pub pool_mint: Pubkey,
+    pub index_mint: Pubkey,
     pub stable_pool_key: Pubkey,
-    pub stable_pool_mint_key: Pubkey,
+    pub stable_pool_mint: Pubkey,
     pub long_open_interest: MarketPosition,
     pub short_open_interest: MarketPosition,
     pub funding_fee: MarketFundingFee,
     pub market_trade_config: MarketConfig,
 }
 
+impl Size for Market {
+    const SIZE: usize = std::mem::size_of::<Market>() + 8;
+}
+
 impl Default for Market {
     fn default() -> Self {
         Market {
             symbol: [0; 32],
-            ticker_size: 0u128,
             pool_key: Pubkey::default(),
-            pool_mint_key: Pubkey::default(),
-            index_mint_key: Pubkey::default(),
-            index: 0u128,
+            pool_mint: Pubkey::default(),
+            index_mint: Pubkey::default(),
+            market_index: 0u16,
             stable_pool_key: Pubkey::default(),
-            stable_pool_mint_key: Default::default(),
+            stable_pool_mint: Default::default(),
             long_open_interest: MarketPosition::default(),
             short_open_interest: MarketPosition::default(),
             funding_fee: MarketFundingFee::default(),
             market_trade_config: MarketConfig::default(),
         }
     }
-}
-
-impl Size for Market {
-    const SIZE: usize = std::mem::size_of::<Market>() + 8;
 }
 
 #[zero_copy(unsafe)]

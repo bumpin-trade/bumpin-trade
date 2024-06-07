@@ -44,7 +44,7 @@ impl<'a> MarketProcessor<'_> {
                                                                  market_position.entry_price,
                                                                  params.size,
                                                                  params.entry_price,
-                                                                 self.market.ticker_size,
+                                                                 self.market.market_trade_config.tick_size,
                                                                  params.is_long)?;
 
             market_position.add_open_interest(params.size, entry_price)?;
@@ -58,7 +58,7 @@ impl<'a> MarketProcessor<'_> {
         Ok(())
     }
     pub fn update_market_funding_fee_rate(&mut self, state: &State, oracle_price: &mut OracleMap) -> BumpResult<()> {
-        let oracle_price_data = oracle_price.get_price_data(&self.market.pool_mint_key)?;
+        let oracle_price_data = oracle_price.get_price_data(&self.market.pool_mint)?;
         let long = self.market.long_open_interest;
         let short = self.market.short_open_interest;
 

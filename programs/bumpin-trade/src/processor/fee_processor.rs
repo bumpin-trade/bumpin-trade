@@ -4,6 +4,7 @@ use crate::math::safe_math::SafeMath;
 use crate::state::market::Market;
 use crate::state::pool::Pool;
 use crate::state::state::State;
+use anchor_lang::prelude::msg;
 use crate::validate;
 
 pub fn collect_stake_fee(stake_pool: &mut Pool, state: &State, amount: u128) -> BumpResult<u128> {
@@ -108,7 +109,7 @@ pub fn collect_funding_fee(pool: &mut Pool, fee_amount_usd: i128, is_long: bool)
         if fee_amount_usd <= 0i128 {
             //base_token_pool should pay to user, count amount on base_token_pool
             pool.add_stable_amount(fee_amount_usd.cast::<u128>()?)?;
-        }else {
+        } else {
             //user should pay to base_token_pool, count amount on base_token_pool
             pool.add_stable_loss_amount(fee_amount_usd.cast::<u128>()?)?;
         }
