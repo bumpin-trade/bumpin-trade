@@ -1,9 +1,10 @@
-use crate::errors::BumpResult;
+use crate::errors::{BumpErrorCode, BumpResult};
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::state::market::Market;
 use crate::state::pool::Pool;
 use crate::state::state::State;
+use crate::validate;
 
 pub fn collect_stake_fee(stake_pool: &mut Pool, state: &State, amount: u128) -> BumpResult<u128> {
     let fee_amount = amount.
@@ -93,7 +94,24 @@ pub fn collect_borrowing_fee(stake_pool: &mut Pool, state: &State, fee_amount: u
 }
 
 
-pub fn collect_funding_fee(pool: &mut Pool, fee_amount: i128) -> BumpResult<()> {
-    pool.add_funding_fee(fee_amount)?;
+pub fn collect_funding_fee(pool: &mut Pool, fee_amount_usd: i128, is_long: bool) -> BumpResult<()> {
+    validate!(!pool.stable, BumpErrorCode::InvalidParam)?;
+    if !is_long {
+        if fee_amount_usd <= 0i128 {
+            //stable_pool should pay to user, count loss on base_token_pool
+            pool.add_stable_loss_amount(fee_amount_usd.cast::<u128>()?)?;
+        } else {
+            //user should pay to stable_pool, count amount on base_token_pool
+            pool.add_stable_amount(fee_amount_usd.cast::<u128>()?)?;
+        }
+    } else {
+        if fee_amount_usd <= 0i128 {
+            //base_token_pool should pay to user, count amount on base_token_pool
+            pool.add_stable_amount(fee_amount_usd.cast::<u128>()?)?;
+        }else {
+            //user should pay to base_token_pool, count amount on base_token_pool
+            pool.add_stable_loss_amount(fee_amount_usd.cast::<u128>()?)?;
+        }
+    }
     Ok(())
 }

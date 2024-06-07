@@ -302,7 +302,8 @@ impl PositionProcessor<'_> {
         //collect fee
         fee_processor::collect_close_position_fee(pool, state_account, response.settle_close_fee, params.is_cross_margin)?;
         fee_processor::collect_borrowing_fee(pool, state_account, response.settle_borrowing_fee, params.is_cross_margin)?;
-        fee_processor::collect_funding_fee(pool, response.settle_funding_fee)?;
+        let stake_token_pool = &mut pool_account_loader.load_mut().unwrap();
+        fee_processor::collect_funding_fee(stake_token_pool, response.settle_funding_fee_in_usd, self.position.is_long)?;
 
         //update total borrowing fee and funding fee
         let mut market_processor = MarketProcessor { market };
