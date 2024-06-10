@@ -52,7 +52,6 @@ impl<'a> PoolProcessor<'_> {
         self.pool.add_amount(mint_amount)?;
         let user_stake = user.get_user_stake_mut(pool.pool_index)?;
         user_stake.add_user_stake(stake_amount)?;
-        drop(user_processor);
         Ok(stake_amount)
     }
     pub fn stake(&mut self, user_loader: &AccountLoader<User>, pool_loader: &AccountLoader<Pool>, mint_amount: u128, trade_token: &TradeToken, account_maps: &mut AccountMaps) -> BumpResult<u128> {

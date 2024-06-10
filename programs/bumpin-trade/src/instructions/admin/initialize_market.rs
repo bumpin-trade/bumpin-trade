@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
-use crate::instructions::admin::initialize_pool::InitializePool;
+use anchor_spl::token::{Mint};
 use crate::safe_increment;
 use crate::math_error;
 use crate::state::market::Market;

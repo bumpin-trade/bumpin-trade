@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::rent::Rent;
-use crate::{get_then_update_id, safe_increment};
+use crate::{safe_increment};
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use anchor_lang::error;
@@ -45,7 +45,7 @@ pub struct InitializeTradeToken<'info> {
 }
 
 pub fn initialize_trade_token(ctx: Context<InitializeTradeToken>, discount: u128, liquidation_factor: u128) -> anchor_lang::Result<()> {
-    let mut state = &mut ctx.accounts.state;
+    let state = &mut ctx.accounts.state;
     let mut trade_token = ctx.accounts.trade_token.load_init()?;
     *trade_token = TradeToken {
         mint: ctx.accounts.trade_token_mint.key(),
