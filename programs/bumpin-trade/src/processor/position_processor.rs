@@ -1,3 +1,4 @@
+use std::ops::Sub;
 use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
@@ -215,7 +216,7 @@ impl PositionProcessor<'_> {
         } else {
             //increase position
             self.update_borrowing_fee(pool, params.margin_token_price, &trade_token)?;
-            self.update_funding_fee(market_processor.market, params.margin_token_price, &trade_token, pool)?;
+            self.update_funding_fee(market_processor.market, params.margin_token_price, &trade_token)?;
             self.position.set_entry_price(cal_utils::compute_avg_entry_price(self.position.position_size, self.position.entry_price, increase_size, params.margin_token_price, market_processor.market.market_trade_config.tick_size, params.is_long)?)?;
             self.position.add_initial_margin(increase_margin)?;
             self.position.add_initial_margin_usd(cal_utils::token_to_usd_u(increase_margin, trade_token.decimals, params.margin_token_price)?)?;
@@ -266,7 +267,7 @@ impl PositionProcessor<'_> {
         let market = &mut market_account_loader.load_mut().unwrap();
         let position_un_pnl_usd = self.get_position_un_pnl_usd(params.execute_price)?;
         self.update_borrowing_fee(pool, params.execute_price, trade_token)?;
-        self.update_funding_fee(market, params.execute_price, trade_token, pool)?;
+        self.update_funding_fee(market, params.execute_price, trade_token)?;
         let response = self.update_decrease_position(params.decrease_size,
                                                      params.is_liquidation,
                                                      params.is_cross_margin,
@@ -303,7 +304,8 @@ impl PositionProcessor<'_> {
         fee_processor::collect_close_position_fee(pool, state_account, response.settle_close_fee, params.is_cross_margin)?;
         fee_processor::collect_borrowing_fee(pool, state_account, response.settle_borrowing_fee, params.is_cross_margin)?;
         let stake_token_pool = &mut pool_account_loader.load_mut().unwrap();
-        fee_processor::collect_funding_fee(stake_token_pool, response.settle_funding_fee_in_usd, self.position.is_long)?;
+        let stable_pool = &mut stable_pool_account_loader.load_mut().unwrap();
+        Pool::settle_funding_fee(stake_token_pool, stable_pool, response.settle_funding_fee_in_usd, response.settle_funding_fee, self.position.is_long, self.position.cross_margin)?;
 
         //update total borrowing fee and funding fee
         let mut market_processor = MarketProcessor { market };
@@ -454,7 +456,7 @@ impl PositionProcessor<'_> {
         response.user_realized_pnl_token = response.settle_margin.safe_sub(response.decrease_margin.cast::<i128>()?)?;
         //decrease_margin - (initial_margin_usd + pnl) * decrease_percent * decimals / price
         response.pool_pnl_token = response.decrease_margin.cast::<i128>()?
-            .safe_sub(response.settle_margin)?;
+            .safe_sub(response.settle_margin)?.safe_sub(response.settle_fee)?;
         //(settle_margin - decrease_margin) * price / decimal
         response.user_realized_pnl = cal_utils::token_to_usd_i(response.user_realized_pnl_token, decimals, token_price)?;
         response.decrease_margin_in_usd_from_portfolio = if cal_utils::add_u128(response.decrease_margin_in_usd, self.position.initial_margin_usd_from_portfolio)? > self.position.initial_margin_usd
@@ -477,7 +479,8 @@ impl PositionProcessor<'_> {
         }
         return Ok((self.position.realized_borrowing_fee
                        .safe_mul(decrease_size)?
-                       .safe_div(self.position.position_size)?, self.position.realized_borrowing_fee_in_usd
+                       .safe_div(self.position.position_size)?,
+                   self.position.realized_borrowing_fee_in_usd
                        .safe_mul(decrease_size)?
                        .safe_div(self.position.position_size)?));
     }
@@ -488,7 +491,8 @@ impl PositionProcessor<'_> {
         }
         return Ok((self.position.realized_funding_fee
                        .safe_mul(decrease_size.cast()?)?
-                       .safe_div(self.position.position_size.cast()?)?, self.position.realized_funding_fee_in_usd
+                       .safe_div(self.position.position_size.cast()?)?,
+                   self.position.realized_funding_fee_in_usd
                        .safe_mul(decrease_size.cast()?)?
                        .safe_div(self.position.position_size.cast()?)?));
     }
@@ -526,7 +530,7 @@ impl PositionProcessor<'_> {
     }
 
 
-    fn update_funding_fee(&mut self, mut market: &mut Market, token_price: u128, token: &TradeToken, pool: &mut Pool) -> BumpResult<()> {
+    fn update_funding_fee(&mut self, mut market: &mut Market, token_price: u128, token: &TradeToken) -> BumpResult<()> {
         let market_funding_fee_per_size = if self.position.is_long {
             market.funding_fee.long_funding_fee_amount_per_size
         } else {

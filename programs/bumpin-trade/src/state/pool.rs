@@ -7,6 +7,7 @@ use crate::state::infrastructure::fee_reward::FeeReward;
 use crate::state::infrastructure::pool_borrowing_fee::BorrowingFee;
 use crate::traits::Size;
 use solana_program::msg;
+use crate::math::casting::Cast;
 
 #[account(zero_copy(unsafe))]
 #[derive(Eq, PartialEq, Debug)]
@@ -161,6 +162,41 @@ impl Pool {
 
     pub fn reset_stable_amount(&mut self) -> BumpResult<()> {
         self.stable_balance.loss_amount = 0u128;
+        Ok(())
+    }
+
+    pub fn settle_funding_fee(base_token_pool: &mut Pool,
+                              stable_token_pool: &mut Pool,
+                              fee_amount_usd: i128,
+                              fee_amount: i128,
+                              is_long: bool,
+                              is_cross: bool) -> BumpResult<()> {
+        if !is_long {
+            if fee_amount_usd <= 0i128 {
+                //stable_pool should pay to user, count loss on base_token_pool
+                base_token_pool.add_stable_loss_amount(fee_amount_usd.cast::<u128>()?)?;
+                stable_token_pool.add_unsettle(fee_amount_usd.cast::<u128>()?)?;
+            } else {
+                if is_cross {
+                    stable_token_pool.add_unsettle(fee_amount_usd.cast::<u128>()?)?;
+                }else {
+                    //user should pay to stable_pool, count amount on base_token_pool
+                    base_token_pool.add_stable_amount(fee_amount_usd.cast::<u128>()?)?;
+                }
+            }
+        } else {
+            if fee_amount_usd <= 0i128 {
+                //base_token_pool should pay to user, count amount on base_token_pool
+                base_token_pool.sub_amount(fee_amount.cast::<u128>()?)?;
+            } else {
+                if is_cross {
+                    //user should pay to base_token_pool, count amount on base_token_pool
+                    base_token_pool.add_unsettle(fee_amount.cast::<u128>()?)?;
+                }else {
+                    base_token_pool.add_amount(fee_amount.cast::<u128>()?)?;
+                }
+            }
+        }
         Ok(())
     }
 
