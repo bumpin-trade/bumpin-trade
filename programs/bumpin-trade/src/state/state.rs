@@ -18,6 +18,7 @@ pub struct State {
     pub max_funding_base_rate: u128,
     pub trading_fee_staking_rewards_ratio: u128,
     pub trading_fee_pool_rewards_ratio: u128,
+    pub trading_fee_usd_pool_rewards_ratio: u128,
     pub borrowing_fee_staking_rewards_ratio: u128,
     pub borrowing_fee_pool_rewards_ratio: u128,
     pub min_precision_multiple: u128,

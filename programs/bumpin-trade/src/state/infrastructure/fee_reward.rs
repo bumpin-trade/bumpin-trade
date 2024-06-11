@@ -1,8 +1,9 @@
 use anchor_lang::prelude::*;
+use crate::errors::BumpErrorCode::RewardsNotFound;
 use crate::errors::BumpResult;
 use crate::math::safe_math::SafeMath;
 
-#[derive(AnchorSerialize, AnchorDeserialize, Default, Eq, PartialEq, Debug, Clone, Copy)]
+#[derive(Default, Eq, PartialEq, Debug, Clone, Copy)]
 pub struct FeeReward {
     pub fee_amount: u128,
     pub un_settle_fee_amount: u128,
@@ -10,6 +11,7 @@ pub struct FeeReward {
     pub cumulative_rewards_per_stake_token: u128,
     pub last_rewards_per_stake_token_deltas: [u128; 3],
 }
+
 
 impl FeeReward {
     pub fn get_rewards_delta_limit(&self) -> BumpResult<u128> {
@@ -29,4 +31,3 @@ impl FeeReward {
         Ok(())
     }
 }
-

@@ -87,6 +87,8 @@ pub enum BumpErrorCode {
     UnStakeNotEnough,
     #[msg("PositionSideNotSupport")]
     PositionSideNotSupport,
+    #[msg("RewardsNotFound")]
+    RewardsNotFound,
 }
 #[macro_export]
 macro_rules! print_error {

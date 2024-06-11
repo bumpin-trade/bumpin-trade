@@ -24,6 +24,7 @@ pub struct Pool {
     pub stable_balance: PoolBalance,
     pub borrowing_fee: BorrowingFee,
     pub fee_reward: FeeReward,
+    pub stable_fee_reward: FeeReward,
     pub pool_config: PoolConfig,
     pub total_supply: u128,
     pub pool_status: PoolStatus,
@@ -179,7 +180,7 @@ impl Pool {
             } else {
                 if is_cross {
                     stable_token_pool.add_unsettle(fee_amount_usd.cast::<u128>()?)?;
-                }else {
+                } else {
                     //user should pay to stable_pool, count amount on base_token_pool
                     base_token_pool.add_stable_amount(fee_amount_usd.cast::<u128>()?)?;
                 }
@@ -192,7 +193,7 @@ impl Pool {
                 if is_cross {
                     //user should pay to base_token_pool, count amount on base_token_pool
                     base_token_pool.add_unsettle(fee_amount.cast::<u128>()?)?;
-                }else {
+                } else {
                     base_token_pool.add_amount(fee_amount.cast::<u128>()?)?;
                 }
             }
