@@ -80,6 +80,11 @@ pub struct PlaceOrder<'info> {
 
     pub trade_token: AccountLoader<'info, TradeToken>,
 
+    #[account(
+        constraint = trade_token_vault.mint == trade_token.load() ?.trade_token_vault
+    )]
+    pub trade_token_vault: Account<'info, TokenAccount>,
+
     pub bump_signer: AccountInfo<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -159,7 +164,6 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'in
     if order.order_type.eq(&OrderType::MARKET) {
         //execute order
         let user_account_loader = &ctx.accounts.user_account;
-        let authority_signer = &ctx.accounts.authority;
         let margin_token_account = &ctx.accounts.margin_token;
         let pool_account_loader = &ctx.accounts.pool;
         let stable_pool_account_loader = &ctx.accounts.stable_pool;
@@ -169,11 +173,11 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'in
         let pool_vault_account = &ctx.accounts.pool_vault;
         let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
         let trade_token_loader = &ctx.accounts.trade_token;
+        let trade_token_vault_account = &ctx.accounts.trade_token_vault;
         let bump_signer_account_info = &ctx.accounts.bump_signer;
         let token_program = &ctx.accounts.token_program;
 
         return handle_execute_order(user_account_loader,
-                                    authority_signer,
                                     margin_token_account,
                                     pool_account_loader,
                                     stable_pool_account_loader,
@@ -183,6 +187,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'in
                                     pool_vault_account,
                                     stable_pool_vault_account,
                                     trade_token_loader,
+                                    trade_token_vault_account,
                                     bump_signer_account_info,
                                     token_program,
                                     ctx.program_id,
@@ -200,7 +205,6 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'in
 }
 
 pub fn handle_execute_order<'info>(user_account_loader: &AccountLoader<'info, User>,
-                                   authority_signer: &Signer<'info>,
                                    margin_token_account: &Account<'info, TokenAccount>,
                                    pool_account_loader: &AccountLoader<'info, Pool>,
                                    stable_pool_account_loader: &AccountLoader<'info, Pool>,
@@ -210,7 +214,8 @@ pub fn handle_execute_order<'info>(user_account_loader: &AccountLoader<'info, Us
                                    pool_vault_account: &Account<'info, TokenAccount>,
                                    stable_pool_vault_account: &Account<'info, TokenAccount>,
                                    trade_token_loader: &AccountLoader<'info, TradeToken>,
-                                   bump_signer: &AccountInfo<'info, >,
+                                   trade_token_vault_account: &Account<'info, TokenAccount>,
+                                   bump_signer: &AccountInfo<'info>,
                                    token_program: &Program<'info, Token>,
                                    program_id: &Pubkey,
                                    trade_token_map: &TradeTokenMap,
@@ -321,7 +326,7 @@ pub fn handle_execute_order<'info>(user_account_loader: &AccountLoader<'info, Us
                 margin_token: order.margin_token,
                 decrease_size: if position_processor.position.position_size < order.order_size { position_processor.position.position_size } else { order.order_size },
                 execute_price,
-            }, user_account_loader, authority_signer,
+            }, user_account_loader,
                                                  pool_account_loader,
                                                  stable_pool_account_loader,
                                                  market_account_loader,
@@ -329,6 +334,7 @@ pub fn handle_execute_order<'info>(user_account_loader: &AccountLoader<'info, Us
                                                  user_token_account,
                                                  if position_processor.position.is_long { pool_vault_account } else { stable_pool_vault_account },
                                                  trade_token_loader,
+                                                 trade_token_vault_account,
                                                  bump_signer,
                                                  token_program,
                                                  program_id,

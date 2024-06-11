@@ -47,7 +47,6 @@ pub mod bumpin_trade {
     pub fn execute_order<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>, order_id: u128,
     ) -> Result<()> {
         let user_account_loader = &ctx.accounts.user_account;
-        let authority_signer = &ctx.accounts.authority;
         let margin_token_account = &ctx.accounts.margin_token;
         let pool_account_loader = &ctx.accounts.pool;
         let stable_pool_account_loader = &ctx.accounts.stable_pool;
@@ -67,7 +66,6 @@ pub mod bumpin_trade {
         } = load_maps(remaining_accounts_iter)?;
 
         handle_execute_order(user_account_loader,
-                             authority_signer,
                              margin_token_account,
                              pool_account_loader,
                              stable_pool_account_loader,
