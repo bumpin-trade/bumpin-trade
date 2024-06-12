@@ -306,7 +306,7 @@ pub fn handle_execute_order<'info>(user_account_loader: &AccountLoader<'info, Us
                 is_long,
                 is_cross_margin: order.cross_margin,
                 decimals: trade_token.decimals,
-            }, user_account_loader, pool_account_loader, market_account_loader, state_account, trade_token_loader)?;
+            }, user_account_loader, pool_account_loader, stable_pool_account_loader, market_account_loader, state_account, trade_token_loader)?;
         }),
 
         PositionSide::DECREASE => Ok({
