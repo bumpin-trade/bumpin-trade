@@ -56,6 +56,7 @@ pub mod bumpin_trade {
         let pool_vault_account = &ctx.accounts.pool_vault;
         let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
         let trade_token_loader = &ctx.accounts.trade_token;
+        let trade_token_vault_account = &ctx.accounts.trade_token_vault;
         let bump_signer_account_info = &ctx.accounts.bump_signer;
         let token_program = &ctx.accounts.token_program;
         let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> = &mut ctx.remaining_accounts.iter().peekable();
@@ -75,6 +76,7 @@ pub mod bumpin_trade {
                              pool_vault_account,
                              stable_pool_vault_account,
                              trade_token_loader,
+                             trade_token_vault_account,
                              bump_signer_account_info,
                              token_program,
                              ctx.program_id,

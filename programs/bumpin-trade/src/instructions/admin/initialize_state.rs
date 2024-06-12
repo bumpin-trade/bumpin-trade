@@ -59,6 +59,7 @@ pub fn handle_initialize_state(ctx: Context<InitializeState>, initialize_state_p
         max_funding_base_rate: initialize_state_params.max_funding_base_rate,
         trading_fee_staking_rewards_ratio: initialize_state_params.trading_fee_staking_rewards_ratio,
         trading_fee_pool_rewards_ratio: initialize_state_params.trading_fee_pool_rewards_ratio,
+        trading_fee_usd_pool_rewards_ratio: initialize_state_params.trading_fee_usd_pool_rewards_ratio,
         borrowing_fee_staking_rewards_ratio: initialize_state_params.borrowing_fee_staking_rewards_ratio,
         borrowing_fee_pool_rewards_ratio: initialize_state_params.borrowing_fee_pool_rewards_ratio,
         min_precision_multiple: initialize_state_params.min_precision_multiple,

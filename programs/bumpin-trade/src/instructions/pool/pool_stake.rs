@@ -93,7 +93,6 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'inf
     update_account_fee_reward(&ctx.accounts.user, &ctx.accounts.pool)?;
 
     let stake_fee = fee_processor::collect_stake_fee(&mut pool,
-                                                     &mut ctx.accounts.state,
                                                      stake_params.request_token_amount)?;
     let base_mint_amount = stake_params.request_token_amount.safe_sub(stake_fee)?;
     if stake_params.portfolio {

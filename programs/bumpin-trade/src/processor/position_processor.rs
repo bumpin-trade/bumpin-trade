@@ -180,7 +180,7 @@ impl PositionProcessor<'_> {
         let trade_token = trade_token_loader.load().unwrap();
         let market = market_account_loader.load().unwrap();
         let pool = &mut pool_account_loader.load_mut().unwrap();
-        let fee = fee_processor::collect_open_position_fee(&market, pool, state_account, params.increase_margin, params.is_cross_margin)?;
+        let fee = if self.position.is_long { fee_processor::collect_long_open_position_fee(&market, pool, params.increase_margin, params.is_cross_margin)? } else { fee_processor::collect_short_open_position_fee(&market, pool, state_account, params.increase_margin, params.is_cross_margin)? };
 
 
         let market = &mut market_account_loader.load_mut().unwrap();
@@ -300,7 +300,11 @@ impl PositionProcessor<'_> {
             self.position.set_last_update(cal_utils::current_time())?;
         }
         //collect fee
-        fee_processor::collect_close_position_fee(pool, state_account, response.settle_close_fee, params.is_cross_margin)?;
+        if self.position.is_long {
+            fee_processor::collect_long_close_position_fee(pool, state_account, response.settle_close_fee, params.is_cross_margin)?;
+        } else {
+            fee_processor::collect_short_close_position_fee(pool, state_account, response.settle_close_fee, params.is_cross_margin)?;
+        }
         fee_processor::collect_borrowing_fee(pool, state_account, response.settle_borrowing_fee, params.is_cross_margin)?;
         let stake_token_pool = &mut pool_account_loader.load_mut().unwrap();
         let stable_pool = &mut stable_pool_account_loader.load_mut().unwrap();
@@ -644,7 +648,11 @@ impl PositionProcessor<'_> {
 
         //deal user pnl
         if response.user_realized_pnl_token >= 0i128 {
-            user_processor.add_token(&self.position.margin_mint, response.user_realized_pnl_token.abs().cast::<u128>()?)?;
+            if response.settle_fee < 0i128 && response.user_realized_pnl_token.abs().cast::<u128>()? < response.settle_fee.abs().cast::<u128>()? {
+                user_processor.sub_user_token_amount(&self.position.margin_mint, response.settle_fee.abs().cast::<u128>()?.safe_sub(response.user_realized_pnl_token.abs().cast::<u128>()?)?)?;
+            }else {
+                user_processor.add_token(&self.position.margin_mint, response.user_realized_pnl_token.safe_sub(response.settle_fee)?.abs().cast::<u128>()?)?;
+            }
         } else {
             add_liability += user_processor.sub_token_with_liability(&self.position.margin_mint, response.user_realized_pnl_token.abs().cast::<u128>()?)?;
         }

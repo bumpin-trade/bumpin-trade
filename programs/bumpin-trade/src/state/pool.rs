@@ -92,6 +92,7 @@ impl Default for Pool {
             stable_balance: Default::default(),
             borrowing_fee: BorrowingFee::default(),
             fee_reward: FeeReward::default(),
+            stable_fee_reward: Default::default(),
             pool_config: PoolConfig::default(),
             total_supply: 0u128,
             pool_status: PoolStatus::NORMAL,

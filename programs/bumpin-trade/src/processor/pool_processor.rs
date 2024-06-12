@@ -10,7 +10,6 @@ use crate::processor::user_processor::UserProcessor;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle::oracle_map::OracleMap;
 use crate::state::pool::Pool;
-use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::validate;
@@ -21,11 +20,11 @@ pub struct PoolProcessor<'a> {
 }
 
 impl<'a> PoolProcessor<'_> {
-    pub fn collect_stake_fee(&mut self, state: &State, amount: u128) -> BumpResult<u128> {
-        Ok(fee_processor::collect_stake_fee(&mut self.pool, state, amount)?)
+    pub fn collect_stake_fee(&mut self, amount: u128) -> BumpResult<u128> {
+        Ok(fee_processor::collect_stake_fee(&mut self.pool, amount)?)
     }
-    pub fn collect_un_stake_fee(&mut self, state: &State, amount: u128) -> BumpResult<u128> {
-        Ok(fee_processor::collect_un_stake_fee(&mut self.pool, state, amount)?)
+    pub fn collect_un_stake_fee(&mut self, amount: u128) -> BumpResult<u128> {
+        Ok(fee_processor::collect_un_stake_fee(&mut self.pool, amount)?)
     }
     pub fn portfolio_to_stake(&mut self, user_loader: &AccountLoader<User>,
                               pool_loader: &AccountLoader<Pool>,
