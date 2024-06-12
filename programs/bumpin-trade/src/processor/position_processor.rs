@@ -174,14 +174,21 @@ impl PositionProcessor<'_> {
                              params: IncreasePositionParams,
                              user_account_loader: &AccountLoader<User>,
                              pool_account_loader: &AccountLoader<Pool>,
+                             stable_pool_account_loader: &AccountLoader<Pool>,
                              market_account_loader: &AccountLoader<Market>,
                              state_account: &Account<State>,
                              trade_token_loader: &AccountLoader<TradeToken>) -> BumpResult<> {
         let trade_token = trade_token_loader.load().unwrap();
         let market = market_account_loader.load().unwrap();
-        let pool = &mut pool_account_loader.load_mut().unwrap();
-        let fee = if self.position.is_long { fee_processor::collect_long_open_position_fee(&market, pool, params.increase_margin, params.is_cross_margin)? } else { fee_processor::collect_short_open_position_fee(&market, pool, state_account, params.increase_margin, params.is_cross_margin)? };
 
+
+        let stable_pool = &mut stable_pool_account_loader.load_mut().unwrap();
+        let base_token_pool = &mut pool_account_loader.load_mut().unwrap();
+        let fee = if self.position.is_long { fee_processor::collect_long_open_position_fee(&market, base_token_pool, params.increase_margin, params.is_cross_margin)? } else { fee_processor::collect_short_open_position_fee(&market, stable_pool, base_token_pool, state_account, params.increase_margin, params.is_cross_margin)? };
+
+        let base_token_pool = &mut pool_account_loader.load_mut().unwrap();
+        let stable_pool = &mut stable_pool_account_loader.load_mut().unwrap();
+        let pool = if self.position.is_long { base_token_pool } else { stable_pool };
 
         let market = &mut market_account_loader.load_mut().unwrap();
         let user = &mut user_account_loader.load_mut().unwrap();
@@ -303,9 +310,11 @@ impl PositionProcessor<'_> {
         if self.position.is_long {
             fee_processor::collect_long_close_position_fee(pool, state_account, response.settle_close_fee, params.is_cross_margin)?;
         } else {
-            fee_processor::collect_short_close_position_fee(pool, state_account, response.settle_close_fee, params.is_cross_margin)?;
+            let stake_token_pool = &mut pool_account_loader.load_mut().unwrap();
+            let stable_pool = &mut stable_pool_account_loader.load_mut().unwrap();
+            fee_processor::collect_short_close_position_fee(stable_pool, stake_token_pool, state_account, response.settle_close_fee, params.is_cross_margin)?;
         }
-        fee_processor::collect_borrowing_fee(pool, state_account, response.settle_borrowing_fee, params.is_cross_margin)?;
+        fee_processor::collect_borrowing_fee(pool, response.settle_borrowing_fee, params.is_cross_margin)?;
         let stake_token_pool = &mut pool_account_loader.load_mut().unwrap();
         let stable_pool = &mut stable_pool_account_loader.load_mut().unwrap();
         Pool::settle_funding_fee(stake_token_pool, stable_pool, response.settle_funding_fee_in_usd, response.settle_funding_fee, self.position.is_long, self.position.cross_margin)?;
@@ -650,7 +659,7 @@ impl PositionProcessor<'_> {
         if response.user_realized_pnl_token >= 0i128 {
             if response.settle_fee < 0i128 && response.user_realized_pnl_token.abs().cast::<u128>()? < response.settle_fee.abs().cast::<u128>()? {
                 user_processor.sub_user_token_amount(&self.position.margin_mint, response.settle_fee.abs().cast::<u128>()?.safe_sub(response.user_realized_pnl_token.abs().cast::<u128>()?)?)?;
-            }else {
+            } else {
                 user_processor.add_token(&self.position.margin_mint, response.user_realized_pnl_token.safe_sub(response.settle_fee)?.abs().cast::<u128>()?)?;
             }
         } else {
