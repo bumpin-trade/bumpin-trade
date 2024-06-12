@@ -29,79 +29,51 @@ pub fn collect_long_open_position_fee(market: &Market, pool: &mut Pool, margin: 
     Ok(fee_amount)
 }
 
-pub fn collect_short_open_position_fee(market: &Market, pool: &mut Pool, state: &State, margin: u128, cross_margin: bool) -> BumpResult<u128> {
+pub fn collect_short_open_position_fee(market: &Market, pool: &mut Pool, stable_pool: &mut Pool, state: &State, margin: u128, cross_margin: bool) -> BumpResult<u128> {
     let fee_amount = margin.safe_mul(market.market_trade_config.open_fee_rate)?;
 
-    let pool_rewards_fee = fee_amount.safe_mul(state.trading_fee_pool_rewards_ratio)?;
-    let staking_rewards_fee = fee_amount.safe_mul(state.trading_fee_staking_rewards_ratio)?;
-    let dao_rewards_fee = fee_amount.safe_sub(pool_rewards_fee)?.safe_sub(staking_rewards_fee)?;
-
+    let usd_pool_rewards_fee = fee_amount.safe_mul(state.trading_fee_usd_pool_rewards_ratio)?;
+    let pool_rewards_fee = fee_amount.safe_sub(usd_pool_rewards_fee)?;
 
     pool.fee_reward.add_fee_amount(pool_rewards_fee)?;
-    // state.dao_fee_reward.add_fee_amount(dao_rewards_fee)?;
-    // state.staking_fee_reward.add_fee_amount(staking_rewards_fee)?;
+    stable_pool.fee_reward.add_fee_amount(usd_pool_rewards_fee)?;
 
     if cross_margin {
         pool.fee_reward.add_un_settle_amount(pool_rewards_fee)?;
-        // state.dao_fee_reward.add_un_settle_amount(dao_rewards_fee)?;
-        // state.staking_fee_reward.add_un_settle_amount(staking_rewards_fee)?;
+        stable_pool.fee_reward.add_un_settle_amount(usd_pool_rewards_fee)?;
     }
 
-    Ok(fee_amount.cast::<u128>()?)
+    Ok(fee_amount)
 }
 
 pub fn collect_long_close_position_fee(stake_pool: &mut Pool, state: &State, fee_amount: u128, cross_margin: bool) -> BumpResult<u128> {
-    let pool_rewards_fee = fee_amount.safe_mul(state.trading_fee_pool_rewards_ratio)?;
-    let staking_rewards_fee = fee_amount.safe_mul(state.trading_fee_staking_rewards_ratio)?;
-    let dao_rewards_fee = fee_amount.safe_sub(pool_rewards_fee)?.safe_sub(staking_rewards_fee)?;
-
-
-    stake_pool.fee_reward.add_fee_amount(pool_rewards_fee)?;
-    // state.dao_fee_reward.add_fee_amount(dao_rewards_fee)?;
-    // state.staking_fee_reward.add_fee_amount(staking_rewards_fee)?;
-
+    stake_pool.fee_reward.add_fee_amount(fee_amount)?;
     if cross_margin {
-        stake_pool.fee_reward.add_un_settle_amount(pool_rewards_fee)?;
-        // state.dao_fee_reward.add_un_settle_amount(dao_rewards_fee)?;
-        // state.staking_fee_reward.add_un_settle_amount(staking_rewards_fee)?;
+        stake_pool.fee_reward.add_un_settle_amount(fee_amount)?;
     }
-
-    Ok(fee_amount.cast::<u128>()?)
+    Ok(fee_amount)
 }
 
-pub fn collect_short_close_position_fee(stake_pool: &mut Pool, state: &State, fee_amount: u128, cross_margin: bool) -> BumpResult<u128> {
-    let pool_rewards_fee = fee_amount.safe_mul(state.trading_fee_pool_rewards_ratio)?;
-    let staking_rewards_fee = fee_amount.safe_mul(state.trading_fee_staking_rewards_ratio)?;
-    let dao_rewards_fee = fee_amount.safe_sub(pool_rewards_fee)?.safe_sub(staking_rewards_fee)?;
+pub fn collect_short_close_position_fee(stake_pool: &mut Pool, pool: &mut Pool, state: &State, close_fee: u128, cross_margin: bool) -> BumpResult {
+    let usd_pool_staking_rewards_fee = close_fee.safe_mul(state.trading_fee_usd_pool_rewards_ratio)?;
+    let left_rewards = close_fee.safe_sub(usd_pool_staking_rewards_fee)?;
 
-
-    stake_pool.fee_reward.add_fee_amount(pool_rewards_fee)?;
-    // state.dao_fee_reward.add_fee_amount(dao_rewards_fee)?;
-    // state.staking_fee_reward.add_fee_amount(staking_rewards_fee)?;
-
+    stake_pool.fee_reward.add_fee_amount(usd_pool_staking_rewards_fee)?;
+    pool.fee_reward.add_fee_amount(left_rewards)?;
     if cross_margin {
-        stake_pool.fee_reward.add_un_settle_amount(pool_rewards_fee)?;
-        // state.dao_fee_reward.add_un_settle_amount(dao_rewards_fee)?;
-        // state.staking_fee_reward.add_un_settle_amount(staking_rewards_fee)?;
-    }
-
-    Ok(fee_amount.cast::<u128>()?)
-}
-
-pub fn collect_borrowing_fee(stake_pool: &mut Pool, state: &State, fee_amount: u128, cross_margin: bool) -> BumpResult<()> {
-    let pool_rewards_fee = fee_amount.safe_mul(state.borrowing_fee_pool_rewards_ratio)?;
-    let staking_rewards_fee = fee_amount.safe_mul(state.borrowing_fee_staking_rewards_ratio)?;
-    // let dao_rewards_fee = fee_amount.safe_sub(pool_rewards_fee)?.safe_sub(staking_rewards_fee)?;
-
-    stake_pool.fee_reward.add_fee_amount(pool_rewards_fee)?;
-    // state.dao_fee_reward.add_fee_amount(dao_rewards_fee)?;
-    // state.staking_fee_reward.add_fee_amount(staking_rewards_fee)?;
-
-    if cross_margin {
-        stake_pool.fee_reward.add_un_settle_amount(pool_rewards_fee)?;
-        // state.dao_fee_reward.add_un_settle_amount(dao_rewards_fee)?;
-        // state.staking_fee_reward.add_un_settle_amount(staking_rewards_fee)?;
+        stake_pool.fee_reward.add_un_settle_amount(usd_pool_staking_rewards_fee)?;
+        pool.fee_reward.add_un_settle_amount(left_rewards)?;
     }
 
     Ok(())
+}
+
+pub fn collect_borrowing_fee(stake_pool: &mut Pool, fee_amount: u128, cross_margin: bool) -> BumpResult<u128> {
+    stake_pool.fee_reward.add_fee_amount(fee_amount)?;
+
+    if cross_margin {
+        stake_pool.fee_reward.add_un_settle_amount(fee_amount)?;
+    }
+
+    Ok(fee_amount)
 }

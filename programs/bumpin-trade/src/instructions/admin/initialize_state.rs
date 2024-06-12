@@ -69,7 +69,6 @@ pub fn handle_initialize_state(ctx: Context<InitializeState>, initialize_state_p
         redeem_fee_pool_rewards_ratio: initialize_state_params.redeem_fee_pool_rewards_ratio,
         pool_rewards_interval_limit: initialize_state_params.pool_rewards_interval_limit,
         init_fee: initialize_state_params.init_fee,
-        open_fee_rate: 0,
         staking_fee_reward: Default::default(),
         dao_fee_reward: Default::default(),
     };

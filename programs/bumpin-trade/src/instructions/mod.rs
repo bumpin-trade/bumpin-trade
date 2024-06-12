@@ -7,6 +7,7 @@ mod admin;
 mod utils;
 mod liquidate;
 mod reward;
+mod risk;
 
 pub use constraints::*;
 pub use account::*;
