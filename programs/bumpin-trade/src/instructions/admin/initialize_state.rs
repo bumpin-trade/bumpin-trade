@@ -39,6 +39,8 @@ pub struct InitializeStateParams {
     pub redeem_fee_pool_rewards_ratio: u128,
     pub pool_rewards_interval_limit: u128,
     pub init_fee: u64,
+    pub staking_fee_reward_ratio: u128,
+    pub pool_fee_reward_ratio: u128,
 }
 
 pub fn handle_initialize_state(ctx: Context<InitializeState>, initialize_state_params: InitializeStateParams) -> anchor_lang::Result<()> {
@@ -57,20 +59,11 @@ pub fn handle_initialize_state(ctx: Context<InitializeState>, initialize_state_p
         max_maintenance_margin_rate: initialize_state_params.max_maintenance_margin_rate,
         funding_fee_base_rate: initialize_state_params.funding_fee_base_rate,
         max_funding_base_rate: initialize_state_params.max_funding_base_rate,
-        trading_fee_staking_rewards_ratio: initialize_state_params.trading_fee_staking_rewards_ratio,
-        trading_fee_pool_rewards_ratio: initialize_state_params.trading_fee_pool_rewards_ratio,
-        trading_fee_usd_pool_rewards_ratio: initialize_state_params.trading_fee_usd_pool_rewards_ratio,
-        borrowing_fee_staking_rewards_ratio: initialize_state_params.borrowing_fee_staking_rewards_ratio,
-        borrowing_fee_pool_rewards_ratio: initialize_state_params.borrowing_fee_pool_rewards_ratio,
         min_precision_multiple: initialize_state_params.min_precision_multiple,
-        mint_fee_staking_rewards_ratio: initialize_state_params.mint_fee_staking_rewards_ratio,
-        mint_fee_pool_rewards_ratio: initialize_state_params.mint_fee_pool_rewards_ratio,
-        redeem_fee_staking_rewards_ratio: initialize_state_params.redeem_fee_staking_rewards_ratio,
-        redeem_fee_pool_rewards_ratio: initialize_state_params.redeem_fee_pool_rewards_ratio,
         pool_rewards_interval_limit: initialize_state_params.pool_rewards_interval_limit,
         init_fee: initialize_state_params.init_fee,
-        staking_fee_reward: Default::default(),
-        dao_fee_reward: Default::default(),
+        staking_fee_reward_ratio: initialize_state_params.staking_fee_reward_ratio,
+        pool_fee_reward_ratio: initialize_state_params.pool_fee_reward_ratio,
     };
     Ok(())
 }
