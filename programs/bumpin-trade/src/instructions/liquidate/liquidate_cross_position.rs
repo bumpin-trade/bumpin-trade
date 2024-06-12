@@ -32,7 +32,7 @@ pub struct LiquidateCrossPosition<'info> {
 pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, LiquidateCrossPosition>, user: Pubkey) -> Result<()> {
     let user = &mut ctx.accounts.user.load_mut()?;
 
-    let remaining_accounts:&mut Peekable<Iter<'info, AccountInfo<'info>>> = &mut ctx.remaining_accounts.iter().peekable();
+    let remaining_accounts: &mut Peekable<Iter<'info, AccountInfo<'info>>> = &mut ctx.remaining_accounts.iter().peekable();
 
     let AccountMaps { market_map, trade_token_map, mut oracle_map, pool_map } = load_maps(remaining_accounts)?;
 

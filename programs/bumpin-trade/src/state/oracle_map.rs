@@ -11,7 +11,7 @@ use crate::errors::BumpErrorCode::OracleNotFound;
 use crate::errors::BumpResult;
 use crate::ids::pyth_program;
 use crate::math::safe_unwrap::SafeUnwrap;
-use crate::state::oracle::oracle::{get_oracle_price, OraclePriceData};
+use crate::state::oracle::{get_oracle_price, OraclePriceData};
 
 pub struct AccountInfoAndOracleSource<'a> {
     /// CHECK: ownders are validated in OracleMap::load
