@@ -47,16 +47,13 @@ pub fn handle_initialize_market(
     let pool = ctx.accounts.pool.load()?;
     let stable_pool = ctx.accounts.stable_pool.load()?;
     let state = &mut ctx.accounts.state;
-    *market = Market {
-        symbol,
-        market_index: state.number_of_markets,
-        pool_key: pool.pool_key,
-        pool_mint: pool.pool_mint,
-        index_mint: *ctx.accounts.index_mint.to_account_info().key,
-        stable_pool_key: stable_pool.pool_key,
-        stable_pool_mint: stable_pool.pool_mint,
-        ..Market::default()
-    };
+    market.market_index = state.number_of_markets;
+    market.symbol = symbol;
+    market.pool_key = pool.pool_key;
+    market.pool_mint = pool.pool_mint;
+    market.index_mint = ctx.accounts.index_mint.key();
+    market.stable_pool_mint = stable_pool.pool_mint;
+    market.stable_pool_key = stable_pool.pool_key;
     safe_increment!(state.number_of_markets, 1);
     Ok(())
 }
