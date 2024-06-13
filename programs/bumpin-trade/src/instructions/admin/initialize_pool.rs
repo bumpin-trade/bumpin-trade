@@ -1,10 +1,11 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-use crate::safe_increment;
+
 use crate::math_error;
+use crate::safe_increment;
 use crate::state::pool::Pool;
-use crate::traits::Size;
 use crate::state::state::State;
+use crate::traits::Size;
 
 #[derive(Accounts)]
 pub struct InitializePool<'info> {
@@ -37,7 +38,7 @@ pub struct InitializePool<'info> {
         token::mint = pool_mint,
         token::authority = bump_signer
     )]
-    pub pool_rewards_vault: Account<'info, TokenAccount>,
+    pub pool_rewards_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         init,
@@ -59,7 +60,7 @@ pub struct InitializePool<'info> {
         bump,
         has_one = admin
     )]
-    pub state: Account<'info, State>,
+    pub state: Box<Account<'info, State>>,
 
     #[account(mut)]
     pub admin: Signer<'info>,
@@ -74,16 +75,22 @@ pub struct InitializePool<'info> {
 pub fn handle_initialize_pool(ctx: Context<InitializePool>, name: [u8; 32]) -> Result<()> {
     let mut pool = ctx.accounts.pool.load_init()?;
     let state = &mut ctx.accounts.state;
-    *pool = Pool {
-        pool_key: ctx.accounts.pool.key(),
-        pool_mint: ctx.accounts.pool_mint.key(),
-        pool_mint_vault: *ctx.accounts.pool_mint_vault.to_account_info().key,
-        pool_rewards_vault: *ctx.accounts.pool_rewards_vault.to_account_info().key,
-        pool_fee_vault: *ctx.accounts.pool_fee_vault.to_account_info().key,
-        pool_name: name,
-        ..Pool::default()
-    };
+    pool.pool_key = ctx.accounts.pool.key();
+    pool.pool_mint = ctx.accounts.pool_mint.key();
+    pool.pool_mint_vault = *ctx.accounts.pool_mint_vault.to_account_info().key;
+    pool.pool_rewards_vault = *ctx.accounts.pool_rewards_vault.to_account_info().key;
+    pool.pool_fee_vault = *ctx.accounts.pool_fee_vault.to_account_info().key;
+    pool.pool_name = name;
+
+    // *pool = Pool {
+    //     pool_key: ctx.accounts.pool.key(),
+    //     pool_mint: ctx.accounts.pool_mint.key(),
+    //     pool_mint_vault: *ctx.accounts.pool_mint_vault.to_account_info().key,
+    //     pool_rewards_vault: *ctx.accounts.pool_rewards_vault.to_account_info().key,
+    //     pool_fee_vault: *ctx.accounts.pool_fee_vault.to_account_info().key,
+    //     pool_name: name,
+    //     ..Pool::default()
+    // };
     safe_increment!(state.number_of_pools, 1);
     Ok(())
 }
-

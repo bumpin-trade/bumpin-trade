@@ -722,7 +722,7 @@ impl PositionProcessor<'_> {
 
     fn update_all_position_from_portfolio_margin(&self, user: &mut User, change_token_amount: i128, token_mint: &Pubkey) -> BumpResult<()> {
         let mut reduce_amount = change_token_amount;
-        for mut position in user.user_positions {
+        for mut position in &mut user.user_positions {
             if position.margin_mint.eq(token_mint) && position.cross_margin {
                 let change_amount;
 

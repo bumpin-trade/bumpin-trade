@@ -210,3 +210,14 @@ impl Pool {
             .safe_mul(self.pool_config.pool_liquidity_limit)? >= amount);
     }
 }
+
+#[cfg(test)]
+mod test{
+    use crate::state::pool::Pool;
+
+    #[test]
+    pub fn size_of_pool() {
+        println!("size of pool: {}", std::mem::size_of::<Pool>());
+        assert_eq!(std::mem::size_of::<Pool>(), 528);
+    }
+}

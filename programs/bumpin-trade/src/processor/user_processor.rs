@@ -44,7 +44,7 @@ impl<'a> UserProcessor<'a> {
         Ok(())
     }
     pub fn sub_user_token_amount(&mut self, mint: &Pubkey, mut amount: u128) -> BumpResult {
-        for mut user_position in self.user.user_positions {
+        for mut user_position in &mut self.user.user_positions {
             if user_position.cross_margin && user_position.margin_mint.eq(mint) && amount > 0 {
                 let reduce_amount = user_position.reduce_position_portfolio_balance(amount)?;
                 amount = amount.safe_sub(reduce_amount)?;
@@ -54,14 +54,14 @@ impl<'a> UserProcessor<'a> {
         user_token.sub_token_amount(amount)?;
         Ok(())
     }
-    pub fn get_user_cross_position_value(&self, state: &State, market_map: &MarketMap, pool_map: &PoolMap, price_map: &mut OracleMap) -> BumpResult<(u128, i128, i128, u128)> {
+    pub fn get_user_cross_position_value(&mut self, state: &State, market_map: &MarketMap, pool_map: &PoolMap, price_map: &mut OracleMap) -> BumpResult<(u128, i128, i128, u128)> {
         let mut total_im_usd = 0u128;
         let mut total_un_pnl_usd = 0i128;
         let mut total_position_fee = 0i128;
         let mut total_position_mm = 0u128;
 
 
-        for mut user_position in self.user.user_positions {
+        for mut user_position in &mut self.user.user_positions {
             let price_data = price_map.get_price_data(&user_position.index_mint)?;
             let market = market_map.get_ref(&user_position.symbol)?;
             let pool = pool_map.get_ref(&user_position.margin_mint)?;
