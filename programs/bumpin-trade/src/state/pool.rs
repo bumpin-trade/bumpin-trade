@@ -17,8 +17,6 @@ pub struct Pool {
     pub pool_key: Pubkey,
     pub pool_mint: Pubkey,
     pub pool_mint_vault: Pubkey,
-    // pub pool_rewards_vault: Pubkey,
-    // pub pool_fee_vault: Pubkey,
     pub pool_name: [u8; 32],
     pub pool_balance: PoolBalance,
     pub stable_balance: PoolBalance,
@@ -85,8 +83,6 @@ impl Default for Pool {
             pool_key: Default::default(),
             pool_mint: Default::default(),
             pool_mint_vault: Pubkey::default(),
-            // pool_rewards_vault: Default::default(),
-            // pool_fee_vault: Default::default(),
             pool_name: [0; 32],
             pool_balance: PoolBalance::default(),
             stable_balance: Default::default(),
@@ -212,7 +208,7 @@ impl Pool {
 }
 
 #[cfg(test)]
-mod test{
+mod test {
     use crate::state::pool::Pool;
 
     #[test]
