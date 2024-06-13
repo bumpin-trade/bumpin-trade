@@ -33,6 +33,7 @@ pub struct InitializePool<'info> {
     #[account(
         constraint = state.bump_signer.eq(& bump_signer.key())
     )]
+    /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
 
     #[account(
@@ -52,7 +53,7 @@ pub struct InitializePool<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle_initialize_pool_x(ctx: Context<InitializePool>, name: [u8; 32]) -> Result<()> {
+pub fn handle_initialize_pool(ctx: Context<InitializePool>, name: [u8; 32]) -> Result<()> {
     let mut pool = ctx.accounts.pool.load_init()?;
     let state = &mut ctx.accounts.state;
 

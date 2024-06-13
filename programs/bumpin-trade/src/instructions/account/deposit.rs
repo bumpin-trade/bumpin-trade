@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use anchor_lang::Discriminator;
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 
@@ -10,7 +9,7 @@ use crate::state::user::User;
 use crate::utils::token;
 
 #[derive(Accounts)]
-#[instruction(token_index: u16,)]
+#[instruction(token_index: u16)]
 pub struct Deposit<'info> {
     #[account(
         mut,

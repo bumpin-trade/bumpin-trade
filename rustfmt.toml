@@ -1,6 +1,6 @@
 # Copy from rustc and Project servo
 # Using cargo fmt before commit
-version = "Two"
+#version = "Two"
 use_small_heuristics = "Max"
 merge_derives = false
 reorder_imports = true

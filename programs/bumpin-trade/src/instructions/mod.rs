@@ -6,7 +6,7 @@ pub mod order;
 pub mod pool;
 pub mod position;
 mod reward;
-mod risk;
+pub mod risk;
 mod utils;
 
 pub use account::*;

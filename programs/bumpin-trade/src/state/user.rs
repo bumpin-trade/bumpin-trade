@@ -49,8 +49,9 @@ impl User {
             .ok_or(CouldNotFindUserToken)?)
     }
 
-    pub fn get_user_stake_mut(&mut self, pool_index: usize) -> BumpResult<&mut UserStake> {
-        Ok(self.user_stakes.get_mut(pool_index).ok_or(CouldNotFindUserStake)?)
+    pub fn get_user_stake_mut(&mut self, pool_index: u64) -> BumpResult<&mut UserStake> {
+        //TODO[Johnny]: as usize, maybe better
+        Ok(self.user_stakes.get_mut(pool_index as usize).ok_or(CouldNotFindUserStake)?)
     }
     pub fn get_user_stake_ref(&mut self, pool_index: usize) -> BumpResult<&UserStake> {
         Ok(self.user_stakes.get(pool_index).ok_or(CouldNotFindUserStake)?)
