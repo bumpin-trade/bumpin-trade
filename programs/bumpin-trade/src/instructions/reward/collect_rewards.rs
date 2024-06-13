@@ -1,9 +1,9 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::TokenAccount;
 use solana_program::pubkey::Pubkey;
+
 use crate::state::pool::Pool;
 use crate::state::state::State;
-use crate::state::user::User;
 
 #[derive(Accounts)]
 #[instruction(pool_index: u16, stable_pool_index: u16)]

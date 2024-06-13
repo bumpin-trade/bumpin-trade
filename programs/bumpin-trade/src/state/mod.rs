@@ -11,3 +11,4 @@ pub mod trade_token_map;
 pub mod traits;
 pub mod pool_map;
 pub mod oracle_map;
+pub mod user_map;
