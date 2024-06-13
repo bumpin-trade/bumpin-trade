@@ -89,6 +89,10 @@ pub enum BumpErrorCode {
     PositionSideNotSupport,
     #[msg("RewardsNotFound")]
     RewardsNotFound,
+    #[msg("UserNotFound")]
+    UserNotFound,
+    #[msg("CouldNotLoadUserData")]
+    CouldNotLoadUserData,
 }
 #[macro_export]
 macro_rules! print_error {

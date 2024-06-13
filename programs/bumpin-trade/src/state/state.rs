@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use crate::state::infrastructure::fee_reward::FeeReward;
 
 #[account]
 #[derive(Default)]
