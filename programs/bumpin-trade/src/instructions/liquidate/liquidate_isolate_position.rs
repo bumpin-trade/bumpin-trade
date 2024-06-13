@@ -33,16 +33,8 @@ pub struct LiquidateIsolatePosition<'info> {
     )]
     pub market: AccountLoader<'info, Market>,
 
-    #[account(
-        mut,
-        address = market.load() ?.pool_key
-    )]
     pub pool: AccountLoader<'info, Pool>,
 
-    #[account(
-        mut,
-        address = market.load() ?.stable_pool_key
-    )]
     pub stable_pool: AccountLoader<'info, Pool>,
 
     #[account(

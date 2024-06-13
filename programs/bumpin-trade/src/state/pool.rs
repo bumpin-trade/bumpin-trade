@@ -38,7 +38,8 @@ impl Size for Pool {
     const SIZE: usize = std::mem::size_of::<Pool>() + 8;
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Eq, PartialEq)]
 pub enum PoolStatus {
     NORMAL,
     StakePaused,
@@ -54,13 +55,6 @@ pub struct PoolBalance {
     pub hold_amount: u128,
     pub un_settle_amount: u128,
     pub loss_amount: u128,
-}
-
-#[zero_copy(unsafe)]
-#[derive(Default, Eq, PartialEq, Debug)]
-#[repr(C)]
-pub struct FundingFeeHub {
-    pub amount: i128,
 }
 
 
@@ -212,7 +206,7 @@ impl Pool {
 }
 
 #[cfg(test)]
-mod test{
+mod test {
     use crate::state::pool::Pool;
 
     #[test]

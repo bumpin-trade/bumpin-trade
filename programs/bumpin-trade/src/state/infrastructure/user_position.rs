@@ -1,4 +1,4 @@
-use anchor_lang::zero_copy;
+use anchor_lang::prelude::*;
 use solana_program::pubkey::Pubkey;
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;
@@ -36,7 +36,7 @@ pub struct UserPosition {
     pub status: PositionStatus,
 }
 
-#[derive(Default, Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]
 pub enum PositionStatus {
     #[default]
     INIT,
