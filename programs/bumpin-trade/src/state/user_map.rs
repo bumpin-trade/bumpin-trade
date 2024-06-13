@@ -55,7 +55,7 @@ impl<'a> UserMap<'a> {
 
     #[track_caller]
     #[inline(always)]
-    pub fn get_account_loader(&self, user_key: &Pubkey) -> BumpResult<&'a AccountLoader<User>> {
+    pub fn get_account_loader(&self, user_key: &Pubkey) -> BumpResult<AccountLoader<'a, User>> {
         let loader = match self.0.get(&user_key) {
             None => {
                 let caller = Location::caller();
@@ -67,7 +67,7 @@ impl<'a> UserMap<'a> {
                 );
                 return Err(UserNotFound);
             }
-            Some(loader) => loader
+            Some(loader) => loader.clone()
         };
         Ok(loader)
     }

@@ -90,17 +90,17 @@ pub fn adl<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, ADL<'info>>
     } = load_maps(remaining_accounts_iter)?;
 
     for param in params {
-        let user_account_loader = user_map.0.get(&param.user_key).ok_or_else(|| {
-            let caller = Location::caller();
-            msg!(
-                "Could not find user {} at {}:{}",
-                param.user_key,
-                caller.file(),
-                caller.line()
-            );
-            UserNotFound
-        })?;
-        // let user_account_loader= user_map.get_account_loader(&param.user_key)?;
+        // let user_account_loader = user_map.0.get(&param.user_key).ok_or_else(|| {
+        //     let caller = Location::caller();
+        //     msg!(
+        //         "Could not find user {} at {}:{}",
+        //         param.user_key,
+        //         caller.file(),
+        //         caller.line()
+        //     );
+        //     UserNotFound
+        // })?;
+        let user_account_loader= user_map.get_account_loader(&param.user_key)?;
         let user_account = &mut user_map.get_mut_ref(&param.user_key)?;
         let position = user_account.find_position_mut_by_key(&param.position_key)?;
         let mut position_processor = PositionProcessor { position };
