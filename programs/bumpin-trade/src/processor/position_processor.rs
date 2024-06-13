@@ -1165,7 +1165,7 @@ impl PositionProcessor<'_> {
         token_mint: &Pubkey,
     ) -> BumpResult<()> {
         let mut reduce_amount = change_token_amount;
-        for mut position in &mut user.user_positions {
+        for position in &mut user.user_positions {
             if position.margin_mint.eq(token_mint) && position.cross_margin {
                 let change_amount;
 

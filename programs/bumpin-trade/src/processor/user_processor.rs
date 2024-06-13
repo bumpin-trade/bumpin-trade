@@ -53,7 +53,7 @@ impl<'a> UserProcessor<'a> {
         Ok(())
     }
     pub fn sub_user_token_amount(&mut self, mint: &Pubkey, mut amount: u128) -> BumpResult {
-        for mut user_position in &mut self.user.user_positions {
+        for user_position in &mut self.user.user_positions {
             if user_position.cross_margin && user_position.margin_mint.eq(mint) && amount > 0 {
                 let reduce_amount = user_position.reduce_position_portfolio_balance(amount)?;
                 amount = amount.safe_sub(reduce_amount)?;

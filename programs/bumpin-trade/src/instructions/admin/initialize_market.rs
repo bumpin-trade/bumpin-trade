@@ -42,7 +42,7 @@ pub struct InitializeMarket<'info> {
 pub fn handle_initialize_market(
     ctx: Context<InitializeMarket>,
     symbol: [u8; 32],
-) -> anchor_lang::Result<()> {
+) -> Result<()> {
     let mut market = ctx.accounts.market.load_init()?;
     let pool = ctx.accounts.pool.load()?;
     let stable_pool = ctx.accounts.stable_pool.load()?;
