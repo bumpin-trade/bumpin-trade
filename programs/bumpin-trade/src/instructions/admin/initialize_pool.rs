@@ -33,6 +33,7 @@ pub struct InitializePool<'info> {
     #[account(
         constraint = state.bump_signer.eq(& bump_signer.key())
     )]
+    /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
 
     #[account(
