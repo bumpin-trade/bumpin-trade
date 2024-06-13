@@ -1,17 +1,17 @@
-use anchor_lang::prelude::*;
-use solana_program::pubkey::Pubkey;
-use crate::errors::{BumpErrorCode};
+use crate::errors::BumpErrorCode;
 use crate::processor::market_processor::MarketProcessor;
 use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::position_processor::PositionProcessor;
 use crate::state::market::Market;
+use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::validate;
+use anchor_lang::prelude::*;
 use solana_program::msg;
-use crate::state::oracle_map::OracleMap;
+use solana_program::pubkey::Pubkey;
 
 #[derive(Accounts)]
 #[instruction(market_index: u16, trade_token_index: u16, user: Pubkey)]
@@ -45,10 +45,15 @@ pub struct LiquidateIsolatePosition<'info> {
     pub trade_token: AccountLoader<'info, TradeToken>,
 
     pub keeper_signer: Signer<'info>,
-
 }
 
-pub fn handle_liquidate_isolate_position(ctx: Context<LiquidateIsolatePosition>, market_index: u16, trade_token_index: u16, position_key: Pubkey, user: Pubkey) -> Result<()> {
+pub fn handle_liquidate_isolate_position(
+    ctx: Context<LiquidateIsolatePosition>,
+    market_index: u16,
+    trade_token_index: u16,
+    position_key: Pubkey,
+    user: Pubkey,
+) -> Result<()> {
     let user = &mut ctx.accounts.user.load_mut()?;
     let user_position = user.find_position_mut_by_key(&position_key)?;
 
@@ -63,15 +68,25 @@ pub fn handle_liquidate_isolate_position(ctx: Context<LiquidateIsolatePosition>,
 
     let pool = &mut ctx.accounts.pool.load_mut().unwrap();
     let stable_pool = &mut ctx.accounts.stable_pool.load_mut().unwrap();
-    let mut pool_processor = if user_position.is_long { PoolProcessor { pool } } else { PoolProcessor { pool: stable_pool } };
+    let mut pool_processor = if user_position.is_long {
+        PoolProcessor { pool }
+    } else {
+        PoolProcessor { pool: stable_pool }
+    };
     pool_processor.update_pool_borrowing_fee_rate()?;
 
     let mut position_processor = PositionProcessor { position: user_position };
-    let liquidation_price = position_processor.get_liquidation_price(&market, &pool, &ctx.accounts.state, &mut oracle_map)?;
+    let liquidation_price = position_processor.get_liquidation_price(
+        &market,
+        &pool,
+        &ctx.accounts.state,
+        &mut oracle_map,
+    )?;
 
     let index_price = oracle_map.get_price_data(&user_position.index_mint)?;
-    if (user_position.is_long && index_price.price > liquidation_price) ||
-        (!user_position.is_long && index_price.price < liquidation_price) {
+    if (user_position.is_long && index_price.price > liquidation_price)
+        || (!user_position.is_long && index_price.price < liquidation_price)
+    {
         //  position_processor.decrease_position()
     }
     Ok(())

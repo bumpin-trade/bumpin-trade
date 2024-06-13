@@ -1,15 +1,15 @@
+use crate::errors::BumpErrorCode;
+use crate::errors::BumpErrorCode::CantPayUserInitFee;
+use crate::state::state::State;
+use crate::state::traits::Size;
+use crate::state::user::User;
+use anchor_lang::error;
+use anchor_lang::prelude::Pubkey;
 use anchor_lang::prelude::*;
+use anchor_lang::require_keys_neq;
 use solana_program::msg;
 use solana_program::program::invoke;
 use solana_program::rent::Rent;
-use crate::errors::BumpErrorCode::{CantPayUserInitFee};
-use crate::errors::{BumpErrorCode};
-use crate::state::state::State;
-use crate::state::user::User;
-use crate::state::traits::Size;
-use anchor_lang::require_keys_neq;
-use anchor_lang::prelude::Pubkey;
-use anchor_lang::error;
 use solana_program::system_instruction::transfer;
 
 #[derive(Accounts)]
@@ -36,8 +36,8 @@ pub struct InitializeUser<'info> {
 }
 
 pub fn handle_initialize_user(ctx: Context<InitializeUser>) -> Result<()> {
-
-    let mut user = ctx.accounts.user.load_init().or(Err(BumpErrorCode::UnableToLoadAccountLoader))?;
+    let mut user =
+        ctx.accounts.user.load_init().or(Err(BumpErrorCode::UnableToLoadAccountLoader))?;
     user.user_key = *ctx.accounts.user.to_account_info().key;
     user.authority = *ctx.accounts.authority.to_account_info().key;
 
@@ -56,11 +56,7 @@ pub fn handle_initialize_user(ctx: Context<InitializeUser>) -> Result<()> {
         }
 
         invoke(
-            &transfer(
-                &ctx.accounts.payer.key(),
-                &ctx.accounts.user.key(),
-                init_fee,
-            ),
+            &transfer(&ctx.accounts.payer.key(), &ctx.accounts.user.key(), init_fee),
             &[
                 ctx.accounts.payer.to_account_info().clone(),
                 ctx.accounts.user.to_account_info().clone(),

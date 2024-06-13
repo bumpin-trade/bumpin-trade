@@ -1,11 +1,11 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint};
-use crate::safe_increment;
 use crate::math_error;
+use crate::safe_increment;
 use crate::state::market::Market;
 use crate::state::pool::Pool;
-use crate::traits::Size;
 use crate::state::state::State;
+use crate::traits::Size;
+use anchor_lang::prelude::*;
+use anchor_spl::token::Mint;
 
 #[derive(Accounts)]
 pub struct InitializeMarket<'info> {
@@ -37,10 +37,12 @@ pub struct InitializeMarket<'info> {
     pub rent: Sysvar<'info, Rent>,
 
     pub system_program: Program<'info, System>,
-
 }
 
-pub fn handle_initialize_market(ctx: Context<InitializeMarket>, symbol: [u8; 32]) -> anchor_lang::Result<()> {
+pub fn handle_initialize_market(
+    ctx: Context<InitializeMarket>,
+    symbol: [u8; 32],
+) -> anchor_lang::Result<()> {
     let mut market = ctx.accounts.market.load_init()?;
     let pool = ctx.accounts.pool.load()?;
     let stable_pool = ctx.accounts.stable_pool.load()?;
@@ -55,6 +57,6 @@ pub fn handle_initialize_market(ctx: Context<InitializeMarket>, symbol: [u8; 32]
         stable_pool_mint: stable_pool.pool_mint,
         ..Market::default()
     };
-    safe_increment!(state.number_of_markets,1);
+    safe_increment!(state.number_of_markets, 1);
     Ok(())
 }

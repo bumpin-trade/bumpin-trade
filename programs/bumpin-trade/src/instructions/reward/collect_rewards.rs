@@ -47,6 +47,10 @@ pub struct CollectRewards<'info> {
     pub keeper_signer: Signer<'info>,
 }
 
-pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, CollectRewards>, pool_index: u16, stable_pool_index: u16) -> Result<()> {
+pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
+    ctx: Context<'a, 'b, 'c, 'info, CollectRewards>,
+    pool_index: u16,
+    stable_pool_index: u16,
+) -> Result<()> {
     Ok(())
 }

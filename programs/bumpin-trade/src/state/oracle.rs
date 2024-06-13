@@ -1,11 +1,11 @@
 use anchor_lang::prelude::*;
 use pyth_sdk_solana::state::SolanaPriceAccount;
 
-use crate::math::casting::Cast;
-use crate::math::safe_math::SafeMath;
 use crate::errors::BumpErrorCode::{InvalidOracle, PythOffline};
 use crate::errors::BumpResult;
+use crate::math::casting::Cast;
 use crate::math::constants::PRICE_PRECISION;
+use crate::math::safe_math::SafeMath;
 
 #[derive(Default, Clone, Copy, Debug)]
 pub struct OraclePriceData {
@@ -15,30 +15,22 @@ pub struct OraclePriceData {
 
 impl OraclePriceData {
     pub fn default_usd() -> Self {
-        OraclePriceData {
-            price: PRICE_PRECISION,
-            confidence: 1,
-        }
+        OraclePriceData { price: PRICE_PRECISION, confidence: 1 }
     }
 }
 
-pub fn get_oracle_price(
-    price_oracle: &AccountInfo) -> BumpResult<OraclePriceData> {
+pub fn get_oracle_price(price_oracle: &AccountInfo) -> BumpResult<OraclePriceData> {
     get_pyth_price(price_oracle, 1)
 }
 
-pub fn get_pyth_price(
-    price_oracle: &AccountInfo,
-    multiple: u128,
-) -> BumpResult<OraclePriceData> {
+pub fn get_pyth_price(price_oracle: &AccountInfo, multiple: u128) -> BumpResult<OraclePriceData> {
     let price_feed = SolanaPriceAccount::account_info_to_feed(price_oracle).unwrap();
     let current_timestamp = Clock::get().unwrap().unix_timestamp;
-    let price_data = price_feed.get_price_no_older_than(current_timestamp, 10).ok_or(PythOffline).unwrap();
-
+    let price_data =
+        price_feed.get_price_no_older_than(current_timestamp, 10).ok_or(PythOffline).unwrap();
 
     let oracle_price = price_data.price;
     let oracle_conf = price_data.conf;
-
 
     let oracle_precision = 10_u128.pow(price_data.expo.unsigned_abs());
 
@@ -70,12 +62,5 @@ pub fn get_pyth_price(
         .safe_div(oracle_scale_div)?
         .cast::<u128>()?;
 
-
-    Ok(OraclePriceData {
-        price: oracle_price_scaled,
-        confidence: oracle_conf_scaled,
-    })
+    Ok(OraclePriceData { price: oracle_price_scaled, confidence: oracle_conf_scaled })
 }
-
-
-

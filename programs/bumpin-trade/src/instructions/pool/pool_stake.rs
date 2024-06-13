@@ -4,18 +4,18 @@ use std::slice::Iter;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
-use crate::{utils, validate};
 use crate::can_sign_for_user;
 use crate::errors::BumpErrorCode;
 use crate::math::safe_math::SafeMath;
 use crate::processor::fee_processor;
 use crate::processor::fee_reward_processor::update_account_fee_reward;
-use crate::processor::optional_accounts::{load_maps};
+use crate::processor::optional_accounts::load_maps;
 use crate::processor::pool_processor::PoolProcessor;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
+use crate::{utils, validate};
 
 #[derive(Accounts)]
 #[instruction(pool_index: u16, trade_token_index: u16)]
@@ -71,7 +71,6 @@ pub struct PoolStake<'info> {
 
     pub authority: Signer<'info>,
     pub token_program: Program<'info, Token>,
-
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Eq, PartialEq)]
@@ -82,22 +81,34 @@ pub struct StakeParams {
     portfolio: bool,
 }
 
-pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, PoolStake>, stake_params: StakeParams) -> Result<()> {
+pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(
+    ctx: Context<'a, 'b, 'c, 'info, PoolStake>,
+    stake_params: StakeParams,
+) -> Result<()> {
     let mut pool = &mut ctx.accounts.pool.load_mut()?;
-    validate!(pool.pool_config.mini_stake_amount>stake_params.request_token_amount, BumpErrorCode::StakeToSmall)?;
+    validate!(
+        pool.pool_config.mini_stake_amount > stake_params.request_token_amount,
+        BumpErrorCode::StakeToSmall
+    )?;
     let trade_token = ctx.accounts.trade_token.load()?;
 
-    let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> = &mut ctx.remaining_accounts.iter().peekable();
+    let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
+        &mut ctx.remaining_accounts.iter().peekable();
     let mut account_maps = load_maps(remaining_accounts_iter)?;
 
     update_account_fee_reward(&ctx.accounts.user, &ctx.accounts.pool)?;
 
-    let stake_fee = fee_processor::collect_stake_fee(&mut pool,
-                                                     stake_params.request_token_amount)?;
+    let stake_fee = fee_processor::collect_stake_fee(&mut pool, stake_params.request_token_amount)?;
     let base_mint_amount = stake_params.request_token_amount.safe_sub(stake_fee)?;
     if stake_params.portfolio {
         let mut pool_processor = PoolProcessor { pool };
-        pool_processor.portfolio_to_stake(&ctx.accounts.user, &ctx.accounts.pool, base_mint_amount, &trade_token, &mut account_maps)?;
+        pool_processor.portfolio_to_stake(
+            &ctx.accounts.user,
+            &ctx.accounts.pool,
+            base_mint_amount,
+            &trade_token,
+            &mut account_maps,
+        )?;
         drop(pool_processor);
         utils::token::receive(
             &ctx.accounts.token_program,
@@ -109,7 +120,13 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'inf
         ctx.accounts.trade_token_vault.reload()?;
     } else {
         let mut pool_processor = PoolProcessor { pool };
-        pool_processor.stake(&ctx.accounts.user, &ctx.accounts.pool, base_mint_amount, &trade_token, &mut account_maps)?;
+        pool_processor.stake(
+            &ctx.accounts.user,
+            &ctx.accounts.pool,
+            base_mint_amount,
+            &trade_token,
+            &mut account_maps,
+        )?;
         drop(pool_processor);
         utils::token::receive(
             &ctx.accounts.token_program,

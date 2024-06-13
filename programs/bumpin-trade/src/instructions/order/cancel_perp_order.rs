@@ -38,7 +38,6 @@ pub struct CancelOrderCtx<'info> {
     pub state: Account<'info, State>,
 }
 
-
 pub fn handle_cancel_order(ctx: Context<CancelOrderCtx>, order_id: u128) -> Result<()> {
     let user = ctx.accounts.user_account.load().unwrap();
     let order = user.find_ref_order_by_id(order_id)?;
@@ -46,14 +45,15 @@ pub fn handle_cancel_order(ctx: Context<CancelOrderCtx>, order_id: u128) -> Resu
         return Err(BumpErrorCode::InvalidParam.into());
     }
 
-
     let user = &mut ctx.accounts.user_account.load_mut().unwrap();
     let mut user_processor = UserProcessor { user };
-    user_processor.cancel_order(order,
-                                &ctx.accounts.token_program,
-                                &ctx.accounts.pool_vault,
-                                &ctx.accounts.user_token_account,
-                                &ctx.accounts.bump_signer,
-                                &ctx.accounts.state)?;
+    user_processor.cancel_order(
+        order,
+        &ctx.accounts.token_program,
+        &ctx.accounts.pool_vault,
+        &ctx.accounts.user_token_account,
+        &ctx.accounts.bump_signer,
+        &ctx.accounts.state,
+    )?;
     Ok(())
 }

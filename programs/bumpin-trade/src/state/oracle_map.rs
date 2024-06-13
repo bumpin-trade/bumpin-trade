@@ -34,13 +34,11 @@ impl<'a> OracleMap<'a> {
         }
 
         let account_info = match self.oracles.get(pubkey) {
-            Some(AccountInfoAndOracleSource {
-                     account_info
-                 }) => account_info,
+            Some(AccountInfoAndOracleSource { account_info }) => account_info,
             None => {
                 msg!("oracle pubkey not found in oracle_map: {}", pubkey);
                 return Err(OracleNotFound);
-            }
+            },
         };
         let price_result = get_oracle_price(account_info)?;
         self.price_data.insert(*pubkey, price_result);
@@ -49,7 +47,8 @@ impl<'a> OracleMap<'a> {
     }
 
     pub fn load<'c>(
-        account_info_iter: &'c mut Peekable<Iter<AccountInfo<'a>>>) -> BumpResult<OracleMap<'a>> {
+        account_info_iter: &'c mut Peekable<Iter<AccountInfo<'a>>>,
+    ) -> BumpResult<OracleMap<'a>> {
         let mut oracles: BTreeMap<Pubkey, AccountInfoAndOracleSource<'a>> = BTreeMap::new();
 
         while let Some(account_info) = account_info_iter.peek() {
@@ -59,29 +58,20 @@ impl<'a> OracleMap<'a> {
 
                 oracles.insert(
                     pubkey,
-                    AccountInfoAndOracleSource {
-                        account_info: account_info.clone()
-                    },
+                    AccountInfoAndOracleSource { account_info: account_info.clone() },
                 );
                 continue;
             }
             break;
         }
 
-
-        Ok(OracleMap {
-            oracles,
-            price_data: BTreeMap::new(),
-        })
+        Ok(OracleMap { oracles, price_data: BTreeMap::new() })
     }
 }
 
 #[cfg(test)]
 impl<'a> OracleMap<'a> {
     pub fn empty() -> OracleMap<'a> {
-        OracleMap {
-            oracles: BTreeMap::new(),
-            price_data: BTreeMap::new(),
-        }
+        OracleMap { oracles: BTreeMap::new(), price_data: BTreeMap::new() }
     }
 }

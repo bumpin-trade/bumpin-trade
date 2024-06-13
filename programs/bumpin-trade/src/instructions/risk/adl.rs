@@ -6,7 +6,7 @@ use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
 
 use crate::errors::BumpErrorCode::UserNotFound;
-use crate::processor::optional_accounts::{AccountMaps, load_maps};
+use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::position_processor::{DecreasePositionParams, PositionProcessor};
 use crate::state::market::Market;
 use crate::state::pool::Pool;
@@ -67,8 +67,10 @@ pub struct ADL<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-
-pub fn adl<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, ADL<'info>>, params: [ADLParams; 10]) -> Result<()> {
+pub fn adl<'a, 'b, 'c: 'info, 'info>(
+    ctx: Context<'a, 'b, 'c, 'info, ADL<'info>>,
+    params: [ADLParams; 10],
+) -> Result<()> {
     let pool_account_loader = &ctx.accounts.pool;
     let stable_pool_account_loader = &ctx.accounts.stable_pool;
     let market_account_loader = &ctx.accounts.market;
@@ -83,11 +85,7 @@ pub fn adl<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, ADL<'info>>
 
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
 
-    let AccountMaps {
-        user_map,
-        mut oracle_map,
-        ..
-    } = load_maps(remaining_accounts_iter)?;
+    let AccountMaps { user_map, mut oracle_map, .. } = load_maps(remaining_accounts_iter)?;
 
     for param in params {
         // let user_account_loader = user_map.0.get(&param.user_key).ok_or_else(|| {
@@ -100,33 +98,43 @@ pub fn adl<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, ADL<'info>>
         //     );
         //     UserNotFound
         // })?;
-        let user_account_loader= user_map.get_account_loader(&param.user_key)?;
+        let user_account_loader = user_map.get_account_loader(&param.user_key)?;
         let user_account = &mut user_map.get_mut_ref(&param.user_key)?;
         let position = user_account.find_position_mut_by_key(&param.position_key)?;
         let mut position_processor = PositionProcessor { position };
-        position_processor.decrease_position(DecreasePositionParams {
-            order_id: 0,
-            is_liquidation: false,
-            is_cross_margin: position_processor.position.cross_margin,
-            margin_token: position_processor.position.margin_mint,
-            decrease_size: position_processor.position.position_size,
-            execute_price: oracle_map.get_price_data(&position_processor.position.index_mint).unwrap().price,
-        }, &user_account_loader, pool_account_loader,
-                                             stable_pool_account_loader,
-                                             market_account_loader,
-                                             state_account,
-                                             user_token_account,
-                                             if position_processor.position.is_long { pool_vault_account } else { stable_pool_vault_account },
-                                             trade_token_loader,
-                                             trade_token_vault_account,
-                                             bump_signer_account_info,
-                                             token_program,
-                                             ctx.program_id,
-                                             &mut oracle_map)?;
+        position_processor.decrease_position(
+            DecreasePositionParams {
+                order_id: 0,
+                is_liquidation: false,
+                is_cross_margin: position_processor.position.cross_margin,
+                margin_token: position_processor.position.margin_mint,
+                decrease_size: position_processor.position.position_size,
+                execute_price: oracle_map
+                    .get_price_data(&position_processor.position.index_mint)
+                    .unwrap()
+                    .price,
+            },
+            &user_account_loader,
+            pool_account_loader,
+            stable_pool_account_loader,
+            market_account_loader,
+            state_account,
+            user_token_account,
+            if position_processor.position.is_long {
+                pool_vault_account
+            } else {
+                stable_pool_vault_account
+            },
+            trade_token_loader,
+            trade_token_vault_account,
+            bump_signer_account_info,
+            token_program,
+            ctx.program_id,
+            &mut oracle_map,
+        )?;
     }
     Ok(())
 }
-
 
 pub struct ADLParams {
     position_key: Pubkey,

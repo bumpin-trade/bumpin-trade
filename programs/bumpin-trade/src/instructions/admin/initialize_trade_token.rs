@@ -1,11 +1,11 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
-use solana_program::rent::Rent;
-use crate::{safe_increment};
+use crate::math_error;
+use crate::safe_increment;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use anchor_lang::error;
-use crate::math_error;
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Mint, Token, TokenAccount};
+use solana_program::rent::Rent;
 
 #[derive(Accounts)]
 pub struct InitializeTradeToken<'info> {
@@ -46,7 +46,11 @@ pub struct InitializeTradeToken<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn initialize_trade_token(ctx: Context<InitializeTradeToken>, discount: u128, liquidation_factor: u128) -> anchor_lang::Result<()> {
+pub fn initialize_trade_token(
+    ctx: Context<InitializeTradeToken>,
+    discount: u128,
+    liquidation_factor: u128,
+) -> anchor_lang::Result<()> {
     let state = &mut ctx.accounts.state;
     let mut trade_token = ctx.accounts.trade_token.load_init()?;
     *trade_token = TradeToken {
@@ -58,6 +62,6 @@ pub fn initialize_trade_token(ctx: Context<InitializeTradeToken>, discount: u128
         decimals: ctx.accounts.trade_token_mint.decimals,
         trade_token_vault: *ctx.accounts.trade_token_vault.to_account_info().key,
     };
-    safe_increment!(state.number_of_trade_tokens,1);
+    safe_increment!(state.number_of_trade_tokens, 1);
     Ok(())
 }

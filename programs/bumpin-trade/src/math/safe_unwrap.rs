@@ -1,7 +1,7 @@
 use std::panic::Location;
 
-use solana_program::msg;
 use crate::errors::BumpErrorCode::FailedUnwrap;
+use solana_program::msg;
 
 use crate::errors::BumpResult;
 
@@ -23,7 +23,7 @@ impl<T> SafeUnwrap for Option<T> {
                 let caller = Location::caller();
                 msg!("Unwrap error thrown at {}:{}", caller.file(), caller.line());
                 Err(FailedUnwrap)
-            }
+            },
         }
     }
 }
@@ -40,7 +40,7 @@ impl<T, U> SafeUnwrap for Result<T, U> {
                 let caller = Location::caller();
                 msg!("Unwrap error thrown at {}:{}", caller.file(), caller.line());
                 Err(FailedUnwrap)
-            }
+            },
         }
     }
 }

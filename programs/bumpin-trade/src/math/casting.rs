@@ -15,13 +15,9 @@ pub trait Cast: Sized {
             Ok(result) => Ok(result),
             Err(_) => {
                 let caller = Location::caller();
-                msg!(
-                    "Casting error thrown at {}:{}",
-                    caller.file(),
-                    caller.line()
-                );
+                msg!("Casting error thrown at {}:{}", caller.file(), caller.line());
                 Err(CastingFailure)
-            }
+            },
         }
     }
 }

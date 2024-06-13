@@ -52,12 +52,14 @@ pub fn handle_deposit(ctx: Context<Deposit>, amount: u128) -> Result<()> {
 
     let repay_amount = user_token.repay_liability(amount)?;
     if amount > repay_amount {
-        let left_amount = amount
-            .safe_sub(repay_amount)?;
+        let left_amount = amount.safe_sub(repay_amount)?;
 
         let mut user_processor = UserProcessor { user };
-        user_processor.update_cross_position_balance(&ctx.accounts.user_token_account.mint,
-                                                     left_amount, true)?;
+        user_processor.update_cross_position_balance(
+            &ctx.accounts.user_token_account.mint,
+            left_amount,
+            true,
+        )?;
         drop(user_processor);
     }
     Ok(())

@@ -15,23 +15,17 @@ pub struct AccountMaps<'a> {
     pub trade_token_map: TradeTokenMap<'a>,
     pub oracle_map: OracleMap<'a>,
     pub pool_map: PoolMap<'a>,
-    pub user_map: UserMap<'a>
+    pub user_map: UserMap<'a>,
 }
 
 pub fn load_maps<'a: 'info, 'info>(
-    account_info_iter: &mut Peekable<Iter<'a, AccountInfo<'info>>>
+    account_info_iter: &mut Peekable<Iter<'a, AccountInfo<'info>>>,
 ) -> BumpResult<AccountMaps<'info>> {
-    let market_map  = MarketMap::load(account_info_iter)?;
+    let market_map = MarketMap::load(account_info_iter)?;
     let trade_token_map = TradeTokenMap::load(account_info_iter)?;
-    let oracle_map= OracleMap::load(account_info_iter)?;
-    let pool_map= PoolMap::load(account_info_iter)?;
-    let user_map= UserMap::load(account_info_iter)?;
+    let oracle_map = OracleMap::load(account_info_iter)?;
+    let pool_map = PoolMap::load(account_info_iter)?;
+    let user_map = UserMap::load(account_info_iter)?;
 
-    Ok(AccountMaps {
-        market_map,
-        trade_token_map,
-        oracle_map,
-        pool_map,
-        user_map,
-    })
+    Ok(AccountMaps { market_map, trade_token_map, oracle_map, pool_map, user_map })
 }

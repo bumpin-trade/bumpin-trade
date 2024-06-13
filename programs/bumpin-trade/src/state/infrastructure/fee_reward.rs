@@ -1,6 +1,6 @@
-use anchor_lang::prelude::*;
 use crate::errors::BumpResult;
 use crate::math::safe_math::SafeMath;
+use anchor_lang::prelude::*;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Eq, PartialEq, Debug, Clone, Copy)]
 pub struct FeeReward {
@@ -10,7 +10,6 @@ pub struct FeeReward {
     pub cumulative_rewards_per_stake_token: u128,
     pub last_rewards_per_stake_token_deltas: [u128; 3],
 }
-
 
 impl FeeReward {
     pub fn get_rewards_delta_limit(&self) -> BumpResult<u128> {

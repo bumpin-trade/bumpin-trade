@@ -1,13 +1,13 @@
-use anchor_lang::prelude::*;
-use crate::{validate};
 use crate::errors::{BumpErrorCode, BumpResult};
-use crate::instructions::{add_u128};
+use crate::instructions::add_u128;
+use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::state::infrastructure::fee_reward::FeeReward;
 use crate::state::infrastructure::pool_borrowing_fee::BorrowingFee;
 use crate::traits::Size;
+use crate::validate;
+use anchor_lang::prelude::*;
 use solana_program::msg;
-use crate::math::casting::Cast;
 
 #[account(zero_copy(unsafe))]
 #[derive(Eq, PartialEq, Debug)]
@@ -36,7 +36,6 @@ impl Size for Pool {
     const SIZE: usize = std::mem::size_of::<Pool>() + 8;
 }
 
-
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Eq, PartialEq)]
 pub enum PoolStatus {
     NORMAL,
@@ -55,7 +54,6 @@ pub struct PoolBalance {
     pub loss_amount: u128,
 }
 
-
 #[zero_copy(unsafe)]
 #[derive(Eq, PartialEq, Debug, Default)]
 #[repr(C)]
@@ -68,7 +66,6 @@ pub struct PoolConfig {
     pub un_settle_mint_ratio_limit: u128,
     pub borrowing_interest_rate: u128,
 }
-
 
 impl Default for Pool {
     fn default() -> Self {
@@ -94,7 +91,6 @@ impl Default for Pool {
     }
 }
 
-
 impl Pool {
     pub fn add_amount(&mut self, amount: u128) -> BumpResult<()> {
         self.pool_balance.amount = self.pool_balance.amount.safe_add(amount)?;
@@ -102,7 +98,7 @@ impl Pool {
     }
 
     pub fn sub_amount(&mut self, amount: u128) -> BumpResult<()> {
-        validate!( self.pool_balance.amount >= amount, BumpErrorCode::AmountNotEnough.into())?;
+        validate!(self.pool_balance.amount >= amount, BumpErrorCode::AmountNotEnough.into())?;
         self.pool_balance.amount = self.pool_balance.amount.safe_sub(amount)?;
         Ok(())
     }
@@ -118,7 +114,7 @@ impl Pool {
     }
 
     pub fn un_hold_pool(&mut self, amount: u128) -> BumpResult<()> {
-        validate!(self.pool_balance.hold_amount>=amount, BumpErrorCode::AmountNotEnough.into())?;
+        validate!(self.pool_balance.hold_amount >= amount, BumpErrorCode::AmountNotEnough.into())?;
         self.pool_balance.hold_amount = add_u128(self.pool_balance.hold_amount, amount)?;
         Ok(())
     }
@@ -157,12 +153,14 @@ impl Pool {
         Ok(())
     }
 
-    pub fn settle_funding_fee(base_token_pool: &mut Pool,
-                              stable_token_pool: &mut Pool,
-                              fee_amount_usd: i128,
-                              fee_amount: i128,
-                              is_long: bool,
-                              is_cross: bool) -> BumpResult<()> {
+    pub fn settle_funding_fee(
+        base_token_pool: &mut Pool,
+        stable_token_pool: &mut Pool,
+        fee_amount_usd: i128,
+        fee_amount: i128,
+        is_long: bool,
+        is_cross: bool,
+    ) -> BumpResult<()> {
         if !is_long {
             if fee_amount_usd <= 0i128 {
                 //stable_pool should pay to user, count loss on base_token_pool
@@ -194,10 +192,14 @@ impl Pool {
 
     fn check_hold_is_allowed(&self, amount: u128) -> BumpResult<bool> {
         if self.pool_config.pool_liquidity_limit == 0 {
-            return Ok(add_u128(self.pool_balance.amount, self.pool_balance.un_settle_amount)?.safe_sub(self.pool_balance.hold_amount)? >= amount);
+            return Ok(add_u128(self.pool_balance.amount, self.pool_balance.un_settle_amount)?
+                .safe_sub(self.pool_balance.hold_amount)?
+                >= amount);
         }
-        return Ok(add_u128(self.pool_balance.amount, self.pool_balance.un_settle_amount)?.safe_sub(self.pool_balance.hold_amount)?
-            .safe_mul(self.pool_config.pool_liquidity_limit)? >= amount);
+        return Ok(add_u128(self.pool_balance.amount, self.pool_balance.un_settle_amount)?
+            .safe_sub(self.pool_balance.hold_amount)?
+            .safe_mul(self.pool_config.pool_liquidity_limit)?
+            >= amount);
     }
 }
 

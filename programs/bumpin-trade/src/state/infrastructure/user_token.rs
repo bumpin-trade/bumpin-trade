@@ -1,10 +1,10 @@
-use anchor_lang::zero_copy;
-use solana_program::pubkey::Pubkey;
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::state::oracle::OraclePriceData;
 use crate::state::trade_token::TradeToken;
+use anchor_lang::zero_copy;
+use solana_program::pubkey::Pubkey;
 
 #[zero_copy(unsafe)]
 #[derive(Default, Eq, PartialEq, Debug)]
@@ -37,7 +37,8 @@ impl UserToken {
     }
     pub fn repay_liability(&mut self, amount: u128) -> BumpResult<u128> {
         if self.liability > 0 && self.amount > 0 {
-            let repay_liability_amount = if amount >= self.liability { self.liability } else { self.amount };
+            let repay_liability_amount =
+                if amount >= self.liability { self.liability } else { self.amount };
             self.amount = self.amount.safe_sub(repay_liability_amount)?;
             self.liability = self.liability.safe_sub(repay_liability_amount)?;
             self.used_amount = self.used_amount.safe_sub(repay_liability_amount)?;
@@ -47,9 +48,14 @@ impl UserToken {
         }
     }
 
-    pub fn get_token_net_value(&self, trade_token: &TradeToken, oracle_price_data: &OraclePriceData) -> BumpResult<u128> {
+    pub fn get_token_net_value(
+        &self,
+        trade_token: &TradeToken,
+        oracle_price_data: &OraclePriceData,
+    ) -> BumpResult<u128> {
         if self.amount > self.used_amount {
-            let token_net_value = self.amount
+            let token_net_value = self
+                .amount
                 .safe_sub(self.used_amount)?
                 .safe_mul(oracle_price_data.price)?
                 .safe_mul(trade_token.discount)?;
@@ -58,9 +64,15 @@ impl UserToken {
         Ok(0u128)
     }
 
-    pub fn get_token_used_value(&self, trade_token: &TradeToken, oracle_price_data: &OraclePriceData) -> BumpResult<u128> {
+    pub fn get_token_used_value(
+        &self,
+        trade_token: &TradeToken,
+        oracle_price_data: &OraclePriceData,
+    ) -> BumpResult<u128> {
         if self.amount < self.used_amount {
-            let token_used_value = self.used_amount.cast::<u128>()?
+            let token_used_value = self
+                .used_amount
+                .cast::<u128>()?
                 .safe_sub(self.amount.cast()?)?
                 .safe_mul(oracle_price_data.price.cast()?)?
                 .safe_mul(1u128.safe_add(trade_token.liquidation_factor.cast()?)?)?;
@@ -76,14 +88,15 @@ impl UserToken {
         Ok(0u128)
     }
 
-    pub fn get_token_borrowing_value(&self,  oracle_price_data: &OraclePriceData) -> BumpResult<u128> {
-        let borrowing_amount = self.amount
-            .safe_sub(self.used_amount)?
-            .safe_sub(self.liability)?;
+    pub fn get_token_borrowing_value(
+        &self,
+        oracle_price_data: &OraclePriceData,
+    ) -> BumpResult<u128> {
+        let borrowing_amount = self.amount.safe_sub(self.used_amount)?.safe_sub(self.liability)?;
 
         if borrowing_amount > 0 {
-            let token_borrowing_value = borrowing_amount.cast::<u128>()?
-                .safe_mul(oracle_price_data.price.cast()?)?;
+            let token_borrowing_value =
+                borrowing_amount.cast::<u128>()?.safe_mul(oracle_price_data.price.cast()?)?;
             return Ok(token_borrowing_value);
         }
         Ok(0u128)

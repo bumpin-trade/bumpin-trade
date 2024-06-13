@@ -1,11 +1,11 @@
-use anchor_lang::zero_copy;
-use solana_program::pubkey::Pubkey;
-use crate::{validate};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::math::safe_math::SafeMath;
 use crate::state::pool::PoolConfig;
+use crate::validate;
+use anchor_lang::zero_copy;
 use solana_program::msg;
+use solana_program::pubkey::Pubkey;
 
 #[zero_copy(unsafe)]
 #[derive(Default, Eq, PartialEq, Debug)]
@@ -21,15 +21,22 @@ pub struct PoolTokenBalance {
 
 impl PoolTokenBalance {
     pub fn hold_pool(&mut self, pool_config: PoolConfig, amount: u128) -> BumpResult<()> {
-        validate!(self.check_hold_is_allowed(amount,pool_config)?, BumpErrorCode::AmountNotEnough.into())?;
+        validate!(
+            self.check_hold_is_allowed(amount, pool_config)?,
+            BumpErrorCode::AmountNotEnough.into()
+        )?;
         self.hold_amount = cal_utils::add_u128(self.hold_amount, amount)?;
         Ok(())
     }
 
     fn check_hold_is_allowed(&self, amount: u128, pool_config: PoolConfig) -> BumpResult<bool> {
         if pool_config.pool_liquidity_limit == 0 {
-            return Ok(cal_utils::add_u128(self.amount, self.un_settle_amount)?.safe_sub(self.hold_amount)? >= amount);
+            return Ok(cal_utils::add_u128(self.amount, self.un_settle_amount)?
+                .safe_sub(self.hold_amount)?
+                >= amount);
         }
-        return Ok(cal_utils::add_u128(self.amount, self.un_settle_amount)?.safe_mul(pool_config.pool_liquidity_limit)? >= amount);
+        return Ok(cal_utils::add_u128(self.amount, self.un_settle_amount)?
+            .safe_mul(pool_config.pool_liquidity_limit)?
+            >= amount);
     }
 }

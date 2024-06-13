@@ -4,10 +4,10 @@
 #![allow(clippy::ptr_offset_with_cast)]
 #![allow(clippy::manual_range_contains)]
 
+use anchor_lang::prelude::borsh::maybestd::io::Read;
 use anchor_lang::prelude::borsh::{BorshDeserialize, BorshSerialize};
 use std::borrow::BorrowMut;
 use std::convert::TryInto;
-use anchor_lang::prelude::borsh::maybestd::io::{Read};
 use std::io::{Error, ErrorKind, Write};
 use std::mem::size_of;
 use uint::construct_uint;
@@ -33,10 +33,7 @@ macro_rules! impl_borsh_deserialize_for_bn {
             #[inline]
             fn deserialize(buf: &mut &[u8]) -> std::io::Result<Self> {
                 if buf.len() < size_of::<$type>() {
-                    return Err(Error::new(
-                        ErrorKind::InvalidInput,
-                        "Unexpected length of input",
-                    ));
+                    return Err(Error::new(ErrorKind::InvalidInput, "Unexpected length of input"));
                 }
                 let res = $type::from_le_bytes(buf[..size_of::<$type>()].try_into().unwrap());
                 *buf = &buf[size_of::<$type>()..];
@@ -44,7 +41,7 @@ macro_rules! impl_borsh_deserialize_for_bn {
             }
 
             #[inline]
-            fn deserialize_reader<R: Read>(reader: &mut R) -> std::io::Result<Self>{
+            fn deserialize_reader<R: Read>(reader: &mut R) -> std::io::Result<Self> {
                 let mut buf = [0u8; size_of::<$type>()];
                 reader.read_exact(&mut buf)?;
                 Ok($type::from_le_bytes(buf))

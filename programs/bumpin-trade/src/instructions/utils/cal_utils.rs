@@ -43,7 +43,6 @@ pub fn div_rate_i(value: i128, rate: i128) -> BumpResult<i128> {
     mul_div_i(value, SMALL_RATE_PRECISION.cast::<i128>()?, rate)
 }
 
-
 pub fn add_u128(x: u128, y: u128) -> BumpResult<u128> {
     Ok(x.safe_add(y)?)
 }
@@ -69,34 +68,52 @@ pub fn div_u128(x: u128, y: u128) -> BumpResult<u128> {
 }
 
 pub fn usd_to_token_u(usd_value: u128, decimals: u8, token_price: u128) -> BumpResult<u128> {
-    mul_div_u(usd_value, 10u128.pow(decimals.cast::<u32>()?), token_price.safe_mul(PRICE_TO_LAMPORT)?)
+    mul_div_u(
+        usd_value,
+        10u128.pow(decimals.cast::<u32>()?),
+        token_price.safe_mul(PRICE_TO_LAMPORT)?,
+    )
 }
 
 pub fn usd_to_token_i(usd_value: i128, decimals: u8, token_price: u128) -> BumpResult<i128> {
-    mul_div_i(usd_value, 10i128.pow(decimals.cast::<u32>()?), token_price.cast::<i128>()?.safe_mul(PRICE_TO_LAMPORT.cast::<i128>()?)?)
+    mul_div_i(
+        usd_value,
+        10i128.pow(decimals.cast::<u32>()?),
+        token_price.cast::<i128>()?.safe_mul(PRICE_TO_LAMPORT.cast::<i128>()?)?,
+    )
 }
 
 pub fn token_to_usd_u(token_amount: u128, decimals: u8, token_price: u128) -> BumpResult<u128> {
-    token_amount.safe_mul(token_price)?.safe_mul(PRICE_TO_LAMPORT)?.safe_div(10u128.pow(decimals.cast::<u32>()?))
+    token_amount
+        .safe_mul(token_price)?
+        .safe_mul(PRICE_TO_LAMPORT)?
+        .safe_div(10u128.pow(decimals.cast::<u32>()?))
 }
 
 pub fn token_to_usd_i(token_amount: i128, decimals: u8, token_price: u128) -> BumpResult<i128> {
-    token_amount.safe_mul(token_price.cast::<i128>()?)?.safe_mul(PRICE_TO_LAMPORT.cast::<i128>()?)?.safe_div(10i128.pow(decimals.cast::<u32>()?))
+    token_amount
+        .safe_mul(token_price.cast::<i128>()?)?
+        .safe_mul(PRICE_TO_LAMPORT.cast::<i128>()?)?
+        .safe_div(10i128.pow(decimals.cast::<u32>()?))
 }
-
 
 pub fn current_time() -> u128 {
     let clock = Clock::get().unwrap();
     clock.unix_timestamp.to_u128().unwrap()
 }
 
-pub fn compute_avg_entry_price(amount: u128, entry_price: u128, increase_amount: u128, token_price: u128, ticker_size: u128, up: bool) -> BumpResult<u128> {
+pub fn compute_avg_entry_price(
+    amount: u128,
+    entry_price: u128,
+    increase_amount: u128,
+    token_price: u128,
+    ticker_size: u128,
+    up: bool,
+) -> BumpResult<u128> {
     let origin_entry_price = amount
         .safe_mul(entry_price)?
-        .safe_add(increase_amount
-            .safe_mul(token_price)?)?
-        .safe_mul(amount
-            .safe_add(increase_amount)?)?;
+        .safe_add(increase_amount.safe_mul(token_price)?)?
+        .safe_mul(amount.safe_add(increase_amount)?)?;
     return format_to_ticker_size(origin_entry_price, ticker_size, up);
 }
 
@@ -105,8 +122,6 @@ fn format_to_ticker_size(price: u128, ticker_size: u128, up: bool) -> BumpResult
     return if remainder == 0u128 {
         Ok(price)
     } else {
-        Ok(price.safe_div(ticker_size)?
-            .safe_add(if up { 0 } else { 1 })?
-            .safe_mul(ticker_size)?)
+        Ok(price.safe_div(ticker_size)?.safe_add(if up { 0 } else { 1 })?.safe_mul(ticker_size)?)
     };
 }

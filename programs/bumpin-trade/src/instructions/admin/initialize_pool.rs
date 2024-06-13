@@ -52,7 +52,6 @@ pub struct InitializePool<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-
 pub fn handle_initialize_pool_x(ctx: Context<InitializePool>, name: [u8; 32]) -> Result<()> {
     let mut pool = ctx.accounts.pool.load_init()?;
     let state = &mut ctx.accounts.state;

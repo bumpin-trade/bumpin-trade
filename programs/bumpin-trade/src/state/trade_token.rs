@@ -1,6 +1,6 @@
+use crate::traits::{MarketIndexOffset, Size};
 use anchor_lang::prelude::*;
 use solana_program::pubkey::Pubkey;
-use crate::traits::{MarketIndexOffset, Size};
 
 #[account(zero_copy(unsafe))]
 #[derive(Eq, PartialEq, Debug, Default)]

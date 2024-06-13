@@ -1,8 +1,8 @@
-use anchor_lang::prelude::*;
 use crate::errors::BumpResult;
 use crate::instructions::cal_utils;
 use crate::state::infrastructure::market_funding_fee::MarketFundingFee;
 use crate::traits::Size;
+use anchor_lang::prelude::*;
 
 #[account(zero_copy(unsafe))]
 #[derive(Eq, PartialEq, Debug)]

@@ -1,8 +1,8 @@
-use anchor_lang::prelude::*;
-use solana_program::pubkey::Pubkey;
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
+use anchor_lang::prelude::*;
+use solana_program::pubkey::Pubkey;
 
 #[zero_copy(unsafe)]
 #[derive(Default, Eq, PartialEq, Debug)]
@@ -79,12 +79,18 @@ impl UserPosition {
         Ok(())
     }
 
-    pub fn set_open_borrowing_fee_per_token(&mut self, open_borrowing_fee_per_token: u128) -> BumpResult {
+    pub fn set_open_borrowing_fee_per_token(
+        &mut self,
+        open_borrowing_fee_per_token: u128,
+    ) -> BumpResult {
         self.open_borrowing_fee_per_token = open_borrowing_fee_per_token;
         Ok(())
     }
 
-    pub fn set_open_funding_fee_amount_per_size(&mut self, open_funding_fee_amount_per_size: i128) -> BumpResult {
+    pub fn set_open_funding_fee_amount_per_size(
+        &mut self,
+        open_funding_fee_amount_per_size: i128,
+    ) -> BumpResult {
         self.open_funding_fee_amount_per_size = open_funding_fee_amount_per_size;
         Ok(())
     }
@@ -95,7 +101,8 @@ impl UserPosition {
     }
 
     pub fn add_realized_borrowing_fee(&mut self, realized_borrowing_fee: u128) -> BumpResult<()> {
-        self.realized_borrowing_fee = self.realized_borrowing_fee.safe_add(realized_borrowing_fee)?;
+        self.realized_borrowing_fee =
+            self.realized_borrowing_fee.safe_add(realized_borrowing_fee)?;
         Ok(())
     }
 
@@ -104,13 +111,21 @@ impl UserPosition {
         Ok(())
     }
 
-    pub fn add_realized_funding_fee_in_usd(&mut self, realized_funding_fee_in_usd: i128) -> BumpResult<()> {
-        self.realized_funding_fee_in_usd = self.realized_funding_fee_in_usd.safe_add(realized_funding_fee_in_usd)?;
+    pub fn add_realized_funding_fee_in_usd(
+        &mut self,
+        realized_funding_fee_in_usd: i128,
+    ) -> BumpResult<()> {
+        self.realized_funding_fee_in_usd =
+            self.realized_funding_fee_in_usd.safe_add(realized_funding_fee_in_usd)?;
         Ok(())
     }
 
-    pub fn add_realized_borrowing_fee_in_usd(&mut self, realized_borrowing_fee_in_usd: u128) -> BumpResult<()> {
-        self.realized_borrowing_fee_in_usd = self.realized_borrowing_fee_in_usd.safe_add(realized_borrowing_fee_in_usd)?;
+    pub fn add_realized_borrowing_fee_in_usd(
+        &mut self,
+        realized_borrowing_fee_in_usd: u128,
+    ) -> BumpResult<()> {
+        self.realized_borrowing_fee_in_usd =
+            self.realized_borrowing_fee_in_usd.safe_add(realized_borrowing_fee_in_usd)?;
         Ok(())
     }
 
@@ -129,17 +144,28 @@ impl UserPosition {
         Ok(())
     }
 
-    pub fn add_initial_margin_usd_from_portfolio(&mut self, initial_margin_usd_from_portfolio: u128) -> BumpResult<()> {
-        self.initial_margin_usd_from_portfolio = self.initial_margin_usd_from_portfolio.safe_add(initial_margin_usd_from_portfolio)?;
+    pub fn add_initial_margin_usd_from_portfolio(
+        &mut self,
+        initial_margin_usd_from_portfolio: u128,
+    ) -> BumpResult<()> {
+        self.initial_margin_usd_from_portfolio =
+            self.initial_margin_usd_from_portfolio.safe_add(initial_margin_usd_from_portfolio)?;
         Ok(())
     }
 
-    pub fn sub_initial_margin_usd_from_portfolio(&mut self, initial_margin_usd_from_portfolio: u128) -> BumpResult<()> {
-        self.initial_margin_usd_from_portfolio = self.initial_margin_usd_from_portfolio.safe_sub(initial_margin_usd_from_portfolio)?;
+    pub fn sub_initial_margin_usd_from_portfolio(
+        &mut self,
+        initial_margin_usd_from_portfolio: u128,
+    ) -> BumpResult<()> {
+        self.initial_margin_usd_from_portfolio =
+            self.initial_margin_usd_from_portfolio.safe_sub(initial_margin_usd_from_portfolio)?;
         Ok(())
     }
 
-    pub fn set_initial_margin_usd_from_portfolio(&mut self, initial_margin_usd_from_portfolio: u128) -> BumpResult {
+    pub fn set_initial_margin_usd_from_portfolio(
+        &mut self,
+        initial_margin_usd_from_portfolio: u128,
+    ) -> BumpResult {
         self.initial_margin_usd_from_portfolio = initial_margin_usd_from_portfolio;
         Ok(())
     }
@@ -170,12 +196,17 @@ impl UserPosition {
     }
 
     pub fn sub_realized_borrowing_fee(&mut self, realized_borrowing_fee: u128) -> BumpResult<()> {
-        self.realized_borrowing_fee = self.realized_borrowing_fee.safe_sub(realized_borrowing_fee)?;
+        self.realized_borrowing_fee =
+            self.realized_borrowing_fee.safe_sub(realized_borrowing_fee)?;
         Ok(())
     }
 
-    pub fn sub_realized_borrowing_fee_usd(&mut self, realized_borrowing_fee_in_usd: u128) -> BumpResult<()> {
-        self.realized_borrowing_fee_in_usd = self.realized_borrowing_fee_in_usd.safe_sub(realized_borrowing_fee_in_usd)?;
+    pub fn sub_realized_borrowing_fee_usd(
+        &mut self,
+        realized_borrowing_fee_in_usd: u128,
+    ) -> BumpResult<()> {
+        self.realized_borrowing_fee_in_usd =
+            self.realized_borrowing_fee_in_usd.safe_sub(realized_borrowing_fee_in_usd)?;
         Ok(())
     }
 
@@ -184,8 +215,12 @@ impl UserPosition {
         Ok(())
     }
 
-    pub fn sub_realized_funding_fee_usd(&mut self, realized_funding_fee_in_usd: i128) -> BumpResult<()> {
-        self.realized_funding_fee_in_usd = self.realized_funding_fee_in_usd.safe_sub(realized_funding_fee_in_usd)?;
+    pub fn sub_realized_funding_fee_usd(
+        &mut self,
+        realized_funding_fee_in_usd: i128,
+    ) -> BumpResult<()> {
+        self.realized_funding_fee_in_usd =
+            self.realized_funding_fee_in_usd.safe_sub(realized_funding_fee_in_usd)?;
         Ok(())
     }
 
@@ -243,7 +278,8 @@ impl UserPosition {
         if self.initial_margin_usd == self.initial_margin_usd_from_portfolio {
             Ok(0)
         } else {
-            let borrow_margin = self.initial_margin_usd
+            let borrow_margin = self
+                .initial_margin_usd
                 .safe_sub(self.initial_margin_usd_from_portfolio)?
                 .safe_mul(self.initial_margin)?
                 .safe_div(self.initial_margin_usd)?;
@@ -254,7 +290,8 @@ impl UserPosition {
                 .safe_mul(self.initial_margin_usd)?
                 .safe_div(self.initial_margin)?;
 
-            self.initial_margin_usd_from_portfolio = self.initial_margin_usd_from_portfolio.safe_add(add_initial_amount_usd)?;
+            self.initial_margin_usd_from_portfolio =
+                self.initial_margin_usd_from_portfolio.safe_add(add_initial_amount_usd)?;
             Ok(add_initial_amount)
         }
     }
@@ -265,12 +302,13 @@ impl UserPosition {
             .safe_div(self.initial_margin.cast()?)?;
         if self.initial_margin_usd_from_portfolio <= reduce_initial_margin_usd {
             self.initial_margin_usd_from_portfolio = 0;
-            Ok(self.initial_margin_usd_from_portfolio
+            Ok(self
+                .initial_margin_usd_from_portfolio
                 .safe_mul(self.initial_margin)?
-                .safe_div(self.initial_margin_usd)?
-            )
+                .safe_div(self.initial_margin_usd)?)
         } else {
-            self.initial_margin_usd_from_portfolio = self.initial_margin_usd_from_portfolio.safe_sub(reduce_initial_margin_usd)?;
+            self.initial_margin_usd_from_portfolio =
+                self.initial_margin_usd_from_portfolio.safe_sub(reduce_initial_margin_usd)?;
             Ok(amount)
         }
     }

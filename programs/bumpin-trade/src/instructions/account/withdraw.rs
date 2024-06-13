@@ -4,13 +4,13 @@ use std::slice::Iter;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
-use crate::{utils, validate};
 use crate::errors::BumpErrorCode;
 use crate::instructions::constraints::*;
-use crate::processor::optional_accounts::{AccountMaps, load_maps};
+use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::user_processor::UserProcessor;
 use crate::state::state::State;
 use crate::state::user::User;
+use crate::{utils, validate};
 
 #[derive(Accounts)]
 #[instruction(token_index: u16,)]
@@ -42,20 +42,21 @@ pub struct Withdraw<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, Withdraw>, amount: u128) -> Result<()> {
-    validate!(amount>0, BumpErrorCode::AmountZero)?;
+pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
+    ctx: Context<'a, 'b, 'c, 'info, Withdraw>,
+    amount: u128,
+) -> Result<()> {
+    validate!(amount > 0, BumpErrorCode::AmountZero)?;
 
     let user = &mut ctx.accounts.user.load_mut()?;
     let mint = &ctx.accounts.user_token_account.mint.key();
 
     let user_token = user.get_user_token_ref(mint)?;
-    validate!(user_token.amount>amount, BumpErrorCode::AmountNotEnough)?;
-    let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> = &mut ctx.remaining_accounts.iter().peekable();
+    validate!(user_token.amount > amount, BumpErrorCode::AmountNotEnough)?;
+    let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
+        &mut ctx.remaining_accounts.iter().peekable();
 
-    let AccountMaps {
-        trade_token_map,
-        mut oracle_map, ..
-    } = load_maps(remaining_accounts_iter)?;
+    let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts_iter)?;
 
     let mut user_processor = UserProcessor { user };
 
@@ -71,7 +72,6 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info,
         bump_signer_nonce,
         amount,
     )?;
-
 
     Ok(())
 }

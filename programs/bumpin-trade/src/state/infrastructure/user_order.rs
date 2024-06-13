@@ -31,14 +31,14 @@ pub enum OrderSide {
     SHORT,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy,  PartialEq, Debug, Eq, Default)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Debug, Eq, Default)]
 pub enum OrderStatus {
     #[default]
     INIT,
     USING,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy,  PartialEq, Debug, Eq, Default)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Debug, Eq, Default)]
 pub enum PositionSide {
     #[default]
     NONE,
@@ -46,7 +46,7 @@ pub enum PositionSide {
     DECREASE,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy,  PartialEq, Debug, Eq, Default)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Debug, Eq, Default)]
 pub enum OrderType {
     #[default]
     NONE,
@@ -55,7 +55,7 @@ pub enum OrderType {
     STOP,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy,  PartialEq, Debug, Eq, Default)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Debug, Eq, Default)]
 pub enum StopType {
     #[default]
     NONE,

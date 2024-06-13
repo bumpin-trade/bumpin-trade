@@ -1,15 +1,15 @@
+use anchor_lang::prelude::*;
+use anchor_lang::Discriminator;
+use arrayref::array_ref;
+use solana_program::msg;
 use std::cell::RefMut;
 use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::ops::Deref;
 use std::slice::Iter;
-use anchor_lang::Discriminator;
-use anchor_lang::prelude::*;
-use arrayref::array_ref;
-use solana_program::msg;
 
-use crate::errors::{BumpErrorCode, BumpResult};
 use crate::errors::BumpErrorCode::{CouldNotLoadTradeTokenData, TradeTokenNotFind};
+use crate::errors::{BumpErrorCode, BumpResult};
 use crate::state::market::Market;
 use crate::traits::Size;
 
@@ -19,9 +19,8 @@ impl<'a> MarketMap<'a> {
     #[track_caller]
     #[inline(always)]
     pub fn get_all_market(&self) -> BumpResult<BTreeMap<[u8; 32], Market>> {
-        let market = self.0.iter()
-            .map(|(&key, &ref value)| (key, *value.load().unwrap().deref()))
-            .collect();
+        let market =
+            self.0.iter().map(|(&key, &ref value)| (key, *value.load().unwrap().deref())).collect();
         Ok(market)
     }
 
@@ -31,15 +30,15 @@ impl<'a> MarketMap<'a> {
         let loader = match self.0.get(symbol) {
             None => {
                 return Err(TradeTokenNotFind);
-            }
-            Some(loader) => loader
+            },
+            Some(loader) => loader,
         };
         match loader.load_mut() {
             Ok(market) => Ok(market),
             Err(e) => {
                 msg!("{:?}", e);
                 Err(CouldNotLoadTradeTokenData)
-            }
+            },
         }
     }
 
@@ -49,14 +48,12 @@ impl<'a> MarketMap<'a> {
         let loader = match self.0.get(symbol) {
             None => {
                 return Err(TradeTokenNotFind);
-            }
-            Some(loader) => loader
+            },
+            Some(loader) => loader,
         };
         match loader.load_mut() {
             Ok(market) => Ok(market),
-            Err(_e) => {
-                Err(CouldNotLoadTradeTokenData)
-            }
+            Err(_e) => Err(CouldNotLoadTradeTokenData),
         }
     }
 }
@@ -68,9 +65,8 @@ impl<'a> MarketMap<'a> {
         let mut perp_market_map: MarketMap = MarketMap(BTreeMap::new());
         let market_discriminator: [u8; 8] = Market::discriminator();
         while let Some(account_info) = account_info_iter.peek() {
-            let data = account_info
-                .try_borrow_data()
-                .or(Err(BumpErrorCode::CouldNotLoadMarketData))?;
+            let data =
+                account_info.try_borrow_data().or(Err(BumpErrorCode::CouldNotLoadMarketData))?;
 
             let expected_data_len = Market::SIZE;
             if data.len() < expected_data_len {
@@ -82,9 +78,11 @@ impl<'a> MarketMap<'a> {
             }
             let symbol = *array_ref![data, 8, 32];
 
-            let account_info = account_info_iter.next().ok_or(BumpErrorCode::InvalidMarketAccount)?;
+            let account_info =
+                account_info_iter.next().ok_or(BumpErrorCode::InvalidMarketAccount)?;
             let account_loader: AccountLoader<'a, Market> =
-                AccountLoader::try_from(account_info).or(Err(BumpErrorCode::InvalidMarketAccount))?;
+                AccountLoader::try_from(account_info)
+                    .or(Err(BumpErrorCode::InvalidMarketAccount))?;
             perp_market_map.0.insert(symbol, account_loader);
         }
         Ok(perp_market_map)
