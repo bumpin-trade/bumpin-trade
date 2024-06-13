@@ -8,12 +8,12 @@ use crate::processor::market_processor::MarketProcessor;
 use crate::processor::optional_accounts::AccountMaps;
 use crate::processor::user_processor::UserProcessor;
 use crate::state::market_map::MarketMap;
-use crate::state::oracle::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::validate;
 use anchor_lang::prelude::msg;
+use crate::state::oracle_map::OracleMap;
 
 pub struct PoolProcessor<'a> {
     pub(crate) pool: &'a mut Pool,

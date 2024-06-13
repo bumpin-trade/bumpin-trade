@@ -9,7 +9,6 @@ use crate::processor::position_processor::PositionProcessor;
 use crate::state::infrastructure::user_order::{OrderType, PositionSide, UserOrder};
 use crate::state::infrastructure::user_position::UserPosition;
 use crate::state::market_map::MarketMap;
-use crate::state::oracle::oracle_map::OracleMap;
 use crate::state::pool_map::PoolMap;
 use crate::state::state::State;
 use crate::state::trade_token_map::TradeTokenMap;
@@ -17,6 +16,7 @@ use crate::state::user::User;
 use crate::{validate};
 use solana_program::msg;
 use crate::errors::BumpErrorCode::{CouldNotFindUserPosition, CouldNotFindUserToken};
+use crate::state::oracle_map::OracleMap;
 use crate::utils::token;
 
 pub struct UserProcessor<'a> {

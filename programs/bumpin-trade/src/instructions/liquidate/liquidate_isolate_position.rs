@@ -5,13 +5,13 @@ use crate::processor::market_processor::MarketProcessor;
 use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::position_processor::PositionProcessor;
 use crate::state::market::Market;
-use crate::state::oracle::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::validate;
 use solana_program::msg;
+use crate::state::oracle_map::OracleMap;
 
 #[derive(Accounts)]
 #[instruction(market_index: u16, trade_token_index: u16, user: Pubkey)]

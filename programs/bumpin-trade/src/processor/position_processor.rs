@@ -15,7 +15,6 @@ use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::user_processor::UserProcessor;
 use crate::state::infrastructure::user_position::UserPosition;
 use crate::state::market::{Market};
-use crate::state::oracle::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
@@ -23,6 +22,7 @@ use crate::state::user::User;
 use crate::utils::token;
 use crate::validate;
 use solana_program::msg;
+use crate::state::oracle_map::OracleMap;
 use crate::state::trade_token_map::TradeTokenMap;
 
 pub struct PositionProcessor<'a> {
@@ -308,7 +308,7 @@ impl PositionProcessor<'_> {
         }
         //collect fee
         if self.position.is_long {
-            fee_processor::collect_long_close_position_fee(pool, state_account, response.settle_close_fee, params.is_cross_margin)?;
+            fee_processor::collect_long_close_position_fee(pool, response.settle_close_fee, params.is_cross_margin)?;
         } else {
             let stake_token_pool = &mut pool_account_loader.load_mut().unwrap();
             let stable_pool = &mut stable_pool_account_loader.load_mut().unwrap();

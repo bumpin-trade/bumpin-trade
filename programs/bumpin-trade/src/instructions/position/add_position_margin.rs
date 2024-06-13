@@ -6,7 +6,6 @@ use crate::constraints::*;
 use crate::errors::{BumpErrorCode};
 use crate::processor::position_processor::PositionProcessor;
 use crate::state::market::Market;
-use crate::state::oracle::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
@@ -14,6 +13,7 @@ use crate::state::user::User;
 use crate::utils::token;
 use crate::validate;
 use solana_program::msg;
+use crate::state::oracle_map::OracleMap;
 
 #[derive(Accounts)]
 pub struct AddPositionMargin<'info> {

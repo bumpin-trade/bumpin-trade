@@ -20,7 +20,7 @@ use crate::processor::user_processor::UserProcessor;
 use crate::state::infrastructure::user_order::{OrderSide, OrderStatus, OrderType, PositionSide, StopType, UserOrder};
 use crate::state::infrastructure::user_position::{PositionStatus};
 use crate::state::market::Market;
-use crate::state::oracle::oracle_map::OracleMap;
+use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;

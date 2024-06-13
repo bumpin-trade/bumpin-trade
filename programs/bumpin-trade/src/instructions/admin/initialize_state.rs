@@ -62,6 +62,7 @@ pub fn handle_initialize_state(ctx: Context<InitializeState>, initialize_state_p
         min_precision_multiple: initialize_state_params.min_precision_multiple,
         pool_rewards_interval_limit: initialize_state_params.pool_rewards_interval_limit,
         init_fee: initialize_state_params.init_fee,
+        trading_fee_usd_pool_rewards_ratio: 0,
         staking_fee_reward_ratio: initialize_state_params.staking_fee_reward_ratio,
         pool_fee_reward_ratio: initialize_state_params.pool_fee_reward_ratio,
     };

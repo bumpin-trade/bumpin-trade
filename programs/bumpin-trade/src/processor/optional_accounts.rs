@@ -5,7 +5,7 @@ use solana_program::account_info::AccountInfo;
 
 use crate::errors::BumpResult;
 use crate::state::market_map::MarketMap;
-use crate::state::oracle::oracle_map::OracleMap;
+use crate::state::oracle_map::OracleMap;
 use crate::state::pool_map::PoolMap;
 use crate::state::trade_token_map::TradeTokenMap;
 

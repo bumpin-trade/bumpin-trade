@@ -6,7 +6,7 @@ use crate::instructions::cal_utils;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::state::market::Market;
-use crate::state::oracle::oracle_map::OracleMap;
+use crate::state::oracle_map::OracleMap;
 use crate::state::state::State;
 
 pub struct MarketProcessor<'a> {
