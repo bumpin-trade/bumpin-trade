@@ -34,7 +34,10 @@ pub struct AddPositionMargin<'info> {
     )]
     pub user_token_account: Account<'info, TokenAccount>,
     pub pool_vault: Account<'info, TokenAccount>,
-    /// CHECK: ?
+    #[account(
+        constraint = state.bump_signer.eq(& bump_signer.key())
+    )]
+    /// CHECK: forced drift_signer
     pub bump_signer: AccountInfo<'info>,
     pub token_program: Program<'info, Token>,
 }

@@ -1,0 +1,7 @@
+# Copy from rustc and Project servo
+# Using cargo fmt before commit
+version = "Two"
+use_small_heuristics = "Max"
+merge_derives = false
+reorder_imports = true
+match_block_trailing_comma = true
