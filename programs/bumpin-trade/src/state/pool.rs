@@ -13,7 +13,7 @@ use solana_program::msg;
 #[derive(Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct Pool {
-    pub pool_index: usize,
+    pub pool_index: u64,
     pub pool_key: Pubkey,
     pub pool_mint: Pubkey,
     pub pool_mint_vault: Pubkey,

@@ -10,7 +10,7 @@ use crate::state::user::User;
 use crate::utils::token;
 
 #[derive(Accounts)]
-#[instruction(token_index: u16,)]
+#[instruction(token_index: u16)]
 pub struct Deposit<'info> {
     #[account(
         mut,

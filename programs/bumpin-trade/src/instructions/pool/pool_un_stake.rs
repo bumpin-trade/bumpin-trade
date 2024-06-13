@@ -70,7 +70,7 @@ pub struct UnStakeParams {
 
 pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, PoolUnStake>,
-    pool_index: usize,
+    pool_index: u64,
     un_stake_params: UnStakeParams,
 ) -> Result<()> {
     let pool = &mut ctx.accounts.pool.load_mut()?;
