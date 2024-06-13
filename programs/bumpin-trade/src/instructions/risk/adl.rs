@@ -1,18 +1,17 @@
+use std::panic::Location;
+
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
-use crate::processor::optional_accounts;
-use crate::processor::optional_accounts::{AccountMaps, load_maps};
 
+use crate::errors::BumpErrorCode::UserNotFound;
+use crate::processor::optional_accounts::{AccountMaps, load_maps};
 use crate::processor::position_processor::{DecreasePositionParams, PositionProcessor};
 use crate::state::market::Market;
-use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
-use crate::state::user_map::UserMap;
-
 
 #[derive(Accounts)]
 pub struct ADL<'info> {
@@ -62,13 +61,14 @@ pub struct ADL<'info> {
     )]
     pub trade_token_vault: Account<'info, TokenAccount>,
 
+    /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
 
     pub token_program: Program<'info, Token>,
 }
 
 
-pub fn adl<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, ADL>, params: [ADLParams; 10]) -> Result<()> {
+pub fn adl<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, ADL<'info>>, params: [ADLParams; 10]) -> Result<()> {
     let pool_account_loader = &ctx.accounts.pool;
     let stable_pool_account_loader = &ctx.accounts.stable_pool;
     let market_account_loader = &ctx.accounts.market;
@@ -83,13 +83,24 @@ pub fn adl<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, ADL>, param
 
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
 
-    let  AccountMaps {
+    let AccountMaps {
         user_map,
         mut oracle_map,
         ..
     } = load_maps(remaining_accounts_iter)?;
+
     for param in params {
-        let user_account_loader = user_map.get_account_loader(&param.user_key)?;
+        let user_account_loader = user_map.0.get(&param.user_key).ok_or_else(|| {
+            let caller = Location::caller();
+            msg!(
+                "Could not find user {} at {}:{}",
+                param.user_key,
+                caller.file(),
+                caller.line()
+            );
+            UserNotFound
+        })?;
+        // let user_account_loader= user_map.get_account_loader(&param.user_key)?;
         let user_account = &mut user_map.get_mut_ref(&param.user_key)?;
         let position = user_account.find_position_mut_by_key(&param.position_key)?;
         let mut position_processor = PositionProcessor { position };
@@ -100,7 +111,7 @@ pub fn adl<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, ADL>, param
             margin_token: position_processor.position.margin_mint,
             decrease_size: position_processor.position.position_size,
             execute_price: oracle_map.get_price_data(&position_processor.position.index_mint).unwrap().price,
-        }, user_account_loader, pool_account_loader,
+        }, &user_account_loader, pool_account_loader,
                                              stable_pool_account_loader,
                                              market_account_loader,
                                              state_account,

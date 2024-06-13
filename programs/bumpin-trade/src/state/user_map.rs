@@ -55,7 +55,7 @@ impl<'a> UserMap<'a> {
 
     #[track_caller]
     #[inline(always)]
-    pub fn get_account_loader(&self, user_key: &Pubkey) -> BumpResult<&AccountLoader<User>> {
+    pub fn get_account_loader(&self, user_key: &Pubkey) -> BumpResult<&'a AccountLoader<User>> {
         let loader = match self.0.get(&user_key) {
             None => {
                 let caller = Location::caller();
@@ -104,7 +104,7 @@ impl<'a> UserMap<'a> {
             }
         }
     }
-    pub fn load<'c>(account_info_iter: &'c mut Peekable<Iter<'a, AccountInfo<'a>>>) -> BumpResult<UserMap<'a>> {
+    pub fn load(account_info_iter: &mut Peekable<Iter<'a, AccountInfo<'a>>>) -> BumpResult<UserMap<'a>> {
         let mut user_map = UserMap(BTreeMap::new());
         let user_discriminator = User::discriminator();
         while let Some(account_info) = account_info_iter.peek() {

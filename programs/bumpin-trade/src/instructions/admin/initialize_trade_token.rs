@@ -27,7 +27,9 @@ pub struct InitializeTradeToken<'info> {
         token::authority = bump_signer
     )]
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
+    /// CHECK: ?
     pub oracle: AccountInfo<'info>,
+    /// CHECK: ?
     #[account(
         constraint = state.bump_signer.eq(& bump_signer.key())
     )]

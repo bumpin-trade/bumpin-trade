@@ -30,26 +30,7 @@ pub struct InitializePool<'info> {
     )]
     pub pool_mint_vault: Box<Account<'info, TokenAccount>>,
 
-    #[account(
-        init,
-        seeds = [b"pool_rewards_vault".as_ref(), state.number_of_pools.to_le_bytes().as_ref()],
-        bump,
-        payer = admin,
-        token::mint = pool_mint,
-        token::authority = bump_signer
-    )]
-    pub pool_rewards_vault: Box<Account<'info, TokenAccount>>,
-
-    #[account(
-        init,
-        seeds = [b"pool_fee_vault".as_ref(), state.number_of_pools.to_le_bytes().as_ref()],
-        bump,
-        payer = admin,
-        token::mint = pool_mint,
-        token::authority = bump_signer
-    )]
-    pub pool_fee_vault: Box<Account<'info, TokenAccount>>,
-
+    /// CHECK: ?
     #[account(
         constraint = state.bump_signer.eq(& bump_signer.key())
     )]
@@ -72,14 +53,15 @@ pub struct InitializePool<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle_initialize_pool(ctx: Context<InitializePool>, name: [u8; 32]) -> Result<()> {
+
+pub fn handle_initialize_pool_x(ctx: Context<InitializePool>, name: [u8; 32]) -> Result<()> {
     let mut pool = ctx.accounts.pool.load_init()?;
     let state = &mut ctx.accounts.state;
     pool.pool_key = ctx.accounts.pool.key();
     pool.pool_mint = ctx.accounts.pool_mint.key();
     pool.pool_mint_vault = *ctx.accounts.pool_mint_vault.to_account_info().key;
-    pool.pool_rewards_vault = *ctx.accounts.pool_rewards_vault.to_account_info().key;
-    pool.pool_fee_vault = *ctx.accounts.pool_fee_vault.to_account_info().key;
+    // pool.pool_rewards_vault = *ctx.accounts.pool_rewards_vault.to_account_info().key;
+    // pool.pool_fee_vault = *ctx.accounts.pool_fee_vault.to_account_info().key;
     pool.pool_name = name;
 
     // *pool = Pool {

@@ -30,6 +30,7 @@ pub struct CancelOrderCtx<'info> {
 
     pub trade_token: AccountLoader<'info, TradeToken>,
 
+    /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
 
     pub token_program: Program<'info, Token>,

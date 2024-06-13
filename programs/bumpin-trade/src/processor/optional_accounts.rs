@@ -19,7 +19,7 @@ pub struct AccountMaps<'a> {
 }
 
 pub fn load_maps<'a: 'info, 'info>(
-    account_info_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>>
+    account_info_iter: &mut Peekable<Iter<'a, AccountInfo<'info>>>
 ) -> BumpResult<AccountMaps<'info>> {
     let market_map  = MarketMap::load(account_info_iter)?;
     let trade_token_map = TradeTokenMap::load(account_info_iter)?;

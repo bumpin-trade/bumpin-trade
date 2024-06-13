@@ -85,6 +85,7 @@ pub struct PlaceOrder<'info> {
     )]
     pub trade_token_vault: Account<'info, TokenAccount>,
 
+    /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
 
     pub token_program: Program<'info, Token>,
