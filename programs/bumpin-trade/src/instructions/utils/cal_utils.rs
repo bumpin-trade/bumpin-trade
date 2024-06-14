@@ -31,6 +31,10 @@ pub fn div_to_precision_u(a: u128, b: u128, precision: u128) -> BumpResult<u128>
     mul_div_u(a, precision, b)
 }
 
+pub fn div_to_precision_i(a: i128, b: i128, precision: i128) -> BumpResult<i128> {
+    mul_div_i(a, precision, b)
+}
+
 pub fn mul_small_rate_u(value: u128, rate: u128) -> BumpResult<u128> {
     mul_div_u(value, rate, SMALL_RATE_PRECISION)
 }
@@ -117,7 +121,7 @@ pub fn compute_avg_entry_price(
     return format_to_ticker_size(origin_entry_price, ticker_size, up);
 }
 
-fn format_to_ticker_size(price: u128, ticker_size: u128, up: bool) -> BumpResult<u128> {
+pub fn format_to_ticker_size(price: u128, ticker_size: u128, up: bool) -> BumpResult<u128> {
     let remainder = price % ticker_size;
     return if remainder == 0u128 {
         Ok(price)

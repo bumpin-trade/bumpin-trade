@@ -3,7 +3,7 @@ use crate::errors::{BumpErrorCode, BumpResult};
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::processor::position_processor::PositionProcessor;
-use crate::state::infrastructure::user_order::{OrderType, PositionSide, UserOrder};
+use crate::state::infrastructure::user_order::{OrderStatus, OrderType, PositionSide, UserOrder};
 use crate::state::infrastructure::user_position::UserPosition;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
@@ -69,11 +69,12 @@ impl<'a> UserProcessor<'a> {
         market_map: &MarketMap,
         pool_map: &PoolMap,
         price_map: &mut OracleMap,
-    ) -> BumpResult<(u128, i128, i128, u128)> {
+    ) -> BumpResult<(u128, i128, i128, u128, u128)> {
         let mut total_im_usd = 0u128;
         let mut total_un_pnl_usd = 0i128;
         let mut total_position_fee = 0i128;
         let mut total_position_mm = 0u128;
+        let mut total_size = 0u128;
 
         for mut user_position in &mut self.user.user_positions {
             let price_data = price_map.get_price_data(&user_position.index_mint)?;
@@ -89,10 +90,11 @@ impl<'a> UserProcessor<'a> {
                     .safe_add(position_processor.get_position_fee(&market, &pool, price_map)?)?;
                 total_position_mm = total_position_mm
                     .safe_add(position_processor.get_position_mm(&market, state)?)?;
+                total_size = total_size.safe_add(position_processor.position.position_size)?;
             }
             drop(position_processor);
         }
-        Ok((total_im_usd, total_un_pnl_usd, total_position_fee, total_position_mm))
+        Ok((total_im_usd, total_un_pnl_usd, total_position_fee, total_position_mm, total_size))
     }
     pub fn get_total_used_value(
         &self,
@@ -248,10 +250,13 @@ impl<'a> UserProcessor<'a> {
         Ok(())
     }
 
-    pub fn cancel_all_orders(&mut self) -> BumpResult<()> {
+    pub fn cancel_all_cross_orders(&mut self) -> BumpResult<()> {
         let user_orders_length = self.user.user_orders.len();
         for index in 0..user_orders_length {
-            self.user.cancel_user_order(index)?;
+            let order = self.user.user_orders[index];
+            if order.status.eq(&OrderStatus::USING) && order.cross_margin {
+                self.user.cancel_user_order(index)?;
+            }
         }
         Ok(())
     }

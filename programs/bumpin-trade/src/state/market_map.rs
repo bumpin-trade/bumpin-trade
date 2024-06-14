@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::Discriminator;
 use arrayref::array_ref;
 use solana_program::msg;
-use std::cell::RefMut;
+use std::cell::{Ref, RefMut};
 use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::ops::Deref;
@@ -30,7 +30,7 @@ impl<'a> MarketMap<'a> {
         let loader = match self.0.get(symbol) {
             None => {
                 return Err(TradeTokenNotFind);
-            },
+            }
             Some(loader) => loader,
         };
         match loader.load_mut() {
@@ -38,20 +38,32 @@ impl<'a> MarketMap<'a> {
             Err(e) => {
                 msg!("{:?}", e);
                 Err(CouldNotLoadTradeTokenData)
-            },
+            }
         }
     }
 
     #[track_caller]
     #[inline(always)]
-    pub fn get_ref(&self, symbol: &[u8; 32]) -> BumpResult<RefMut<Market>> {
+    pub fn get_account_loader(&self, symbol: &[u8; 32]) -> BumpResult<&AccountLoader<'a, Market>> {
         let loader = match self.0.get(symbol) {
             None => {
                 return Err(TradeTokenNotFind);
-            },
+            }
             Some(loader) => loader,
         };
-        match loader.load_mut() {
+        Ok(loader)
+    }
+
+    #[track_caller]
+    #[inline(always)]
+    pub fn get_ref(&self, symbol: &[u8; 32]) -> BumpResult<Ref<Market>> {
+        let loader = match self.0.get(symbol) {
+            None => {
+                return Err(TradeTokenNotFind);
+            }
+            Some(loader) => loader,
+        };
+        match loader.load() {
             Ok(market) => Ok(market),
             Err(_e) => Err(CouldNotLoadTradeTokenData),
         }
