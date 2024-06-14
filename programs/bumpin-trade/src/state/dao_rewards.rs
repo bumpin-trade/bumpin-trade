@@ -1,6 +1,5 @@
-use anchor_lang::account;
-use solana_program::pubkey::Pubkey;
 use crate::state::infrastructure::fee_reward::FeeReward;
+use anchor_lang::prelude::*;
 
 #[account(zero_copy(unsafe))]
 #[derive(Eq, PartialEq, Debug)]

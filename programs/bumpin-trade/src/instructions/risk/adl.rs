@@ -3,7 +3,7 @@ use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
 
-use crate::processor::optional_accounts::{AccountMaps, load_maps};
+use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::position_processor::{DecreasePositionParams, PositionProcessor};
 use crate::state::market::Market;
 use crate::state::pool::Pool;

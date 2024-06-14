@@ -1,12 +1,12 @@
-use anchor_lang::Accounts;
-use anchor_lang::prelude::{Account, Program, Signer, System, Sysvar};
+use crate::state::state::State;
+use anchor_lang::prelude::*;
 use anchor_spl::token::Token;
 use solana_program::account_info::AccountInfo;
 use solana_program::rent::Rent;
-use crate::state::state::State;
 
 #[derive(Accounts)]
 pub struct InitializeDaoRewards<'info> {
+    /// CHECK: ?
     #[account(
         constraint = state.bump_signer.eq(& bump_signer.key())
     )]
@@ -18,7 +18,7 @@ pub struct InitializeDaoRewards<'info> {
         has_one = admin
     )]
     pub state: Box<Account<'info, State>>,
-    
+
     #[account(mut)]
     pub admin: Signer<'info>,
 
