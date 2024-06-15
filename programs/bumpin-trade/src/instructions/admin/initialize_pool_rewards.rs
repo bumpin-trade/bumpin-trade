@@ -24,7 +24,7 @@ pub struct InitializePoolRewards<'info> {
         init,
         seeds = [b"pool_rewards_vault".as_ref(), pool_index.to_le_bytes().as_ref()],
         bump,
-        payer = admin
+        payer = admin,
         token::mint = pool_mint,
         token::authority = bump_signer
     )]

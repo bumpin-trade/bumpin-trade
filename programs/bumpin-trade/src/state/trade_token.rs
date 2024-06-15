@@ -12,6 +12,7 @@ pub struct TradeToken {
     pub discount: u128,
     pub liquidation_factor: u128,
     pub decimals: u8,
+    pub total_liability: u128,
     pub trade_token_vault: Pubkey,
 }
 

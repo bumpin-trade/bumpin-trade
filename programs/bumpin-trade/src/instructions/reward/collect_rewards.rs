@@ -1,20 +1,20 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::TokenAccount;
+use anchor_spl::token::{Token, TokenAccount};
 use solana_program::pubkey::Pubkey;
 
 use crate::state::pool::Pool;
 use crate::state::state::State;
+use crate::state::trade_token::TradeToken;
 
 #[derive(Accounts)]
-#[instruction(pool_index: u16, stable_pool_index: u16)]
+#[instruction(pool_index: u16, stable_pool_index: u16, trade_token_index: u16)]
 pub struct CollectRewards<'info> {
     #[account(
-        mut,
         seeds = [b"bump_state".as_ref()],
         has_one = keeper_signer,
         bump,
     )]
-    pub state: Account<'info, State>,
+    pub state: Box<Account<'info, State>>,
 
     #[account(
         mut,
@@ -44,13 +44,26 @@ pub struct CollectRewards<'info> {
     )]
     pub stable_pool_vault: Box<Account<'info, TokenAccount>>,
 
+    #[account(
+        seeds = [b"trade_token".as_ref(), trade_token_index.to_le_bytes().as_ref()],
+        bump,
+    )]
+    pub trade_token: Box<Account<'info, TradeToken>>,
+
+    #[account(
+        mut,
+        seeds = [b"trade_token_vault".as_ref(), trade_token_index.to_le_bytes().as_ref()],
+        bump,
+    )]
+    pub trade_token_vault: Box<Account<'info, TokenAccount>>,
+
     pub keeper_signer: Signer<'info>,
 }
 
-pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
-    ctx: Context<'a, 'b, 'c, 'info, CollectRewards>,
+pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
+    ctx: Context<'a, 'b, 'c, 'info, CollectRewards<'info>>,
     pool_index: u16,
-    stable_pool_index: u16,
+    stable_pool_index: u16, trade_token_index: u16,
 ) -> Result<()> {
     Ok(())
 }
