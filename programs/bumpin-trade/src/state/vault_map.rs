@@ -1,0 +1,64 @@
+use std::collections::BTreeMap;
+use std::iter::Peekable;
+use std::panic::Location;
+use std::slice::Iter;
+
+use anchor_lang::Discriminator;
+use anchor_lang::prelude::Account;
+use anchor_spl::token::TokenAccount;
+use arrayref::array_ref;
+use solana_program::account_info::AccountInfo;
+use solana_program::msg;
+use solana_program::pubkey::Pubkey;
+
+use crate::errors::BumpErrorCode::{
+    CouldNotLoadTradeTokenData, InvalidTradeTokenAccount, TradeTokenNotFind,
+};
+use crate::errors::BumpResult;
+use crate::math::safe_unwrap::SafeUnwrap;
+
+pub struct VaultMap<'a>(pub BTreeMap<Pubkey, Account<'a, TokenAccount>>);
+
+impl<'a> VaultMap<'a> {
+
+    #[track_caller]
+    #[inline(always)]
+    pub fn get_account(&self, mint: &Pubkey) -> BumpResult<&Account<'a, TokenAccount>> {
+        let account = match self.0.get(mint) {
+            None => {
+                let caller = Location::caller();
+                msg!("Could not find trade_token {} at {}:{}", mint, caller.file(), caller.line());
+                return Err(TradeTokenNotFind);
+            }
+            Some(loader) => loader,
+        };
+        Ok(account)
+    }
+
+    pub fn load<'c>(
+        account_info_iter: &'c mut Peekable<Iter<'a, AccountInfo<'a>>>,
+    ) -> BumpResult<VaultMap<'a>> {
+        let mut token_account_map: VaultMap = VaultMap(BTreeMap::new());
+        let trade_token_discriminator = TokenAccount::discriminator();
+        while let Some(account_info) = account_info_iter.peek() {
+            let data = account_info.try_borrow_data().or(Err(CouldNotLoadTradeTokenData))?;
+
+            let expected_data_len = TokenAccount::LEN;
+            if data.len() < expected_data_len {
+                break;
+            }
+            let account_discriminator = array_ref![data, 0, 8];
+            if account_discriminator != &trade_token_discriminator {
+                continue;
+            }
+
+            let trade_token_mint = Pubkey::from(*array_ref![data, 8, 32]);
+            let account_info = account_info_iter.next().safe_unwrap()?;
+            let account_loader: Account<'a, TokenAccount> =
+                Account::try_from(account_info).or(Err(InvalidTradeTokenAccount))?;
+
+            token_account_map.0.insert(trade_token_mint, account_loader);
+        }
+        Ok(token_account_map)
+    }
+}

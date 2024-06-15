@@ -112,7 +112,7 @@ impl PositionProcessor<'_> {
                         authority,
                         params.add_margin_amount,
                     )
-                    .unwrap();
+                        .unwrap();
                 }
             } else {
                 self.position.set_leverage(params.leverage)?;
@@ -146,7 +146,7 @@ impl PositionProcessor<'_> {
                         state.bump_signer_nonce,
                         reduce_margin_amount,
                     )
-                    .unwrap();
+                        .unwrap();
                 }
             }
         }
@@ -298,8 +298,9 @@ impl PositionProcessor<'_> {
         let mut user_processor = UserProcessor { user };
 
         if params.is_cross_margin {
+            let trade_token = &mut trade_token_loader.load_mut().unwrap();
             user_processor.un_use_token(&params.margin_token, fee)?;
-            user_processor.sub_token_with_liability(&params.margin_token, fee)?;
+            user_processor.sub_token_with_liability(&params.margin_token, trade_token, fee)?;
         }
 
         let increase_margin = cal_utils::sub_u128(params.increase_margin, fee)?;
@@ -535,6 +536,7 @@ impl PositionProcessor<'_> {
             state_account,
             user_token_account,
             pool_vault_account,
+            trade_token_loader,
             trade_token_vault_account,
             bump_signer,
             token_program,
@@ -571,7 +573,7 @@ impl PositionProcessor<'_> {
                 self.position.position_size,
                 market.market_trade_config.max_leverage,
             )?
-            .max(state.min_order_margin_usd),
+                .max(state.min_order_margin_usd),
         )?;
         validate!(
             max_reduce_margin_in_usd > params.update_margin_amount,
@@ -585,10 +587,10 @@ impl PositionProcessor<'_> {
 
         if self.position.cross_margin
             && self
-                .position
-                .initial_margin_usd
-                .safe_sub(self.position.initial_margin_usd_from_portfolio)?
-                < reduce_margin_amount
+            .position
+            .initial_margin_usd
+            .safe_sub(self.position.initial_margin_usd_from_portfolio)?
+            < reduce_margin_amount
         {
             self.position.sub_initial_margin_usd_from_portfolio(
                 reduce_margin_amount
@@ -850,7 +852,7 @@ impl PositionProcessor<'_> {
                     trade_token.decimals,
                     token_price,
                 )
-                .unwrap(),
+                    .unwrap(),
                 self.position.close_fee_in_usd,
             ));
         }
@@ -985,6 +987,7 @@ impl PositionProcessor<'_> {
         state_account: &Account<'info, State>,
         user_token_account: &Account<'info, TokenAccount>,
         pool_vault_account: &Account<'info, TokenAccount>,
+        trade_token_account: &AccountLoader<'info, TradeToken>,
         trade_token_vault_account: &Account<'info, TokenAccount>,
         bump_signer: &AccountInfo<'info>,
         token_program: &Program<'info, Token>,
@@ -1003,6 +1006,7 @@ impl PositionProcessor<'_> {
                 user_account_loader,
                 state_account,
                 pool_vault_account,
+                trade_token_account,
                 trade_token_vault_account,
                 bump_signer,
                 token_program,
@@ -1042,6 +1046,7 @@ impl PositionProcessor<'_> {
         user_account_loader: &AccountLoader<'info, User>,
         state_account: &Account<'info, State>,
         pool_vault_account: &Account<'info, TokenAccount>,
+        trade_token_account: &AccountLoader<'info, TradeToken>,
         trade_token_vault_account: &Account<'info, TokenAccount>,
         bump_signer: &AccountInfo<'info>,
         token_program: &Program<'info, Token>,
@@ -1054,6 +1059,7 @@ impl PositionProcessor<'_> {
         if response.settle_fee > 0i128 {
             add_liability = user_processor.sub_token_with_liability(
                 &self.position.margin_mint,
+                &mut trade_token_account.load_mut().unwrap(),
                 response.settle_fee.abs().cast::<u128>()?,
             )?;
         } else {
@@ -1068,7 +1074,7 @@ impl PositionProcessor<'_> {
         if response.user_realized_pnl_token >= 0i128 {
             if response.settle_fee < 0i128
                 && response.user_realized_pnl_token.abs().cast::<u128>()?
-                    < response.settle_fee.abs().cast::<u128>()?
+                < response.settle_fee.abs().cast::<u128>()?
             {
                 user_processor.sub_user_token_amount(
                     &self.position.margin_mint,
@@ -1091,6 +1097,7 @@ impl PositionProcessor<'_> {
         } else {
             add_liability += user_processor.sub_token_with_liability(
                 &self.position.margin_mint,
+                &mut trade_token_account.load_mut().unwrap(),
                 response.user_realized_pnl_token.abs().cast::<u128>()?,
             )?;
         }
@@ -1104,7 +1111,7 @@ impl PositionProcessor<'_> {
                 state_account.bump_signer_nonce,
                 response.pool_pnl_token.abs().cast::<u128>()?,
             )
-            .unwrap();
+                .unwrap();
         } else if response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)? > 0i128 {
             token::receive(
                 token_program,
@@ -1113,7 +1120,7 @@ impl PositionProcessor<'_> {
                 bump_signer,
                 response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)?.cast::<u128>()?,
             )
-            .unwrap();
+                .unwrap();
         }
 
         if !response.is_liquidation {
@@ -1154,7 +1161,7 @@ impl PositionProcessor<'_> {
             state_account.bump_signer_nonce,
             response.settle_margin.abs().cast::<u128>()?,
         )
-        .unwrap();
+            .unwrap();
         Ok(())
     }
 

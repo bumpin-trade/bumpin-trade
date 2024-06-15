@@ -18,6 +18,7 @@ use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 use solana_program::msg;
 use solana_program::pubkey::Pubkey;
+use crate::state::trade_token::TradeToken;
 
 pub struct UserProcessor<'a> {
     pub(crate) user: &'a mut User,
@@ -261,7 +262,7 @@ impl<'a> UserProcessor<'a> {
         Ok(())
     }
 
-    pub fn sub_token_with_liability(&mut self, token: &Pubkey, amount: u128) -> BumpResult<u128> {
+    pub fn sub_token_with_liability(&mut self, token: &Pubkey, trade_token: &mut TradeToken, amount: u128) -> BumpResult<u128> {
         let mut liability = 0u128;
         let token_balance = self
             .user
@@ -276,10 +277,12 @@ impl<'a> UserProcessor<'a> {
             token_balance.liability = token_balance.liability.safe_add(liability)?;
             token_balance.used_amount = token_balance.used_amount.safe_add(liability)?;
             token_balance.amount = 0u128;
+            trade_token.add_liability(liability)?;
         } else {
             token_balance.liability = token_balance.liability.safe_add(amount)?;
             token_balance.used_amount = token_balance.used_amount.safe_add(amount)?;
             liability = amount;
+            trade_token.add_liability(amount)?;
         }
         Ok(liability)
     }
@@ -328,7 +331,7 @@ impl<'a> UserProcessor<'a> {
                 state.bump_signer_nonce,
                 order.order_margin,
             )
-            .unwrap();
+                .unwrap();
         }
         Ok(())
     }

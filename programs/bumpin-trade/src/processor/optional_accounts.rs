@@ -9,6 +9,7 @@ use crate::state::oracle_map::OracleMap;
 use crate::state::pool_map::PoolMap;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user_map::UserMap;
+use crate::state::vault_map::VaultMap;
 
 pub struct AccountMaps<'a> {
     pub market_map: MarketMap<'a>,
@@ -17,6 +18,7 @@ pub struct AccountMaps<'a> {
     pub pool_key_map: PoolMap<'a>,
     pub pool_mint_map: PoolMap<'a>,
     pub user_map: UserMap<'a>,
+    pub vault_map: VaultMap<'a>,
 }
 
 pub fn load_maps<'a: 'info, 'info>(
@@ -28,6 +30,7 @@ pub fn load_maps<'a: 'info, 'info>(
     let pool_key_map = PoolMap::load_key(account_info_iter)?;
     let pool_mint_map = PoolMap::load_mint(account_info_iter)?;
     let user_map = UserMap::load(account_info_iter)?;
+    let vault_map = VaultMap::load(account_info_iter)?;
 
     Ok(AccountMaps {
         market_map,
@@ -36,5 +39,6 @@ pub fn load_maps<'a: 'info, 'info>(
         pool_key_map,
         pool_mint_map,
         user_map,
+        vault_map,
     })
 }
