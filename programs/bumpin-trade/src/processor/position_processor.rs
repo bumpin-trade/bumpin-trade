@@ -1011,8 +1011,12 @@ impl PositionProcessor<'_> {
                 bump_signer,
                 token_program,
             )?;
+
             let user_token = user.get_user_token_mut(&self.position.margin_mint)?;
-            user_token.repay_liability(user_token.amount)?;
+            let repay_amount = user_token.repay_liability(user_token.amount)?;
+            let trade_token = trade_token_account.load_mut().unwrap();
+            trade_token.sub_liability(repay_amount)?;
+
             pool_processor.update_pnl_and_un_hold_pool_amount(
                 response.un_hold_pool_amount,
                 response.pool_pnl_token,
