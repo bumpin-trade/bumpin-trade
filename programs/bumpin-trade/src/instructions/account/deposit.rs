@@ -5,6 +5,7 @@ use solana_program::account_info::AccountInfo;
 use crate::instructions::constraints::*;
 use crate::math::safe_math::SafeMath;
 use crate::processor::user_processor::UserProcessor;
+use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::utils::token;
 
@@ -25,6 +26,14 @@ pub struct Deposit<'info> {
         token::authority = authority
     )]
     pub user_token_account: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        seeds = [b"trade_token", token_index.to_le_bytes().as_ref()],
+        bump,
+    )]
+    pub trade_token: AccountLoader<'info, TradeToken>,
+
     #[account(
         mut,
         seeds = [b"trade_token_vault", token_index.to_le_bytes().as_ref()],
@@ -36,7 +45,7 @@ pub struct Deposit<'info> {
 
 pub fn handle_deposit(ctx: Context<Deposit>, amount: u128) -> Result<()> {
     let user = &mut ctx.accounts.user.load_mut()?;
-
+    let trade_token = ctx.accounts.trade_token.load_mut()?;
     token::receive(
         &ctx.accounts.token_program,
         &ctx.accounts.user_token_account,
@@ -48,8 +57,10 @@ pub fn handle_deposit(ctx: Context<Deposit>, amount: u128) -> Result<()> {
 
     let user_token = user.get_user_token_mut(&ctx.accounts.trade_token_vault.mint)?;
     user_token.add_token_amount(amount)?;
+    trade_token.add_token(amount)?;
 
     let repay_amount = user_token.repay_liability(amount)?;
+    trade_token.sub_liability(repay_amount)?;
     if amount > repay_amount {
         let left_amount = amount.safe_sub(repay_amount)?;
 

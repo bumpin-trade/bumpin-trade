@@ -24,6 +24,16 @@ pub struct TradeTokenMap<'a>(pub BTreeMap<Pubkey, AccountLoader<'a, TradeToken>>
 impl<'a> TradeTokenMap<'a> {
     #[track_caller]
     #[inline(always)]
+    pub fn get_all_trade_token(&self) -> BumpResult<Vec<TradeToken>> {
+        let mut trade_tokens = Vec::new();
+        for trade_token_loader in self.0.values() {
+            let trade_token = trade_token_loader.load()?.clone();
+            trade_tokens.push(trade_token);
+        }
+        Ok(trade_tokens)
+    }
+    #[track_caller]
+    #[inline(always)]
     pub fn get_trade_token(&self, mint: &Pubkey) -> BumpResult<Ref<TradeToken>> {
         let loader = match self.0.get(mint) {
             None => {

@@ -11,6 +11,7 @@ use crate::processor::user_processor::UserProcessor;
 use crate::state::state::State;
 use crate::state::user::User;
 use crate::{utils, validate};
+use crate::state::trade_token::TradeToken;
 
 #[derive(Accounts)]
 #[instruction(token_index: u16,)]
@@ -34,6 +35,14 @@ pub struct Withdraw<'info> {
         bump
     )]
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        mut,
+        seeds = [b"trade_token", token_index.to_le_bytes().as_ref()],
+        bump,
+    )]
+    pub trade_token: AccountLoader<'info, TradeToken>,
+
     #[account(
         constraint = state.bump_signer.eq(& bump_signer.key())
     )]
@@ -49,6 +58,7 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
     validate!(amount > 0, BumpErrorCode::AmountZero)?;
 
     let user = &mut ctx.accounts.user.load_mut()?;
+    let trade_token = ctx.accounts.trade_token.load_mut()?;
     let mint = &ctx.accounts.user_token_account.mint.key();
 
     let user_token = user.get_user_token_ref(mint)?;
@@ -61,6 +71,7 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
     let mut user_processor = UserProcessor { user };
 
     user_processor.withdraw(amount, mint, &mut oracle_map, &trade_token_map)?;
+    trade_token.sub_token(amount)?;
     drop(user_processor);
 
     let bump_signer_nonce = ctx.accounts.state.bump_signer_nonce;
