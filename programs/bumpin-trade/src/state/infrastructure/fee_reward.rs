@@ -4,7 +4,6 @@ use anchor_lang::prelude::*;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Eq, PartialEq, Debug, Clone, Copy)]
 pub struct FeeReward {
-    pub total_fee_amount: u128,
     pub fee_amount: u128,
     pub un_settle_fee_amount: u128,
     pub open_cumulative_rewards_per_stake_token: u128,

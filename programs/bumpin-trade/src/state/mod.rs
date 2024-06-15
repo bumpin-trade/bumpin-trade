@@ -13,3 +13,4 @@ pub mod trade_token_map;
 pub mod traits;
 pub mod user;
 pub mod user_map;
+pub mod pool_rewards;

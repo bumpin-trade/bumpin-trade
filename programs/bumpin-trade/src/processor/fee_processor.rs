@@ -45,12 +45,12 @@ pub fn collect_short_open_position_fee(
     let usd_pool_rewards_fee = fee_amount.safe_mul(state.trading_fee_usd_pool_rewards_ratio)?;
     let pool_rewards_fee = fee_amount.safe_sub(usd_pool_rewards_fee)?;
 
-    pool.fee_reward.add_fee_amount(pool_rewards_fee)?;
-    stable_pool.stable_fee_reward.add_fee_amount(usd_pool_rewards_fee)?;
+    pool.stable_fee_reward.add_fee_amount(pool_rewards_fee)?;
+    stable_pool.fee_reward.add_fee_amount(usd_pool_rewards_fee)?;
 
     if cross_margin {
-        pool.fee_reward.add_un_settle_amount(pool_rewards_fee)?;
-        stable_pool.stable_fee_reward.add_un_settle_amount(usd_pool_rewards_fee)?;
+        pool.stable_fee_reward.add_un_settle_amount(pool_rewards_fee)?;
+        stable_pool.fee_reward.add_un_settle_amount(usd_pool_rewards_fee)?;
     }
 
     Ok(fee_amount)

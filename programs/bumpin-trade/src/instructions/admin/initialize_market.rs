@@ -14,7 +14,7 @@ pub struct InitializeMarket<'info> {
         seeds = [b"market", state.number_of_markets.to_le_bytes().as_ref()],
         space = Market::SIZE,
         bump,
-        payer = admin
+        payer = bump_signer
     )]
     pub market: AccountLoader<'info, Market>,
 
@@ -27,12 +27,12 @@ pub struct InitializeMarket<'info> {
     #[account(
         seeds = [b"bump_state".as_ref()],
         bump,
-        has_one = admin
+        has_one = bump_signer
     )]
     pub state: Account<'info, State>,
 
     #[account(mut)]
-    pub admin: Signer<'info>,
+    pub bump_signer: Signer<'info>,
 
     pub rent: Sysvar<'info, Rent>,
 
