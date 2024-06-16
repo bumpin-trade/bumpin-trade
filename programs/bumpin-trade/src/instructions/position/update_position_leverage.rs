@@ -12,6 +12,8 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use std::iter::Peekable;
 use std::slice::Iter;
+use crate::utils::pda;
+
 #[derive(Accounts)]
 pub struct UpdatePositionLeverage<'info> {
     #[account(
@@ -63,7 +65,7 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
     )?;
 
     let user_processor = UserProcessor { user: user_mut };
-    let position_key = user_processor.user.generate_position_key(
+    let position_key = pda::generate_position_key(
         &user_processor.user.authority,
         params.symbol,
         params.is_cross_margin,

@@ -106,7 +106,7 @@ pub fn adl<'a, 'b, 'c: 'info, 'info>(
             stable_pool_account_loader,
             market_account_loader,
             state_account,
-            user_token_account,
+            Some(user_token_account),
             if position_processor.position.is_long {
                 pool_vault_account
             } else {

@@ -12,6 +12,7 @@ use crate::state::traits::Size;
 use crate::validate;
 use anchor_lang::prelude::*;
 use solana_program::msg;
+use crate::utils::pda;
 
 #[account(zero_copy(unsafe))]
 #[derive(Default, Eq, PartialEq, Debug)]
@@ -49,7 +50,7 @@ impl User {
             .ok_or(CouldNotFindUserToken)?)
     }
 
-    pub fn get_user_stake_mut(&mut self, pool_index: u64) -> BumpResult<&mut UserStake> {
+    pub fn get_user_stake_mut(&mut self, pool_index: u16) -> BumpResult<&mut UserStake> {
         //TODO[Johnny]: as usize, maybe better
         Ok(self.user_stakes.get_mut(pool_index as usize).ok_or(CouldNotFindUserStake)?)
     }
@@ -106,30 +107,13 @@ impl User {
         program_id: &Pubkey,
     ) -> BumpResult<&mut UserPosition> {
         let position_key =
-            self.generate_position_key(user, symbol, is_cross_margin, program_id)?;
+            pda::generate_position_key(user, symbol, is_cross_margin, program_id)?;
         Ok(self
             .user_positions
             .iter_mut()
             .find(|position| position.position_key.eq(&position_key))
             .ok_or(&mut UserPosition::default())
             .unwrap())
-    }
-
-    pub fn generate_position_key(
-        &self,
-        user: &Pubkey,
-        symbol: [u8; 32],
-        is_cross_margin: bool,
-        program_id: &Pubkey,
-    ) -> BumpResult<Pubkey> {
-        // Convert is_cross_margin to a byte array
-        let is_cross_margin_bytes: &[u8] = if is_cross_margin { &[1] } else { &[0] };
-        // Create the seeds array by concatenating the byte representations
-        let seeds: &[&[u8]] = &[user.as_ref(), &symbol, is_cross_margin_bytes];
-
-        // Find the program address
-        let (address, _bump_seed) = Pubkey::find_program_address(seeds, program_id);
-        Ok(address)
     }
 
     pub fn find_position_by_key(&self, position_key: &Pubkey) -> BumpResult<&UserPosition> {

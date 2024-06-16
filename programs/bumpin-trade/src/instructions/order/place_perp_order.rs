@@ -29,7 +29,7 @@ use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
-use crate::utils::token;
+use crate::utils::{pda, token};
 use crate::{get_then_update_id, validate};
 
 #[derive(Accounts)]
@@ -314,7 +314,7 @@ pub fn handle_execute_order<'info>(
                     return Err(BumpErrorCode::AmountNotEnough.into());
                 }
 
-                position.set_position_key(user.generate_position_key(
+                position.set_position_key(pda::generate_position_key(
                     &user.authority,
                     order.symbol,
                     order.cross_margin,
@@ -383,7 +383,7 @@ pub fn handle_execute_order<'info>(
                 stable_pool_account_loader,
                 market_account_loader,
                 state_account,
-                user_token_account,
+                Some(user_token_account),
                 if position_processor.position.is_long {
                     pool_vault_account
                 } else {

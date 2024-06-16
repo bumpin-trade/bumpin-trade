@@ -80,7 +80,7 @@ impl<'a> UserProcessor<'a> {
         for mut user_position in &mut self.user.user_positions {
             let price_data = price_map.get_price_data(&user_position.index_mint)?;
             let market = market_map.get_ref(&user_position.symbol)?;
-            let pool = pool_map.get_ref(&user_position.margin_mint)?;
+            let pool = pool_map.get_ref(&market.pool_key)?;
             total_im_usd = total_im_usd.safe_add(user_position.initial_margin_usd)?;
 
             let position_processor = PositionProcessor { position: &mut user_position };

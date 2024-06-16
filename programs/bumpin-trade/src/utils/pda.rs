@@ -1,10 +1,10 @@
-use anchor_lang::prelude::Signer;
 use solana_program::pubkey::Pubkey;
+
 use crate::errors::BumpResult;
 
 pub fn generate_position_key(
+    user: &Pubkey,
     symbol: [u8; 32],
-    user: Pubkey,
     is_cross_margin: bool,
     program_id: &Pubkey,
 ) -> BumpResult<Pubkey> {
