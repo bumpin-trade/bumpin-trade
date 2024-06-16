@@ -1,8 +1,10 @@
-use crate::traits::{MarketIndexOffset, Size};
 use anchor_lang::prelude::*;
+use anchor_spl::token::TokenAccount;
 use solana_program::pubkey::Pubkey;
+
 use crate::errors::BumpResult;
 use crate::math::safe_math::SafeMath;
+use crate::traits::{MarketIndexOffset, Size};
 
 #[account(zero_copy(unsafe))]
 #[derive(Eq, PartialEq, Debug, Default)]
@@ -18,6 +20,8 @@ pub struct TradeToken {
     pub total_amount: u128,
     pub trade_token_vault: Pubkey,
 }
+
+impl AccountSerialize for TradeToken {}
 
 impl Size for TradeToken {
     const SIZE: usize = std::mem::size_of::<TradeToken>() + 8;

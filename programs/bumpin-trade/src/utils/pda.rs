@@ -22,8 +22,9 @@ pub fn generate_pool_vault_key(
     pool_index: u16,
     program_id: &Pubkey,
 ) -> BumpResult<Pubkey> {
+    let binding = pool_index.to_le_bytes();
     let seeds: &[&[u8]] =
-        &["pool_mint_vault".as_ref(), pool_index.to_le_bytes().as_ref()];
+        &["pool_mint_vault".as_ref(), binding.as_ref()];
     // Find the program address
     let (address, _bump_seed) = Pubkey::find_program_address(seeds, program_id);
     Ok(address)
@@ -33,8 +34,9 @@ pub fn generate_trade_token_vault_key(
     trade_token_index: u16,
     program_id: &Pubkey,
 ) -> BumpResult<Pubkey> {
+    let binding = trade_token_index.to_le_bytes();
     let seeds: &[&[u8]] =
-        &["trade_token_vault".as_ref(), trade_token_index.to_le_bytes().as_ref()];
+        &["trade_token_vault".as_ref(), binding.as_ref()];
 
     let (address, _bump_seed) = Pubkey::find_program_address(seeds, program_id);
     Ok(address)

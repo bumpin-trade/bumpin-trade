@@ -40,6 +40,7 @@ pub struct InitializeDaoRewards<'info> {
     )]
     pub state: Box<Account<'info, State>>,
 
+    /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
 
     #[account(mut)]

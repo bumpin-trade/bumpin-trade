@@ -1,15 +1,17 @@
 use std::collections::BTreeMap;
 use std::iter::Peekable;
+use std::ops::Deref;
 use std::panic::Location;
 use std::slice::Iter;
-
 use anchor_lang::{Discriminator, Key};
 use anchor_lang::prelude::Account;
 use anchor_spl::token;
 use anchor_spl::token::TokenAccount;
+
 use arrayref::array_ref;
 use solana_program::account_info::AccountInfo;
 use solana_program::msg;
+use solana_program::program_pack::Pack;
 use solana_program::pubkey::Pubkey;
 
 use crate::errors::BumpErrorCode::{
@@ -40,8 +42,7 @@ impl<'a> VaultMap<'a> {
         account_info_iter: &'c mut Peekable<Iter<'a, AccountInfo<'a>>>,
     ) -> BumpResult<VaultMap<'a>> {
         let mut token_account_map: VaultMap = VaultMap(BTreeMap::new());
-        let trade_token_discriminator = TokenAccount::discriminator();
-        while let Some(account_info) = account_info_iter.peek() {
+        while let Some(account_info) = account_info_iter.next() {
             let data = account_info.try_borrow_data().or(Err(CouldNotLoadTradeTokenData))?;
 
             let expected_data_len = TokenAccount::LEN;
@@ -53,11 +54,11 @@ impl<'a> VaultMap<'a> {
                 continue;
             }
 
-            let account_info = account_info_iter.next().safe_unwrap()?;
             let account: Account<'a, TokenAccount> =
                 Account::try_from(account_info).or(Err(InvalidTradeTokenAccount))?;
 
             token_account_map.0.insert(account.key(), account);
+
         }
         Ok(token_account_map)
     }

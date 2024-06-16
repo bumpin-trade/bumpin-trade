@@ -1,4 +1,4 @@
-use std::cell::Ref;
+use std::cell::{Ref, RefMut};
 use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::panic::Location;
@@ -27,11 +27,19 @@ impl<'a> TradeTokenMap<'a> {
     pub fn get_all_trade_token(&self) -> BumpResult<Vec<TradeToken>> {
         let mut trade_tokens = Vec::new();
         for trade_token_loader in self.0.values() {
-            let trade_token = trade_token_loader.load()?.clone();
+            let trade_token = trade_token_loader.load()
+                .map_err(|e| {
+                    let caller = Location::caller();
+                    msg!("{:?}", e);
+                    msg!("Could not load trade_token at {}:{}", caller.file(), caller.line());
+                    CouldNotLoadTradeTokenData
+                })?
+                .clone();
             trade_tokens.push(trade_token);
         }
         Ok(trade_tokens)
     }
+
     #[track_caller]
     #[inline(always)]
     pub fn get_trade_token(&self, mint: &Pubkey) -> BumpResult<Ref<TradeToken>> {

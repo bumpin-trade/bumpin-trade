@@ -61,6 +61,7 @@ pub fn initialize_trade_token(
         liquidation_factor,
         decimals: ctx.accounts.trade_token_mint.decimals,
         total_liability: 0,
+        total_amount: 0,
         trade_token_vault: *ctx.accounts.trade_token_vault.to_account_info().key,
     };
     safe_increment!(state.number_of_trade_tokens, 1);

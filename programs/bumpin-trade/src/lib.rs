@@ -1,3 +1,19 @@
+use std::iter::Peekable;
+use std::slice::Iter;
+
+use anchor_lang::Discriminator;
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Mint, spl_token};
+use anchor_spl::token::{InitializeAccount, Token, TokenAccount};
+use anchor_spl::token::{self};
+
+use instructions::*;
+
+use crate::state::dao_rewards::DaoRewards;
+use crate::state::state::State;
+use crate::state::trade_token::TradeToken;
+use crate::traits::Size;
+
 pub mod errors;
 pub mod ids;
 pub mod instructions;
@@ -8,19 +24,61 @@ pub mod state;
 pub mod traits;
 pub mod utils;
 
-use anchor_lang::prelude::*;
-use instructions::*;
-use std::iter::Peekable;
-use std::slice::Iter;
 declare_id!("GhzHdLjZ1qLLPnPq6YdeqJAszuBRN8WnLnK455yBbig6");
 
 #[program]
 pub mod bumpin_trade {
-    use super::*;
-    use crate::processor::optional_accounts::{load_maps, AccountMaps};
+    use arrayref::array_ref;
+
+    use crate::processor::optional_accounts::{AccountMaps, load_maps};
     use crate::state::infrastructure::user_order::UserOrder;
+    use crate::state::vault_map::VaultMap;
+
+    use super::*;
+
+    pub fn initialize1<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, Initialize1>) -> Result<()> {
+        msg!("initialize1");
+
+        let key_value = &ctx.accounts.key_value;
+
+        // 打印 KeyValue 的已知字段
+        // msg!("key_value key: {:?}", key_value.key);
+        // msg!("key_value value: {:?}", key_value.value);
+        // for x in ctx.remaining_accounts.iter() {
+        //     let a: Account<TokenAccount> = Account::try_from(x).unwrap();
+        //     msg!("a: {:?}", a);
+        // }
+
+        let r = VaultMap::load(&mut ctx.remaining_accounts.iter().peekable());
+        msg!("r: {}", r.is_ok());
+        let u = r.unwrap();
+        msg!("len: {}",u.0.len());
+        u.0.iter().for_each(|(k, v)| {
+            msg!("k: {:?}", k);
+            msg!("v: {:?}", v);
+        });
+        Ok(())
+    }
 
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+        msg!("initialize");
+
+        let trade_token_vault = &ctx.accounts.trade_token_vault;
+
+        // 打印 TokenAccount 的已知字段
+        msg!("trade_token_vault owner: {:?}", trade_token_vault.owner);
+        msg!("trade_token_vault mint: {:?}", trade_token_vault.mint);
+        msg!("trade_token_vault amount: {:?}", trade_token_vault.amount);
+
+
+        let binding = trade_token_vault.to_account_info();
+        // let account :Account<TokenAccount> = Account::try_from(&binding).unwrap();
+
+
+        // let data1 = binding.try_borrow_data().unwrap();
+        // let d1 =  array_ref![data1, 0, 8];
+        msg!("data1: {:?}", binding);
+        msg!("data1 owner: {:?}", binding.owner);
         Ok(())
     }
 
@@ -34,7 +92,7 @@ pub mod bumpin_trade {
 
     pub fn pool_un_stake<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PoolUnStake>,
-        pool_index: u64,
+        pool_index: u16,
         params: UnStakeParams,
     ) -> Result<()> {
         handle_pool_un_stake(ctx, pool_index, params)
@@ -129,4 +187,45 @@ pub mod bumpin_trade {
 }
 
 #[derive(Accounts)]
-pub struct Initialize {}
+pub struct Initialize<'info> {
+    #[account(
+        init,
+        seeds = [b"trade_token_vault".as_ref()],
+        bump,
+        payer = admin,
+        token::mint = trade_token_mint,
+        token::authority = bump_signer
+    )]
+    pub trade_token_vault: Box<Account<'info, TokenAccount>>,
+    /// CHECK: ?
+    #[account()]
+    pub bump_signer: AccountInfo<'info>,
+    pub trade_token_mint: Box<Account<'info, Mint>>,
+
+    #[account(mut)]
+    pub admin: Signer<'info>,
+    pub rent: Sysvar<'info, Rent>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+}
+
+
+#[account]
+pub struct KeyValue {
+    pub key: String,
+    pub value: String,
+}
+
+impl Size for KeyValue {
+    const SIZE: usize = std::mem::size_of::<KeyValue>() + 8;
+}
+
+#[derive(Accounts)]
+pub struct Initialize1<'info> {
+    #[account(init, payer = user, space = KeyValue::SIZE)]
+    pub key_value: Account<'info, KeyValue>,
+    #[account(mut)]
+    pub user: Signer<'info>,
+    pub system_program: Program<'info, System>,
+
+}

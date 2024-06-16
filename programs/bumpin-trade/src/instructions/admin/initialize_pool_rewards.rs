@@ -40,6 +40,7 @@ pub struct InitializePoolRewards<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
 
+    /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
 
     pub rent: Sysvar<'info, Rent>,

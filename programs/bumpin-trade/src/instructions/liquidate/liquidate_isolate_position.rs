@@ -29,8 +29,7 @@ pub struct LiquidateIsolatePosition<'info> {
 
     #[account(
         mut,
-        constraint = & pool_vault.mint.eq(& user_token_account.mint) || & stable_pool_vault.mint.eq(& user_token_account.mint), ,
-        token::authority = authority
+        constraint = pool_vault.mint.eq(& user_token_account.mint) || stable_pool_vault.mint.eq(& user_token_account.mint),
     )]
     pub user_token_account: Account<'info, TokenAccount>,
 
