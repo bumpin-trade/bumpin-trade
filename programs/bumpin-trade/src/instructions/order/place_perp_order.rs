@@ -65,7 +65,7 @@ pub struct PlaceOrder<'info> {
     pub state: Account<'info, State>,
     #[account(
         mut,
-        constraint = & pool_vault.mint.eq(& user_token_account.mint),
+        constraint = & pool_vault.mint.eq(& user_token_account.mint) || & stable_pool_vault.mint.eq(& user_token_account.mint),,
         token::authority = authority
     )]
     pub user_token_account: Account<'info, TokenAccount>,

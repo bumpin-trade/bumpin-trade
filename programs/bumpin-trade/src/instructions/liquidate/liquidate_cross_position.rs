@@ -161,6 +161,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
             )?;
 
             let pool = pool_key_map.get_ref(&market.pool_key)?;
+            let stable_pool = pool_key_map.get_ref(&market.stable_pool_key)?;
             let trade_token = trade_token_map.get_trade_token(&position_processor.position.margin_mint)?;
 
 
@@ -176,7 +177,11 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
                                                  market_map.get_account_loader(&position_processor.position.symbol)?,
                                                  &ctx.accounts.state,
                                                  None,
-                                                 vault_map.get_account(&pda::generate_pool_vault_key(pool.pool_index, ctx.program_id)?)?,
+                                                 if position_processor.position.is_long {
+                                                     vault_map.get_account(&pda::generate_pool_vault_key(pool.pool_index, ctx.program_id)?)?
+                                                 } else {
+                                                     vault_map.get_account(&pda::generate_pool_vault_key(stable_pool.pool_index, ctx.program_id)?)?
+                                                 },
                                                  trade_token_map.get_account_loader(&position_processor.position.margin_mint)?,
                                                  vault_map.get_account(&pda::generate_trade_token_vault_key(trade_token.token_index, ctx.program_id)?)?,
                                                  &ctx.accounts.bump_signer,
