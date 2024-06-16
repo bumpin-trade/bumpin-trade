@@ -5,6 +5,7 @@ use std::slice::Iter;
 
 use anchor_lang::{Discriminator, Key};
 use anchor_lang::prelude::Account;
+use anchor_spl::token;
 use anchor_spl::token::TokenAccount;
 use arrayref::array_ref;
 use solana_program::account_info::AccountInfo;
@@ -21,7 +22,6 @@ use crate::math::safe_unwrap::SafeUnwrap;
 pub struct VaultMap<'a>(pub BTreeMap<Pubkey, Account<'a, TokenAccount>>);
 
 impl<'a> VaultMap<'a> {
-
     #[track_caller]
     #[inline(always)]
     pub fn get_account(&self, mint: &Pubkey) -> BumpResult<&Account<'a, TokenAccount>> {
@@ -46,10 +46,10 @@ impl<'a> VaultMap<'a> {
 
             let expected_data_len = TokenAccount::LEN;
             if data.len() < expected_data_len {
-                break;
+                continue;
             }
-            let account_discriminator = array_ref![data, 0, 8];
-            if account_discriminator != &trade_token_discriminator {
+
+            if account_info.owner != &token::ID {
                 continue;
             }
 
