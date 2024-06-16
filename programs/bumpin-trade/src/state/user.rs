@@ -102,12 +102,11 @@ impl User {
         &mut self,
         user: &Pubkey,
         symbol: [u8; 32],
-        token: &Pubkey,
         is_cross_margin: bool,
         program_id: &Pubkey,
     ) -> BumpResult<&mut UserPosition> {
         let position_key =
-            self.generate_position_key(user, symbol, token, is_cross_margin, program_id)?;
+            self.generate_position_key(user, symbol, is_cross_margin, program_id)?;
         Ok(self
             .user_positions
             .iter_mut()
@@ -120,14 +119,13 @@ impl User {
         &self,
         user: &Pubkey,
         symbol: [u8; 32],
-        token: &Pubkey,
         is_cross_margin: bool,
         program_id: &Pubkey,
     ) -> BumpResult<Pubkey> {
         // Convert is_cross_margin to a byte array
         let is_cross_margin_bytes: &[u8] = if is_cross_margin { &[1] } else { &[0] };
         // Create the seeds array by concatenating the byte representations
-        let seeds: &[&[u8]] = &[user.as_ref(), &symbol, token.as_ref(), is_cross_margin_bytes];
+        let seeds: &[&[u8]] = &[user.as_ref(), &symbol, is_cross_margin_bytes];
 
         // Find the program address
         let (address, _bump_seed) = Pubkey::find_program_address(seeds, program_id);

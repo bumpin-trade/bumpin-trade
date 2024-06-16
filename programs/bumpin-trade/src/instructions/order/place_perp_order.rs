@@ -268,7 +268,6 @@ pub fn handle_execute_order<'info>(
     let position = user.find_position_by_seed(
         &user_authority,
         market.symbol,
-        &margin_token.mint,
         order.cross_margin,
         program_id,
     )?;
@@ -318,7 +317,6 @@ pub fn handle_execute_order<'info>(
                 position.set_position_key(user.generate_position_key(
                     &user.authority,
                     order.symbol,
-                    &order.margin_token,
                     order.cross_margin,
                     program_id,
                 )?)?;
