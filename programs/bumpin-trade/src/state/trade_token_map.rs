@@ -4,8 +4,8 @@ use std::iter::Peekable;
 use std::panic::Location;
 use std::slice::Iter;
 
-use anchor_lang::prelude::{Account, AccountLoader};
-use anchor_lang::{Discriminator, ToAccountInfo};
+use anchor_lang::Discriminator;
+use anchor_lang::prelude::AccountLoader;
 use arrayref::array_ref;
 use solana_program::account_info::AccountInfo;
 use solana_program::msg;

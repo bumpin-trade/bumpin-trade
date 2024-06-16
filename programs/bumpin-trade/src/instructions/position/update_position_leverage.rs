@@ -66,7 +66,6 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
     let position_key = user_processor.user.generate_position_key(
         &user_processor.user.authority,
         params.symbol,
-        &trade_token.mint,
         params.is_cross_margin,
         &ctx.program_id,
     )?;

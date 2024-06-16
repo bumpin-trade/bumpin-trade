@@ -3,7 +3,7 @@ use std::iter::Peekable;
 use std::panic::Location;
 use std::slice::Iter;
 
-use anchor_lang::Discriminator;
+use anchor_lang::{Discriminator, Key};
 use anchor_lang::prelude::Account;
 use anchor_spl::token::TokenAccount;
 use arrayref::array_ref;
@@ -52,12 +52,11 @@ impl<'a> VaultMap<'a> {
                 continue;
             }
 
-            let trade_token_mint = Pubkey::from(*array_ref![data, 8, 32]);
             let account_info = account_info_iter.next().safe_unwrap()?;
-            let account_loader: Account<'a, TokenAccount> =
+            let account: Account<'a, TokenAccount> =
                 Account::try_from(account_info).or(Err(InvalidTradeTokenAccount))?;
 
-            token_account_map.0.insert(trade_token_mint, account_loader);
+            token_account_map.0.insert(account.key(), account);
         }
         Ok(token_account_map)
     }
