@@ -51,9 +51,8 @@ impl<'a> OracleMap<'a> {
     ) -> BumpResult<OracleMap<'a>> {
         let mut oracles: BTreeMap<Pubkey, AccountInfoAndOracleSource<'a>> = BTreeMap::new();
 
-        while let Some(account_info) = account_info_iter.peek() {
+        while let Some(account_info) = account_info_iter.next() {
             if account_info.owner == &pyth_program::id() {
-                let account_info = account_info_iter.next().safe_unwrap()?;
                 let pubkey = account_info.key();
 
                 oracles.insert(

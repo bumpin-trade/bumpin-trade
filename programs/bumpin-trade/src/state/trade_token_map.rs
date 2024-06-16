@@ -80,7 +80,7 @@ impl<'a> TradeTokenMap<'a> {
     ) -> BumpResult<TradeTokenMap<'a>> {
         let mut trade_token_vec: TradeTokenMap = TradeTokenMap(BTreeMap::new());
         let trade_token_discriminator = TradeToken::discriminator();
-        while let Some(account_info) = account_info_iter.peek() {
+        while let Some(account_info) = account_info_iter.next() {
             let data = account_info.try_borrow_data().or(Err(CouldNotLoadTradeTokenData))?;
 
             let expected_data_len = TradeToken::SIZE;
@@ -93,7 +93,6 @@ impl<'a> TradeTokenMap<'a> {
             }
 
             let trade_token_mint = Pubkey::from(*array_ref![data, 8, 32]);
-            let account_info = account_info_iter.next().safe_unwrap()?;
             let account_loader: AccountLoader<'a, TradeToken> =
                 AccountLoader::try_from(account_info).or(Err(InvalidTradeTokenAccount))?;
 

@@ -28,7 +28,7 @@ impl<'a> UserMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find user {} at {}:{}", user_key, caller.file(), caller.line());
                 return Err(UserNotFound);
-            },
+            }
             Some(loader) => loader,
         };
         match loader.load() {
@@ -38,7 +38,7 @@ impl<'a> UserMap<'a> {
                 msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", user_key, caller.file(), caller.line());
                 Err(CouldNotLoadUserData)
-            },
+            }
         }
     }
 
@@ -50,7 +50,7 @@ impl<'a> UserMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find user {} at {}:{}", user_key, caller.file(), caller.line());
                 return Err(UserNotFound);
-            },
+            }
             Some(loader) => loader.clone(),
         };
         Ok(loader)
@@ -64,7 +64,7 @@ impl<'a> UserMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find user {} at {}:{}", user_key, caller.file(), caller.line());
                 return Err(UserNotFound);
-            },
+            }
             Some(loader) => loader,
         };
         match loader.load_mut() {
@@ -74,7 +74,7 @@ impl<'a> UserMap<'a> {
                 msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", user_key, caller.file(), caller.line());
                 Err(CouldNotLoadUserData)
-            },
+            }
         }
     }
     pub fn load(
@@ -82,7 +82,7 @@ impl<'a> UserMap<'a> {
     ) -> BumpResult<UserMap<'a>> {
         let mut user_map = UserMap(BTreeMap::new());
         let user_discriminator = User::discriminator();
-        while let Some(account_info) = account_info_iter.peek() {
+        while let Some(account_info) = account_info_iter.next() {
             let data = account_info.try_borrow_data().or(Err(CouldNotLoadUserData))?;
 
             let expected_data_len = User::SIZE;
@@ -95,7 +95,6 @@ impl<'a> UserMap<'a> {
             }
 
             let user_key = Pubkey::from(*array_ref![data, 8, 32]);
-            let account_info = account_info_iter.next().safe_unwrap()?;
             let account_loader: AccountLoader<'a, User> =
                 AccountLoader::try_from(account_info).or(Err(CouldNotLoadUserData))?;
 

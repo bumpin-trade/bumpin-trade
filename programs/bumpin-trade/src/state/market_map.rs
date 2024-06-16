@@ -76,7 +76,7 @@ impl<'a> MarketMap<'a> {
     ) -> BumpResult<MarketMap<'a>> {
         let mut perp_market_map: MarketMap = MarketMap(BTreeMap::new());
         let market_discriminator: [u8; 8] = Market::discriminator();
-        while let Some(account_info) = account_info_iter.peek() {
+        while let Some(account_info) = account_info_iter.next() {
             let data =
                 account_info.try_borrow_data().or(Err(BumpErrorCode::CouldNotLoadMarketData))?;
 
@@ -90,8 +90,6 @@ impl<'a> MarketMap<'a> {
             }
             let symbol = *array_ref![data, 8, 32];
 
-            let account_info =
-                account_info_iter.next().ok_or(BumpErrorCode::InvalidMarketAccount)?;
             let account_loader: AccountLoader<'a, Market> =
                 AccountLoader::try_from(account_info)
                     .or(Err(BumpErrorCode::InvalidMarketAccount))?;
