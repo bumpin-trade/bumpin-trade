@@ -13,6 +13,8 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use std::iter::Peekable;
 use std::slice::Iter;
+use crate::processor::user_processor::UserProcessor;
+use crate::state::trade_token::TradeToken;
 
 #[derive(Accounts)]
 #[instruction(pool_index: u16, trade_token_index: u16)]
@@ -51,6 +53,19 @@ pub struct PoolUnStake<'info> {
         bump,
     )]
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        mut,
+        seeds = [b"trade_token".as_ref(), trade_token_index.to_le_bytes().as_ref()],
+        bump,
+    )]
+    pub trade_token: AccountLoader<'info, TradeToken>,
+
+    #[account(
+        seeds = [b"pool_rewards_vault".as_ref(), pool_index.to_le_bytes().as_ref()],
+        bump,
+    )]
+    pub pool_rewards_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
@@ -102,9 +117,13 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
 
     update_account_fee_reward(&ctx.accounts.user, &ctx.accounts.pool)?;
 
+    let user_stake = user.get_user_stake_mut(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
+    let rewards_amount = user_stake.user_rewards.realised_rewards_token_amount;
     let transfer_amount = un_stake_token_amount.safe_sub(un_stake_token_amount_fee)?;
+
     if un_stake_params.portfolio {
         let user_token = user.get_user_token_mut(&pool.pool_mint)?;
+        let trade_token = ctx.accounts.trade_token.load_mut()?;
 
         utils::token::receive(
             &ctx.accounts.token_program,
@@ -116,7 +135,30 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
 
         ctx.accounts.pool_vault.reload()?;
         ctx.accounts.trade_token_vault.reload()?;
-        user_token.add_token_amount(transfer_amount)?;
+
+        if rewards_amount > 0 {
+            utils::token::receive(
+                &ctx.accounts.token_program,
+                &ctx.accounts.pool_rewards_vault,
+                &ctx.accounts.trade_token_vault,
+                &ctx.accounts.authority,
+                rewards_amount,
+            )?;
+        }
+        ctx.accounts.trade_token_vault.reload()?;
+        ctx.accounts.pool_rewards_vault.reload()?;
+
+        user_token.add_token_amount(rewards_amount.safe_add(transfer_amount)?)?;
+        trade_token.add_token(rewards_amount.safe_add(transfer_amount)?)?;
+
+        let repay_liability = user_token.repay_liability(rewards_amount.safe_add(transfer_amount)?)?;
+        if repay_liability > 0 {
+            trade_token.sub_liability(repay_liability)?;
+        }
+
+        let mut user_processor = UserProcessor { user };
+        user_processor.update_cross_position_balance(&pool.pool_mint,
+                                                     rewards_amount.safe_add(transfer_amount)?.safe_sub(repay_liability)?, true)?;
     } else {
         let bump_signer_nonce = ctx.accounts.state.bump_signer_nonce;
 
@@ -128,6 +170,18 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
             bump_signer_nonce,
             transfer_amount,
         )?;
+
+        ctx.accounts.pool_vault.reload()?;
+        if rewards_amount > 0 {
+            utils::token::send_from_program_vault(
+                &ctx.accounts.token_program,
+                &ctx.accounts.pool_rewards_vault,
+                &ctx.accounts.user_token_account,
+                &ctx.accounts.authority,
+                bump_signer_nonce,
+                rewards_amount,
+            )?;
+        }
         ctx.accounts.pool_vault.reload()?;
     }
     Ok(())
