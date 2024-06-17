@@ -4,17 +4,17 @@ use crate::math::safe_math::SafeMath;
 use crate::processor::fee_reward_processor::update_account_fee_reward;
 use crate::processor::optional_accounts::load_maps;
 use crate::processor::pool_processor::PoolProcessor;
+use crate::processor::user_processor::UserProcessor;
 use crate::state::infrastructure::user_stake::UserStakeStatus;
 use crate::state::pool::Pool;
 use crate::state::state::State;
+use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::{utils, validate};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use std::iter::Peekable;
 use std::slice::Iter;
-use crate::processor::user_processor::UserProcessor;
-use crate::state::trade_token::TradeToken;
 
 #[derive(Accounts)]
 #[instruction(pool_index: u16, trade_token_index: u16)]
@@ -151,14 +151,18 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
         user_token.add_token_amount(rewards_amount.safe_add(transfer_amount)?)?;
         trade_token.add_token(rewards_amount.safe_add(transfer_amount)?)?;
 
-        let repay_liability = user_token.repay_liability(rewards_amount.safe_add(transfer_amount)?)?;
+        let repay_liability =
+            user_token.repay_liability(rewards_amount.safe_add(transfer_amount)?)?;
         if repay_liability > 0 {
             trade_token.sub_liability(repay_liability)?;
         }
 
         let mut user_processor = UserProcessor { user };
-        user_processor.update_cross_position_balance(&pool.pool_mint,
-                                                     rewards_amount.safe_add(transfer_amount)?.safe_sub(repay_liability)?, true)?;
+        user_processor.update_cross_position_balance(
+            &pool.pool_mint,
+            rewards_amount.safe_add(transfer_amount)?.safe_sub(repay_liability)?,
+            true,
+        )?;
     } else {
         let bump_signer_nonce = ctx.accounts.state.bump_signer_nonce;
 
