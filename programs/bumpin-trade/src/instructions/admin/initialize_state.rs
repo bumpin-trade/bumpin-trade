@@ -5,6 +5,7 @@ use solana_program::pubkey::Pubkey;
 use crate::state::state::State;
 
 #[derive(Accounts)]
+#[instruction(param: InitializeStateParams)]
 pub struct InitializeState<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
@@ -23,13 +24,13 @@ pub struct InitializeState<'info> {
 
 #[derive(AnchorDeserialize, AnchorSerialize, Debug, Clone, Copy)]
 pub struct InitializeStateParams {
-    pub min_order_margin_usd: u128,
-    pub max_maintenance_margin_rate: u128,
-    pub funding_fee_base_rate: u128,
-    pub max_funding_base_rate: u128,
-    pub trading_fee_staking_rewards_ratio: u128,
-    pub trading_fee_pool_rewards_ratio: u128,
-    pub trading_fee_usd_pool_rewards_ratio: u128,
+    pub min_order_margin_usd: u128,//最小下单头寸 param: InitializeStateParams
+    pub max_maintenance_margin_rate: u128,//最大维持保证金率，类似于用来做adl
+    pub funding_fee_base_rate: u128,//fundingfee 基础费率
+    pub max_funding_base_rate: u128,//最大fundinfee率
+    pub trading_fee_staking_rewards_ratio: u128,//stake reward最小单位
+    pub trading_fee_pool_rewards_ratio: u128,// pool reward最小单位
+    pub trading_fee_usd_pool_rewards_ratio: u128,// 稳定币pool reward最小单位
     pub borrowing_fee_staking_rewards_ratio: u128,
     pub borrowing_fee_pool_rewards_ratio: u128,
     pub min_precision_multiple: u128,
@@ -49,6 +50,7 @@ pub fn handle_initialize_state(
 ) -> Result<()> {
     let (bump_signer, bump_signer_nonce) =
         Pubkey::find_program_address(&[b"bump_state".as_ref()], ctx.program_id);
+    msg!("min_order_margin_usd: {}", initialize_state_params.min_order_margin_usd);
 
     *ctx.accounts.state = State {
         admin: *ctx.accounts.admin.key,

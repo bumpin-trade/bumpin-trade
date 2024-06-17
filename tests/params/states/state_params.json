@@ -1,0 +1,20 @@
+{
+  "min_order_margin_usd": 1000,
+  "max_maintenance_margin_rate": 500,
+  "funding_fee_base_rate": 100,
+  "max_funding_base_rate": 200,
+  "trading_fee_staking_rewards_ratio": 50,
+  "trading_fee_pool_rewards_ratio": 50,
+  "trading_fee_usd_pool_rewards_ratio": 50,
+  "borrowing_fee_staking_rewards_ratio": 50,
+  "borrowing_fee_pool_rewards_ratio": 50,
+  "min_precision_multiple": 1,
+  "mint_fee_staking_rewards_ratio": 50,
+  "mint_fee_pool_rewards_ratio": 50,
+  "redeem_fee_staking_rewards_ratio": 50,
+  "redeem_fee_pool_rewards_ratio": 50,
+  "pool_rewards_interval_limit": 100,
+  "init_fee": 10,
+  "staking_fee_reward_ratio": 50,
+  "pool_fee_reward_ratio": 50
+}
