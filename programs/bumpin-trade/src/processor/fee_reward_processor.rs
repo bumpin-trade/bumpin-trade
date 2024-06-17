@@ -1,6 +1,6 @@
 use anchor_lang::prelude::AccountLoader;
 
-use crate::errors::BumpResult;
+use crate::errors::{BumpErrorCode, BumpResult};
 use crate::math::safe_math::SafeMath;
 use crate::state::pool::Pool;
 use crate::state::user::User;
@@ -12,7 +12,8 @@ pub fn update_account_fee_reward(
     let user = &mut user_loader.load_mut().unwrap();
     let stake_pool = pool_loader.load().unwrap();
 
-    let user_stake = user.get_user_stake_mut(stake_pool.pool_index)?;
+    let user_stake =
+        user.get_user_stake_mut(&stake_pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
 
     let fee_reward = stake_pool.fee_reward;
     if user_stake.user_rewards.open_rewards_per_stake_token

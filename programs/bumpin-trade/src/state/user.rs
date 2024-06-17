@@ -6,7 +6,7 @@ use crate::instructions::cal_utils;
 use crate::math::safe_math::SafeMath;
 use crate::state::infrastructure::user_order::{OrderSide, OrderStatus, PositionSide, UserOrder};
 use crate::state::infrastructure::user_position::{PositionStatus, UserPosition};
-use crate::state::infrastructure::user_stake::{UserRewards, UserStake};
+use crate::state::infrastructure::user_stake::{UserRewards, UserStake, UserStakeStatus};
 use crate::state::infrastructure::user_token::UserToken;
 use crate::state::traits::Size;
 use crate::utils::pda;
@@ -27,7 +27,6 @@ pub struct User {
     pub user_stakes: [UserStake; 10],
     pub user_positions: [UserPosition; 24],
     pub user_orders: [UserOrder; 16],
-    pub user_rewards: [UserRewards; 10],
 }
 
 impl Size for User {
@@ -50,12 +49,12 @@ impl User {
             .ok_or(CouldNotFindUserToken)?)
     }
 
-    pub fn get_user_stake_mut(&mut self, pool_index: u16) -> BumpResult<&mut UserStake> {
-        //TODO[Johnny]: as usize, maybe better
-        Ok(self.user_stakes.get_mut(pool_index as usize).ok_or(CouldNotFindUserStake)?)
-    }
-    pub fn get_user_stake_ref(&mut self, pool_index: usize) -> BumpResult<&UserStake> {
-        Ok(self.user_stakes.get(pool_index).ok_or(CouldNotFindUserStake)?)
+    pub fn get_user_stake_mut(&mut self, pool_key: &Pubkey) -> BumpResult<Option<&mut UserStake>> {
+        let stake = self.user_stakes.iter_mut().find(|user_stake| {
+            user_stake.pool_key.eq(pool_key)
+                && user_stake.user_stake_status.eq(&UserStakeStatus::USING)
+        });
+        Ok(stake)
     }
 
     pub fn sub_order_hold_in_usd(&mut self, amount: u128) -> BumpResult<()> {
@@ -197,6 +196,15 @@ impl User {
         Err(BumpErrorCode::AmountNotEnough)
     }
 
+    pub fn next_usable_stake_index(&self) -> BumpResult<usize> {
+        for (index, user_stake) in self.user_stakes.iter().enumerate() {
+            if user_stake.user_stake_status.eq(&UserStakeStatus::INIT) {
+                return Ok(index);
+            }
+        }
+        Err(BumpErrorCode::AmountNotEnough)
+    }
+
     pub fn add_position(&mut self, position: &UserPosition, index: usize) -> BumpResult {
         self.user_positions[index] = *position;
         Ok(())
@@ -204,6 +212,11 @@ impl User {
 
     pub fn add_order(&mut self, order: UserOrder, index: usize) -> BumpResult {
         self.user_orders[index] = order;
+        Ok(())
+    }
+
+    pub fn add_user_stake(&mut self, user_stake: &UserStake, index: usize) -> BumpResult {
+        self.user_stakes[index] = *user_stake;
         Ok(())
     }
 

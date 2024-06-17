@@ -6,12 +6,16 @@ use anchor_lang::prelude::*;
 pub struct FeeReward {
     pub fee_amount: u128,
     pub un_settle_fee_amount: u128,
+    pub pnl: i128,
     pub open_cumulative_rewards_per_stake_token: u128,
     pub cumulative_rewards_per_stake_token: u128,
     pub last_rewards_per_stake_token_deltas: [u128; 3],
 }
 
 impl FeeReward {
+    pub fn add_pnl(&mut self, pool_pnl: i128) {
+        self.pnl = self.pnl.safe_add(pool_pnl)?;
+    }
     pub fn get_rewards_delta_limit(&self) -> BumpResult<u128> {
         let mut delta_limit = 0u128;
         for delta in self.last_rewards_per_stake_token_deltas {

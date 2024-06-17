@@ -1,5 +1,5 @@
 use crate::errors::BumpResult;
-use anchor_lang::zero_copy;
+use anchor_lang::prelude::*;
 use solana_program::pubkey::Pubkey;
 
 use crate::math::safe_math::SafeMath;
@@ -8,9 +8,17 @@ use crate::math::safe_math::SafeMath;
 #[derive(Default, Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct UserStake {
+    pub user_stake_status: UserStakeStatus,
     pub pool_key: Pubkey,
     pub amount: u128,
     pub user_rewards: UserRewards,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]
+pub enum UserStakeStatus {
+    #[default]
+    INIT,
+    USING,
 }
 
 impl UserStake {

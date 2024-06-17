@@ -6,6 +6,7 @@ use crate::processor::fee_processor;
 use crate::processor::market_processor::MarketProcessor;
 use crate::processor::optional_accounts::AccountMaps;
 use crate::processor::user_processor::UserProcessor;
+use crate::state::infrastructure::user_stake::UserStakeStatus;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
@@ -63,7 +64,8 @@ impl<'a> PoolProcessor<'_> {
         }
         self.pool.add_supply(stake_amount)?;
         self.pool.add_amount(mint_amount)?;
-        let user_stake = user.get_user_stake_mut(pool.pool_index)?;
+        let user_stake =
+            user.get_user_stake_mut(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
         user_stake.add_user_stake(stake_amount)?;
         Ok(stake_amount)
     }
@@ -92,7 +94,8 @@ impl<'a> PoolProcessor<'_> {
         }
         self.pool.add_supply(stake_amount)?;
         self.pool.add_amount(mint_amount)?;
-        let user_stake = user.get_user_stake_mut(pool.pool_index)?;
+        let user_stake =
+            user.get_user_stake_mut(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
         user_stake.add_user_stake(stake_amount)?;
         Ok(stake_amount)
     }
@@ -119,7 +122,8 @@ impl<'a> PoolProcessor<'_> {
         let max_un_stake_amount = pool.get_current_max_un_stake()?;
         validate!(token_amount < max_un_stake_amount, BumpErrorCode::UnStakeNotEnough)?;
 
-        let user_stake = user.get_user_stake_mut(pool.pool_index)?;
+        let user_stake =
+            user.get_user_stake_mut(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
         user_stake.sub_user_stake(un_stake_amount)?;
 
         Ok(token_amount)

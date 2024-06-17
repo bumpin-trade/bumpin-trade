@@ -100,10 +100,9 @@ pub mod bumpin_trade {
 
     pub fn pool_un_stake<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PoolUnStake>,
-        pool_index: u16,
         params: UnStakeParams,
     ) -> Result<()> {
-        handle_pool_un_stake(ctx, pool_index, params)
+        handle_pool_un_stake(ctx, params)
     }
 
     /*-----account------*/

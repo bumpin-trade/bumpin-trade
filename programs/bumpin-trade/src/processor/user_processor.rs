@@ -186,6 +186,30 @@ impl<'a> UserProcessor<'a> {
         Ok(available_value)
     }
 
+    pub fn get_user_cross_net_value(
+        &mut self,
+        trade_token_map: &TradeTokenMap,
+        mut oracle_map: &mut OracleMap,
+        market_map: &MarketMap,
+        pool_key_map: &PoolMap,
+        state: &State,
+    ) -> BumpResult<(i128, u128, u128)> {
+        let portfolio_net_value =
+            self.get_portfolio_net_value(&trade_token_map, &mut oracle_map)?;
+        let used_value = self.get_total_used_value(&trade_token_map, &mut oracle_map)?;
+        let (total_im_usd, total_un_pnl_usd, total_position_fee, total_position_mm, total_size) =
+            self.get_user_cross_position_value(state, &market_map, &pool_key_map, &mut oracle_map)?;
+
+        let cross_net_value = portfolio_net_value
+            .safe_add(total_im_usd)?
+            .safe_add(self.user.hold)?
+            .cast::<i128>()?
+            .safe_add(total_un_pnl_usd)?
+            .safe_sub(used_value.cast()?)?
+            .safe_sub(total_position_fee)?;
+        Ok((cross_net_value, total_position_mm, total_size))
+    }
+
     pub fn update_cross_position_balance(
         &mut self,
         mint: &Pubkey,
