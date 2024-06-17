@@ -76,25 +76,14 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         drop(market_processor);
     }
 
-    let portfolio_net_value =
-        user_processor.get_portfolio_net_value(&trade_token_map, &mut oracle_map)?;
-    let used_value = user_processor.get_total_used_value(&trade_token_map, &mut oracle_map)?;
-    let (total_im_usd, total_un_pnl_usd, total_position_fee, total_position_mm, total_size) =
-        user_processor.get_user_cross_position_value(
-            &ctx.accounts.state,
+    let (cross_net_value, total_position_mm, total_size) = user_processor
+        .get_user_cross_net_value(
+            &trade_token_map,
+            &mut oracle_map,
             &market_map,
             &pool_key_map,
-            &mut oracle_map,
+            &state,
         )?;
-
-    let user = ctx.accounts.user.load()?;
-    let cross_net_value = portfolio_net_value
-        .safe_add(total_im_usd)?
-        .safe_add(user.hold)?
-        .cast::<i128>()?
-        .safe_add(total_un_pnl_usd)?
-        .safe_sub(used_value.cast()?)?
-        .safe_sub(total_position_fee)?;
 
     let bankruptcy_mr = cal_utils::div_to_precision_i(
         cross_net_value,
