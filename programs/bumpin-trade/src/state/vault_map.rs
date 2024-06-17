@@ -1,14 +1,12 @@
 use std::collections::BTreeMap;
 use std::iter::Peekable;
-use std::ops::Deref;
 use std::panic::Location;
 use std::slice::Iter;
-use anchor_lang::{Discriminator, Key};
+
+use anchor_lang::Key;
 use anchor_lang::prelude::Account;
 use anchor_spl::token;
 use anchor_spl::token::TokenAccount;
-
-use arrayref::array_ref;
 use solana_program::account_info::AccountInfo;
 use solana_program::msg;
 use solana_program::program_pack::Pack;
@@ -19,7 +17,6 @@ use crate::errors::BumpErrorCode::{
 };
 use crate::errors::BumpResult;
 use crate::math::safe_unwrap::SafeUnwrap;
-
 
 pub struct VaultMap<'a>(pub BTreeMap<Pubkey, Account<'a, TokenAccount>>);
 

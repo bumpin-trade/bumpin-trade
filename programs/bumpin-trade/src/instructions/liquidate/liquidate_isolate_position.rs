@@ -108,9 +108,9 @@ pub fn handle_liquidate_isolate_position(
         &mut oracle_map,
     )?;
 
-    let index_price = oracle_map.get_price_data(&user_position.index_mint)?;
-    if (user_position.is_long && index_price.price > liquidation_price)
-        || (!user_position.is_long && index_price.price < liquidation_price)
+    let index_price = oracle_map.get_price_data(&position_processor.position.index_mint)?;
+    if (position_processor.position.is_long && index_price.price > liquidation_price)
+        || (!position_processor.position.is_long && index_price.price < liquidation_price)
     {
         position_processor.decrease_position(DecreasePositionParams {
             order_id: 0,

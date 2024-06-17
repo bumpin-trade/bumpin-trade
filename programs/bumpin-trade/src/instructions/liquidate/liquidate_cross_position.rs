@@ -43,7 +43,7 @@ pub struct LiquidateCrossPosition<'info> {
 }
 
 pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
-    ctx: Context<'a, 'b, 'c, 'info, LiquidateCrossPosition>,
+    ctx: Context<'a, 'b, 'c, 'info, LiquidateCrossPosition<'c>>,
 ) -> Result<()> {
     let user = &mut ctx.accounts.user.load_mut()?;
     let state = &ctx.accounts.state;
@@ -91,6 +91,8 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
             &pool_key_map,
             &mut oracle_map,
         )?;
+
+    let user = ctx.accounts.user.load()?;
     let cross_net_value = portfolio_net_value
         .safe_add(total_im_usd)?
         .safe_add(user.hold)?
