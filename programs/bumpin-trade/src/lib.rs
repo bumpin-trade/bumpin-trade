@@ -1,17 +1,17 @@
 use std::iter::Peekable;
 use std::slice::Iter;
 
-use anchor_lang::Discriminator;
 use anchor_lang::prelude::*;
+use anchor_lang::Discriminator;
 use anchor_spl::token::{self};
-use anchor_spl::token::{Mint, spl_token};
+use anchor_spl::token::{spl_token, Mint};
 use anchor_spl::token::{InitializeAccount, Token, TokenAccount};
 use solana_program::entrypoint::ProgramResult;
 
 use instructions::*;
 
 use crate::instructions::admin::initialize_state::handle_initialize_state;
-use crate::processor::optional_accounts::{AccountMaps, load_maps};
+use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::state::dao_rewards::DaoRewards;
 use crate::state::infrastructure::user_order::UserOrder;
 use crate::state::state::State;
@@ -81,14 +81,15 @@ pub mod bumpin_trade {
         Ok(())
     }
 
-
-    pub fn initialize_state<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, InitializeState>, param: InitializeStateParams) -> Result<()> {
+    pub fn initialize_state<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, InitializeState>,
+        param: InitializeStateParams,
+    ) -> Result<()> {
         msg!("initialize_state");
         msg!("param: {:?}", param);
         msg!("admin: {:?}", ctx.accounts.admin.key);
         handle_initialize_state(ctx, param)
     }
-
 
     /*-----pool pool------*/
     pub fn pool_stake<'a, 'b, 'c: 'info, 'info>(

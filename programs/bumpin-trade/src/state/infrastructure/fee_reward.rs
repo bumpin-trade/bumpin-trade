@@ -13,7 +13,7 @@ pub struct FeeReward {
 }
 
 impl FeeReward {
-    pub fn add_pnl(&mut self, pool_pnl: i128)-> BumpResult<()> {
+    pub fn add_pnl(&mut self, pool_pnl: i128) -> BumpResult<()> {
         self.pnl = self.pnl.safe_add(pool_pnl)?;
         Ok(())
     }
