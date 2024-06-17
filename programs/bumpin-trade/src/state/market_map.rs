@@ -30,7 +30,7 @@ impl<'a> MarketMap<'a> {
         let loader = match self.0.get(symbol) {
             None => {
                 return Err(TradeTokenNotFind);
-            }
+            },
             Some(loader) => loader,
         };
         match loader.load_mut() {
@@ -38,7 +38,7 @@ impl<'a> MarketMap<'a> {
             Err(e) => {
                 msg!("{:?}", e);
                 Err(CouldNotLoadTradeTokenData)
-            }
+            },
         }
     }
 
@@ -48,7 +48,7 @@ impl<'a> MarketMap<'a> {
         let loader = match self.0.get(symbol) {
             None => {
                 return Err(TradeTokenNotFind);
-            }
+            },
             Some(loader) => loader,
         };
         Ok(loader)
@@ -60,7 +60,7 @@ impl<'a> MarketMap<'a> {
         let loader = match self.0.get(symbol) {
             None => {
                 return Err(TradeTokenNotFind);
-            }
+            },
             Some(loader) => loader,
         };
         match loader.load() {

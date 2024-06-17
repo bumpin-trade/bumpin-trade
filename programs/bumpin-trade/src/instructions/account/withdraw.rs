@@ -9,9 +9,9 @@ use crate::instructions::constraints::*;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::user_processor::UserProcessor;
 use crate::state::state::State;
+use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::{utils, validate};
-use crate::state::trade_token::TradeToken;
 
 #[derive(Accounts)]
 #[instruction(token_index: u16,)]

@@ -1,3 +1,4 @@
+pub mod balance_processor;
 pub mod fee_processor;
 pub mod fee_reward_processor;
 pub mod liquidate_processor;
@@ -7,4 +8,3 @@ pub mod pool_processor;
 pub mod position_processor;
 pub mod reward_processor;
 pub mod user_processor;
-pub mod balance_processor;

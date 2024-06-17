@@ -112,24 +112,33 @@ pub fn handle_liquidate_isolate_position(
     if (position_processor.position.is_long && index_price.price > liquidation_price)
         || (!position_processor.position.is_long && index_price.price < liquidation_price)
     {
-        position_processor.decrease_position(DecreasePositionParams {
-            order_id: 0,
-            is_liquidation: true,
-            is_cross_margin: false,
-            margin_token: position_processor.position.margin_mint,
-            decrease_size: position_processor.position.position_size,
-            execute_price: liquidation_price,
-        }, &ctx.accounts.user, &ctx.accounts.pool,
-                                             &ctx.accounts.stable_pool,
-                                             &ctx.accounts.market,
-                                             &ctx.accounts.state,
-                                             Some(&ctx.accounts.user_token_account), if position_processor.position.is_long { &ctx.accounts.pool_vault } else { &ctx.accounts.stable_pool_vault },
-                                             &ctx.accounts.trade_token,
-                                             &ctx.accounts.trade_token_vault,
-                                             &ctx.accounts.bump_signer,
-                                             &ctx.accounts.token_program,
-                                             &ctx.program_id,
-                                             &mut oracle_map)?;
+        position_processor.decrease_position(
+            DecreasePositionParams {
+                order_id: 0,
+                is_liquidation: true,
+                is_cross_margin: false,
+                margin_token: position_processor.position.margin_mint,
+                decrease_size: position_processor.position.position_size,
+                execute_price: liquidation_price,
+            },
+            &ctx.accounts.user,
+            &ctx.accounts.pool,
+            &ctx.accounts.stable_pool,
+            &ctx.accounts.market,
+            &ctx.accounts.state,
+            Some(&ctx.accounts.user_token_account),
+            if position_processor.position.is_long {
+                &ctx.accounts.pool_vault
+            } else {
+                &ctx.accounts.stable_pool_vault
+            },
+            &ctx.accounts.trade_token,
+            &ctx.accounts.trade_token_vault,
+            &ctx.accounts.bump_signer,
+            &ctx.accounts.token_program,
+            &ctx.program_id,
+            &mut oracle_map,
+        )?;
     }
     Ok(())
 }

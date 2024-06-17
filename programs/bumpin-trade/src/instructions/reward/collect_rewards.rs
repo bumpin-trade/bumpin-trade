@@ -63,7 +63,8 @@ pub struct CollectRewards<'info> {
 pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, CollectRewards<'info>>,
     pool_index: u16,
-    stable_pool_index: u16, trade_token_index: u16,
+    stable_pool_index: u16,
+    trade_token_index: u16,
 ) -> Result<()> {
     Ok(())
 }

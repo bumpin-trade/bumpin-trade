@@ -28,7 +28,7 @@ impl<'a> UserMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find user {} at {}:{}", user_key, caller.file(), caller.line());
                 return Err(UserNotFound);
-            }
+            },
             Some(loader) => loader,
         };
         match loader.load() {
@@ -38,7 +38,7 @@ impl<'a> UserMap<'a> {
                 msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", user_key, caller.file(), caller.line());
                 Err(CouldNotLoadUserData)
-            }
+            },
         }
     }
 
@@ -50,7 +50,7 @@ impl<'a> UserMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find user {} at {}:{}", user_key, caller.file(), caller.line());
                 return Err(UserNotFound);
-            }
+            },
             Some(loader) => loader.clone(),
         };
         Ok(loader)
@@ -64,7 +64,7 @@ impl<'a> UserMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find user {} at {}:{}", user_key, caller.file(), caller.line());
                 return Err(UserNotFound);
-            }
+            },
             Some(loader) => loader,
         };
         match loader.load_mut() {
@@ -74,7 +74,7 @@ impl<'a> UserMap<'a> {
                 msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", user_key, caller.file(), caller.line());
                 Err(CouldNotLoadUserData)
-            }
+            },
         }
     }
     pub fn load(

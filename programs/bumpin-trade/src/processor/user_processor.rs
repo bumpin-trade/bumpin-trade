@@ -9,6 +9,7 @@ use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool_map::PoolMap;
 use crate::state::state::State;
+use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 use crate::utils::token;
@@ -18,7 +19,6 @@ use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 use solana_program::msg;
 use solana_program::pubkey::Pubkey;
-use crate::state::trade_token::TradeToken;
 
 pub struct UserProcessor<'a> {
     pub(crate) user: &'a mut User,
@@ -262,7 +262,12 @@ impl<'a> UserProcessor<'a> {
         Ok(())
     }
 
-    pub fn sub_token_with_liability(&mut self, token: &Pubkey, trade_token: &mut TradeToken, amount: u128) -> BumpResult<u128> {
+    pub fn sub_token_with_liability(
+        &mut self,
+        token: &Pubkey,
+        trade_token: &mut TradeToken,
+        amount: u128,
+    ) -> BumpResult<u128> {
         let mut liability = 0u128;
         let token_balance = self
             .user
@@ -331,7 +336,7 @@ impl<'a> UserProcessor<'a> {
                 state.bump_signer_nonce,
                 order.order_margin,
             )
-                .unwrap();
+            .unwrap();
         }
         Ok(())
     }

@@ -9,10 +9,10 @@ use crate::state::infrastructure::user_position::{PositionStatus, UserPosition};
 use crate::state::infrastructure::user_stake::{UserRewards, UserStake};
 use crate::state::infrastructure::user_token::UserToken;
 use crate::state::traits::Size;
+use crate::utils::pda;
 use crate::validate;
 use anchor_lang::prelude::*;
 use solana_program::msg;
-use crate::utils::pda;
 
 #[account(zero_copy(unsafe))]
 #[derive(Default, Eq, PartialEq, Debug)]
@@ -106,8 +106,7 @@ impl User {
         is_cross_margin: bool,
         program_id: &Pubkey,
     ) -> BumpResult<&mut UserPosition> {
-        let position_key =
-            pda::generate_position_key(user, symbol, is_cross_margin, program_id)?;
+        let position_key = pda::generate_position_key(user, symbol, is_cross_margin, program_id)?;
         Ok(self
             .user_positions
             .iter_mut()

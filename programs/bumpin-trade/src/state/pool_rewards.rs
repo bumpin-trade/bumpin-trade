@@ -1,7 +1,7 @@
-use anchor_lang::prelude::*;
 use crate::state::dao_rewards::DaoRewards;
 use crate::state::infrastructure::fee_reward::FeeReward;
 use crate::traits::Size;
+use anchor_lang::prelude::*;
 
 #[account(zero_copy(unsafe))]
 #[derive(Eq, PartialEq, Debug)]

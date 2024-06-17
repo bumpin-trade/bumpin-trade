@@ -265,12 +265,8 @@ pub fn handle_execute_order<'info>(
         get_execution_price(oracle_map.get_price_data(&market.index_mint).unwrap().price, &order)?;
 
     let user = &mut user_account_loader.load_mut().unwrap();
-    let position = user.find_position_by_seed(
-        &user_authority,
-        market.symbol,
-        order.cross_margin,
-        program_id,
-    )?;
+    let position =
+        user.find_position_by_seed(&user_authority, market.symbol, order.cross_margin, program_id)?;
 
     //update funding_fee_rate and borrowing_fee_rate
     let mut market_processor = MarketProcessor { market };

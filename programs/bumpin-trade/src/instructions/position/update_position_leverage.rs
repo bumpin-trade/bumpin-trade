@@ -7,12 +7,12 @@ use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
+use crate::utils::pda;
 use crate::{can_sign_for_user, validate};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use std::iter::Peekable;
 use std::slice::Iter;
-use crate::utils::pda;
 
 #[derive(Accounts)]
 pub struct UpdatePositionLeverage<'info> {

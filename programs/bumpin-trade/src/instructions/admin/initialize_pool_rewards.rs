@@ -1,10 +1,10 @@
+use crate::state::pool_rewards::PoolRewards;
+use crate::state::state::State;
+use crate::traits::Size;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 use solana_program::rent::Rent;
-use crate::state::pool_rewards::PoolRewards;
-use crate::state::state::State;
-use crate::traits::Size;
 
 #[derive(Accounts)]
 #[instruction(pool_index: u16)]
@@ -50,7 +50,10 @@ pub struct InitializePoolRewards<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle_initialize_dao_rewards(ctx: Context<InitializePoolRewards>, pool_index: u16) -> anchor_lang::Result<()> {
+pub fn handle_initialize_dao_rewards(
+    ctx: Context<InitializePoolRewards>,
+    pool_index: u16,
+) -> anchor_lang::Result<()> {
     let mut dao_rewards = ctx.accounts.pool_rewards.load_init()?;
     dao_rewards.pool_index = pool_index;
     dao_rewards.poo_rewards_vault = ctx.accounts.pool_rewards_vault.mint.key();

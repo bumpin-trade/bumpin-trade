@@ -4,8 +4,8 @@ use std::iter::Peekable;
 use std::panic::Location;
 use std::slice::Iter;
 
-use anchor_lang::Discriminator;
 use anchor_lang::prelude::AccountLoader;
+use anchor_lang::Discriminator;
 use arrayref::array_ref;
 use solana_program::account_info::AccountInfo;
 use solana_program::msg;
@@ -27,7 +27,8 @@ impl<'a> TradeTokenMap<'a> {
     pub fn get_all_trade_token(&self) -> BumpResult<Vec<TradeToken>> {
         let mut trade_tokens = Vec::new();
         for trade_token_loader in self.0.values() {
-            let trade_token = trade_token_loader.load()
+            let trade_token = trade_token_loader
+                .load()
                 .map_err(|e| {
                     let caller = Location::caller();
                     msg!("{:?}", e);
@@ -48,7 +49,7 @@ impl<'a> TradeTokenMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find trade_token {} at {}:{}", mint, caller.file(), caller.line());
                 return Err(TradeTokenNotFind);
-            }
+            },
             Some(loader) => loader,
         };
         match loader.load() {
@@ -58,7 +59,7 @@ impl<'a> TradeTokenMap<'a> {
                 msg!("{:?}", e);
                 msg!("Could not load trade_token {} at {}:{}", mint, caller.file(), caller.line());
                 Err(CouldNotLoadTradeTokenData)
-            }
+            },
         }
     }
 
@@ -70,7 +71,7 @@ impl<'a> TradeTokenMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find trade_token {} at {}:{}", mint, caller.file(), caller.line());
                 return Err(TradeTokenNotFind);
-            }
+            },
             Some(loader) => loader,
         };
         Ok(loader)

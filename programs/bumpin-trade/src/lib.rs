@@ -1,11 +1,11 @@
 use std::iter::Peekable;
 use std::slice::Iter;
 
-use anchor_lang::Discriminator;
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, spl_token};
-use anchor_spl::token::{InitializeAccount, Token, TokenAccount};
+use anchor_lang::Discriminator;
 use anchor_spl::token::{self};
+use anchor_spl::token::{spl_token, Mint};
+use anchor_spl::token::{InitializeAccount, Token, TokenAccount};
 
 use instructions::*;
 
@@ -30,13 +30,15 @@ declare_id!("GhzHdLjZ1qLLPnPq6YdeqJAszuBRN8WnLnK455yBbig6");
 pub mod bumpin_trade {
     use arrayref::array_ref;
 
-    use crate::processor::optional_accounts::{AccountMaps, load_maps};
+    use crate::processor::optional_accounts::{load_maps, AccountMaps};
     use crate::state::infrastructure::user_order::UserOrder;
     use crate::state::vault_map::VaultMap;
 
     use super::*;
 
-    pub fn initialize1<'a, 'b, 'c: 'info, 'info>(ctx: Context<'a, 'b, 'c, 'info, Initialize1>) -> Result<()> {
+    pub fn initialize1<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, Initialize1>,
+    ) -> Result<()> {
         msg!("initialize1");
 
         let key_value = &ctx.accounts.key_value;
@@ -52,7 +54,7 @@ pub mod bumpin_trade {
         let r = VaultMap::load(&mut ctx.remaining_accounts.iter().peekable());
         msg!("r: {}", r.is_ok());
         let u = r.unwrap();
-        msg!("len: {}",u.0.len());
+        msg!("len: {}", u.0.len());
         u.0.iter().for_each(|(k, v)| {
             msg!("k: {:?}", k);
             msg!("v: {:?}", v);
@@ -70,10 +72,8 @@ pub mod bumpin_trade {
         msg!("trade_token_vault mint: {:?}", trade_token_vault.mint);
         msg!("trade_token_vault amount: {:?}", trade_token_vault.amount);
 
-
         let binding = trade_token_vault.to_account_info();
         // let account :Account<TokenAccount> = Account::try_from(&binding).unwrap();
-
 
         // let data1 = binding.try_borrow_data().unwrap();
         // let d1 =  array_ref![data1, 0, 8];
@@ -209,7 +209,6 @@ pub struct Initialize<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-
 #[account]
 pub struct KeyValue {
     pub key: String,
@@ -227,5 +226,4 @@ pub struct Initialize1<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
     pub system_program: Program<'info, System>,
-
 }

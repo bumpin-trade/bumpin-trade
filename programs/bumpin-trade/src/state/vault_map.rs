@@ -3,8 +3,8 @@ use std::iter::Peekable;
 use std::panic::Location;
 use std::slice::Iter;
 
-use anchor_lang::Key;
 use anchor_lang::prelude::Account;
+use anchor_lang::Key;
 use anchor_spl::token;
 use anchor_spl::token::TokenAccount;
 use solana_program::account_info::AccountInfo;
@@ -29,7 +29,7 @@ impl<'a> VaultMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find trade_token {} at {}:{}", mint, caller.file(), caller.line());
                 return Err(TradeTokenNotFind);
-            }
+            },
             Some(loader) => loader,
         };
         Ok(account)
@@ -55,7 +55,6 @@ impl<'a> VaultMap<'a> {
                 Account::try_from(account_info).or(Err(InvalidTradeTokenAccount))?;
 
             token_account_map.0.insert(account.key(), account);
-
         }
         Ok(token_account_map)
     }

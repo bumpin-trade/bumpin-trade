@@ -52,12 +52,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         &mut ctx.remaining_accounts.iter().peekable();
 
     let AccountMaps {
-        market_map,
-        trade_token_map,
-        mut oracle_map,
-        pool_key_map,
-        vault_map,
-        ..
+        market_map, trade_token_map, mut oracle_map, pool_key_map, vault_map, ..
     } = load_maps(remaining_accounts)?;
 
     let mut user_processor = UserProcessor { user };
@@ -106,7 +101,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         total_size.cast::<i128>()?,
         SMALL_RATE_PRECISION.cast::<i128>()?,
     )?
-        .max(0i128);
+    .max(0i128);
 
     if cross_net_value <= 0 || cross_net_value.abs().cast::<u128>()? <= total_position_mm {
         for mut user_position in user_processor.user.user_positions {
@@ -118,7 +113,8 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
 
             let market = market_map.get_ref(&position_processor.position.symbol)?;
 
-            let index_price = oracle_map.get_price_data(&position_processor.position.index_mint).unwrap().price;
+            let index_price =
+                oracle_map.get_price_data(&position_processor.position.index_mint).unwrap().price;
             let bankruptcy_price = cal_utils::format_to_ticker_size(
                 if position_processor.position.is_long {
                     cal_utils::mul_small_rate_u(
@@ -164,32 +160,44 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
 
             let pool = pool_key_map.get_ref(&market.pool_key)?;
             let stable_pool = pool_key_map.get_ref(&market.stable_pool_key)?;
-            let trade_token = trade_token_map.get_trade_token(&position_processor.position.margin_mint)?;
+            let trade_token =
+                trade_token_map.get_trade_token(&position_processor.position.margin_mint)?;
 
-
-            position_processor.decrease_position(DecreasePositionParams {
-                order_id: 0,
-                is_liquidation: true,
-                is_cross_margin: true,
-                margin_token: position_processor.position.margin_mint,
-                decrease_size: position_processor.position.position_size,
-                execute_price: liquidation_price,
-            }, &ctx.accounts.user, pool_key_map.get_account_loader(&market.pool_key)?,
-                                                 pool_key_map.get_account_loader(&market.stable_pool_key)?,
-                                                 market_map.get_account_loader(&position_processor.position.symbol)?,
-                                                 &ctx.accounts.state,
-                                                 None,
-                                                 if position_processor.position.is_long {
-                                                     vault_map.get_account(&pda::generate_pool_vault_key(pool.pool_index, ctx.program_id)?)?
-                                                 } else {
-                                                     vault_map.get_account(&pda::generate_pool_vault_key(stable_pool.pool_index, ctx.program_id)?)?
-                                                 },
-                                                 trade_token_map.get_account_loader(&position_processor.position.margin_mint)?,
-                                                 vault_map.get_account(&pda::generate_trade_token_vault_key(trade_token.token_index, ctx.program_id)?)?,
-                                                 &ctx.accounts.bump_signer,
-                                                 &ctx.accounts.token_program,
-                                                 &ctx.program_id,
-                                                 &mut oracle_map,
+            position_processor.decrease_position(
+                DecreasePositionParams {
+                    order_id: 0,
+                    is_liquidation: true,
+                    is_cross_margin: true,
+                    margin_token: position_processor.position.margin_mint,
+                    decrease_size: position_processor.position.position_size,
+                    execute_price: liquidation_price,
+                },
+                &ctx.accounts.user,
+                pool_key_map.get_account_loader(&market.pool_key)?,
+                pool_key_map.get_account_loader(&market.stable_pool_key)?,
+                market_map.get_account_loader(&position_processor.position.symbol)?,
+                &ctx.accounts.state,
+                None,
+                if position_processor.position.is_long {
+                    vault_map.get_account(&pda::generate_pool_vault_key(
+                        pool.pool_index,
+                        ctx.program_id,
+                    )?)?
+                } else {
+                    vault_map.get_account(&pda::generate_pool_vault_key(
+                        stable_pool.pool_index,
+                        ctx.program_id,
+                    )?)?
+                },
+                trade_token_map.get_account_loader(&position_processor.position.margin_mint)?,
+                vault_map.get_account(&pda::generate_trade_token_vault_key(
+                    trade_token.token_index,
+                    ctx.program_id,
+                )?)?,
+                &ctx.accounts.bump_signer,
+                &ctx.accounts.token_program,
+                &ctx.program_id,
+                &mut oracle_map,
             )?;
         }
     }
