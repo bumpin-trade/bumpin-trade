@@ -13,8 +13,9 @@ pub struct FeeReward {
 }
 
 impl FeeReward {
-    pub fn add_pnl(&mut self, pool_pnl: i128) {
+    pub fn add_pnl(&mut self, pool_pnl: i128)-> BumpResult<()> {
         self.pnl = self.pnl.safe_add(pool_pnl)?;
+        Ok(())
     }
     pub fn get_rewards_delta_limit(&self) -> BumpResult<u128> {
         let mut delta_limit = 0u128;

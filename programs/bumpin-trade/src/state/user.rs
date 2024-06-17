@@ -49,6 +49,22 @@ impl User {
             .ok_or(CouldNotFindUserToken)?)
     }
 
+    pub fn try_sub_user_stake(&mut self, pool_key: &Pubkey, stake_amount: u128) -> BumpResult<()> {
+        let user_stake = self.get_user_stake_mut(pool_key)?;
+        if let Some(user_stake) = user_stake {
+            user_stake.sub_user_stake(stake_amount)?;
+        }
+        Ok(())
+    }
+
+    pub fn get_user_stake_ref(&self, pool_key: &Pubkey) -> BumpResult<&UserStake> {
+        Ok(self
+            .user_stakes
+            .iter()
+            .find(|user_stake| user_stake.pool_key.eq(pool_key))
+            .ok_or(CouldNotFindUserStake)?)
+    }
+
     pub fn get_user_stake_mut(&mut self, pool_key: &Pubkey) -> BumpResult<Option<&mut UserStake>> {
         let stake = self.user_stakes.iter_mut().find(|user_stake| {
             user_stake.pool_key.eq(pool_key)

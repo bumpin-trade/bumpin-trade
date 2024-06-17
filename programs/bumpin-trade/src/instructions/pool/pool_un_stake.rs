@@ -1,3 +1,10 @@
+use std::iter::Peekable;
+use std::slice::Iter;
+
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Token, TokenAccount};
+
+use crate::{utils, validate};
 use crate::can_sign_for_user;
 use crate::errors::BumpErrorCode;
 use crate::math::safe_math::SafeMath;
@@ -10,11 +17,6 @@ use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
-use crate::{utils, validate};
-use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
-use std::iter::Peekable;
-use std::slice::Iter;
 
 #[derive(Accounts)]
 #[instruction(pool_index: u16, trade_token_index: u16)]
@@ -117,8 +119,10 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
 
     update_account_fee_reward(&ctx.accounts.user, &ctx.accounts.pool)?;
 
-    let user_stake = user.get_user_stake_mut(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
-    let rewards_amount = user_stake.user_rewards.realised_rewards_token_amount;
+
+    let user_stake_ref = user.get_user_stake_ref(&pool.pool_key)?;
+    // let user_stake = user.get_user_stake_mut(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
+    let rewards_amount = user_stake_ref.user_rewards.realised_rewards_token_amount;
     let transfer_amount = un_stake_token_amount.safe_sub(un_stake_token_amount_fee)?;
 
     if un_stake_params.portfolio {
@@ -182,7 +186,7 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
         }
     }
 
-    user_stake.sub_user_stake(un_stake_params.un_stake_token_amount)?;
+    user.try_sub_user_stake(&pool.pool_key, un_stake_params.un_stake_token_amount)?;
 
     let mut user_stake = user.get_user_stake_mut(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
 
