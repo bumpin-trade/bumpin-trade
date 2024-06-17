@@ -93,7 +93,7 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
     let pool = &mut ctx.accounts.pool.load_mut()?;
     let user = &mut ctx.accounts.user.load_mut()?;
 
-    let user_stake = user.get_user_stake_mut(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
+    let user_stake = user.get_user_stake_ref(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
     validate!(
         user_stake.amount >= un_stake_params.un_stake_token_amount,
         BumpErrorCode::UnStakeNotEnough
@@ -119,9 +119,7 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
 
     update_account_fee_reward(&ctx.accounts.user, &ctx.accounts.pool)?;
 
-    let user_stake_ref = user.get_user_stake_ref(&pool.pool_key)?;
-    // let user_stake = user.get_user_stake_mut(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
-    let rewards_amount = user_stake_ref.user_rewards.realised_rewards_token_amount;
+    let rewards_amount = user_stake.user_rewards.realised_rewards_token_amount;
     let transfer_amount = un_stake_token_amount.safe_sub(un_stake_token_amount_fee)?;
 
     if un_stake_params.portfolio {

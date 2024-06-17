@@ -150,6 +150,10 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
             order.order_margin,
         )?;
     }
+    if order.position_side.eq(&PositionSide::INCREASE) && order.is_cross_margin {
+        //hold usd
+        user.add_order_hold_in_usd(order.order_margin)?;
+    }
 
     if user.has_other_short_order(order.symbol, token.mint, order.is_cross_margin)? {
         return Err(BumpErrorCode::OnlyOneShortOrderAllowed.into());
@@ -174,10 +178,6 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         time: cal_utils::current_time(),
         status: OrderStatus::USING,
     };
-    if order.position_side.eq(&PositionSide::INCREASE) && order.is_cross_margin {
-        //hold usd
-        user.add_order_hold_in_usd(order.order_margin)?;
-    }
 
     if order.order_type.eq(&OrderType::MARKET) {
         //execute order

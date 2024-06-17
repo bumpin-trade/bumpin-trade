@@ -58,4 +58,30 @@ impl<'a> VaultMap<'a> {
         }
         Ok(token_account_map)
     }
+
+    pub fn load_vec<'c>(
+        account_info_iter: &'c mut Peekable<Iter<'a, AccountInfo<'a>>>,
+    ) -> BumpResult<Vec<Account<'a, TokenAccount>>> {
+        let mut token_account_vec: Vec<Account<'a, TokenAccount>> = Vec::new();
+        let mut index = 0usize;
+        while let Some(account_info) = account_info_iter.next() {
+            let data = account_info.try_borrow_data().or(Err(CouldNotLoadTradeTokenData))?;
+
+            let expected_data_len = TokenAccount::LEN;
+            if data.len() < expected_data_len {
+                continue;
+            }
+
+            if account_info.owner != &token::ID {
+                continue;
+            }
+
+            let account: Account<'a, TokenAccount> =
+                Account::try_from(account_info).or(Err(InvalidTradeTokenAccount))?;
+
+            token_account_vec.insert(index, account);
+            index += 1usize;
+        }
+        Ok(token_account_vec)
+    }
 }

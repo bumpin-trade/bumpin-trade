@@ -57,12 +57,11 @@ impl User {
         Ok(())
     }
 
-    pub fn get_user_stake_ref(&self, pool_key: &Pubkey) -> BumpResult<&UserStake> {
-        Ok(self
-            .user_stakes
-            .iter()
-            .find(|user_stake| user_stake.pool_key.eq(pool_key))
-            .ok_or(CouldNotFindUserStake)?)
+    pub fn get_user_stake_ref(&self, pool_key: &Pubkey) -> BumpResult<Option<&UserStake>> {
+        Ok(self.user_stakes.iter().find(|user_stake| {
+            user_stake.pool_key.eq(pool_key)
+                && user_stake.user_stake_status.eq(&UserStakeStatus::USING)
+        }))
     }
 
     pub fn get_user_stake_mut(&mut self, pool_key: &Pubkey) -> BumpResult<Option<&mut UserStake>> {
