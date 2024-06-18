@@ -85,10 +85,20 @@ pub mod bumpin_trade {
         ctx: Context<'a, 'b, 'c, 'info, InitializeState>,
         param: InitializeStateParams,
     ) -> Result<()> {
-        msg!("initialize_state");
-        msg!("param: {:?}", param);
-        msg!("admin: {:?}", ctx.accounts.admin.key);
         handle_initialize_state(ctx, param)
+    }
+
+    pub fn initialize_pool<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, InitializePool>,
+        name: [u8; 32],
+    ) -> Result<()> {
+        handle_initialize_pool(ctx, name)
+    }
+
+    pub fn initialize_user<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, InitializeUser>,
+    ) -> Result<()> {
+        handle_initialize_user(ctx)
     }
 
     /*-----pool pool------*/

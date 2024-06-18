@@ -1,19 +1,64 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Program } from "@coral-xyz/anchor";
-import { BumpinTrade } from "../target/types/bumpin_trade";
+import {Program} from "@coral-xyz/anchor";
+import {BumpinTrade} from "../target/types/bumpin_trade";
 import {Utils} from "./utils/utils";
+import {assert} from 'chai';
+import {PublicKey} from "@solana/web3.js";
+
 describe("bumpin-trade", () => {
     const provider = anchor.AnchorProvider.local();
-    anchor.setProvider(anchor.AnchorProvider.env());
     const program = anchor.workspace.BumpinTrade as Program<BumpinTrade>;
-
     const utils = new Utils({programId: program.programId});
 
-    it("State initialize", async () => {
-        let admin = await utils.new_user();
-        await utils.initialize_state(admin);
-        const state= await program.account.state.fetch(utils.get_bump_state_pk()) ;
-        console.log("State: ", state.fundingFeeBaseRate.toString());
+    let admin: anchor.web3.Keypair;
+    let Player1: anchor.web3.Keypair;
+    let Player2: anchor.web3.Keypair;
+    let mint_account: anchor.web3.Keypair;
 
+    before(async () => {
+        admin = await utils.new_user();
+        mint_account = await utils.create_mint_account(admin, admin);
+        await utils.initialize_state(admin);
+        await utils.initialize_pool(mint_account.publicKey, "BUMP_P__BTC", admin);
+        Player1 = await utils.new_user();
+        await utils.initialize_user(Player1, admin);
+
+        Player2 = await utils.new_user();
+        await utils.initialize_user(Player2, admin);
+    });
+
+    it("Check State", async () => {
+        const state = await program.account.state.fetch(utils.get_bump_state_pk());
+        assert(state.fundingFeeBaseRate.toString() === "100");
+    });
+
+    it("Check User (Player1, Player2)", async () => {
+        //TODO: Do better
+        const [meAddress1, nonce1] = PublicKey.findProgramAddressSync(
+            [Buffer.from("user"), Player1.publicKey.toBuffer()],
+            program.programId
+        );
+        const m1 = await program.account.user.fetch(meAddress1);
+        assert(m1.hold.toString() === "0");
+
+        const [meAddress2, nonce2] = PublicKey.findProgramAddressSync(
+            [Buffer.from("user"), Player2.publicKey.toBuffer()],
+            program.programId
+        );
+        const m2 = await program.account.user.fetch(meAddress2);
+        assert(m2.hold.toString() === "0");
+    });
+
+    it("Check Pool", async () => {
+        const stateNumberOfPoolsBytes = new Uint8Array(new Uint16Array([0]).buffer);
+        const seeds = [
+            Buffer.from('pool'),
+            stateNumberOfPoolsBytes
+        ];
+        const [meAddress, nonce] = PublicKey.findProgramAddressSync(
+            seeds,
+            program.programId
+        );
+        await program.account.pool.fetch(meAddress);
     });
 });

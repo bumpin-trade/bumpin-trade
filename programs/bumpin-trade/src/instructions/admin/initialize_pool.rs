@@ -31,7 +31,7 @@ pub struct InitializePool<'info> {
     pub pool_mint_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
-        constraint = state.bump_signer.eq(& bump_signer.key())
+        constraint = state.bump_signer.eq(&bump_signer.key())
     )]
     /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
@@ -54,6 +54,8 @@ pub struct InitializePool<'info> {
 }
 
 pub fn handle_initialize_pool(ctx: Context<InitializePool>, name: [u8; 32]) -> Result<()> {
+    msg!("handle_initialize_pool, name: {}", String::from_utf8(name.to_vec()).unwrap());
+    msg!("state: {}", ctx.accounts.state.to_account_info().key());
     let mut pool = ctx.accounts.pool.load_init()?;
     let state = &mut ctx.accounts.state;
 

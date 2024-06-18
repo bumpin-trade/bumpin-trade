@@ -25,8 +25,8 @@ pub struct User {
     pub hold: u128,
     pub user_tokens: [UserToken; 10],
     pub user_stakes: [UserStake; 10],
-    pub user_positions: [UserPosition; 24],
-    pub user_orders: [UserOrder; 16],
+    pub user_positions: [UserPosition; 10],
+    pub user_orders: [UserOrder; 10],
 }
 
 impl Size for User {

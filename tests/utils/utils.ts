@@ -1,15 +1,17 @@
-import {PublicKey} from '@solana/web3.js';
+import {PublicKey, sendAndConfirmTransaction, SystemProgram, Transaction} from '@solana/web3.js';
 import * as fs from 'fs';
 import * as anchor from "@coral-xyz/anchor";
 import {Program} from "@coral-xyz/anchor";
 import {BumpinTrade} from "../../target/types/bumpin_trade";
-import {ACCOUNT_SIZE} from "@solana/spl-token";
+import {ACCOUNT_SIZE, createInitializeMintInstruction, MintLayout, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 
 export class Utils {
     programId: PublicKey;
     bump_state_pk: PublicKey;
     bump_state_nonce: number;
 
+    provider = anchor.AnchorProvider.local();
+    program = anchor.workspace.BumpinTrade as Program<BumpinTrade>;
 
     constructor(program: { programId: PublicKey }) {
         this.programId = program.programId;
@@ -24,7 +26,6 @@ export class Utils {
 
     public async new_user(secretKey?: Uint8Array, lamportMultiplier: number = 100.0): Promise<anchor.web3.Keypair> {
         //TODO: Do better, maybe can switch to a different provider
-        const provider = anchor.AnchorProvider.local();
         let user: anchor.web3.Keypair | undefined;
         if (secretKey) {
             user = anchor.web3.Keypair.fromSecretKey(secretKey);
@@ -35,16 +36,14 @@ export class Utils {
         }
 
         if (lamportMultiplier > 0.0) {
-            const lamports = await provider.connection.getMinimumBalanceForRentExemption(ACCOUNT_SIZE);
-            await this.airdrop_lamports(provider, user.publicKey, lamports * lamportMultiplier);
+            const lamports = await this.provider.connection.getMinimumBalanceForRentExemption(ACCOUNT_SIZE);
+            await this.airdrop_lamports(this.provider, user.publicKey, lamports * lamportMultiplier);
         }
         return user;
 
     }
 
-
     public async initialize_state(admin: anchor.web3.Keypair): Promise<void> {
-        const program = anchor.workspace.BumpinTrade as Program<BumpinTrade>;
         const params = this.read_json_from_file('tests/params/states/state_params.json');
         const param = {
             minOrderMarginUsd: new anchor.BN(params.min_order_margin_usd),
@@ -67,14 +66,71 @@ export class Utils {
             poolFeeRewardRatio: new anchor.BN(params.pool_fee_reward_ratio)
         };
 
-        const tx = await program.methods.initializeState(
+        await this.program.methods.initializeState(
             param
-        ).accounts( {
+        ).accounts({
             admin: admin.publicKey,
         }).signers([admin]).rpc();
-        console.log("Your transaction signature", tx);
     }
 
+    public async create_mint_account(mintAuthority: anchor.web3.Keypair, payer: anchor.web3.Keypair, decimals: number = 9): Promise<anchor.web3.Keypair> {
+        const lamports = await this.provider.connection.getMinimumBalanceForRentExemption(ACCOUNT_SIZE);
+        let account = anchor.web3.Keypair.generate();
+        const transaction = new Transaction();
+        transaction.add(
+            SystemProgram.createAccount({
+                fromPubkey: payer.publicKey,
+                newAccountPubkey: account.publicKey,
+                space: MintLayout.span,
+                lamports,
+                programId: TOKEN_PROGRAM_ID,
+            })
+        );
+
+        transaction.add(
+            createInitializeMintInstruction(
+                account.publicKey,
+                decimals,
+                mintAuthority.publicKey,
+                mintAuthority.publicKey,
+                TOKEN_PROGRAM_ID
+            )
+        );
+
+        await sendAndConfirmTransaction(
+            this.provider.connection,
+            transaction,
+            [payer, account]
+        );
+
+        return account;
+
+    }
+
+
+    public async initialize_user(authority: anchor.web3.Keypair, payer: anchor.web3.Keypair): Promise<void> {
+        const program = anchor.workspace.BumpinTrade as Program<BumpinTrade>;
+        await program.methods.initializeUser().accounts({
+            state: this.bump_state_pk,
+            authority: authority.publicKey,
+            payer: payer.publicKey
+        }).signers([authority, payer]).rpc();
+    }
+
+
+    public async initialize_pool(poolMint: PublicKey, name: string, admin: anchor.web3.Keypair): Promise<void> {
+        const poolName = Buffer.from(name, 'utf-8');
+        const paddedPoolName = Buffer.concat([poolName, Buffer.alloc(32 - poolName.length)]);
+        const paddedPoolNameArray = Array.from(paddedPoolName);
+        const program = anchor.workspace.BumpinTrade as Program<BumpinTrade>;
+        await program.methods.initializePool(
+            paddedPoolNameArray,
+        ).accounts({
+            poolMint: poolMint,
+            bumpSigner: this.bump_state_pk,
+            admin: admin.publicKey,
+        }).signers([admin]).rpc();
+    }
 
     public async airdrop_lamports(provider: anchor.Provider, receiver: PublicKey, lamports: number) {
         const airdropSignature = await provider.connection.requestAirdrop(receiver, lamports); // Request 2x lamports for safety
