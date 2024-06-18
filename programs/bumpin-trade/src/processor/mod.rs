@@ -1,4 +1,4 @@
-pub mod balance_processor;
+pub mod re_balance_processor;
 pub mod fee_processor;
 pub mod fee_reward_processor;
 pub mod liquidate_processor;
