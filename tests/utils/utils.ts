@@ -11,7 +11,14 @@ import * as anchor from "@coral-xyz/anchor";
 import {Program, Provider} from "@coral-xyz/anchor";
 import {BumpinTrade} from "../../target/types/bumpin_trade";
 import {Pyth} from "../../target/types/pyth";
-import {ACCOUNT_SIZE, createInitializeMintInstruction, MintLayout, TOKEN_PROGRAM_ID} from "@solana/spl-token";
+import {
+    ACCOUNT_SIZE,
+    createInitializeMintInstruction,
+    getOrCreateAssociatedTokenAccount,
+    MintLayout,
+    mintToChecked,
+    TOKEN_PROGRAM_ID
+} from "@solana/spl-token";
 import BN from "bn.js";
 
 export class Utils {
@@ -154,6 +161,29 @@ export class Utils {
         }).rpc();
     }
 
+
+    public async initialize_trade_token(tradeTokenMint: PublicKey, admin: anchor.web3.Keypair, oracle: PublicKey, discount: BN, liquidationFactor: BN): Promise<void> {
+        await this.program.methods.initializeTradeToken(
+            discount, liquidationFactor
+        ).accounts({
+            tradeTokenMint,
+            oracle,
+            bumpSigner: this.bump_state_pk,
+            admin: admin.publicKey,
+        }).signers([admin]).rpc();
+    }
+
+
+    public async deposit(authority: anchor.web3.Keypair, userTokenAccount: PublicKey, tokenIndex: number, amount: BN): Promise<void> {
+        await this.program.methods.deposit(
+            tokenIndex, amount
+        ).accounts({
+            authority: authority.publicKey,
+            userTokenAccount
+        }).signers([authority]).rpc();
+    }
+
+
     public async manual_create_account(provider: Provider, fromPk: anchor.web3.Keypair, newAccountPk: anchor.web3.Keypair, space: number, lamports: number, programId: PublicKey) {
         let i = anchor.web3.SystemProgram.createAccount({
             fromPubkey: fromPk.publicKey,
@@ -177,13 +207,27 @@ export class Utils {
         const transaction = new VersionedTransaction(messageV0);
         transaction.sign([fromPk, newAccountPk]);
         const signature = await provider.connection.sendTransaction(transaction);
-        const confirmation = await provider.connection.confirmTransaction({
+        await provider.connection.confirmTransaction({
             blockhash,
             lastValidBlockHeight,
             signature
         });
         // const accountInfo = await provider.connection.getAccountInfo(newAccountPk.publicKey);
         // console.log(accountInfo);
+    }
+
+
+    public async createTokenAccount(provider: Provider, payer: anchor.web3.Keypair, mint: PublicKey, owner: PublicKey) {
+        return await getOrCreateAssociatedTokenAccount(
+            provider.connection,
+            payer,
+            mint,
+            owner
+        );
+    }
+
+    public async mintTo(provider: Provider, payer: anchor.web3.Keypair, mint: PublicKey, destination: PublicKey, amount: number, decimals: number) {
+        await mintToChecked(provider.connection, payer, mint, destination, payer, amount, decimals);
     }
 
     public async airdrop_lamports(provider: anchor.Provider, receiver: PublicKey, lamports: number) {

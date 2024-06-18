@@ -22,7 +22,7 @@ pub fn stake(
     let mut pool = &mut pool_account_loader
         .load_mut()
         .map_err(|e| BumpErrorCode::UnableToLoadAccountLoader)?;
-    let mut user =
+    let user =
         &mut user_account_loader.load_mut().map_err(|e| BumpErrorCode::CouldNotLoadUserData)?;
     let trade_token =
         trade_token_account.load().map_err(|e| BumpErrorCode::UnableToLoadAccountLoader)?;

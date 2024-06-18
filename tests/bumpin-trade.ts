@@ -5,6 +5,7 @@ import {Pyth} from "../target/types/pyth";
 import {Utils} from "./utils/utils";
 import {assert} from 'chai';
 import {PublicKey} from "@solana/web3.js";
+import BN from "bn.js";
 
 describe("bumpin-trade", () => {
     const provider = anchor.AnchorProvider.local();
@@ -15,26 +16,29 @@ describe("bumpin-trade", () => {
     let admin: anchor.web3.Keypair;
     let Player1: anchor.web3.Keypair;
     let Player2: anchor.web3.Keypair;
-    let mint_account: anchor.web3.Keypair;
+    let pool_mint_account: anchor.web3.Keypair;
+    let trade_token_mint_account: anchor.web3.Keypair;
     let oracle: anchor.web3.Keypair;
 
     before(async () => {
         admin = await utils.new_user(provider);
         let oracle_payer = await utils.new_user(programPyth.provider as anchor.AnchorProvider);
         oracle = anchor.web3.Keypair.generate();
-
         await utils.manual_create_account(programPyth.provider, oracle_payer, oracle, 3312,
             await programPyth.provider.connection.getMinimumBalanceForRentExemption(
                 3312
             ), programPyth.programId);
+
         await utils.initialize_oracle(oracle, 70000);
-        mint_account = await utils.create_mint_account(admin, admin);
+        pool_mint_account = await utils.create_mint_account(admin, admin);
+        trade_token_mint_account = await utils.create_mint_account(admin, admin);
         await utils.initialize_state(admin);
-        await utils.initialize_pool(mint_account.publicKey, "BUMP_P__BTC", admin);
+        await utils.initialize_pool(pool_mint_account.publicKey, "BUMP_P__BTC", admin);
         Player1 = await utils.new_user(provider);
         await utils.initialize_user(Player1, admin);
         Player2 = await utils.new_user(provider);
         await utils.initialize_user(Player2, admin);
+        await utils.initialize_trade_token(trade_token_mint_account.publicKey, admin, oracle.publicKey, new BN(10), new BN(1));
     });
 
     it("Check State", async () => {
@@ -70,5 +74,27 @@ describe("bumpin-trade", () => {
             program.programId
         );
         await program.account.pool.fetch(meAddress);
+    });
+
+
+    it("Check TradeToken", async () => {
+        const stateNumberOfPoolsBytes = new Uint8Array(new Uint16Array([0]).buffer);
+        const seeds = [
+            Buffer.from('trade_token'),
+            stateNumberOfPoolsBytes
+        ];
+        const [meAddress, nonce] = PublicKey.findProgramAddressSync(
+            seeds,
+            program.programId
+        );
+        await program.account.tradeToken.fetch(meAddress);
+    });
+
+
+    it("Deposit for Play1", async () => {
+        let tradeToken = await utils.createTokenAccount(program.provider, admin, trade_token_mint_account.publicKey, Player1.publicKey);
+        await utils.mintTo(program.provider, admin, trade_token_mint_account.publicKey, tradeToken.address, 1000, 9);
+        // await utils.airdrop_lamports(program.provider, tradeToken.address, 1000);
+        await utils.deposit(Player1, tradeToken.address, 0, new BN(1));
     });
 });

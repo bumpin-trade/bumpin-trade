@@ -36,7 +36,9 @@ pub struct InitializeTradeToken<'info> {
     pub bump_signer: AccountInfo<'info>,
     #[account(
         mut,
-        has_one = bump_signer
+        seeds = [b"bump_state".as_ref()],
+        bump,
+        has_one = admin
     )]
     pub state: Account<'info, State>,
     #[account(mut)]
@@ -46,7 +48,7 @@ pub struct InitializeTradeToken<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn initialize_trade_token(
+pub fn handle_initialize_trade_token(
     ctx: Context<InitializeTradeToken>,
     discount: u128,
     liquidation_factor: u128,

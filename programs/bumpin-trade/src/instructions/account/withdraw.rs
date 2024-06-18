@@ -61,7 +61,7 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
     let trade_token = ctx.accounts.trade_token.load_mut()?;
     let mint = &ctx.accounts.user_token_account.mint.key();
 
-    let user_token = user.get_user_token_ref(mint)?;
+    let user_token = user.get_user_token_ref(mint)?.ok_or(BumpErrorCode::CouldNotFindUserToken)?;
     validate!(user_token.amount > amount, BumpErrorCode::AmountNotEnough)?;
     let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
         &mut ctx.remaining_accounts.iter().peekable();

@@ -5,7 +5,7 @@ use crate::math::safe_math::SafeMath;
 use crate::state::infrastructure::user_order::{OrderSide, OrderStatus, PositionSide, UserOrder};
 use crate::state::infrastructure::user_position::{PositionStatus, UserPosition};
 use crate::state::infrastructure::user_stake::{UserStake, UserStakeStatus};
-use crate::state::infrastructure::user_token::UserToken;
+use crate::state::infrastructure::user_token::{UserToken, UserTokenStatus};
 use crate::state::traits::Size;
 use crate::utils::pda;
 use crate::validate;
@@ -32,19 +32,19 @@ impl Size for User {
 }
 
 impl User {
-    pub fn get_user_token_mut(&mut self, mint: &Pubkey) -> BumpResult<&mut UserToken> {
+    pub fn get_user_token_mut(&mut self, mint: &Pubkey) -> BumpResult<Option<&mut UserToken>> {
         Ok(self
             .user_tokens
             .iter_mut()
-            .find(|user_token| user_token.token_mint.eq(mint))
-            .ok_or(CouldNotFindUserToken)?)
+            .find(|user_token| user_token.token_mint.eq(mint) && user_token.user_token_status.eq(&UserTokenStatus::USING))
+        )
     }
-    pub fn get_user_token_ref(&self, mint: &Pubkey) -> BumpResult<&UserToken> {
+    pub fn get_user_token_ref(&self, mint: &Pubkey) -> BumpResult<Option<&UserToken>> {
         Ok(self
             .user_tokens
             .iter()
-            .find(|&user_token| user_token.token_mint.eq(mint))
-            .ok_or(CouldNotFindUserToken)?)
+            .find(|&user_token| user_token.token_mint.eq(mint) && user_token.user_token_status.eq(&UserTokenStatus::USING))
+        )
     }
 
     pub fn try_sub_user_stake(&mut self, pool_key: &Pubkey, stake_amount: u128) -> BumpResult<()> {
@@ -83,21 +83,38 @@ impl User {
 
     pub fn use_token(&mut self, token: &Pubkey, amount: u128, is_check: bool) -> BumpResult<u128> {
         let use_from_balance;
-        let token_balance = self.get_user_token_mut(token)?;
+        let user_token_option = self.get_user_token_mut(&token)?;
+        let user_token =
+            match user_token_option {
+                None => {
+                    let index = self.next_usable_user_token_index()?;
+                    //init user_token
+                    let new_token = &mut UserToken {
+                        user_token_status: UserTokenStatus::USING,
+                        token_mint: *token,
+                        amount: 0,
+                        used_amount: 0,
+                        liability: 0,
+                    };
+                    self.add_user_token(new_token, index)?;
+                    self.get_user_token_mut(token)?.ok_or(CouldNotFindUserToken)?
+                }
+                Some(exist_user_token) => { exist_user_token }
+            };
         if is_check {
             validate!(
-                token_balance.amount >= token_balance.used_amount,
+                user_token.amount >= user_token.used_amount,
                 BumpErrorCode::AmountNotEnough.into()
             )?;
         };
-        if token_balance.amount >= token_balance.used_amount + amount {
-            token_balance.add_token_used_amount(amount)?;
+        if user_token.amount >= user_token.used_amount + amount {
+            user_token.add_token_used_amount(amount)?;
             use_from_balance = amount;
-        } else if token_balance.amount > token_balance.used_amount {
-            use_from_balance = token_balance.amount - token_balance.used_amount;
-            token_balance.add_token_used_amount(amount)?;
+        } else if user_token.amount > user_token.used_amount {
+            use_from_balance = user_token.amount - user_token.used_amount;
+            user_token.add_token_used_amount(amount)?;
         } else {
-            token_balance.add_token_used_amount(amount)?;
+            user_token.add_token_used_amount(amount)?;
             use_from_balance = 0u128;
         }
 
@@ -105,7 +122,7 @@ impl User {
     }
 
     pub fn un_use_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
-        let token_balance = self.get_user_token_mut(token)?;
+        let token_balance = self.get_user_token_mut(token)?.ok_or(CouldNotFindUserToken)?;
         validate!(token_balance.used_amount > amount, BumpErrorCode::AmountNotEnough.into())?;
         token_balance.sub_token_used_amount(amount)?;
         Ok(())
@@ -200,6 +217,15 @@ impl User {
         Err(BumpErrorCode::NoMoreOrderSpace)
     }
 
+    pub fn next_usable_user_token_index(&self) -> BumpResult<usize> {
+        for (index, user_token) in self.user_tokens.iter().enumerate() {
+            if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
+                return Ok(index);
+            }
+        }
+        Err(BumpErrorCode::NoMoreOrderSpace)
+    }
+
     pub fn next_usable_position_index(&self) -> BumpResult<usize> {
         for (index, position) in self.user_positions.iter().enumerate() {
             if position.status.eq(&PositionStatus::INIT) {
@@ -230,6 +256,11 @@ impl User {
 
     pub fn add_user_stake(&mut self, user_stake: &UserStake, index: usize) -> BumpResult {
         self.user_stakes[index] = *user_stake;
+        Ok(())
+    }
+
+    pub fn add_user_token(&mut self, user_token: &UserToken, index: usize) -> BumpResult {
+        self.user_tokens[index] = *user_token;
         Ok(())
     }
 
@@ -272,8 +303,8 @@ impl User {
                 && user_order.symbol == symbol
                 && user_order.margin_token.eq(margin_token)
                 && ((is_long_order == is_long
-                    && user_order.position_side.eq(&PositionSide::INCREASE))
-                    || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
+                && user_order.position_side.eq(&PositionSide::INCREASE))
+                || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
             {
                 user_order.set_leverage(leverage)
             }
