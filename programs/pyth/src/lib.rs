@@ -36,12 +36,7 @@ pub mod pyth {
         let oracle = &ctx.accounts.price;
         let mut price_oracle = Price::load(oracle).unwrap();
 
-        price_oracle.twap = price_oracle
-            .twap
-            .checked_add(price)
-            .unwrap()
-            .checked_div(2)
-            .unwrap(); //todo
+        price_oracle.twap = price_oracle.twap.checked_add(price).unwrap().checked_div(2).unwrap(); //todo
         price_oracle.agg.price = price;
         Ok(())
     }
@@ -50,12 +45,7 @@ pub mod pyth {
         let oracle = &ctx.accounts.price;
         let mut price_oracle = Price::load(oracle).unwrap();
 
-        price_oracle.twap = price_oracle
-            .twap
-            .checked_add(price)
-            .unwrap()
-            .checked_div(2)
-            .unwrap(); //todo
+        price_oracle.twap = price_oracle.twap.checked_add(price).unwrap().checked_div(2).unwrap(); //todo
         price_oracle.agg.price = price;
         price_oracle.agg.conf = conf;
         price_oracle.valid_slot = slot;
@@ -87,12 +77,12 @@ pub struct Initialize<'info> {
 }
 
 #[cfg(test)]
-mod test{
+mod test {
 
     use super::*;
 
     #[test]
-    pub fn print_price_memory_layout(){
+    pub fn print_price_memory_layout() {
         println!("Price memory layout: {:?}", std::mem::size_of::<Price>());
     }
 }
