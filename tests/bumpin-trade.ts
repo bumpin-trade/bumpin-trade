@@ -1,6 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import {Program} from "@coral-xyz/anchor";
 import {BumpinTrade} from "../target/types/bumpin_trade";
+import {Pyth} from "../target/types/pyth";
 import {Utils} from "./utils/utils";
 import {assert} from 'chai';
 import {PublicKey} from "@solana/web3.js";
@@ -8,22 +9,31 @@ import {PublicKey} from "@solana/web3.js";
 describe("bumpin-trade", () => {
     const provider = anchor.AnchorProvider.local();
     const program = anchor.workspace.BumpinTrade as Program<BumpinTrade>;
-    const utils = new Utils({programId: program.programId});
+    const programPyth = anchor.workspace.Pyth as Program<Pyth>;
+    const utils = new Utils();
 
     let admin: anchor.web3.Keypair;
     let Player1: anchor.web3.Keypair;
     let Player2: anchor.web3.Keypair;
     let mint_account: anchor.web3.Keypair;
+    let oracle: anchor.web3.Keypair;
 
     before(async () => {
-        admin = await utils.new_user();
+        admin = await utils.new_user(provider);
+        let oracle_payer = await utils.new_user(programPyth.provider as anchor.AnchorProvider);
+        oracle = anchor.web3.Keypair.generate();
+
+        await utils.manual_create_account(programPyth.provider, oracle_payer, oracle, 3312,
+            await programPyth.provider.connection.getMinimumBalanceForRentExemption(
+                3312
+            ), programPyth.programId);
+        await utils.initialize_oracle(oracle, 70000);
         mint_account = await utils.create_mint_account(admin, admin);
         await utils.initialize_state(admin);
         await utils.initialize_pool(mint_account.publicKey, "BUMP_P__BTC", admin);
-        Player1 = await utils.new_user();
+        Player1 = await utils.new_user(provider);
         await utils.initialize_user(Player1, admin);
-
-        Player2 = await utils.new_user();
+        Player2 = await utils.new_user(provider);
         await utils.initialize_user(Player2, admin);
     });
 

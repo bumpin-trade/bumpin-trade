@@ -6,7 +6,7 @@ skip-lint = false
 
 [programs.localnet]
 bumpin_trade = "GhzHdLjZ1qLLPnPq6YdeqJAszuBRN8WnLnK455yBbig6"
-#bumpin_trade = "m3CNxDRMvfVAn1fBxceL6wdcy9srHfR9qQFvxyDPPJd"
+pyth = "7JAaHCu2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH"
 
 [registry]
 url = "https://api.apr.dev"

@@ -1,9 +1,18 @@
-import {PublicKey, sendAndConfirmTransaction, SystemProgram, Transaction} from '@solana/web3.js';
+import {
+    PublicKey,
+    sendAndConfirmTransaction,
+    SystemProgram,
+    Transaction,
+    TransactionMessage,
+    VersionedTransaction
+} from '@solana/web3.js';
 import * as fs from 'fs';
 import * as anchor from "@coral-xyz/anchor";
-import {Program} from "@coral-xyz/anchor";
+import {Program, Provider} from "@coral-xyz/anchor";
 import {BumpinTrade} from "../../target/types/bumpin_trade";
+import {Pyth} from "../../target/types/pyth";
 import {ACCOUNT_SIZE, createInitializeMintInstruction, MintLayout, TOKEN_PROGRAM_ID} from "@solana/spl-token";
+import BN from "bn.js";
 
 export class Utils {
     programId: PublicKey;
@@ -12,9 +21,10 @@ export class Utils {
 
     provider = anchor.AnchorProvider.local();
     program = anchor.workspace.BumpinTrade as Program<BumpinTrade>;
+    programPyth = anchor.workspace.Pyth as Program<Pyth>;
 
-    constructor(program: { programId: PublicKey }) {
-        this.programId = program.programId;
+    constructor() {
+        this.programId = this.program.programId;
         const [bump_state_pk, bump_state_nonce] = PublicKey.findProgramAddressSync(
             [Buffer.from("bump_state")],
             this.programId
@@ -24,7 +34,7 @@ export class Utils {
     }
 
 
-    public async new_user(secretKey?: Uint8Array, lamportMultiplier: number = 100.0): Promise<anchor.web3.Keypair> {
+    public async new_user(provider: anchor.AnchorProvider, secretKey?: Uint8Array, lamportMultiplier: number = 100.0,): Promise<anchor.web3.Keypair> {
         //TODO: Do better, maybe can switch to a different provider
         let user: anchor.web3.Keypair | undefined;
         if (secretKey) {
@@ -36,12 +46,13 @@ export class Utils {
         }
 
         if (lamportMultiplier > 0.0) {
-            const lamports = await this.provider.connection.getMinimumBalanceForRentExemption(ACCOUNT_SIZE);
-            await this.airdrop_lamports(this.provider, user.publicKey, lamports * lamportMultiplier);
+            const lamports = await provider.connection.getMinimumBalanceForRentExemption(ACCOUNT_SIZE);
+            await this.airdrop_lamports(provider, user.publicKey, lamports * lamportMultiplier);
         }
         return user;
 
     }
+
 
     public async initialize_state(admin: anchor.web3.Keypair): Promise<void> {
         const params = this.read_json_from_file('tests/params/states/state_params.json');
@@ -130,6 +141,49 @@ export class Utils {
             bumpSigner: this.bump_state_pk,
             admin: admin.publicKey,
         }).signers([admin]).rpc();
+    }
+
+    public async initialize_oracle(oracle: anchor.web3.Keypair, initPrice: number, confidence = undefined, expo = -4): Promise<void> {
+        const conf = new BN(confidence) || new BN((initPrice / 10) * 10 ** -expo);
+        await this.programPyth.methods.initialize(
+            new anchor.BN(initPrice),
+            expo,
+            conf
+        ).accounts({
+            price: oracle.publicKey,
+        }).rpc();
+    }
+
+    public async manual_create_account(provider: Provider, fromPk: anchor.web3.Keypair, newAccountPk: anchor.web3.Keypair, space: number, lamports: number, programId: PublicKey) {
+        let i = anchor.web3.SystemProgram.createAccount({
+            fromPubkey: fromPk.publicKey,
+            newAccountPubkey: newAccountPk.publicKey,
+            space: space,
+            lamports: lamports,
+            programId: programId,
+        });
+        let lastBlockHash = await provider.connection
+            .getLatestBlockhash();
+        let blockhash = lastBlockHash.blockhash;
+        let lastValidBlockHeight = lastBlockHash.lastValidBlockHeight;
+
+
+        // create v0 compatible message
+        const messageV0 = new TransactionMessage({
+            instructions: [i],
+            payerKey: fromPk.publicKey,
+            recentBlockhash: blockhash,
+        }).compileToV0Message();
+        const transaction = new VersionedTransaction(messageV0);
+        transaction.sign([fromPk, newAccountPk]);
+        const signature = await provider.connection.sendTransaction(transaction);
+        const confirmation = await provider.connection.confirmTransaction({
+            blockhash,
+            lastValidBlockHeight,
+            signature
+        });
+        // const accountInfo = await provider.connection.getAccountInfo(newAccountPk.publicKey);
+        // console.log(accountInfo);
     }
 
     public async airdrop_lamports(provider: anchor.Provider, receiver: PublicKey, lamports: number) {
