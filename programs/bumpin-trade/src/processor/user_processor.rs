@@ -47,7 +47,7 @@ impl<'a> UserProcessor<'a> {
             BumpErrorCode::UserNotEnoughValue
         )?;
 
-        let user_token = self.user.get_user_token_mut(mint)?;
+        let user_token = self.user.get_user_token_mut(mint)?.ok_or(CouldNotFindUserToken)?;
         user_token.sub_token_amount(amount)?;
 
         self.update_cross_position_balance(mint, amount, false)?;
@@ -60,7 +60,7 @@ impl<'a> UserProcessor<'a> {
                 amount = amount.safe_sub(reduce_amount)?;
             }
         }
-        let user_token = self.user.get_user_token_mut(mint)?;
+        let user_token = self.user.get_user_token_mut(mint)?.ok_or(CouldNotFindUserToken)?;
         user_token.sub_token_amount(amount)?;
         Ok(())
     }
@@ -317,7 +317,7 @@ impl<'a> UserProcessor<'a> {
     }
 
     pub fn add_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
-        let user_token = self.user.get_user_token_mut(token)?;
+        let user_token = self.user.get_user_token_mut(token)?.ok_or(CouldNotFindUserToken)?;
         user_token.add_token_amount(amount)?;
         Ok(())
     }
@@ -360,7 +360,7 @@ impl<'a> UserProcessor<'a> {
                 state.bump_signer_nonce,
                 order.order_margin,
             )
-            .unwrap();
+                .unwrap();
         }
         Ok(())
     }

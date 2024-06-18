@@ -3,18 +3,25 @@ use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::state::oracle::OraclePriceData;
 use crate::state::trade_token::TradeToken;
-use anchor_lang::zero_copy;
+use anchor_lang::prelude::*;
 use solana_program::pubkey::Pubkey;
 
 #[zero_copy(unsafe)]
 #[derive(Default, Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct UserToken {
-    pub token_index: u16,
+    pub user_token_status: UserTokenStatus,
     pub token_mint: Pubkey,
     pub amount: u128,
     pub used_amount: u128,
     pub liability: u128,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]
+pub enum UserTokenStatus {
+    #[default]
+    INIT,
+    USING,
 }
 
 impl UserToken {
