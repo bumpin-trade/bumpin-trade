@@ -21,8 +21,8 @@ pub struct User {
     pub next_order_id: u128,
     pub next_liquidation_id: u128,
     pub hold: u128,
-    pub user_tokens: [UserToken; 10],
-    pub user_stakes: [UserStake; 10],
+    pub user_tokens: [UserToken; 10],//Max 32
+    pub user_stakes: [UserStake; 10],//Max 32
     pub user_positions: [UserPosition; 10],
     pub user_orders: [UserOrder; 10],
 }
