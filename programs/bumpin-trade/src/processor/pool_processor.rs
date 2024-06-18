@@ -99,7 +99,7 @@ impl<'a> PoolProcessor<'_> {
         Ok(stake_amount)
     }
     pub fn un_stake(
-        &mut self,
+        &self,
         pool_loader: &AccountLoader<Pool>,
         user_loader: &AccountLoader<User>,
         un_stake_amount: u128,
@@ -128,7 +128,7 @@ impl<'a> PoolProcessor<'_> {
         Ok(token_amount)
     }
     pub fn get_pool_net_price(
-        &mut self,
+        &self,
         oracle_map: &mut OracleMap,
         market_vec: &MarketMap,
     ) -> BumpResult<u128> {
@@ -137,7 +137,7 @@ impl<'a> PoolProcessor<'_> {
         Ok(net_price)
     }
     pub fn get_pool_usd_value(
-        &mut self,
+        &self,
         oracle_map: &mut OracleMap,
         market_vec: &MarketMap,
     ) -> BumpResult<u128> {
