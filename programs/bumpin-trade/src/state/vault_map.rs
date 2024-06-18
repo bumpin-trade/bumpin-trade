@@ -16,7 +16,6 @@ use crate::errors::BumpErrorCode::{
     CouldNotLoadTradeTokenData, InvalidTradeTokenAccount, TradeTokenNotFind,
 };
 use crate::errors::BumpResult;
-use crate::math::safe_unwrap::SafeUnwrap;
 
 pub struct VaultMap<'a>(pub BTreeMap<Pubkey, Account<'a, TokenAccount>>);
 

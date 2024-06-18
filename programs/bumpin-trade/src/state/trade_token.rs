@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::TokenAccount;
 use solana_program::pubkey::Pubkey;
 
 use crate::errors::BumpResult;

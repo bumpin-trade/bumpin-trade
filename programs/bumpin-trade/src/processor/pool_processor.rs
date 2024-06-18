@@ -1,3 +1,5 @@
+use anchor_lang::prelude::AccountLoader;
+
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::math::casting::Cast;
@@ -6,15 +8,12 @@ use crate::processor::fee_processor;
 use crate::processor::market_processor::MarketProcessor;
 use crate::processor::optional_accounts::AccountMaps;
 use crate::processor::user_processor::UserProcessor;
-use crate::state::infrastructure::user_stake::UserStakeStatus;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::validate;
-use anchor_lang::prelude::msg;
-use anchor_lang::prelude::AccountLoader;
 
 pub struct PoolProcessor<'a> {
     pub(crate) pool: &'a mut Pool,
@@ -100,7 +99,7 @@ impl<'a> PoolProcessor<'_> {
         Ok(stake_amount)
     }
     pub fn un_stake(
-        &mut self,
+        &self,
         pool_loader: &AccountLoader<Pool>,
         user_loader: &AccountLoader<User>,
         un_stake_amount: u128,
@@ -129,7 +128,7 @@ impl<'a> PoolProcessor<'_> {
         Ok(token_amount)
     }
     pub fn get_pool_net_price(
-        &mut self,
+        &self,
         oracle_map: &mut OracleMap,
         market_vec: &MarketMap,
     ) -> BumpResult<u128> {
@@ -138,7 +137,7 @@ impl<'a> PoolProcessor<'_> {
         Ok(net_price)
     }
     pub fn get_pool_usd_value(
-        &mut self,
+        &self,
         oracle_map: &mut OracleMap,
         market_vec: &MarketMap,
     ) -> BumpResult<u128> {

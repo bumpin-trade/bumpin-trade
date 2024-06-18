@@ -1,3 +1,7 @@
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Token, TokenAccount};
+use solana_program::pubkey::Pubkey;
+
 use crate::errors::BumpErrorCode;
 use crate::processor::market_processor::MarketProcessor;
 use crate::processor::pool_processor::PoolProcessor;
@@ -9,10 +13,6 @@ use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::validate;
-use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
-use solana_program::msg;
-use solana_program::pubkey::Pubkey;
 
 #[derive(Accounts)]
 #[instruction(market_index: u16, trade_token_index: u16, user: Pubkey)]
