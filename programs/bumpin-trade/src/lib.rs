@@ -101,6 +101,14 @@ pub mod bumpin_trade {
         handle_initialize_user(ctx)
     }
 
+    pub fn initialize_trade_token<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, InitializeTradeToken>,
+        discount: u128,
+        liquidation_factor: u128,
+    ) -> Result<()> {
+        handle_initialize_trade_token(ctx, discount, liquidation_factor)
+    }
+
     /*-----pool pool------*/
     pub fn pool_stake<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PoolStake>,
@@ -119,9 +127,10 @@ pub mod bumpin_trade {
     /*-----account------*/
     pub fn deposit<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, Deposit>,
+        token_index: u16,
         amount: u128,
     ) -> Result<()> {
-        handle_deposit(ctx, amount)
+        handle_deposit(ctx, token_index, amount)
     }
 
     pub fn withdraw<'a, 'b, 'c: 'info, 'info>(

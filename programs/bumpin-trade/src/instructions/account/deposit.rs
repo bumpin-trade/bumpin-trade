@@ -22,7 +22,7 @@ pub struct Deposit<'info> {
     pub authority: Signer<'info>,
     #[account(
         mut,
-        constraint = & trade_token_vault.mint.eq(& user_token_account.mint),
+        constraint = &trade_token_vault.mint.eq(&user_token_account.mint),
         token::authority = authority
     )]
     pub user_token_account: Account<'info, TokenAccount>,
@@ -43,9 +43,11 @@ pub struct Deposit<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle_deposit(ctx: Context<Deposit>, amount: u128) -> Result<()> {
+pub fn handle_deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> Result<()> {
+    msg!("Token index: {}", token_index);
     let user = &mut ctx.accounts.user.load_mut()?;
     let trade_token = ctx.accounts.trade_token.load_mut()?;
+    // msg!("User Token Account: {:?}", &ctx.accounts.user_token_account);
     token::receive(
         &ctx.accounts.token_program,
         &ctx.accounts.user_token_account,
