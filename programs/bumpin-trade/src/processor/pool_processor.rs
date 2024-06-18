@@ -1,3 +1,5 @@
+use anchor_lang::prelude::AccountLoader;
+
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::math::casting::Cast;
@@ -6,15 +8,12 @@ use crate::processor::fee_processor;
 use crate::processor::market_processor::MarketProcessor;
 use crate::processor::optional_accounts::AccountMaps;
 use crate::processor::user_processor::UserProcessor;
-use crate::state::infrastructure::user_stake::UserStakeStatus;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::validate;
-use anchor_lang::prelude::msg;
-use anchor_lang::prelude::AccountLoader;
 
 pub struct PoolProcessor<'a> {
     pub(crate) pool: &'a mut Pool,

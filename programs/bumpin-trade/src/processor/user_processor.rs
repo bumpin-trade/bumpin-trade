@@ -1,3 +1,8 @@
+use anchor_lang::prelude::{Account, Program};
+use anchor_spl::token::{Token, TokenAccount};
+use solana_program::account_info::AccountInfo;
+use solana_program::pubkey::Pubkey;
+
 use crate::errors::BumpErrorCode::{CouldNotFindUserPosition, CouldNotFindUserToken};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::math::casting::Cast;
@@ -14,11 +19,6 @@ use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 use crate::utils::token;
 use crate::validate;
-use anchor_lang::prelude::{Account, Program};
-use anchor_spl::token::{Token, TokenAccount};
-use solana_program::account_info::AccountInfo;
-use solana_program::msg;
-use solana_program::pubkey::Pubkey;
 
 pub struct UserProcessor<'a> {
     pub(crate) user: &'a mut User,

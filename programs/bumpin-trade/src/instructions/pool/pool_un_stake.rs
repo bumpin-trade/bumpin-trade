@@ -11,7 +11,7 @@ use crate::processor::fee_reward_processor::update_account_fee_reward;
 use crate::processor::optional_accounts::load_maps;
 use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::user_processor::UserProcessor;
-use crate::state::infrastructure::user_stake::{UserStake, UserStakeStatus};
+use crate::state::infrastructure::user_stake::UserStake;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;

@@ -1,12 +1,10 @@
-use crate::errors::BumpErrorCode::{
-    CouldNotFindUserPosition, CouldNotFindUserStake, CouldNotFindUserToken,
-};
+use crate::errors::BumpErrorCode::{CouldNotFindUserPosition, CouldNotFindUserToken};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::math::safe_math::SafeMath;
 use crate::state::infrastructure::user_order::{OrderSide, OrderStatus, PositionSide, UserOrder};
 use crate::state::infrastructure::user_position::{PositionStatus, UserPosition};
-use crate::state::infrastructure::user_stake::{UserRewards, UserStake, UserStakeStatus};
+use crate::state::infrastructure::user_stake::{UserStake, UserStakeStatus};
 use crate::state::infrastructure::user_token::UserToken;
 use crate::state::traits::Size;
 use crate::utils::pda;

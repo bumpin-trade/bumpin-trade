@@ -1,5 +1,3 @@
-use crate::state::dao_rewards::DaoRewards;
-use crate::state::infrastructure::fee_reward::FeeReward;
 use crate::traits::Size;
 use anchor_lang::prelude::*;
 
