@@ -2,20 +2,14 @@ use std::iter::Peekable;
 use std::slice::Iter;
 
 use anchor_lang::prelude::*;
-use anchor_lang::Discriminator;
-use anchor_spl::token::{self};
-use anchor_spl::token::{spl_token, Mint};
-use anchor_spl::token::{InitializeAccount, Token, TokenAccount};
-use solana_program::entrypoint::ProgramResult;
+use anchor_spl::token::Mint;
+use anchor_spl::token::{Token, TokenAccount};
 
 use instructions::*;
 
 use crate::instructions::admin::initialize_state::handle_initialize_state;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
-use crate::state::dao_rewards::DaoRewards;
 use crate::state::infrastructure::user_order::UserOrder;
-use crate::state::state::State;
-use crate::state::trade_token::TradeToken;
 use crate::state::vault_map::VaultMap;
 use crate::traits::Size;
 
@@ -40,7 +34,7 @@ pub mod bumpin_trade {
     ) -> Result<()> {
         msg!("initialize1");
 
-        let key_value = &ctx.accounts.key_value;
+        // let key_value = &ctx.accounts.key_value;
 
         // 打印 KeyValue 的已知字段
         // msg!("key_value key: {:?}", key_value.key);
@@ -107,6 +101,13 @@ pub mod bumpin_trade {
         liquidation_factor: u128,
     ) -> Result<()> {
         handle_initialize_trade_token(ctx, discount, liquidation_factor)
+    }
+
+    pub fn initialize_market<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, InitializeMarket>,
+        symbol: [u8; 32],
+    ) -> Result<()> {
+        handle_initialize_market(ctx, symbol)
     }
 
     /*-----pool pool------*/

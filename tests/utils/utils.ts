@@ -173,6 +173,17 @@ export class Utils {
         }).signers([admin]).rpc();
     }
 
+    public async initialize_market(market: PublicKey, admin: anchor.web3.Keypair, poolMint: PublicKey, tradeTokenMint: PublicKey): Promise<void> {
+        await this.program.methods.initializeMarket(
+            discount
+        ).accounts({
+            tradeTokenMint,
+            oracle,
+            bumpSigner: this.bump_state_pk,
+            admin: admin.publicKey,
+        }).signers([admin]).rpc();
+    }
+
 
     public async deposit(authority: anchor.web3.Keypair, userTokenAccount: PublicKey, tokenIndex: number, amount: BN): Promise<void> {
         await this.program.methods.deposit(

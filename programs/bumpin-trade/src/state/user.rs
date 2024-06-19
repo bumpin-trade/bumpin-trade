@@ -10,7 +10,6 @@ use crate::state::traits::Size;
 use crate::utils::pda;
 use crate::validate;
 use anchor_lang::prelude::*;
-use solana_program::msg;
 
 #[account(zero_copy(unsafe))]
 #[derive(Default, Eq, PartialEq, Debug)]
@@ -21,8 +20,8 @@ pub struct User {
     pub next_order_id: u128,
     pub next_liquidation_id: u128,
     pub hold: u128,
-    pub user_tokens: [UserToken; 10],//Max 32
-    pub user_stakes: [UserStake; 10],//Max 32
+    pub user_tokens: [UserToken; 10], //Max 32
+    pub user_stakes: [UserStake; 10], //Max 32
     pub user_positions: [UserPosition; 10],
     pub user_orders: [UserOrder; 10],
 }
@@ -33,18 +32,16 @@ impl Size for User {
 
 impl User {
     pub fn get_user_token_mut(&mut self, mint: &Pubkey) -> BumpResult<Option<&mut UserToken>> {
-        Ok(self
-            .user_tokens
-            .iter_mut()
-            .find(|user_token| user_token.token_mint.eq(mint) && user_token.user_token_status.eq(&UserTokenStatus::USING))
-        )
+        Ok(self.user_tokens.iter_mut().find(|user_token| {
+            user_token.token_mint.eq(mint)
+                && user_token.user_token_status.eq(&UserTokenStatus::USING)
+        }))
     }
     pub fn get_user_token_ref(&self, mint: &Pubkey) -> BumpResult<Option<&UserToken>> {
-        Ok(self
-            .user_tokens
-            .iter()
-            .find(|&user_token| user_token.token_mint.eq(mint) && user_token.user_token_status.eq(&UserTokenStatus::USING))
-        )
+        Ok(self.user_tokens.iter().find(|&user_token| {
+            user_token.token_mint.eq(mint)
+                && user_token.user_token_status.eq(&UserTokenStatus::USING)
+        }))
     }
 
     pub fn try_sub_user_stake(&mut self, pool_key: &Pubkey, stake_amount: u128) -> BumpResult<()> {
@@ -84,23 +81,22 @@ impl User {
     pub fn use_token(&mut self, token: &Pubkey, amount: u128, is_check: bool) -> BumpResult<u128> {
         let use_from_balance;
         let user_token_option = self.get_user_token_mut(&token)?;
-        let user_token =
-            match user_token_option {
-                None => {
-                    let index = self.next_usable_user_token_index()?;
-                    //init user_token
-                    let new_token = &mut UserToken {
-                        user_token_status: UserTokenStatus::USING,
-                        token_mint: *token,
-                        amount: 0,
-                        used_amount: 0,
-                        liability: 0,
-                    };
-                    self.add_user_token(new_token, index)?;
-                    self.get_user_token_mut(token)?.ok_or(CouldNotFindUserToken)?
-                }
-                Some(exist_user_token) => { exist_user_token }
-            };
+        let user_token = match user_token_option {
+            None => {
+                let index = self.next_usable_user_token_index()?;
+                //init user_token
+                let new_token = &mut UserToken {
+                    user_token_status: UserTokenStatus::USING,
+                    token_mint: *token,
+                    amount: 0,
+                    used_amount: 0,
+                    liability: 0,
+                };
+                self.add_user_token(new_token, index)?;
+                self.get_user_token_mut(token)?.ok_or(CouldNotFindUserToken)?
+            },
+            Some(exist_user_token) => exist_user_token,
+        };
         if is_check {
             validate!(
                 user_token.amount >= user_token.used_amount,
@@ -303,8 +299,8 @@ impl User {
                 && user_order.symbol == symbol
                 && user_order.margin_token.eq(margin_token)
                 && ((is_long_order == is_long
-                && user_order.position_side.eq(&PositionSide::INCREASE))
-                || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
+                    && user_order.position_side.eq(&PositionSide::INCREASE))
+                    || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
             {
                 user_order.set_leverage(leverage)
             }

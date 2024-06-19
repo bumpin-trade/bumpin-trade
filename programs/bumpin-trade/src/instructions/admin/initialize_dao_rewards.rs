@@ -1,7 +1,4 @@
-use crate::instructions::Deposit;
 use crate::state::dao_rewards::DaoRewards;
-use crate::state::market::Market;
-use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::traits::Size;
 use anchor_lang::prelude::*;

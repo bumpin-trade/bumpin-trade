@@ -12,12 +12,12 @@ use crate::processor::optional_accounts::load_maps;
 use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::user_processor::UserProcessor;
 use crate::state::infrastructure::user_stake::UserStake;
+use crate::state::infrastructure::user_token::{UserToken, UserTokenStatus};
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::{utils, validate};
-use crate::state::infrastructure::user_token::{UserToken, UserTokenStatus};
 
 #[derive(Accounts)]
 #[instruction(pool_index: u16, trade_token_index: u16)]
@@ -126,23 +126,23 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
     if un_stake_params.portfolio {
         let trade_token = ctx.accounts.trade_token.load_mut()?;
         let user_token_option = user.get_user_token_mut(&ctx.accounts.trade_token_vault.mint)?;
-        let user_token =
-            match user_token_option {
-                None => {
-                    let index = user.next_usable_user_token_index()?;
-                    //init user_token
-                    let new_token = &mut UserToken {
-                        user_token_status: UserTokenStatus::USING,
-                        token_mint: trade_token.mint,
-                        amount: 0,
-                        used_amount: 0,
-                        liability: 0,
-                    };
-                    user.add_user_token(new_token, index)?;
-                    user.get_user_token_mut(&ctx.accounts.trade_token_vault.mint)?.ok_or(BumpErrorCode::CouldNotFindUserToken)?
-                }
-                Some(exist_user_token) => { exist_user_token }
-            };
+        let user_token = match user_token_option {
+            None => {
+                let index = user.next_usable_user_token_index()?;
+                //init user_token
+                let new_token = &mut UserToken {
+                    user_token_status: UserTokenStatus::USING,
+                    token_mint: trade_token.mint,
+                    amount: 0,
+                    used_amount: 0,
+                    liability: 0,
+                };
+                user.add_user_token(new_token, index)?;
+                user.get_user_token_mut(&ctx.accounts.trade_token_vault.mint)?
+                    .ok_or(BumpErrorCode::CouldNotFindUserToken)?
+            },
+            Some(exist_user_token) => exist_user_token,
+        };
 
         utils::token::receive(
             &ctx.accounts.token_program,

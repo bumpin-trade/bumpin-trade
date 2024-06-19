@@ -17,6 +17,7 @@ describe("bumpin-trade", () => {
     let Player1: anchor.web3.Keypair;
     let Player2: anchor.web3.Keypair;
     let pool_mint_account: anchor.web3.Keypair;
+    let stable_pool_mint_account: anchor.web3.Keypair;
     let trade_token_mint_account: anchor.web3.Keypair;
     let oracle: anchor.web3.Keypair;
 
@@ -31,9 +32,11 @@ describe("bumpin-trade", () => {
 
         await utils.initialize_oracle(oracle, 70000);
         pool_mint_account = await utils.create_mint_account(admin, admin);
+        stable_pool_mint_account = await utils.create_mint_account(admin, admin);
         trade_token_mint_account = await utils.create_mint_account(admin, admin);
         await utils.initialize_state(admin);
         await utils.initialize_pool(pool_mint_account.publicKey, "BUMP_P__BTC", admin);
+        await utils.initialize_pool(stable_pool_mint_account.publicKey, "BUMP_P__USDC", admin);
         Player1 = await utils.new_user(provider);
         await utils.initialize_user(Player1, admin);
         Player2 = await utils.new_user(provider);
@@ -91,10 +94,9 @@ describe("bumpin-trade", () => {
     });
 
 
-    it("Deposit for Play1", async () => {
+    it("Mint & Deposit for Play1", async () => {
         let tradeToken = await utils.createTokenAccount(program.provider, admin, trade_token_mint_account.publicKey, Player1.publicKey);
         await utils.mintTo(program.provider, admin, trade_token_mint_account.publicKey, tradeToken.address, 1000, 9);
-        // await utils.airdrop_lamports(program.provider, tradeToken.address, 1000);
-        await utils.deposit(Player1, tradeToken.address, 0, new BN(1));
+        await utils.deposit(Player1, tradeToken.address, 0, new BN(100));
     });
 });

@@ -1,5 +1,3 @@
-use crate::state::infrastructure::fee_reward::FeeReward;
-use crate::state::market::Market;
 use crate::traits::Size;
 use anchor_lang::prelude::*;
 

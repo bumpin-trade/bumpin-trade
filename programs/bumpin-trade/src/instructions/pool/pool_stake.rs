@@ -5,7 +5,6 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::can_sign_for_user;
-use crate::math::safe_math::SafeMath;
 use crate::processor::optional_accounts::load_maps;
 use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::stake_processor;
@@ -81,7 +80,7 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, PoolStake>,
     stake_params: StakeParams,
 ) -> Result<()> {
-    let mut pool = &mut ctx.accounts.pool.load_mut()?;
+    let pool = &mut ctx.accounts.pool.load_mut()?;
     let trade_token = ctx.accounts.trade_token.load()?;
 
     let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> =

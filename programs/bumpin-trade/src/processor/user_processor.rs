@@ -360,7 +360,7 @@ impl<'a> UserProcessor<'a> {
                 state.bump_signer_nonce,
                 order.order_margin,
             )
-                .unwrap();
+            .unwrap();
         }
         Ok(())
     }

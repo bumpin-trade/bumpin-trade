@@ -13,7 +13,6 @@ use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::utils::token;
 use crate::validate;
-use solana_program::msg;
 
 #[derive(Accounts)]
 pub struct AddPositionMargin<'info> {

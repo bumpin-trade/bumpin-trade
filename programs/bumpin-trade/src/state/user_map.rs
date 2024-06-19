@@ -13,7 +13,6 @@ use solana_program::pubkey::Pubkey;
 
 use crate::errors::BumpErrorCode::{CouldNotLoadUserData, UserNotFound};
 use crate::errors::BumpResult;
-use crate::math::safe_unwrap::SafeUnwrap;
 use crate::state::traits::Size;
 use crate::state::user::User;
 

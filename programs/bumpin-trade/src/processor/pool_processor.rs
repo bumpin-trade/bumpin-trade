@@ -38,7 +38,9 @@ impl<'a> PoolProcessor<'_> {
         let user = &mut user_loader.load_mut().unwrap();
         let pool = pool_loader.load().unwrap();
 
-        let user_token = user.get_user_token_ref(&pool.pool_mint)?.ok_or(BumpErrorCode::CouldNotFindUserToken)?;
+        let user_token = user
+            .get_user_token_ref(&pool.pool_mint)?
+            .ok_or(BumpErrorCode::CouldNotFindUserToken)?;
         validate!(user_token.amount > mint_amount, BumpErrorCode::AmountNotEnough)?;
 
         let mut user_processor = UserProcessor { user };

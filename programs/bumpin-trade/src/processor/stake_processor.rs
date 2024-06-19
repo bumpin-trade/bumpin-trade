@@ -16,16 +16,16 @@ pub fn stake(
     pool_account_loader: &AccountLoader<Pool>,
     user_account_loader: &AccountLoader<User>,
     trade_token_account: &AccountLoader<TradeToken>,
-    mut account_maps: &mut AccountMaps,
+    account_maps: &mut AccountMaps,
     stake_params: &StakeParams,
 ) -> BumpResult<u128> {
     let mut pool = &mut pool_account_loader
         .load_mut()
-        .map_err(|e| BumpErrorCode::UnableToLoadAccountLoader)?;
+        .map_err(|_| BumpErrorCode::UnableToLoadAccountLoader)?;
     let user =
-        &mut user_account_loader.load_mut().map_err(|e| BumpErrorCode::CouldNotLoadUserData)?;
+        &mut user_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
     let trade_token =
-        trade_token_account.load().map_err(|e| BumpErrorCode::UnableToLoadAccountLoader)?;
+        trade_token_account.load().map_err(|_| BumpErrorCode::UnableToLoadAccountLoader)?;
 
     let token_price = account_maps.oracle_map.get_price_data(&pool.pool_mint)?.price;
 

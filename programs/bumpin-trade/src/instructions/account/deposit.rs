@@ -1,7 +1,7 @@
+use crate::errors::BumpErrorCode::CouldNotFindUserToken;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
-use crate::errors::BumpErrorCode::CouldNotFindUserToken;
 
 use crate::instructions::constraints::*;
 use crate::math::safe_math::SafeMath;
@@ -60,23 +60,22 @@ pub fn handle_deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> 
     ctx.accounts.trade_token_vault.reload()?;
 
     let user_token_option = user.get_user_token_mut(&ctx.accounts.trade_token_vault.mint)?;
-    let user_token =
-        match user_token_option {
-            None => {
-                let index = user.next_usable_user_token_index()?;
-                //init user_token
-                let new_token = &mut UserToken {
-                    user_token_status: UserTokenStatus::USING,
-                    token_mint: trade_token.mint,
-                    amount: 0,
-                    used_amount: 0,
-                    liability: 0,
-                };
-                user.add_user_token(new_token, index)?;
-                user.get_user_token_mut(&trade_token.mint)?.ok_or(CouldNotFindUserToken)?
-            }
-            Some(exist_user_token) => { exist_user_token }
-        };
+    let user_token = match user_token_option {
+        None => {
+            let index = user.next_usable_user_token_index()?;
+            //init user_token
+            let new_token = &mut UserToken {
+                user_token_status: UserTokenStatus::USING,
+                token_mint: trade_token.mint,
+                amount: 0,
+                used_amount: 0,
+                liability: 0,
+            };
+            user.add_user_token(new_token, index)?;
+            user.get_user_token_mut(&trade_token.mint)?.ok_or(CouldNotFindUserToken)?
+        },
+        Some(exist_user_token) => exist_user_token,
+    };
 
     user_token.add_token_amount(amount)?;
     trade_token.add_token(amount)?;
