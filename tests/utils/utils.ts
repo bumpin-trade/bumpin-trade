@@ -27,10 +27,10 @@ export class Utils {
     programPyth = anchor.workspace.Pyth as Program<Pyth>;
 
 
-    public getStatePda(program: Program<BumpinTrade>): [PublicKey, number] {
+    public getStatePda(): [PublicKey, number] {
         return PublicKey.findProgramAddressSync(
             [Buffer.from("bump_state")],
-            program.programId
+            this.program.programId
         );
 
     }
@@ -121,7 +121,7 @@ export class Utils {
 
 
     public async initialize_user(authority: anchor.web3.Keypair, payer: anchor.web3.Keypair): Promise<void> {
-        let [pda, nonce] = this.getStatePda(this.program);
+        let [pda, nonce] = this.getStatePda();
         const program = anchor.workspace.BumpinTrade as Program<BumpinTrade>;
         await program.methods.initializeUser().accounts({
             state: pda,
@@ -132,7 +132,7 @@ export class Utils {
 
 
     public async initialize_pool(program: Program<BumpinTrade>, poolMint: PublicKey, name: string, admin: anchor.web3.Keypair): Promise<void> {
-        let [pda, nonce] = this.getStatePda(this.program);
+        let [pda, nonce] = this.getStatePda();
         const poolName = Buffer.from(name, 'utf-8');
         const paddedPoolName = Buffer.concat([poolName, Buffer.alloc(32 - poolName.length)]);
         const paddedPoolNameArray = Array.from(paddedPoolName);
@@ -159,7 +159,7 @@ export class Utils {
 
 
     public async initialize_trade_token(tradeTokenMint: PublicKey, admin: anchor.web3.Keypair, oracle: PublicKey, discount: BN, liquidationFactor: BN): Promise<void> {
-        let [pda, nonce] = this.getStatePda(this.program);
+        let [pda, nonce] = this.getStatePda();
         await this.program.methods.initializeTradeToken(
             discount, liquidationFactor
         ).accounts({

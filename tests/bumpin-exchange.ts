@@ -74,7 +74,6 @@ describe("bumpin-exchange", () => {
         await exchange.playerDeposit("Player1", "BTC", 500);
         await exchange.playerDeposit("Player2", "USDC", 500);
 
-
         // let pdaForPlayer1 = exchange.getUserPda("Player1");
         // const player1 = await program.account.user.fetch(pdaForPlayer1[0]);
     });

@@ -1,11 +1,12 @@
+use anchor_lang::prelude::*;
+use anchor_spl::token::Mint;
+
 use crate::math_error;
 use crate::safe_increment;
 use crate::state::market::Market;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::traits::Size;
-use anchor_lang::prelude::*;
-use anchor_spl::token::Mint;
 
 #[derive(Accounts)]
 pub struct InitializeMarket<'info> {
@@ -25,6 +26,7 @@ pub struct InitializeMarket<'info> {
     pub index_mint: Account<'info, Mint>,
 
     #[account(
+        mut,
         seeds = [b"bump_state".as_ref()],
         bump,
         has_one = bump_signer

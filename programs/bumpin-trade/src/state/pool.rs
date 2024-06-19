@@ -1,3 +1,4 @@
+use crate::errors::BumpErrorCode::PoolSubUnsettleNotEnough;
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{add_u128, sub_u128};
 use crate::math::casting::Cast;
@@ -7,7 +8,6 @@ use crate::state::infrastructure::pool_borrowing_fee::BorrowingFee;
 use crate::traits::Size;
 use crate::validate;
 use anchor_lang::prelude::*;
-use crate::errors::BumpErrorCode::PoolSubUnsettleNotEnough;
 
 #[account(zero_copy(unsafe))]
 #[derive(Eq, PartialEq, Debug)]
@@ -125,7 +125,7 @@ impl Pool {
     }
 
     pub fn sub_unsettle(&mut self, amount: u128) -> BumpResult<()> {
-        validate!(self.pool_balance.un_settle_amount>=amount,PoolSubUnsettleNotEnough);
+        validate!(self.pool_balance.un_settle_amount >= amount, PoolSubUnsettleNotEnough);
         self.pool_balance.un_settle_amount = sub_u128(self.pool_balance.un_settle_amount, amount)?;
         self.pool_balance.amount = add_u128(self.pool_balance.amount, amount)?;
         Ok(())

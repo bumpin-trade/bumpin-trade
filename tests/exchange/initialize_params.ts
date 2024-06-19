@@ -17,10 +17,17 @@ export class TradeTokenInfo {
     liquidationFactor: BN;
 }
 
+export class MarketInfo {
+    symbol: string;
+    poolName: string;
+    stablePoolName: string;
+}
+
 export class ExchangeInitializeParams {
     poolInfos: PoolInfo[];
     playerInfos: PlayerInfo[];
     tradeTokenInfos: TradeTokenInfo[];
+    ma
 
 
     constructor(poolInfos: PoolInfo[], playerInfos: PlayerInfo[], tradeTokenInfos: TradeTokenInfo[]) {

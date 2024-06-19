@@ -1,14 +1,35 @@
 {
-  "name": "sdk",
+  "name": "@bumpin-trade/sdk",
   "version": "1.0.0",
-  "main": "index.js",
-  "license": "MIT",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "license": "Apache-2.0",
+  "directories": {
+    "lib": "lib"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "lint": "eslint './**/*.{ts,tsx}' --quiet",
+    "build": "yarn clean && tsc",
+    "clean": "rm -rf lib",
+    "test": "mocha -r ts-node/register tests/**/*.ts",
+    "test:inspect": "mocha --inspect-brk -r ts-node/register tests/**/*.ts",
+    "test:bignum": "mocha -r ts-node/register tests/bn/**/*.ts",
+    "patch-and-pub": "npm version patch --force && npm publish",
+    "prettify": "prettier --check './src/***/*.ts'",
+    "prettify:fix": "prettier --write './{src,tests}/***/*.ts'",
+    "version": "node ./scripts/updateVersion.js"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.30.0",
+    "@solana/spl-token": "^0.4.6",
+    "@solana/web3.js": "^1.93.0",
+    "borsh": "^2.0.0"
+  },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^26.0.1",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-typescript": "^11.1.6",
     "@types/node": "^20.14.5",
-    "rollup": "^4.18.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   }
