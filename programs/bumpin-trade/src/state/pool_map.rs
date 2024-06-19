@@ -1,22 +1,23 @@
+use std::cell::{Ref, RefMut};
+use std::collections::BTreeMap;
+use std::iter::Peekable;
+use std::panic::Location;
+use std::slice::Iter;
+
+use anchor_lang::Discriminator;
+use anchor_lang::prelude::AccountLoader;
+use arrayref::array_ref;
+use solana_program::account_info::AccountInfo;
+use solana_program::msg;
+use solana_program::pubkey::Pubkey;
+
 use crate::errors::BumpErrorCode::{
     CouldNotLoadTradeTokenData, InvalidPoolAccount, TradeTokenNotFind,
 };
 use crate::errors::BumpResult;
 use crate::math::safe_unwrap::SafeUnwrap;
 use crate::state::pool::Pool;
-use crate::state::trade_token::TradeToken;
 use crate::traits::Size;
-use anchor_lang::prelude::AccountLoader;
-use anchor_lang::Discriminator;
-use arrayref::array_ref;
-use solana_program::account_info::AccountInfo;
-use solana_program::msg;
-use solana_program::pubkey::Pubkey;
-use std::cell::{Ref, RefMut};
-use std::collections::BTreeMap;
-use std::iter::Peekable;
-use std::panic::Location;
-use std::slice::Iter;
 
 pub struct PoolMap<'a>(pub BTreeMap<Pubkey, AccountLoader<'a, Pool>>);
 

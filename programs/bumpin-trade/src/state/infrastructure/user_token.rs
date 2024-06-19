@@ -42,10 +42,10 @@ impl UserToken {
         self.used_amount = self.used_amount.safe_add(amount)?;
         Ok(())
     }
-    pub fn repay_liability(&mut self, amount: u128) -> BumpResult<u128> {
+    pub fn repay_liability(&mut self) -> BumpResult<u128> {
         if self.liability > 0 && self.amount > 0 {
             let repay_liability_amount =
-                if amount >= self.liability { self.liability } else { self.amount };
+                if self.amount >= self.liability { self.liability } else { self.amount };
             self.amount = self.amount.safe_sub(repay_liability_amount)?;
             self.liability = self.liability.safe_sub(repay_liability_amount)?;
             self.used_amount = self.used_amount.safe_sub(repay_liability_amount)?;

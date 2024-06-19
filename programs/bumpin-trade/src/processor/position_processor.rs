@@ -79,7 +79,7 @@ impl PositionProcessor<'_> {
 
                     drop(user_processor);
                     let user = &mut user_account.load_mut().unwrap();
-                    let mut user_processor = UserProcessor { user };
+                    let user_processor = UserProcessor { user };
                     add_margin_amount = cal_utils::usd_to_token_u(
                         add_margin_in_usd,
                         trade_token.decimals,
@@ -135,7 +135,7 @@ impl PositionProcessor<'_> {
                 )?;
                 if self.position.cross_margin {
                     let user = &mut user_account.load_mut().unwrap();
-                    let mut user_processor = UserProcessor { user };
+                    let user_processor = UserProcessor { user };
                     user_processor
                         .user
                         .un_use_token(&self.position.margin_mint, reduce_margin_amount)?;
@@ -453,7 +453,6 @@ impl PositionProcessor<'_> {
         if params.decrease_size == self.position.position_size {
             user_processor.user.delete_position(
                 market.symbol,
-                &trade_token.mint,
                 self.position.cross_margin,
                 program_id,
             )?;
@@ -1017,7 +1016,7 @@ impl PositionProcessor<'_> {
             let user_token = user
                 .get_user_token_mut(&self.position.margin_mint)?
                 .ok_or(BumpErrorCode::CouldNotFindUserToken)?;
-            let repay_amount = user_token.repay_liability(user_token.amount)?;
+            let repay_amount = user_token.repay_liability()?;
             let trade_token = trade_token_account.load_mut().unwrap();
             trade_token.sub_liability(repay_amount)?;
 
