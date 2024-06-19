@@ -6,6 +6,8 @@ import {Utils} from "./utils/utils";
 import {assert} from 'chai';
 import {PublicKey} from "@solana/web3.js";
 import BN from "bn.js";
+import {ExchangeInitializeParams} from "./exchange/initialize_params";
+import {BumpinExchange} from "./exchange/exchange";
 
 describe("bumpin-trade", () => {
     const provider = anchor.AnchorProvider.local();
@@ -35,8 +37,8 @@ describe("bumpin-trade", () => {
         stable_pool_mint_account = await utils.create_mint_account(admin, admin);
         trade_token_mint_account = await utils.create_mint_account(admin, admin);
         await utils.initialize_state(admin);
-        await utils.initialize_pool(pool_mint_account.publicKey, "BUMP_P__BTC", admin);
-        await utils.initialize_pool(stable_pool_mint_account.publicKey, "BUMP_P__USDC", admin);
+        await utils.initialize_pool(program,pool_mint_account.publicKey, "BUMP_P__BTC", admin);
+        await utils.initialize_pool(program,stable_pool_mint_account.publicKey, "BUMP_P__USDC", admin);
         Player1 = await utils.new_user(provider);
         await utils.initialize_user(Player1, admin);
         Player2 = await utils.new_user(provider);

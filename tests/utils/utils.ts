@@ -22,24 +22,18 @@ import {
 import BN from "bn.js";
 
 export class Utils {
-    programId: PublicKey;
-    bump_state_pk: PublicKey;
-    bump_state_nonce: number;
-
     provider = anchor.AnchorProvider.local();
     program = anchor.workspace.BumpinTrade as Program<BumpinTrade>;
     programPyth = anchor.workspace.Pyth as Program<Pyth>;
 
-    constructor() {
-        this.programId = this.program.programId;
-        const [bump_state_pk, bump_state_nonce] = PublicKey.findProgramAddressSync(
-            [Buffer.from("bump_state")],
-            this.programId
-        );
-        this.bump_state_pk = bump_state_pk;
-        this.bump_state_nonce = bump_state_nonce;
-    }
 
+    public getStatePda(program: Program<BumpinTrade>): [PublicKey, number] {
+        return PublicKey.findProgramAddressSync(
+            [Buffer.from("bump_state")],
+            program.programId
+        );
+
+    }
 
     public async new_user(provider: anchor.AnchorProvider, secretKey?: Uint8Array, lamportMultiplier: number = 100.0,): Promise<anchor.web3.Keypair> {
         //TODO: Do better, maybe can switch to a different provider
@@ -127,25 +121,27 @@ export class Utils {
 
 
     public async initialize_user(authority: anchor.web3.Keypair, payer: anchor.web3.Keypair): Promise<void> {
+        let [pda, nonce] = this.getStatePda(this.program);
         const program = anchor.workspace.BumpinTrade as Program<BumpinTrade>;
         await program.methods.initializeUser().accounts({
-            state: this.bump_state_pk,
+            state: pda,
             authority: authority.publicKey,
             payer: payer.publicKey
         }).signers([authority, payer]).rpc();
     }
 
 
-    public async initialize_pool(poolMint: PublicKey, name: string, admin: anchor.web3.Keypair): Promise<void> {
+    public async initialize_pool(program: Program<BumpinTrade>, poolMint: PublicKey, name: string, admin: anchor.web3.Keypair): Promise<void> {
+        let [pda, nonce] = this.getStatePda(this.program);
         const poolName = Buffer.from(name, 'utf-8');
         const paddedPoolName = Buffer.concat([poolName, Buffer.alloc(32 - poolName.length)]);
         const paddedPoolNameArray = Array.from(paddedPoolName);
-        const program = anchor.workspace.BumpinTrade as Program<BumpinTrade>;
+
         await program.methods.initializePool(
             paddedPoolNameArray,
         ).accounts({
             poolMint: poolMint,
-            bumpSigner: this.bump_state_pk,
+            bumpSigner: pda,
             admin: admin.publicKey,
         }).signers([admin]).rpc();
     }
@@ -163,26 +159,27 @@ export class Utils {
 
 
     public async initialize_trade_token(tradeTokenMint: PublicKey, admin: anchor.web3.Keypair, oracle: PublicKey, discount: BN, liquidationFactor: BN): Promise<void> {
+        let [pda, nonce] = this.getStatePda(this.program);
         await this.program.methods.initializeTradeToken(
             discount, liquidationFactor
         ).accounts({
             tradeTokenMint,
             oracle,
-            bumpSigner: this.bump_state_pk,
+            bumpSigner: pda,
             admin: admin.publicKey,
         }).signers([admin]).rpc();
     }
 
-    public async initialize_market(market: PublicKey, admin: anchor.web3.Keypair, poolMint: PublicKey, tradeTokenMint: PublicKey): Promise<void> {
-        await this.program.methods.initializeMarket(
-            discount
-        ).accounts({
-            tradeTokenMint,
-            oracle,
-            bumpSigner: this.bump_state_pk,
-            admin: admin.publicKey,
-        }).signers([admin]).rpc();
-    }
+    // public async initialize_market(market: PublicKey, admin: anchor.web3.Keypair, poolMint: PublicKey, tradeTokenMint: PublicKey): Promise<void> {
+    //     await this.program.methods.initializeMarket(
+    //         discount
+    //     ).accounts({
+    //         tradeTokenMint,
+    //         oracle,
+    //         bumpSigner: this.bump_state_pk,
+    //         admin: admin.publicKey,
+    //     }).signers([admin]).rpc();
+    // }
 
 
     public async deposit(authority: anchor.web3.Keypair, userTokenAccount: PublicKey, tokenIndex: number, amount: BN): Promise<void> {

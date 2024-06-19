@@ -37,6 +37,7 @@ pub struct InitializePool<'info> {
     pub bump_signer: AccountInfo<'info>,
 
     #[account(
+        mut,
         seeds = [b"bump_state".as_ref()],
         bump,
         has_one = admin
@@ -54,8 +55,6 @@ pub struct InitializePool<'info> {
 }
 
 pub fn handle_initialize_pool(ctx: Context<InitializePool>, name: [u8; 32]) -> Result<()> {
-    msg!("handle_initialize_pool, name: {}", String::from_utf8(name.to_vec()).unwrap());
-    msg!("state: {}", ctx.accounts.state.to_account_info().key());
     let mut pool = ctx.accounts.pool.load_init()?;
     let state = &mut ctx.accounts.state;
 
