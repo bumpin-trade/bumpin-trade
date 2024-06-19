@@ -93,6 +93,8 @@ pub enum BumpErrorCode {
     UserNotFound,
     #[msg("CouldNotLoadUserData")]
     CouldNotLoadUserData,
+    #[msg("PoolSubUnsettleNotEnough")]
+    PoolSubUnsettleNotEnough,
 }
 #[macro_export]
 macro_rules! print_error {

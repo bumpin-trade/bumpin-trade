@@ -153,8 +153,8 @@ impl<'a> PoolProcessor<'_> {
         if !self.pool.stable {
             let markets = market_vec.get_all_market()?;
             for mut market in markets {
-                if self.pool.pool_key.eq(&market.1.pool_key) {
-                    let mut market_processor = MarketProcessor { market: &mut market.1 };
+                if self.pool.pool_key.eq(&market.pool_key) {
+                    let mut market_processor = MarketProcessor { market: &mut market };
                     let long_market_un_pnl =
                         market_processor.get_market_un_pnl(true, oracle_map)?;
                     pool_value = cal_utils::add_u128(pool_value, long_market_un_pnl)?;

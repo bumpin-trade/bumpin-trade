@@ -6,6 +6,7 @@ use std::cell::{Ref, RefMut};
 use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::ops::Deref;
+use std::panic::Location;
 use std::slice::Iter;
 
 use crate::errors::BumpErrorCode::{CouldNotLoadTradeTokenData, TradeTokenNotFind};
@@ -18,10 +19,21 @@ pub struct MarketMap<'a>(pub BTreeMap<[u8; 32], AccountLoader<'a, Market>>);
 impl<'a> MarketMap<'a> {
     #[track_caller]
     #[inline(always)]
-    pub fn get_all_market(&self) -> BumpResult<BTreeMap<[u8; 32], Market>> {
-        let market =
-            self.0.iter().map(|(&key, &ref value)| (key, *value.load().unwrap().deref())).collect();
-        Ok(market)
+    pub fn get_all_market(&self) -> BumpResult<Vec<Market>> {
+        let mut markets = Vec::new();
+        for market_loader in self.0.values() {
+            let market = market_loader
+                .load()
+                .map_err(|e| {
+                    let caller = Location::caller();
+                    msg!("{:?}", e);
+                    msg!("Could not load market at {}:{}", caller.file(), caller.line());
+                    CouldNotLoadTradeTokenData
+                })?
+                .clone();
+            markets.push(market);
+        }
+        Ok(markets)
     }
 
     #[track_caller]
@@ -30,7 +42,7 @@ impl<'a> MarketMap<'a> {
         let loader = match self.0.get(symbol) {
             None => {
                 return Err(TradeTokenNotFind);
-            },
+            }
             Some(loader) => loader,
         };
         match loader.load_mut() {
@@ -38,7 +50,7 @@ impl<'a> MarketMap<'a> {
             Err(e) => {
                 msg!("{:?}", e);
                 Err(CouldNotLoadTradeTokenData)
-            },
+            }
         }
     }
 
@@ -48,7 +60,7 @@ impl<'a> MarketMap<'a> {
         let loader = match self.0.get(symbol) {
             None => {
                 return Err(TradeTokenNotFind);
-            },
+            }
             Some(loader) => loader,
         };
         Ok(loader)
@@ -60,7 +72,7 @@ impl<'a> MarketMap<'a> {
         let loader = match self.0.get(symbol) {
             None => {
                 return Err(TradeTokenNotFind);
-            },
+            }
             Some(loader) => loader,
         };
         match loader.load() {

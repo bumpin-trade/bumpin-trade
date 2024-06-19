@@ -33,4 +33,8 @@ impl FeeReward {
         self.fee_amount = self.un_settle_fee_amount.safe_add(amount)?;
         Ok(())
     }
+    pub fn sub_un_settle_amount(&mut self, amount: u128) -> BumpResult<()> {
+        self.fee_amount = self.un_settle_fee_amount.safe_sub(amount)?;
+        Ok(())
+    }
 }
