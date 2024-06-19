@@ -13,16 +13,7 @@ describe("bumpin-exchange", () => {
     const program = anchor.workspace.BumpinTrade as Program<BumpinTrade>;
     const programPyth = anchor.workspace.Pyth as Program<Pyth>;
 
-    let admin: anchor.web3.Keypair;
-    let Player1: anchor.web3.Keypair;
-    let Player2: anchor.web3.Keypair;
-    let pool_mint_account: anchor.web3.Keypair;
-    let stable_pool_mint_account: anchor.web3.Keypair;
-    let trade_token_mint_account: anchor.web3.Keypair;
-    let oracle: anchor.web3.Keypair;
     let utils: Utils = new Utils();
-
-
     let exchange: BumpinExchange;
 
     before(async () => {
