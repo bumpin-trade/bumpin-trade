@@ -46,6 +46,7 @@ pub struct UpdatePositionMarginParams {
     pub position_key: Pubkey,
     pub is_add: bool,
     pub update_margin_amount: u128,
+    pub add_initial_margin_from_portfolio: u128,
 }
 
 pub fn handle_add_position_margin(

@@ -4,7 +4,6 @@ use std::slice::Iter;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
-use crate::{utils, validate};
 use crate::can_sign_for_user;
 use crate::errors::BumpErrorCode;
 use crate::math::safe_math::SafeMath;
@@ -17,6 +16,7 @@ use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
+use crate::{utils, validate};
 
 #[derive(Accounts)]
 #[instruction(pool_index: u16, trade_token_index: u16)]
@@ -164,8 +164,7 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
         user_token.add_token_amount(rewards_amount.safe_add(transfer_amount)?)?;
         trade_token.add_token(rewards_amount.safe_add(transfer_amount)?)?;
 
-        let repay_liability =
-            user_token.repay_liability()?;
+        let repay_liability = user_token.repay_liability()?;
         if repay_liability > 0 {
             trade_token.sub_liability(repay_liability)?;
         }
@@ -202,8 +201,7 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
 
     user.sub_user_stake(&pool.pool_key, un_stake_params.un_stake_token_amount)?;
 
-    let user_stake =
-        user.get_user_stake_mut(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
+    let user_stake = user.get_user_stake_mut(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
 
     let user = &mut ctx.accounts.user.load_mut()?;
     if user_stake.amount <= 0 {

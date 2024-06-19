@@ -227,7 +227,6 @@ pub mod bumpin_trade {
         handle_adl(ctx, params)
     }
 
-
     /*-----reward------*/
     pub fn claim_rewards<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ClaimRewards<'c>>,

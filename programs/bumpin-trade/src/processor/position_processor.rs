@@ -53,7 +53,7 @@ impl PositionProcessor<'_> {
         if self.position.position_size != 0u128 {
             if self.position.leverage > params.leverage {
                 let add_margin_amount;
-                let add_initial_margin_from_portfolio;
+                let mut add_initial_margin_from_portfolio = 0u128;
                 if self.position.cross_margin {
                     let user = &mut user_account.load_mut().unwrap();
                     let available_amount = user
@@ -100,6 +100,7 @@ impl PositionProcessor<'_> {
                         position_key,
                         is_add: true,
                         update_margin_amount: add_margin_amount,
+                        add_initial_margin_from_portfolio,
                     },
                     &trade_token,
                     oracle_map,
@@ -113,7 +114,7 @@ impl PositionProcessor<'_> {
                         authority,
                         params.add_margin_amount,
                     )
-                    .unwrap();
+                    .map_err(|error| BumpErrorCode::TransferFailed)?;
                 }
             } else {
                 self.position.set_leverage(params.leverage)?;
@@ -125,6 +126,7 @@ impl PositionProcessor<'_> {
                         position_key,
                         is_add: false,
                         update_margin_amount: reduce_margin,
+                        add_initial_margin_from_portfolio: 0,
                     },
                     false,
                     &trade_token,
@@ -645,6 +647,8 @@ impl PositionProcessor<'_> {
                 self.position.position_size,
                 self.position.leverage,
             )?)?;
+            self.position
+                .add_initial_margin_usd_from_portfolio(params.add_initial_margin_from_portfolio)?;
         } else {
             self.position.add_initial_margin_usd(cal_utils::token_to_usd_u(
                 params.update_margin_amount,
