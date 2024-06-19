@@ -64,7 +64,7 @@ pub struct ADL<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn adl<'a, 'b, 'c: 'info, 'info>(
+pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, ADL<'info>>,
     params: [ADLParams; 10],
 ) -> Result<()> {
@@ -123,6 +123,7 @@ pub fn adl<'a, 'b, 'c: 'info, 'info>(
     Ok(())
 }
 
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Eq, PartialEq)]
 pub struct ADLParams {
     position_key: Pubkey,
     user_key: Pubkey,
