@@ -1,3 +1,5 @@
+import BN from "bn.js";
+
 export class PlayerInfo {
     name: string;
     secretKey?: Uint8Array;
@@ -9,16 +11,22 @@ export class PoolInfo {
     isStable: boolean;
 }
 
-export class TradeTokenInfo {}
+export class TradeTokenInfo {
+    name: string;
+    discount: BN;
+    liquidationFactor: BN;
+}
 
 export class ExchangeInitializeParams {
     poolInfos: PoolInfo[];
     playerInfos: PlayerInfo[];
+    tradeTokenInfos: TradeTokenInfo[];
 
 
-    constructor(poolInfos: PoolInfo[], playerInfos: PlayerInfo[]) {
+    constructor(poolInfos: PoolInfo[], playerInfos: PlayerInfo[], tradeTokenInfos: TradeTokenInfo[]) {
         this.poolInfos = poolInfos;
         this.playerInfos = playerInfos;
+        this.tradeTokenInfos = tradeTokenInfos;
     }
 
     static defaultParams(): ExchangeInitializeParams {
@@ -30,6 +38,10 @@ export class ExchangeInitializeParams {
             [
                 {name: "Player1"},
                 {name: "Player2"}
+            ],
+            [
+                {name: "BTC", discount: new BN(1), liquidationFactor: new BN(1)},
+                {name: "USDC", discount: new BN(1), liquidationFactor: new BN(1)}
             ]
         );
     }

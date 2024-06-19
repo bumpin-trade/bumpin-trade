@@ -192,7 +192,7 @@ export class Utils {
     }
 
 
-    public async manual_create_account(provider: Provider, fromPk: anchor.web3.Keypair, newAccountPk: anchor.web3.Keypair, space: number, lamports: number, programId: PublicKey) {
+    public async manualCreateAccount(provider: Provider, fromPk: anchor.web3.Keypair, newAccountPk: anchor.web3.Keypair, space: number, lamports: number, programId: PublicKey) {
         let i = anchor.web3.SystemProgram.createAccount({
             fromPubkey: fromPk.publicKey,
             newAccountPubkey: newAccountPk.publicKey,

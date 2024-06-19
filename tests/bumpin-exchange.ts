@@ -5,7 +5,6 @@ import {Pyth} from "../target/types/pyth";
 import {Utils} from "./utils/utils";
 import {assert} from 'chai';
 import {PublicKey} from "@solana/web3.js";
-import BN from "bn.js";
 import {ExchangeInitializeParams} from "./exchange/initialize_params";
 import {BumpinExchange} from "./exchange/exchange";
 
@@ -71,8 +70,9 @@ describe("bumpin-exchange", () => {
 
 
     it("Mint & Deposit for Play1", async () => {
-        let tradeToken = await utils.createTokenAccount(program.provider, admin, trade_token_mint_account.publicKey, Player1.publicKey);
-        await utils.mintTo(program.provider, admin, trade_token_mint_account.publicKey, tradeToken.address, 1000, 9);
-        await utils.deposit(Player1, tradeToken.address, 0, new BN(100));
+        await exchange.mintTradeTokenToPlayer("Player1", "BTC", 1000, 9);
+        // let tradeToken = await utils.createTokenAccount(program.provider, admin, trade_token_mint_account.publicKey, Player1.publicKey);
+        // await utils.mintTo(program.provider, admin, trade_token_mint_account.publicKey, tradeToken.address, 1000, 9);
+        // await utils.deposit(Player1, tradeToken.address, 0, new BN(100));
     });
 });
