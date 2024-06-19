@@ -30,7 +30,7 @@ pub struct ClaimRewards<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn claim_rewards<'a, 'b, 'c: 'info, 'info>(
+pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, ClaimRewards<'c>>,
 ) -> Result<()> {
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();

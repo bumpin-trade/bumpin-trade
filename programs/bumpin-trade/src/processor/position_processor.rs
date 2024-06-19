@@ -53,7 +53,7 @@ impl PositionProcessor<'_> {
         if self.position.position_size != 0u128 {
             if self.position.leverage > params.leverage {
                 let add_margin_amount;
-                let add_initial_margin_from_portfolio;
+                let mut add_initial_margin_from_portfolio = 0u128;
                 if self.position.cross_margin {
                     let user = &mut user_account.load_mut().unwrap();
                     let available_amount = user
@@ -79,7 +79,7 @@ impl PositionProcessor<'_> {
 
                     drop(user_processor);
                     let user = &mut user_account.load_mut().unwrap();
-                    let mut user_processor = UserProcessor { user };
+                    let user_processor = UserProcessor { user };
                     add_margin_amount = cal_utils::usd_to_token_u(
                         add_margin_in_usd,
                         trade_token.decimals,
@@ -100,6 +100,7 @@ impl PositionProcessor<'_> {
                         position_key,
                         is_add: true,
                         update_margin_amount: add_margin_amount,
+                        add_initial_margin_from_portfolio,
                     },
                     &trade_token,
                     oracle_map,
@@ -113,7 +114,7 @@ impl PositionProcessor<'_> {
                         authority,
                         params.add_margin_amount,
                     )
-                    .unwrap();
+                    .map_err(|error| BumpErrorCode::TransferFailed)?;
                 }
             } else {
                 self.position.set_leverage(params.leverage)?;
@@ -125,6 +126,7 @@ impl PositionProcessor<'_> {
                         position_key,
                         is_add: false,
                         update_margin_amount: reduce_margin,
+                        add_initial_margin_from_portfolio: 0,
                     },
                     false,
                     &trade_token,
@@ -135,7 +137,7 @@ impl PositionProcessor<'_> {
                 )?;
                 if self.position.cross_margin {
                     let user = &mut user_account.load_mut().unwrap();
-                    let mut user_processor = UserProcessor { user };
+                    let user_processor = UserProcessor { user };
                     user_processor
                         .user
                         .un_use_token(&self.position.margin_mint, reduce_margin_amount)?;
@@ -453,7 +455,6 @@ impl PositionProcessor<'_> {
         if params.decrease_size == self.position.position_size {
             user_processor.user.delete_position(
                 market.symbol,
-                &trade_token.mint,
                 self.position.cross_margin,
                 program_id,
             )?;
@@ -646,6 +647,8 @@ impl PositionProcessor<'_> {
                 self.position.position_size,
                 self.position.leverage,
             )?)?;
+            self.position
+                .add_initial_margin_usd_from_portfolio(params.add_initial_margin_from_portfolio)?;
         } else {
             self.position.add_initial_margin_usd(cal_utils::token_to_usd_u(
                 params.update_margin_amount,
@@ -1017,7 +1020,7 @@ impl PositionProcessor<'_> {
             let user_token = user
                 .get_user_token_mut(&self.position.margin_mint)?
                 .ok_or(BumpErrorCode::CouldNotFindUserToken)?;
-            let repay_amount = user_token.repay_liability(user_token.amount)?;
+            let repay_amount = user_token.repay_liability()?;
             let trade_token = trade_token_account.load_mut().unwrap();
             trade_token.sub_liability(repay_amount)?;
 

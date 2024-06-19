@@ -15,7 +15,7 @@ pub struct AutoCompoundRewards<'info> {
     pub authority: Signer<'info>,
 }
 
-pub fn claim_rewards<'a, 'b, 'c: 'info, 'info>(
+pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, AutoCompoundRewards<'c>>,
 ) -> Result<()> {
     let user = &mut ctx.accounts.user.load_mut()?;

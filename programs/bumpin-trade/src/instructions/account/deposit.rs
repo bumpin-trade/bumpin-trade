@@ -80,7 +80,7 @@ pub fn handle_deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> 
     user_token.add_token_amount(amount)?;
     trade_token.add_token(amount)?;
 
-    let repay_amount = user_token.repay_liability(amount)?;
+    let repay_amount = user_token.repay_liability()?;
     trade_token.sub_liability(repay_amount)?;
     if amount > repay_amount {
         let left_amount = amount.safe_sub(repay_amount)?;

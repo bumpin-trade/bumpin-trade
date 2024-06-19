@@ -44,10 +44,15 @@ impl User {
         }))
     }
 
-    pub fn try_sub_user_stake(&mut self, pool_key: &Pubkey, stake_amount: u128) -> BumpResult<()> {
-        let user_stake = self.get_user_stake_mut(pool_key)?;
-        if let Some(user_stake) = user_stake {
-            user_stake.sub_user_stake(stake_amount)?;
+    pub fn sub_user_stake(&mut self, pool_key: &Pubkey, stake_amount: u128) -> BumpResult<()> {
+        let user_stake_option = self.get_user_stake_mut(pool_key)?;
+        match user_stake_option {
+            None => {
+                Err(CouldNotFindUserToken)?;
+            },
+            Some(user_stake) => {
+                user_stake.sub_user_stake(stake_amount)?;
+            },
         }
         Ok(())
     }
@@ -266,6 +271,12 @@ impl User {
         Ok(())
     }
 
+    pub fn delete_user_stake(&mut self, pool_key: &Pubkey) -> BumpResult {
+        let order_index = self.get_user_stake_index_by_id(pool_key);
+        self.user_tokens[order_index] = UserToken::default();
+        Ok(())
+    }
+
     pub fn add_token_amount(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
         let user_token = self.get_user_token_mut(token)?.ok_or(CouldNotFindUserToken)?;
         user_token.add_token_amount(amount)?;
@@ -275,12 +286,11 @@ impl User {
     pub fn delete_position(
         &mut self,
         symbol: [u8; 32],
-        token: &Pubkey,
         is_cross_margin: bool,
         program_id: &Pubkey,
     ) -> BumpResult {
         let position_key =
-            self.generate_position_key(symbol, token, is_cross_margin, program_id)?;
+            pda::generate_position_key(&self.authority, symbol, is_cross_margin, program_id)?;
         let position_index = self
             .user_positions
             .iter()
@@ -344,6 +354,14 @@ impl User {
         self.user_orders
             .iter()
             .position(|user_order| user_order.order_id == order_id)
+            .ok_or(BumpErrorCode::OrderNotExist)
+            .unwrap()
+    }
+
+    fn get_user_stake_index_by_id(&self, pool_key: &Pubkey) -> usize {
+        self.user_stakes
+            .iter()
+            .position(|user_stake| user_stake.pool_key.eq(pool_key))
             .ok_or(BumpErrorCode::OrderNotExist)
             .unwrap()
     }

@@ -212,6 +212,33 @@ pub mod bumpin_trade {
     ) -> Result<()> {
         handle_update_position_leverage(ctx, params)
     }
+
+    pub fn liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, LiquidateCrossPosition<'c>>,
+    ) -> Result<()> {
+        handle_liquidate_cross_position(ctx)
+    }
+
+    /*-----adl------*/
+    pub fn adl<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, ADL<'info>>,
+        params: [ADLParams; 10],
+    ) -> Result<()> {
+        handle_adl(ctx, params)
+    }
+
+    /*-----reward------*/
+    pub fn claim_rewards<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, ClaimRewards<'c>>,
+    ) -> Result<()> {
+        handle_claim_rewards(ctx)
+    }
+
+    pub fn auto_compound<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, AutoCompoundRewards<'c>>,
+    ) -> Result<()> {
+        handle_auto_compound(ctx)
+    }
 }
 
 #[derive(Accounts)]

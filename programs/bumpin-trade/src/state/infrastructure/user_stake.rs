@@ -1,8 +1,9 @@
-use crate::errors::BumpResult;
+use crate::errors::{BumpErrorCode, BumpResult};
 use anchor_lang::prelude::*;
 use solana_program::pubkey::Pubkey;
 
 use crate::math::safe_math::SafeMath;
+use crate::validate;
 
 #[zero_copy(unsafe)]
 #[derive(Default, Eq, PartialEq, Debug)]
@@ -28,6 +29,7 @@ impl UserStake {
     }
 
     pub fn sub_user_stake(&mut self, stake_amount: u128) -> BumpResult {
+        validate!(self.amount >= stake_amount, BumpErrorCode::AmountNotEnough)?;
         self.amount = self.amount.safe_sub(stake_amount)?;
         Ok(())
     }
