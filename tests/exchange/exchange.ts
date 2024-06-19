@@ -122,7 +122,7 @@ export class BumpinExchange {
 
     public async initialize(params: ExchangeInitializeParams) {
         this.initialize_params = params;
-        this.payer = await this.utils.new_user(this.program.provider as AnchorProvider, null, 1000);
+        this.payer = await this.utils.new_user(this.program.provider as AnchorProvider, null, 10000);
 
         //init oracle
         let oracle_payer = await this.utils.new_user(this.programPyth.provider as anchor.AnchorProvider);
@@ -163,8 +163,14 @@ export class BumpinExchange {
             }
         }
 
-
         this.initialized = true;
+    }
+
+    public async playerDeposit(playerName: string, tradeTokenName: string, amount: number) {
+        let player = this.getPlayer(playerName);
+        let tradeToken = this.getTradeToken(tradeTokenName);
+        let tradeTokenAccount = player.getTradeTokenAccount(tradeTokenName);
+        await this.utils.deposit(player.user, tradeTokenAccount.address, tradeToken.numberOfTradeTokens, new BN(amount));
     }
 
 
@@ -176,11 +182,14 @@ export class BumpinExchange {
         return this.players;
     }
 
-    public async mintTradeTokenToPlayer(playerName: string, tradeTokenName: string, amount: number,demicals: number) {
-        let player = this.getPlayer(playerName);
-        let tradeToken = this.tradeTokens.get(tradeTokenName);
-        await player.mintTradeToken(tradeTokenName, tradeToken.mint.publicKey, amount, demicals);
+    public getTradeToken(tradeTokenName: string) {
+        return this.tradeTokens.get(tradeTokenName);
     }
+
+    public getTradeTokens() {
+        return this.tradeTokens;
+    }
+
 
     public getUserPda(playerName: string): [PublicKey, number] {
         let user = this.getPlayer(playerName);

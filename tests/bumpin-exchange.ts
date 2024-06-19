@@ -60,10 +60,22 @@ describe("bumpin-exchange", () => {
     });
 
 
-    it("Mint & Deposit for Play1", async () => {
-        await exchange.mintTradeTokenToPlayer("Player1", "BTC", 1000, 9);
-        // let tradeToken = await utils.createTokenAccount(program.provider, admin, trade_token_mint_account.publicKey, Player1.publicKey);
-        // await utils.mintTo(program.provider, admin, trade_token_mint_account.publicKey, tradeToken.address, 1000, 9);
-        // await utils.deposit(Player1, tradeToken.address, 0, new BN(100));
+    it("Mint for Player1 & Player2", async () => {
+        let player1 = exchange.getPlayer("Player1");
+        let tradeTokenBtc = exchange.getTradeToken("BTC");
+        await player1.mintTradeToken("BTC", tradeTokenBtc.mint.publicKey, 1000, 9);
+
+        let player2 = exchange.getPlayer("Player2");
+        let tradeTokenUSDC = exchange.getTradeToken("USDC");
+        await player2.mintTradeToken("USDC", tradeTokenUSDC.mint.publicKey, 1000, 9);
+    });
+
+    it("Deposit for Player1 & Player2", async () => {
+        await exchange.playerDeposit("Player1", "BTC", 500);
+        await exchange.playerDeposit("Player2", "USDC", 500);
+
+
+        // let pdaForPlayer1 = exchange.getUserPda("Player1");
+        // const player1 = await program.account.user.fetch(pdaForPlayer1[0]);
     });
 });
