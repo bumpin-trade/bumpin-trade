@@ -169,7 +169,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         order_type: order.order_type,
         stop_type: order.stop_type,
         cross_margin: order.is_cross_margin,
-        margin_token: token.mint,
+        margin_mint: token.mint,
         order_margin: order.order_margin,
         leverage: order.leverage,
         order_size: order.size,
@@ -319,7 +319,7 @@ pub fn handle_execute_order<'info>(
                 position.set_authority(user.authority)?;
                 position.set_index_mint(market.index_mint)?;
                 position.set_symbol(order.symbol)?;
-                position.set_margin_mint(order.margin_token)?;
+                position.set_margin_mint(order.margin_mint)?;
                 position.set_leverage(order.leverage)?;
                 position.set_is_long(order.order_side.eq(&OrderSide::LONG))?;
                 position.set_cross_margin(order.cross_margin)?;
@@ -332,7 +332,7 @@ pub fn handle_execute_order<'info>(
             let mut position_processor = PositionProcessor { position };
             position_processor.increase_position(
                 IncreasePositionParams {
-                    margin_token: order.margin_token,
+                    margin_token: order.margin_mint,
                     increase_margin: order_margin,
                     increase_margin_from_balance: order_margin_from_balance,
                     margin_token_price,
@@ -366,7 +366,7 @@ pub fn handle_execute_order<'info>(
                     order_id,
                     is_liquidation: false,
                     is_cross_margin: false,
-                    margin_token: order.margin_token,
+                    margin_token: order.margin_mint,
                     decrease_size: if position_processor.position.position_size < order.order_size {
                         position_processor.position.position_size
                     } else {
@@ -543,11 +543,11 @@ fn get_execution_price(index_price: u128, order: &UserOrder) -> BumpResult<u128>
 fn validate_execute_order(order: &UserOrder, market: &Market) -> BumpResult<()> {
     // token verify
     if order.position_side.eq(&PositionSide::INCREASE) {
-        if order.order_side.eq(&OrderSide::LONG) && order.margin_token != market.pool_mint {
+        if order.order_side.eq(&OrderSide::LONG) && order.margin_mint != market.pool_mint {
             return Err(BumpErrorCode::TokenNotMatch.into());
         }
 
-        if order.order_side.eq(&OrderSide::SHORT) && order.margin_token != market.stable_pool_mint {
+        if order.order_side.eq(&OrderSide::SHORT) && order.margin_mint != market.stable_pool_mint {
             return Err(BumpErrorCode::TokenNotMatch.into());
         }
     }

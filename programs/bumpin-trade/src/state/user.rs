@@ -94,7 +94,7 @@ impl User {
                 };
                 self.add_user_token(new_token, index)?;
                 self.get_user_token_mut(token)?.ok_or(CouldNotFindUserToken)?
-            },
+            }
             Some(exist_user_token) => exist_user_token,
         };
         if is_check {
@@ -184,7 +184,7 @@ impl User {
     ) -> BumpResult<bool> {
         for order in self.user_orders {
             if order.symbol.eq(&symbol)
-                && order.margin_token.eq(&margin_token)
+                && order.margin_mint.eq(&margin_token)
                 && order.cross_margin.eq(&is_cross_margin)
                 && order.position_side.eq(&PositionSide::INCREASE)
                 && order.order_side.eq(&OrderSide::SHORT)
@@ -297,10 +297,10 @@ impl User {
             let is_long_order = user_order.order_side.eq(&OrderSide::LONG);
             if user_order.cross_margin == is_cross_margin
                 && user_order.symbol == symbol
-                && user_order.margin_token.eq(margin_token)
+                && user_order.margin_mint.eq(margin_token)
                 && ((is_long_order == is_long
-                    && user_order.position_side.eq(&PositionSide::INCREASE))
-                    || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
+                && user_order.position_side.eq(&PositionSide::INCREASE))
+                || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
             {
                 user_order.set_leverage(leverage)
             }

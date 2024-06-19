@@ -34,7 +34,7 @@ pub fn claim_rewards<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, ClaimRewards<'c>>,
 ) -> Result<()> {
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
-    let AccountMaps { pool_key_map, .. } = load_maps(remaining_accounts_iter)?;
+    let AccountMaps { pool_map: pool_key_map, .. } = load_maps(remaining_accounts_iter)?;
     let token_account_vec = VaultMap::load_vec(remaining_accounts_iter)?;
 
     let user = &mut ctx.accounts.user.load_mut()?;

@@ -24,7 +24,7 @@ pub fn claim_rewards<'a, 'b, 'c: 'info, 'info>(
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
     for user_stake in user.user_stakes.iter_mut() {
         let account_maps = load_maps(remaining_accounts_iter)?;
-        let pool_key_map = &account_maps.pool_key_map;
+        let pool_key_map = &account_maps.pool_map;
         let pool_account_loader = pool_key_map.get_account_loader(&user_stake.pool_key)?;
 
         let pool = &mut pool_account_loader.load_mut()?;

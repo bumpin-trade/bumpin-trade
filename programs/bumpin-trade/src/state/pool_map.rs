@@ -16,10 +16,29 @@ use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::panic::Location;
 use std::slice::Iter;
+use crate::state::trade_token::TradeToken;
 
 pub struct PoolMap<'a>(pub BTreeMap<Pubkey, AccountLoader<'a, Pool>>);
 
 impl<'a> PoolMap<'a> {
+    #[track_caller]
+    #[inline(always)]
+    pub fn get_all_pool(&self) -> BumpResult<Vec<Pool>> {
+        let mut pool_vec = Vec::new();
+        for pool_loader in self.0.values() {
+            let pool = pool_loader
+                .load()
+                .map_err(|e| {
+                    let caller = Location::caller();
+                    msg!("{:?}", e);
+                    msg!("Could not load pool at {}:{}", caller.file(), caller.line());
+                    CouldNotLoadTradeTokenData
+                })?
+                .clone();
+            pool_vec.push(pool);
+        }
+        Ok(pool_vec)
+    }
     #[track_caller]
     #[inline(always)]
     pub fn get_ref(&self, pool_key: &Pubkey) -> BumpResult<Ref<Pool>> {
@@ -28,7 +47,7 @@ impl<'a> PoolMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 return Err(TradeTokenNotFind);
-            },
+            }
             Some(loader) => loader,
         };
         match loader.load() {
@@ -38,7 +57,7 @@ impl<'a> PoolMap<'a> {
                 msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 Err(CouldNotLoadTradeTokenData)
-            },
+            }
         }
     }
 
@@ -50,7 +69,7 @@ impl<'a> PoolMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 return Err(TradeTokenNotFind);
-            },
+            }
             Some(loader) => loader,
         };
         match loader.load_mut() {
@@ -60,7 +79,7 @@ impl<'a> PoolMap<'a> {
                 msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 Err(CouldNotLoadTradeTokenData)
-            },
+            }
         }
     }
 
@@ -72,7 +91,7 @@ impl<'a> PoolMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 return Err(TradeTokenNotFind);
-            },
+            }
             Some(loader) => loader,
         };
         Ok(loader)

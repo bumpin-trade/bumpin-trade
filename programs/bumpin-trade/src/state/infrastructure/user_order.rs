@@ -13,7 +13,7 @@ pub struct UserOrder {
     pub order_type: OrderType,
     pub stop_type: StopType,
     pub cross_margin: bool,
-    pub margin_token: Pubkey,
+    pub margin_mint: Pubkey,
     pub order_margin: u128,
     pub leverage: u128,
     pub order_size: u128,

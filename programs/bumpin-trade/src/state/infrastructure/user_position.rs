@@ -23,6 +23,7 @@ pub struct UserPosition {
     pub initial_margin_usd_from_portfolio: u128,
     pub mm_usd: u128,
     pub hold_pool_amount: u128,
+    pub open_fee: u128,
     pub open_fee_in_usd: u128,
     pub realized_borrowing_fee: u128,
     pub realized_borrowing_fee_in_usd: u128,

@@ -265,7 +265,7 @@ impl<'a> UserProcessor<'a> {
                 continue;
             }
             if user_order.symbol == symbol
-                && user_order.margin_token.eq(margin_token)
+                && user_order.margin_mint.eq(margin_token)
                 && user_order.order_type.eq(&OrderType::STOP)
                 && user_order.cross_margin == is_cross_margin
             {
