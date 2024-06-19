@@ -51,7 +51,12 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         &mut ctx.remaining_accounts.iter().peekable();
 
     let AccountMaps {
-        market_map, trade_token_map, mut oracle_map, pool_map: pool_key_map, vault_map, ..
+        market_map,
+        trade_token_map,
+        mut oracle_map,
+        pool_map: pool_key_map,
+        vault_map,
+        ..
     } = load_maps(remaining_accounts)?;
 
     let mut user_processor = UserProcessor { user };

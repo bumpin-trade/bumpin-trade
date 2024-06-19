@@ -90,7 +90,7 @@ impl PositionProcessor<'_> {
                         trade_token.decimals,
                         token_price,
                     )?;
-                    user_processor.use_token(&trade_token.mint, add_margin_amount, false)?;
+                    user_processor.user.use_token(&trade_token.mint, add_margin_amount, false)?;
                 } else {
                     add_margin_amount = params.add_margin_amount;
                 }
@@ -137,6 +137,7 @@ impl PositionProcessor<'_> {
                     let user = &mut user_account.load_mut().unwrap();
                     let mut user_processor = UserProcessor { user };
                     user_processor
+                        .user
                         .un_use_token(&self.position.margin_mint, reduce_margin_amount)?;
                 } else {
                     token::send_from_program_vault(
@@ -300,7 +301,7 @@ impl PositionProcessor<'_> {
 
         if params.is_cross_margin {
             let trade_token = &mut trade_token_loader.load_mut().unwrap();
-            user_processor.un_use_token(&params.margin_token, fee)?;
+            user_processor.user.un_use_token(&params.margin_token, fee)?;
             user_processor.sub_token_with_liability(&params.margin_token, trade_token, fee)?;
         }
 
@@ -450,7 +451,7 @@ impl PositionProcessor<'_> {
         let user = &mut user_account_loader.load_mut().unwrap();
         let mut user_processor = UserProcessor { user };
         if params.decrease_size == self.position.position_size {
-            user_processor.delete_position(
+            user_processor.user.delete_position(
                 market.symbol,
                 &trade_token.mint,
                 self.position.cross_margin,
@@ -1070,12 +1071,14 @@ impl PositionProcessor<'_> {
                 response.settle_fee.abs().cast::<u128>()?,
             )?;
         } else {
-            user_processor
-                .add_token(&self.position.margin_mint, response.settle_fee.abs().cast::<u128>()?)?;
+            user_processor.user.add_token_amount(
+                &self.position.margin_mint,
+                response.settle_fee.abs().cast::<u128>()?,
+            )?;
         }
 
         // release token
-        user_processor.un_use_token(&self.position.margin_mint, response.decrease_margin)?;
+        user_processor.user.un_use_token(&self.position.margin_mint, response.decrease_margin)?;
 
         //deal user pnl
         if response.user_realized_pnl_token >= 0i128 {
@@ -1083,7 +1086,7 @@ impl PositionProcessor<'_> {
                 && response.user_realized_pnl_token.abs().cast::<u128>()?
                     < response.settle_fee.abs().cast::<u128>()?
             {
-                user_processor.sub_user_token_amount(
+                user_processor.user.sub_user_token_amount(
                     &self.position.margin_mint,
                     response
                         .settle_fee
@@ -1092,7 +1095,7 @@ impl PositionProcessor<'_> {
                         .safe_sub(response.user_realized_pnl_token.abs().cast::<u128>()?)?,
                 )?;
             } else {
-                user_processor.add_token(
+                user_processor.user.add_token_amount(
                     &self.position.margin_mint,
                     response
                         .user_realized_pnl_token

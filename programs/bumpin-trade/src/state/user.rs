@@ -94,7 +94,7 @@ impl User {
                 };
                 self.add_user_token(new_token, index)?;
                 self.get_user_token_mut(token)?.ok_or(CouldNotFindUserToken)?
-            }
+            },
             Some(exist_user_token) => exist_user_token,
         };
         if is_check {
@@ -266,6 +266,30 @@ impl User {
         Ok(())
     }
 
+    pub fn add_token_amount(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
+        let user_token = self.get_user_token_mut(token)?.ok_or(CouldNotFindUserToken)?;
+        user_token.add_token_amount(amount)?;
+        Ok(())
+    }
+
+    pub fn delete_position(
+        &mut self,
+        symbol: [u8; 32],
+        token: &Pubkey,
+        is_cross_margin: bool,
+        program_id: &Pubkey,
+    ) -> BumpResult {
+        let position_key =
+            self.generate_position_key(symbol, token, is_cross_margin, program_id)?;
+        let position_index = self
+            .user_positions
+            .iter()
+            .position(|user_position: &UserPosition| user_position.position_key.eq(&position_key))
+            .ok_or(CouldNotFindUserPosition)?;
+        self.user_positions[position_index] = UserPosition::default();
+        Ok(())
+    }
+
     pub fn get_order_leverage(
         &self,
         symbol: [u8; 32],
@@ -299,8 +323,8 @@ impl User {
                 && user_order.symbol == symbol
                 && user_order.margin_mint.eq(margin_token)
                 && ((is_long_order == is_long
-                && user_order.position_side.eq(&PositionSide::INCREASE))
-                || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
+                    && user_order.position_side.eq(&PositionSide::INCREASE))
+                    || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
             {
                 user_order.set_leverage(leverage)
             }
@@ -322,5 +346,17 @@ impl User {
             .position(|user_order| user_order.order_id == order_id)
             .ok_or(BumpErrorCode::OrderNotExist)
             .unwrap()
+    }
+
+    pub fn sub_user_token_amount(&mut self, mint: &Pubkey, mut amount: u128) -> BumpResult {
+        for user_position in &mut self.user_positions {
+            if user_position.cross_margin && user_position.margin_mint.eq(mint) && amount > 0 {
+                let reduce_amount = user_position.reduce_position_portfolio_balance(amount)?;
+                amount = amount.safe_sub(reduce_amount)?;
+            }
+        }
+        let user_token = self.get_user_token_mut(mint)?.ok_or(CouldNotFindUserToken)?;
+        user_token.sub_token_amount(amount)?;
+        Ok(())
     }
 }

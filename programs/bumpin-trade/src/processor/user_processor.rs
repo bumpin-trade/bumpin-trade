@@ -9,7 +9,8 @@ use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::processor::position_processor::PositionProcessor;
 use crate::state::infrastructure::user_order::{OrderStatus, OrderType, PositionSide, UserOrder};
-use crate::state::infrastructure::user_position::UserPosition;
+use crate::state::infrastructure::user_position::{PositionStatus, UserPosition};
+use crate::state::infrastructure::user_token::UserTokenStatus;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool_map::PoolMap;
@@ -25,12 +26,6 @@ pub struct UserProcessor<'a> {
 }
 
 impl<'a> UserProcessor<'a> {
-    pub fn un_use_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
-        Ok(self.user.un_use_token(token, amount)?)
-    }
-    pub fn use_token(&mut self, token: &Pubkey, amount: u128, is_check: bool) -> BumpResult<u128> {
-        Ok(self.user.use_token(token, amount, is_check)?)
-    }
     pub fn withdraw(
         &mut self,
         amount: u128,
@@ -53,17 +48,7 @@ impl<'a> UserProcessor<'a> {
         self.update_cross_position_balance(mint, amount, false)?;
         Ok(())
     }
-    pub fn sub_user_token_amount(&mut self, mint: &Pubkey, mut amount: u128) -> BumpResult {
-        for user_position in &mut self.user.user_positions {
-            if user_position.cross_margin && user_position.margin_mint.eq(mint) && amount > 0 {
-                let reduce_amount = user_position.reduce_position_portfolio_balance(amount)?;
-                amount = amount.safe_sub(reduce_amount)?;
-            }
-        }
-        let user_token = self.user.get_user_token_mut(mint)?.ok_or(CouldNotFindUserToken)?;
-        user_token.sub_token_amount(amount)?;
-        Ok(())
-    }
+
     pub fn get_user_cross_position_value(
         &mut self,
         state: &State,
@@ -97,6 +82,7 @@ impl<'a> UserProcessor<'a> {
         }
         Ok((total_im_usd, total_un_pnl_usd, total_position_fee, total_position_mm, total_size))
     }
+
     pub fn get_total_used_value(
         &self,
         trade_token_map: &TradeTokenMap,
@@ -114,6 +100,7 @@ impl<'a> UserProcessor<'a> {
         }
         Ok(total_used_value)
     }
+
     pub fn get_portfolio_net_value(
         &self,
         trade_token_map: &TradeTokenMap,
@@ -130,6 +117,7 @@ impl<'a> UserProcessor<'a> {
         }
         Ok(total_token_net_value)
     }
+
     pub fn get_available_value(
         &mut self,
         oracle_map: &mut OracleMap,
@@ -144,6 +132,9 @@ impl<'a> UserProcessor<'a> {
         let mut total_mm_usd_value = 0u128;
 
         for user_token in self.user.user_tokens {
+            if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
+                continue;
+            }
             let trade_token = trade_token_map.get_trade_token(&user_token.token_mint)?;
             let oracle_price_data = oracle_map.get_price_data(&user_token.token_mint)?;
 
@@ -163,6 +154,9 @@ impl<'a> UserProcessor<'a> {
 
         for i in 0..positions_count {
             let user_position = &mut self.user.user_positions[i];
+            if user_position.status.eq(&PositionStatus::INIT) {
+                continue;
+            }
 
             let position_processor = PositionProcessor { position: user_position };
             let (initial_margin_usd_from_portfolio, position_un_pnl, mm_usd) =
@@ -218,6 +212,9 @@ impl<'a> UserProcessor<'a> {
     ) -> BumpResult<()> {
         let mut reduce_amount = amount;
         for user_position in self.user.user_positions.iter_mut() {
+            if user_position.status.eq(&PositionStatus::INIT) {
+                continue;
+            }
             if user_position.cross_margin && user_position.margin_mint.eq(mint) && reduce_amount > 0
             {
                 if add_amount {
@@ -234,25 +231,6 @@ impl<'a> UserProcessor<'a> {
         Ok(())
     }
 
-    pub fn delete_position(
-        &mut self,
-        symbol: [u8; 32],
-        token: &Pubkey,
-        is_cross_margin: bool,
-        program_id: &Pubkey,
-    ) -> BumpResult {
-        let position_key =
-            self.generate_position_key(symbol, token, is_cross_margin, program_id)?;
-        let position_index = self
-            .user
-            .user_positions
-            .iter()
-            .position(|user_position: &UserPosition| user_position.position_key.eq(&position_key))
-            .ok_or(CouldNotFindUserPosition)?;
-        self.user.user_positions[position_index] = UserPosition::default();
-        Ok(())
-    }
-
     pub fn cancel_stop_orders(
         &mut self,
         order_id: u128,
@@ -261,6 +239,9 @@ impl<'a> UserProcessor<'a> {
         is_cross_margin: bool,
     ) -> BumpResult<()> {
         for user_order in self.user.user_orders {
+            if user_order.status.eq(&OrderStatus::INIT) {
+                continue;
+            }
             if user_order.order_id == order_id {
                 continue;
             }
@@ -314,29 +295,6 @@ impl<'a> UserProcessor<'a> {
             trade_token.add_liability(amount)?;
         }
         Ok(liability)
-    }
-
-    pub fn add_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
-        let user_token = self.user.get_user_token_mut(token)?.ok_or(CouldNotFindUserToken)?;
-        user_token.add_token_amount(amount)?;
-        Ok(())
-    }
-    pub fn generate_position_key(
-        &self,
-        symbol: [u8; 32],
-        token: &Pubkey,
-        is_cross_margin: bool,
-        program_id: &Pubkey,
-    ) -> BumpResult<Pubkey> {
-        // Convert is_cross_margin to a byte array
-        let is_cross_margin_bytes: &[u8] = if is_cross_margin { &[1] } else { &[0] };
-        // Create the seeds array by concatenating the byte representations
-        let seeds: &[&[u8]] =
-            &[self.user.authority.as_ref(), &symbol, token.as_ref(), is_cross_margin_bytes];
-
-        // Find the program address
-        let (address, _bump_seed) = Pubkey::find_program_address(seeds, program_id);
-        Ok(address)
     }
 
     pub fn cancel_order<'info>(

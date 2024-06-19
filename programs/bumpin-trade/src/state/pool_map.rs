@@ -4,6 +4,7 @@ use crate::errors::BumpErrorCode::{
 use crate::errors::BumpResult;
 use crate::math::safe_unwrap::SafeUnwrap;
 use crate::state::pool::Pool;
+use crate::state::trade_token::TradeToken;
 use crate::traits::Size;
 use anchor_lang::prelude::AccountLoader;
 use anchor_lang::Discriminator;
@@ -16,7 +17,6 @@ use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::panic::Location;
 use std::slice::Iter;
-use crate::state::trade_token::TradeToken;
 
 pub struct PoolMap<'a>(pub BTreeMap<Pubkey, AccountLoader<'a, Pool>>);
 
@@ -47,7 +47,7 @@ impl<'a> PoolMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 return Err(TradeTokenNotFind);
-            }
+            },
             Some(loader) => loader,
         };
         match loader.load() {
@@ -57,7 +57,7 @@ impl<'a> PoolMap<'a> {
                 msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 Err(CouldNotLoadTradeTokenData)
-            }
+            },
         }
     }
 
@@ -69,7 +69,7 @@ impl<'a> PoolMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 return Err(TradeTokenNotFind);
-            }
+            },
             Some(loader) => loader,
         };
         match loader.load_mut() {
@@ -79,7 +79,7 @@ impl<'a> PoolMap<'a> {
                 msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 Err(CouldNotLoadTradeTokenData)
-            }
+            },
         }
     }
 
@@ -91,7 +91,7 @@ impl<'a> PoolMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 return Err(TradeTokenNotFind);
-            }
+            },
             Some(loader) => loader,
         };
         Ok(loader)

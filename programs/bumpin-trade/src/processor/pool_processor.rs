@@ -44,7 +44,7 @@ impl<'a> PoolProcessor<'_> {
         validate!(user_token.amount > mint_amount, BumpErrorCode::AmountNotEnough)?;
 
         let mut user_processor = UserProcessor { user };
-        user_processor.sub_user_token_amount(&pool.pool_mint, mint_amount)?;
+        user_processor.user.sub_user_token_amount(&pool.pool_mint, mint_amount)?;
         validate!(
             user_processor
                 .get_available_value(&mut account_maps.oracle_map, &account_maps.trade_token_map)?
