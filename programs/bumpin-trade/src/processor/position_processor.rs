@@ -114,7 +114,7 @@ impl PositionProcessor<'_> {
                         authority,
                         params.add_margin_amount,
                     )
-                    .map_err(|error| BumpErrorCode::TransferFailed)?;
+                    .map_err(|_e| BumpErrorCode::TransferFailed)?;
                 }
             } else {
                 self.position.set_leverage(params.leverage)?;

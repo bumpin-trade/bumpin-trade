@@ -5,7 +5,6 @@ use solana_program::msg;
 use std::cell::{Ref, RefMut};
 use std::collections::BTreeMap;
 use std::iter::Peekable;
-use std::ops::Deref;
 use std::panic::Location;
 use std::slice::Iter;
 

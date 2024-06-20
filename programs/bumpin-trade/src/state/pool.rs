@@ -125,7 +125,7 @@ impl Pool {
     }
 
     pub fn sub_unsettle(&mut self, amount: u128) -> BumpResult<()> {
-        validate!(self.pool_balance.un_settle_amount >= amount, PoolSubUnsettleNotEnough);
+        validate!(self.pool_balance.un_settle_amount >= amount, PoolSubUnsettleNotEnough)?;
         self.pool_balance.un_settle_amount = sub_u128(self.pool_balance.un_settle_amount, amount)?;
         self.pool_balance.amount = add_u128(self.pool_balance.amount, amount)?;
         Ok(())
