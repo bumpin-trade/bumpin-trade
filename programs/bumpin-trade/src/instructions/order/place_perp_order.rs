@@ -131,7 +131,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     // let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
     //     &mut ctx.remaining_accounts.iter().peekable();
     // let AccountMaps { trade_token_map, mut oracle_map, .. } =
-    load_maps(remaining_accounts_iter, &ctx.accounts.state.admin)?;
+    // load_maps(remaining_accounts_iter, &ctx.accounts.state.admin)?;
     // let token_price = oracle_map.get_price_data(&token.mint).unwrap().price;
     // validate!(
     //     validate_place_order(
