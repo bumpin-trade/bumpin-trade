@@ -103,7 +103,7 @@ impl<'a> PoolMap<'a> {
         let mut pool_map = PoolMap(BTreeMap::new());
         let pool_discriminator = Pool::discriminator();
         for account_info in remaining_accounts.iter() {
-            validate!(account_info.owner.eq(admin), CouldNotLoadPoolData)?;
+            // validate!(account_info.owner.eq(admin), CouldNotLoadPoolData)?;
             let data = account_info.try_borrow_data().or(Err(CouldNotLoadPoolData))?;
 
             let expected_data_len = Pool::SIZE;

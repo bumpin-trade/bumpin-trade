@@ -81,7 +81,7 @@ impl<'a> TradeTokenMap<'a> {
         let mut trade_token_vec: TradeTokenMap = TradeTokenMap(BTreeMap::new());
         let trade_token_discriminator = TradeToken::discriminator();
         for account_info in remaining_accounts.iter() {
-            validate!(account_info.owner.eq(admin), CouldNotLoadTradeTokenData)?;
+            // validate!(account_info.owner.eq(admin), CouldNotLoadTradeTokenData)?;
             let data = account_info.try_borrow_data().or(Err(CouldNotLoadTradeTokenData))?;
 
             let expected_data_len = TradeToken::SIZE;
