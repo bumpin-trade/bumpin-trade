@@ -77,7 +77,8 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
         )?;
 
         user_stake.user_rewards.realised_rewards_token_amount = 0;
-        user_stake.user_rewards.open_rewards_per_stake_token = pool.fee_reward.cumulative_rewards_per_stake_token;
+        user_stake.user_rewards.open_rewards_per_stake_token =
+            pool.fee_reward.cumulative_rewards_per_stake_token;
     }
     Ok(())
 }

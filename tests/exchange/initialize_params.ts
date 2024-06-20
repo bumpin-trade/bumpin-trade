@@ -20,6 +20,7 @@ export class TradeTokenInfo {
 export class MarketInfo {
     symbol: string;
     poolName: string;
+    indexTokenName: string;
     stablePoolName: string;
 }
 
@@ -27,19 +28,21 @@ export class ExchangeInitializeParams {
     poolInfos: PoolInfo[];
     playerInfos: PlayerInfo[];
     tradeTokenInfos: TradeTokenInfo[];
-    ma
+    marketInfos: MarketInfo[];
 
 
-    constructor(poolInfos: PoolInfo[], playerInfos: PlayerInfo[], tradeTokenInfos: TradeTokenInfo[]) {
+    constructor(poolInfos: PoolInfo[], playerInfos: PlayerInfo[], tradeTokenInfos: TradeTokenInfo[], marketInfos: MarketInfo[]) {
         this.poolInfos = poolInfos;
         this.playerInfos = playerInfos;
         this.tradeTokenInfos = tradeTokenInfos;
+        this.marketInfos = marketInfos;
     }
 
     static defaultParams(): ExchangeInitializeParams {
         return new ExchangeInitializeParams(
             [
                 {name: "BUMP_P__BTC", mintDecimals: 9, isStable: false},
+                {name: "BUMP_P__SOL", mintDecimals: 9, isStable: false},
                 {name: "BUMP_P__USDC", mintDecimals: 9, isStable: true}
             ],
             [
@@ -48,7 +51,11 @@ export class ExchangeInitializeParams {
             ],
             [
                 {name: "BTC", discount: new BN(1), liquidationFactor: new BN(1)},
+                {name: "SOL", discount: new BN(1), liquidationFactor: new BN(1)},
                 {name: "USDC", discount: new BN(1), liquidationFactor: new BN(1)}
+            ],
+            [
+                {symbol: "BTCUSDC", poolName: "BUMP_P__BTC", indexTokenName: "BTC", stablePoolName: "BUMP_P__USDC"}
             ]
         );
     }

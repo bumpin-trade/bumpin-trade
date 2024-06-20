@@ -170,16 +170,19 @@ export class Utils {
         }).signers([admin]).rpc();
     }
 
-    // public async initialize_market(market: PublicKey, admin: anchor.web3.Keypair, poolMint: PublicKey, tradeTokenMint: PublicKey): Promise<void> {
-    //     await this.program.methods.initializeMarket(
-    //         discount
-    //     ).accounts({
-    //         tradeTokenMint,
-    //         oracle,
-    //         bumpSigner: this.bump_state_pk,
-    //         admin: admin.publicKey,
-    //     }).signers([admin]).rpc();
-    // }
+    public async initialize_market(symbol: string, admin: anchor.web3.Keypair, pool: PublicKey, stablePool: PublicKey, indexMint: PublicKey): Promise<void> {
+        const s = this.string2Padded32Bytes(symbol);
+        const [state, _] = this.getStatePda();
+        await this.program.methods.initializeMarket(
+            s
+        ).accounts({
+            pool,
+            stablePool,
+            indexMint,
+            admin: admin.publicKey,
+            bumpSigner: state,
+        }).signers([admin]).rpc();
+    }
 
 
     public async deposit(authority: anchor.web3.Keypair, userTokenAccount: PublicKey, tokenIndex: number, amount: BN): Promise<void> {
@@ -243,6 +246,11 @@ export class Utils {
         await provider.connection.confirmTransaction(airdropSignature);
     }
 
+    public string2Padded32Bytes(str: string): number[] {
+        const buffer = Buffer.from(str, 'utf-8');
+        const paddedBuffer = Buffer.concat([buffer, Buffer.alloc(32 - buffer.length)]);
+        return Array.from(paddedBuffer);
+    }
 
     private read_json_from_file(file_path: string) {
         const paramsData = fs.readFileSync(file_path, 'utf8');

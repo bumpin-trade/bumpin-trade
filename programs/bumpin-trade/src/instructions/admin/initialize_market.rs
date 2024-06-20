@@ -15,7 +15,7 @@ pub struct InitializeMarket<'info> {
         seeds = [b"market", state.number_of_markets.to_le_bytes().as_ref()],
         space = Market::SIZE,
         bump,
-        payer = bump_signer
+        payer = admin
     )]
     pub market: AccountLoader<'info, Market>,
 
@@ -25,16 +25,22 @@ pub struct InitializeMarket<'info> {
 
     pub index_mint: Account<'info, Mint>,
 
+    #[account(mut)]
+    pub admin: Signer<'info>,
+
     #[account(
         mut,
         seeds = [b"bump_state".as_ref()],
         bump,
-        has_one = bump_signer
+        has_one = admin
     )]
     pub state: Account<'info, State>,
 
-    #[account(mut)]
-    pub bump_signer: Signer<'info>,
+    #[account(
+        constraint = state.bump_signer.eq(&bump_signer.key())
+    )]
+    /// CHECK: ?
+    pub bump_signer: AccountInfo<'info>,
 
     pub rent: Sysvar<'info, Rent>,
 

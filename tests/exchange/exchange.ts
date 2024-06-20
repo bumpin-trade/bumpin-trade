@@ -70,8 +70,42 @@ export class BumpinPool {
         this.mint = await this.utils.create_mint_account(this.payer, this.payer, this.mintDecimals);
         await this.utils.initialize_pool(this.program, this.mint.publicKey, this.poolName, this.payer);
     }
+
+    public getPda(): [PublicKey, number] {
+        const stateNumberOfPoolsBytes = new Uint8Array(new Uint16Array([this.stateNumberOfPools]).buffer);
+        const [address, nonce] = PublicKey.findProgramAddressSync(
+            [Buffer.from("pool"), stateNumberOfPoolsBytes],
+            this.program.programId
+        );
+        return [address, nonce];
+    }
 }
 
+export class BumpinMarket {
+    utils = new Utils();
+    program = anchor.workspace.BumpinTrade as Program<BumpinTrade>;
+    programPyth = anchor.workspace.Pyth as Program<Pyth>;
+    symbol: string;
+    payer: Keypair;
+    pool: BumpinPool;
+    indexToken: BumpinTradeToken;
+    stablePool: BumpinPool;
+
+    constructor(symbol: string, payer: Keypair, pool: BumpinPool, indexToken: BumpinTradeToken, stablePool: BumpinPool) {
+        this.symbol = symbol;
+        this.payer = payer;
+        this.pool = pool;
+        this.indexToken = indexToken;
+        this.stablePool = stablePool;
+    }
+
+    public async initializeMarket() {
+        let [poolPda, _] = this.pool.getPda();
+        let [stablePoolPda, __] = this.stablePool.getPda();
+        await this.utils.initialize_market(this.symbol, this.payer, poolPda, stablePoolPda, this.indexToken.mint.publicKey);
+    }
+
+}
 
 export class BumpinTradeToken {
     utils = new Utils();
@@ -161,6 +195,14 @@ export class BumpinExchange {
             for (let player of this.players) {
                 await player.createTradeTokenAccount(tradeTokenInfo.name, mint.publicKey);
             }
+        }
+
+        for (let marketInfo of params.marketInfos) {
+            let pool = this.pools.find(pool => pool.poolName === marketInfo.poolName);
+            let indexToken = this.tradeTokens.get(marketInfo.indexTokenName);
+            let stablePool = this.pools.find(pool => pool.poolName === marketInfo.stablePoolName);
+            let market = new BumpinMarket(marketInfo.symbol, this.payer, pool, indexToken, stablePool);
+            await market.initializeMarket();
         }
 
         this.initialized = true;
