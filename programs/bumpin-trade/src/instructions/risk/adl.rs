@@ -32,7 +32,7 @@ pub struct ADL<'info> {
 
     pub market: AccountLoader<'info, Market>,
 
-    pub state: Account<'info, State>,
+    pub state: Box<Account<'info, State>>,
     #[account(
         mut,
         constraint = & pool_vault.mint.eq(& user_token_account.mint),

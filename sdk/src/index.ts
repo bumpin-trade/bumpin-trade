@@ -3,7 +3,7 @@ import { PublicKey } from '@solana/web3.js';
 
 
 
-export * from './bumpinClient';
+export * from './adminClient';
 
 
 export { BN, PublicKey };
