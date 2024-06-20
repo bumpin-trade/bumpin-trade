@@ -27,7 +27,7 @@ pub struct Pool {
     pub total_supply: u128,
     pub pool_status: PoolStatus,
     pub stable: bool,
-    pub decimals: u8,
+    pub pnl: i128,
     pub apr: u128,
     pub insurance_fund_amount: u128,
 }
@@ -84,7 +84,7 @@ impl Default for Pool {
             total_supply: 0u128,
             pool_status: PoolStatus::NORMAL,
             stable: false,
-            decimals: 0,
+            pnl: 0,
             apr: 0u128,
             insurance_fund_amount: 0,
         }
@@ -92,6 +92,10 @@ impl Default for Pool {
 }
 
 impl Pool {
+    pub fn add_pnl(&mut self, pool_pnl: i128) -> BumpResult<()> {
+        self.pnl = self.pnl.safe_add(pool_pnl)?;
+        Ok(())
+    }
     pub fn add_amount(&mut self, amount: u128) -> BumpResult<()> {
         self.pool_balance.amount = self.pool_balance.amount.safe_add(amount)?;
         Ok(())
@@ -100,6 +104,12 @@ impl Pool {
     pub fn sub_amount(&mut self, amount: u128) -> BumpResult<()> {
         validate!(self.pool_balance.amount >= amount, BumpErrorCode::AmountNotEnough.into())?;
         self.pool_balance.amount = self.pool_balance.amount.safe_sub(amount)?;
+        Ok(())
+    }
+
+    pub fn sub_loss_amount(&mut self, amount: u128) -> BumpResult<()> {
+        validate!(self.pool_balance.amount >= amount, BumpErrorCode::AmountNotEnough.into())?;
+        self.pool_balance.loss_amount = self.pool_balance.loss_amount.safe_sub(amount)?;
         Ok(())
     }
 
