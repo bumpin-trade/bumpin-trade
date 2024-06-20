@@ -6,13 +6,14 @@ use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
 
+use crate::{get_then_update_id, validate};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::instructions::constraints::*;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::processor::market_processor::MarketProcessor;
-use crate::processor::optional_accounts::{load_maps, AccountMaps};
+use crate::processor::optional_accounts::{AccountMaps, load_maps};
 use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::position_processor::{
     DecreasePositionParams, IncreasePositionParams, PositionProcessor,
@@ -30,7 +31,6 @@ use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 use crate::utils::{pda, token};
-use crate::{get_then_update_id, validate};
 
 #[derive(Accounts)]
 pub struct PlaceOrder<'info> {
@@ -62,7 +62,12 @@ pub struct PlaceOrder<'info> {
 
     pub market: AccountLoader<'info, Market>,
 
+    #[account(
+        seeds = [b"bump_state".as_ref()],
+        bump,
+    )]
     pub state: Box<Account<'info, State>>,
+
     #[account(
         mut,
         constraint = pool_vault.mint.eq(& user_token_account.mint) || stable_pool_vault.mint.eq(& user_token_account.mint),
@@ -301,11 +306,11 @@ pub fn handle_execute_order<'info>(
             if position.position_size == 0u128 && position.status.eq(&PositionStatus::INIT) {
                 if user.has_other_order(order.order_id)?
                     && user.get_order_leverage(
-                        order.symbol,
-                        order.order_side,
-                        order.cross_margin,
-                        order.leverage,
-                    )? == order.leverage
+                    order.symbol,
+                    order.order_side,
+                    order.cross_margin,
+                    order.leverage,
+                )? == order.leverage
                 {
                     return Err(BumpErrorCode::AmountNotEnough.into());
                 }
@@ -410,9 +415,9 @@ fn validate_place_order(
     let mut res = true;
     match order.order_type {
         OrderType::NONE => res = false,
-        OrderType::MARKET => {},
-        OrderType::LIMIT => {},
-        OrderType::STOP => {},
+        OrderType::MARKET => {}
+        OrderType::LIMIT => {}
+        OrderType::STOP => {}
     };
 
     if order.position_side.eq(&PositionSide::DECREASE) && order.size == 0u128 {

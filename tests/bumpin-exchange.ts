@@ -6,7 +6,7 @@ import {Utils} from "./utils/utils";
 import {assert} from 'chai';
 import {PublicKey} from "@solana/web3.js";
 import {ExchangeInitializeParams} from "./exchange/initialize_params";
-import {BumpinExchange} from "./exchange/exchange";
+import {BumpinExchangeMocker} from "./exchange/exchange";
 
 describe("bumpin-exchange", () => {
 
@@ -14,11 +14,11 @@ describe("bumpin-exchange", () => {
     const programPyth = anchor.workspace.Pyth as Program<Pyth>;
 
     let utils: Utils = new Utils();
-    let exchange: BumpinExchange;
+    let exchange: BumpinExchangeMocker;
 
     before(async () => {
         let defaultExchangeInitializeParams = ExchangeInitializeParams.defaultParams();
-        let ex = new BumpinExchange();
+        let ex = new BumpinExchangeMocker();
         await ex.initialize(defaultExchangeInitializeParams);
         exchange = ex;
     });

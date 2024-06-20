@@ -139,7 +139,7 @@ export class BumpinTradeToken {
     }
 }
 
-export class BumpinExchange {
+export class BumpinExchangeMocker {
     program = anchor.workspace.BumpinTrade as Program<BumpinTrade>;
     programPyth = anchor.workspace.Pyth as Program<Pyth>;
     utils = new Utils();
