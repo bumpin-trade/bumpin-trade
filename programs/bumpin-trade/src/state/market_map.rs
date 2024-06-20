@@ -88,7 +88,9 @@ impl<'a> MarketMap<'a> {
         let mut perp_market_map: MarketMap = MarketMap(BTreeMap::new());
         let market_discriminator: [u8; 8] = Market::discriminator();
         for account_info in remaining_accounts {
-            // validate!(account_info.owner.eq(admin), BumpErrorCode::CouldNotLoadMarketData)?;
+            if !account_info.owner.eq(admin) {
+                continue;
+            }
             let data =
                 account_info.try_borrow_data().or(Err(BumpErrorCode::CouldNotLoadMarketData))?;
 

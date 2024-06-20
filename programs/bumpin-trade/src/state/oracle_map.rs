@@ -47,11 +47,8 @@ impl<'a> OracleMap<'a> {
         let mut oracles: BTreeMap<Pubkey, AccountInfoAndOracleSource<'a>> = BTreeMap::new();
 
         for account_info in remaining_accounts.iter() {
-            msg!("account_info owner: {:?}", account_info.owner.key());
-            msg!("pyth_program id: {:?}", pyth_program::id());
             if account_info.owner == &pyth_program::id() {
                 let pubkey = account_info.key();
-
                 oracles.insert(
                     pubkey,
                     AccountInfoAndOracleSource { account_info: account_info.clone() },

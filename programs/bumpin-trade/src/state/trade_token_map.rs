@@ -2,8 +2,8 @@ use std::cell::Ref;
 use std::collections::BTreeMap;
 use std::panic::Location;
 
-use anchor_lang::prelude::AccountLoader;
 use anchor_lang::Discriminator;
+use anchor_lang::prelude::AccountLoader;
 use arrayref::array_ref;
 use solana_program::account_info::AccountInfo;
 use solana_program::msg;
@@ -12,10 +12,9 @@ use solana_program::pubkey::Pubkey;
 use crate::errors::BumpErrorCode::{
     CouldNotLoadTradeTokenData, InvalidTradeTokenAccount, TradeTokenNotFind,
 };
-use crate::errors::{BumpErrorCode, BumpResult};
+use crate::errors::BumpResult;
 use crate::state::trade_token::TradeToken;
 use crate::traits::Size;
-use crate::validate;
 
 pub struct TradeTokenMap<'a>(pub BTreeMap<Pubkey, AccountLoader<'a, TradeToken>>);
 
@@ -81,7 +80,9 @@ impl<'a> TradeTokenMap<'a> {
         let mut trade_token_vec: TradeTokenMap = TradeTokenMap(BTreeMap::new());
         let trade_token_discriminator = TradeToken::discriminator();
         for account_info in remaining_accounts.iter() {
-            validate!(account_info.owner.eq(admin), CouldNotLoadTradeTokenData)?;
+            if !account_info.owner.eq(admin) {
+                continue;
+            }
             let data = account_info.try_borrow_data().or(Err(CouldNotLoadTradeTokenData))?;
 
             let expected_data_len = TradeToken::SIZE;
