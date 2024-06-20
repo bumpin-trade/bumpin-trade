@@ -7,6 +7,7 @@ export class PlayerInfo {
 
 export class PoolInfo {
     name: string;
+    tokenName: string;
     mintDecimals: number;
     isStable: boolean;
 }
@@ -41,9 +42,9 @@ export class ExchangeInitializeParams {
     static defaultParams(): ExchangeInitializeParams {
         return new ExchangeInitializeParams(
             [
-                {name: "BUMP_P__BTC", mintDecimals: 9, isStable: false},
-                {name: "BUMP_P__SOL", mintDecimals: 9, isStable: false},
-                {name: "BUMP_P__USDC", mintDecimals: 9, isStable: true}
+                {name: "BUMP_P__BTC", tokenName: "BTC", mintDecimals: 9, isStable: false},
+                {name: "BUMP_P__SOL", tokenName: "SOL", mintDecimals: 9, isStable: false},
+                {name: "BUMP_P__USDC", tokenName: "USDC", mintDecimals: 9, isStable: true}
             ],
             [
                 {name: "Player1"},

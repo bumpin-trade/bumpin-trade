@@ -33,7 +33,6 @@ describe("bumpin-exchange", () => {
     it("Check User (Player1, Player2)", async () => {
         let pdaForPlayer1 = exchange.getUserPda("Player1");
         const player1 = await program.account.user.fetch(pdaForPlayer1[0]);
-        console.log(player1.userKey);
         assert(player1.hold.toString() === "0");
 
         let pdaForPlayer2 = exchange.getUserPda("Player2");
@@ -63,22 +62,22 @@ describe("bumpin-exchange", () => {
     // });
     //
     //
-    // it("Mint for Player1 & Player2", async () => {
-    //     let player1 = exchange.getPlayer("Player1");
-    //     let tradeTokenBtc = exchange.getTradeToken("BTC");
-    //     await player1.mintTradeToken("BTC", tradeTokenBtc.mint.publicKey, 1000, 9);
-    //
-    //     let player2 = exchange.getPlayer("Player2");
-    //     let tradeTokenUSDC = exchange.getTradeToken("USDC");
-    //     await player2.mintTradeToken("USDC", tradeTokenUSDC.mint.publicKey, 1000, 9);
-    // });
+    it("Mint for Player1 & Player2", async () => {
+        let player1 = exchange.getPlayer("Player1");
+        let tradeTokenBtc = exchange.getTradeToken("BTC");
+        await player1.mintTradeToken("BTC", tradeTokenBtc.mint.publicKey, 1000, 9);
+
+        let player2 = exchange.getPlayer("Player2");
+        let tradeTokenUSDC = exchange.getTradeToken("USDC");
+        await player2.mintTradeToken("USDC", tradeTokenUSDC.mint.publicKey, 1000, 9);
+    });
     //
     // it("Deposit for Player1 & Player2", async () => {
     //     await exchange.playerDeposit("Player1", "BTC", 500);
     //     await exchange.playerDeposit("Player2", "USDC", 500);
     // });
 
-    it("Player1 BTC-USDC Limit Order", async () => {
+    it("Player2 BTC-USDC Limit Order", async () => {
         let param: PlaceOrderParams = {
             symbol: utils.string2Padded32Bytes("BTCUSDC"),
             isCrossMargin: true,
@@ -94,8 +93,8 @@ describe("bumpin-exchange", () => {
             acceptablePrice: new BN(65000),
             placeTime: new BN(Math.floor(Date.now() / 1000))
         };
-        let player1 = exchange.getPlayer("Player1");
-        let tradeToken = exchange.getTradeToken("BTC");
+        let player1 = exchange.getPlayer("Player2");
+        let tradeToken = exchange.getTradeToken("USDC");
         let market = exchange.getMarket("BTCUSDC");
         await utils.placePerpOrder(player1, market, tradeToken, param);
     });

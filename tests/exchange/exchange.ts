@@ -62,14 +62,16 @@ export class BumpinPool {
     utils = new Utils();
     program = anchor.workspace.BumpinTrade as Program<BumpinTrade>;
     poolName: string;
+    tradeToken: BumpinTradeToken;
     isStable: boolean;
     mint: Keypair;
     payer: Keypair;
     mintDecimals: number;
     stateNumberOfPools: number;
 
-    constructor(poolName: string, isStable: boolean, payer: Keypair, mintDecimals: number, stateNumberOfPools: number) {
+    constructor(poolName: string, tradeToken: BumpinTradeToken, isStable: boolean, payer: Keypair, mintDecimals: number, stateNumberOfPools: number) {
         this.poolName = poolName;
+        this.tradeToken = tradeToken;
         this.isStable = isStable;
         this.payer = payer;
         this.mintDecimals = mintDecimals;
@@ -77,7 +79,7 @@ export class BumpinPool {
     }
 
     public async initializePool() {
-        this.mint = await this.utils.create_mint_account(this.payer, this.payer, this.mintDecimals);
+        this.mint = this.tradeToken.mint;
         await this.utils.initialize_pool(this.program, this.mint.publicKey, this.poolName, this.payer);
     }
 
@@ -85,6 +87,15 @@ export class BumpinPool {
         const stateNumberOfPoolsBytes = new Uint8Array(new Uint16Array([this.stateNumberOfPools]).buffer);
         const [address, nonce] = PublicKey.findProgramAddressSync(
             [Buffer.from("pool"), stateNumberOfPoolsBytes],
+            this.program.programId
+        );
+        return [address, nonce];
+    }
+
+    public getVaultPda(): [PublicKey, number] {
+        const stateNumberOfPoolsBytes = new Uint8Array(new Uint16Array([this.stateNumberOfPools]).buffer);
+        const [address, nonce] = PublicKey.findProgramAddressSync(
+            [Buffer.from("pool_vault"), stateNumberOfPoolsBytes],
             this.program.programId
         );
         return [address, nonce];
@@ -167,6 +178,16 @@ export class BumpinTradeToken {
             this.program.programId
         );
         return [address, nonce];
+    }
+
+    public getVaultPda(): [PublicKey, number] {
+        const stateNumberOfTradeTokensBytes = new Uint8Array(new Uint16Array([this.numberOfTradeTokens]).buffer);
+        const [address, nonce] = PublicKey.findProgramAddressSync(
+            [Buffer.from("trade_token_vault"), stateNumberOfTradeTokensBytes],
+            this.program.programId
+        );
+        return [address, nonce];
+
 
     }
 }
@@ -206,18 +227,6 @@ export class BumpinExchangeMocker {
             this.players.push(player);
         }
 
-        for (let i = 0; i < params.poolInfos.length; i++) {
-            let poolInfo = params.poolInfos[i];
-            let pool = new BumpinPool(poolInfo.name, poolInfo.isStable, this.payer, poolInfo.mintDecimals, i);
-            await pool.initializePool();
-            const stateNumberOfPoolsBytes = new Uint8Array(new Uint16Array([pool.stateNumberOfPools]).buffer);
-            const [address, nonce] = PublicKey.findProgramAddressSync(
-                [Buffer.from("pool"), stateNumberOfPoolsBytes],
-                pool.program.programId
-            );
-            this.pools.push(pool);
-            // const state = await this.program.account.state.fetch(this.utils.getStatePda(this.program)[0]);
-        }
 
         for (let i = 0; i < params.tradeTokenInfos.length; i++) {
             let tradeTokenInfo = params.tradeTokenInfos[i];
@@ -229,6 +238,22 @@ export class BumpinExchangeMocker {
                 await player.createTradeTokenAccount(tradeTokenInfo.name, mint.publicKey);
             }
         }
+
+
+        for (let i = 0; i < params.poolInfos.length; i++) {
+            let poolInfo = params.poolInfos[i];
+            let tradeToken = this.getTradeToken(poolInfo.tokenName);
+            let pool = new BumpinPool(poolInfo.name, tradeToken, poolInfo.isStable, this.payer, poolInfo.mintDecimals, i);
+            await pool.initializePool();
+            const stateNumberOfPoolsBytes = new Uint8Array(new Uint16Array([pool.stateNumberOfPools]).buffer);
+            const [address, nonce] = PublicKey.findProgramAddressSync(
+                [Buffer.from("pool"), stateNumberOfPoolsBytes],
+                pool.program.programId
+            );
+            this.pools.push(pool);
+            // const state = await this.program.account.state.fetch(this.utils.getStatePda(this.program)[0]);
+        }
+
 
         for (let i = 0; i < params.marketInfos.length; i++) {
             let marketInfo = params.marketInfos[i];

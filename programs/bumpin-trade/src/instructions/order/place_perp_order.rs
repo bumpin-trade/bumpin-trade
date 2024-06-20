@@ -2,7 +2,7 @@ use std::iter::Peekable;
 use std::slice::Iter;
 
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
+use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
 
@@ -44,9 +44,9 @@ pub struct PlaceOrder<'info> {
 
     #[account(
         mut,
-        constraint = pool.load() ?.pool_mint.eq(& margin_token.mint.key())
+        constraint = pool.load() ?.pool_mint.eq(& margin_token.key())
     )]
-    pub margin_token: Account<'info, TokenAccount>,
+    pub margin_token: Account<'info, Mint>,
 
     #[account(
         mut,
@@ -90,7 +90,7 @@ pub struct PlaceOrder<'info> {
     pub trade_token: AccountLoader<'info, TradeToken>,
 
     #[account(
-        constraint = trade_token_vault.mint == trade_token.load() ?.trade_token_vault
+        constraint = trade_token_vault.key() == trade_token.load() ?.trade_token_vault
     )]
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
 
@@ -124,118 +124,118 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
     order: PlaceOrderParams,
 ) -> Result<()> {
-    // let market = ctx.accounts.market.load()?;
-    // let mut user = ctx.accounts.user_account.load_mut()?;
-    // let pool = ctx.accounts.pool.load()?;
-    // let token = &ctx.accounts.margin_token;
-    // let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
-    //     &mut ctx.remaining_accounts.iter().peekable();
-    // let AccountMaps { trade_token_map, mut oracle_map, .. } =
-    // load_maps(remaining_accounts_iter, &ctx.accounts.state.admin)?;
-    // let token_price = oracle_map.get_price_data(&token.mint).unwrap().price;
-    // validate!(
-    //     validate_place_order(
-    //         &order,
-    //         &token.mint,
-    //         &market,
-    //         &pool,
-    //         &ctx.accounts.state,
-    //         token_price
-    //     )?,
-    //     BumpErrorCode::InvalidParam.into()
-    // )?;
-    //
-    // if order.position_side == PositionSide::INCREASE && !order.is_cross_margin {
-    //     //isolate order, transfer order_margin into pool
-    //     token::receive(
-    //         &ctx.accounts.token_program,
-    //         &ctx.accounts.user_token_account,
-    //         if order.order_side.eq(&OrderSide::LONG) {
-    //             &ctx.accounts.pool_vault
-    //         } else {
-    //             &ctx.accounts.stable_pool_vault
-    //         },
-    //         &ctx.accounts.authority,
-    //         order.order_margin,
-    //     )?;
-    // }
-    // if order.position_side.eq(&PositionSide::INCREASE) && order.is_cross_margin {
-    //     //hold usd
-    //     user.add_order_hold_in_usd(order.order_margin)?;
-    // }
-    //
-    // if user.has_other_short_order(order.symbol, token.mint, order.is_cross_margin)? {
-    //     return Err(BumpErrorCode::OnlyOneShortOrderAllowed.into());
-    // }
-    //
-    // let order_id = get_then_update_id!(user, next_order_id);
-    // let mut user_order = UserOrder {
-    //     authority: user.authority,
-    //     order_id,
-    //     symbol: order.symbol,
-    //     order_side: order.order_side,
-    //     position_side: order.position_side,
-    //     order_type: order.order_type,
-    //     stop_type: order.stop_type,
-    //     cross_margin: order.is_cross_margin,
-    //     margin_mint: token.mint,
-    //     order_margin: order.order_margin,
-    //     leverage: order.leverage,
-    //     order_size: order.size,
-    //     trigger_price: order.trigger_price,
-    //     acceptable_price: order.acceptable_price,
-    //     time: cal_utils::current_time(),
-    //     status: OrderStatus::USING,
-    // };
-    //
-    // if order.order_type.eq(&OrderType::MARKET) {
-    //     //execute order
-    //     let user_account_loader = &ctx.accounts.user_account;
-    //     let margin_token_account = &ctx.accounts.margin_token;
-    //     let pool_account_loader = &ctx.accounts.pool;
-    //     let stable_pool_account_loader = &ctx.accounts.stable_pool;
-    //     let market_account_loader = &ctx.accounts.market;
-    //     let state_account = &ctx.accounts.state;
-    //     let user_token_account = &ctx.accounts.user_token_account;
-    //     let pool_vault_account = &ctx.accounts.pool_vault;
-    //     let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
-    //     let trade_token_loader = &ctx.accounts.trade_token;
-    //     let trade_token_vault_account = &ctx.accounts.trade_token_vault;
-    //     let bump_signer_account_info = &ctx.accounts.bump_signer;
-    //     let token_program = &ctx.accounts.token_program;
-    //
-    //     return handle_execute_order(
-    //         user_account_loader,
-    //         margin_token_account,
-    //         pool_account_loader,
-    //         stable_pool_account_loader,
-    //         market_account_loader,
-    //         state_account,
-    //         user_token_account,
-    //         pool_vault_account,
-    //         stable_pool_vault_account,
-    //         trade_token_loader,
-    //         trade_token_vault_account,
-    //         bump_signer_account_info,
-    //         token_program,
-    //         ctx.program_id,
-    //         &trade_token_map,
-    //         &mut oracle_map,
-    //         &mut user_order,
-    //         order_id,
-    //         false,
-    //     );
-    // } else {
-    //     //store order, wait to execute
-    //     let next_index = user.next_usable_order_index()?;
-    //     user.add_order(user_order, next_index)?;
-    // }
+    let market = ctx.accounts.market.load()?;
+    let mut user = ctx.accounts.user_account.load_mut()?;
+    let pool = ctx.accounts.pool.load()?;
+    let token = &ctx.accounts.margin_token;
+    let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
+        &mut ctx.remaining_accounts.iter().peekable();
+    let AccountMaps { trade_token_map, mut oracle_map, .. } =
+        load_maps(remaining_accounts_iter, &ctx.accounts.state.admin)?;
+    let token_price = oracle_map.get_price_data(&token.key()).unwrap().price;
+    validate!(
+        validate_place_order(
+            &order,
+            &token.key(),
+            &market,
+            &pool,
+            &ctx.accounts.state,
+            token_price
+        )?,
+        BumpErrorCode::InvalidParam.into()
+    )?;
+
+    if order.position_side == PositionSide::INCREASE && !order.is_cross_margin {
+        //isolate order, transfer order_margin into pool
+        token::receive(
+            &ctx.accounts.token_program,
+            &ctx.accounts.user_token_account,
+            if order.order_side.eq(&OrderSide::LONG) {
+                &ctx.accounts.pool_vault
+            } else {
+                &ctx.accounts.stable_pool_vault
+            },
+            &ctx.accounts.authority,
+            order.order_margin,
+        )?;
+    }
+    if order.position_side.eq(&PositionSide::INCREASE) && order.is_cross_margin {
+        //hold usd
+        user.add_order_hold_in_usd(order.order_margin)?;
+    }
+
+    if user.has_other_short_order(order.symbol, token.key(), order.is_cross_margin)? {
+        return Err(BumpErrorCode::OnlyOneShortOrderAllowed.into());
+    }
+
+    let order_id = get_then_update_id!(user, next_order_id);
+    let mut user_order = UserOrder {
+        authority: user.authority,
+        order_id,
+        symbol: order.symbol,
+        order_side: order.order_side,
+        position_side: order.position_side,
+        order_type: order.order_type,
+        stop_type: order.stop_type,
+        cross_margin: order.is_cross_margin,
+        margin_mint: token.key(),
+        order_margin: order.order_margin,
+        leverage: order.leverage,
+        order_size: order.size,
+        trigger_price: order.trigger_price,
+        acceptable_price: order.acceptable_price,
+        time: cal_utils::current_time(),
+        status: OrderStatus::USING,
+    };
+
+    if order.order_type.eq(&OrderType::MARKET) {
+        //execute order
+        let user_account_loader = &ctx.accounts.user_account;
+        let margin_token_account = &ctx.accounts.margin_token;
+        let pool_account_loader = &ctx.accounts.pool;
+        let stable_pool_account_loader = &ctx.accounts.stable_pool;
+        let market_account_loader = &ctx.accounts.market;
+        let state_account = &ctx.accounts.state;
+        let user_token_account = &ctx.accounts.user_token_account;
+        let pool_vault_account = &ctx.accounts.pool_vault;
+        let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
+        let trade_token_loader = &ctx.accounts.trade_token;
+        let trade_token_vault_account = &ctx.accounts.trade_token_vault;
+        let bump_signer_account_info = &ctx.accounts.bump_signer;
+        let token_program = &ctx.accounts.token_program;
+
+        return handle_execute_order(
+            user_account_loader,
+            margin_token_account,
+            pool_account_loader,
+            stable_pool_account_loader,
+            market_account_loader,
+            state_account,
+            user_token_account,
+            pool_vault_account,
+            stable_pool_vault_account,
+            trade_token_loader,
+            trade_token_vault_account,
+            bump_signer_account_info,
+            token_program,
+            ctx.program_id,
+            &trade_token_map,
+            &mut oracle_map,
+            &mut user_order,
+            order_id,
+            false,
+        );
+    } else {
+        //store order, wait to execute
+        let next_index = user.next_usable_order_index()?;
+        user.add_order(user_order, next_index)?;
+    }
     Ok(())
 }
 
 pub fn handle_execute_order<'info>(
     user_account_loader: &AccountLoader<'info, User>,
-    margin_token_account: &Account<'info, TokenAccount>,
+    margin_token_account: &Account<'info, Mint>,
     pool_account_loader: &AccountLoader<'info, Pool>,
     stable_pool_account_loader: &AccountLoader<'info, Pool>,
     market_account_loader: &AccountLoader<'info, Market>,
@@ -290,16 +290,16 @@ pub fn handle_execute_order<'info>(
         PositionSide::NONE => Err(BumpErrorCode::PositionSideNotSupport),
         PositionSide::INCREASE => Ok({
             let margin_token_price;
-            if market.index_mint == margin_token.mint {
+            if market.index_mint.eq(&margin_token.key()) {
                 margin_token_price = execute_price;
             } else {
-                margin_token_price = oracle_map.get_price_data(&margin_token.mint)?.price;
+                margin_token_price = oracle_map.get_price_data(&margin_token.key())?.price;
             }
 
             let (order_margin, order_margin_from_balance) = execute_increase_order_margin(
                 user_token_account.to_account_info().key,
                 order,
-                &margin_token.mint,
+                &margin_token.key(),
                 trade_token.decimals,
                 user,
                 margin_token_price,

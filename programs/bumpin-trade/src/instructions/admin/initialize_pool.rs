@@ -22,13 +22,13 @@ pub struct InitializePool<'info> {
 
     #[account(
         init,
-        seeds = [b"pool_mint_vault".as_ref(), state.number_of_pools.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), state.number_of_pools.to_le_bytes().as_ref()],
         bump,
         payer = admin,
         token::mint = pool_mint,
         token::authority = bump_signer
     )]
-    pub pool_mint_vault: Box<Account<'info, TokenAccount>>,
+    pub pool_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         constraint = state.bump_signer.eq(&bump_signer.key())
@@ -60,7 +60,7 @@ pub fn handle_initialize_pool(ctx: Context<InitializePool>, name: [u8; 32]) -> R
 
     pool.pool_key = ctx.accounts.pool.key();
     pool.pool_mint = ctx.accounts.pool_mint.key();
-    pool.pool_mint_vault = ctx.accounts.pool_mint_vault.key();
+    pool.pool_mint_vault = ctx.accounts.pool_vault.key();
     pool.pool_name = name;
 
     safe_increment!(state.number_of_pools, 1);

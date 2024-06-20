@@ -201,7 +201,6 @@ export class Utils {
                                 tradeToken: BumpinTradeToken,
                                 param: PlaceOrderParams
     ): Promise<void> {
-
         await this.program.methods.placeOrder(
             param
         ).accounts({
@@ -211,10 +210,10 @@ export class Utils {
             pool: market.pool.getPda()[0],
             stablePool: market.stablePool.getPda()[0],
             market: market.getPda()[0],
-            poolVault: market.pool.mint.publicKey,
-            stablePoolVault: market.stablePool.mint.publicKey,
+            poolVault: market.pool.getVaultPda()[0],
+            stablePoolVault: market.stablePool.getVaultPda()[0],
             tradeToken: tradeToken.getPda()[0],
-            tradeTokenVault: tradeToken.mint.publicKey,
+            tradeTokenVault: tradeToken.getVaultPda()[0],
             userTokenAccount: player.getTradeTokenAccount(tradeToken.tradeTokenName).address,
             bumpSigner: this.getStatePda()[0],
         }).signers([player.user]).rpc();
