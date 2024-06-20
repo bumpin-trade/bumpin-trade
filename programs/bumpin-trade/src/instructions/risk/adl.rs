@@ -82,12 +82,11 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
     let bump_signer_account_info = &ctx.accounts.bump_signer;
     let token_program = &ctx.accounts.token_program;
 
-    let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
+    let remaining_accounts = ctx.remaining_accounts;
 
-    let AccountMaps { mut oracle_map, .. } =
-        load_maps(remaining_accounts_iter, &state_account.admin)?;
-    let user_map = UserMap::load(remaining_accounts_iter, ctx.program_id)?;
-    let vault_vec = VaultMap::load_vec(remaining_accounts_iter)?;
+    let AccountMaps { mut oracle_map, .. } = load_maps(remaining_accounts, &state_account.admin)?;
+    let user_map = UserMap::load(remaining_accounts, ctx.program_id)?;
+    let vault_vec = VaultMap::load_vec(remaining_accounts)?;
 
     for param in params {
         let user_account_loader = user_map.get_account_loader(&param.user_key)?;

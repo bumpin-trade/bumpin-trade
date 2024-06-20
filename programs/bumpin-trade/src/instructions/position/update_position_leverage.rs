@@ -11,8 +11,6 @@ use crate::utils::pda;
 use crate::{can_sign_for_user, validate};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
-use std::iter::Peekable;
-use std::slice::Iter;
 
 #[derive(Accounts)]
 pub struct UpdatePositionLeverage<'info> {
@@ -58,8 +56,7 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
     let user_mut = &mut ctx.accounts.user_account.load_mut()?;
     let trade_token = ctx.accounts.trade_token.load_mut()?;
 
-    let remaining_accounts: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
-        &mut ctx.remaining_accounts.iter().peekable();
+    let remaining_accounts = ctx.remaining_accounts;
     let AccountMaps { trade_token_map, mut oracle_map, .. } =
         load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
 

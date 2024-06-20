@@ -1,6 +1,4 @@
 use std::collections::BTreeMap;
-use std::iter::Peekable;
-use std::slice::Iter;
 
 use anchor_lang::Key;
 use solana_program::account_info::AccountInfo;
@@ -32,7 +30,6 @@ impl<'a> OracleMap<'a> {
         if self.price_data.contains_key(pubkey) {
             return self.price_data.get(pubkey).safe_unwrap().clone();
         }
-
         let account_info = match self.oracles.get(pubkey) {
             Some(AccountInfoAndOracleSource { account_info }) => account_info,
             None => {
@@ -46,12 +43,12 @@ impl<'a> OracleMap<'a> {
         self.price_data.get(pubkey).safe_unwrap()
     }
 
-    pub fn load<'c>(
-        account_info_iter: &'c mut Peekable<Iter<AccountInfo<'a>>>,
-    ) -> BumpResult<OracleMap<'a>> {
+    pub fn load(remaining_accounts: &'a [AccountInfo<'a>]) -> BumpResult<OracleMap<'a>> {
         let mut oracles: BTreeMap<Pubkey, AccountInfoAndOracleSource<'a>> = BTreeMap::new();
 
-        while let Some(account_info) = account_info_iter.next() {
+        for account_info in remaining_accounts.iter() {
+            msg!("account_info owner: {:?}", account_info.owner.key());
+            msg!("pyth_program id: {:?}", pyth_program::id());
             if account_info.owner == &pyth_program::id() {
                 let pubkey = account_info.key();
 

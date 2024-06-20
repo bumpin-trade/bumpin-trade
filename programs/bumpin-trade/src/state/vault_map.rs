@@ -1,7 +1,5 @@
 use std::collections::BTreeMap;
-use std::iter::Peekable;
 use std::panic::Location;
-use std::slice::Iter;
 
 use anchor_lang::prelude::Account;
 use anchor_lang::Key;
@@ -33,11 +31,9 @@ impl<'a> VaultMap<'a> {
         Ok(account)
     }
 
-    pub fn load<'c>(
-        account_info_iter: &'c mut Peekable<Iter<'a, AccountInfo<'a>>>,
-    ) -> BumpResult<VaultMap<'a>> {
+    pub fn load(remaining_accounts: &'a [AccountInfo<'a>]) -> BumpResult<VaultMap<'a>> {
         let mut token_account_map: VaultMap = VaultMap(BTreeMap::new());
-        while let Some(account_info) = account_info_iter.next() {
+        for account_info in remaining_accounts.iter() {
             let data = account_info.try_borrow_data().or(Err(CouldNotLoadTradeTokenData))?;
 
             let expected_data_len = TokenAccount::LEN;
@@ -57,12 +53,12 @@ impl<'a> VaultMap<'a> {
         Ok(token_account_map)
     }
 
-    pub fn load_vec<'c>(
-        account_info_iter: &'c mut Peekable<Iter<'a, AccountInfo<'a>>>,
+    pub fn load_vec(
+        remaining_accounts: &'a [AccountInfo<'a>],
     ) -> BumpResult<Vec<Account<'a, TokenAccount>>> {
         let mut token_account_vec: Vec<Account<'a, TokenAccount>> = Vec::new();
         let mut index = 0usize;
-        while let Some(account_info) = account_info_iter.next() {
+        for account_info in remaining_accounts.iter() {
             let data = account_info.try_borrow_data().or(Err(CouldNotLoadTradeTokenData))?;
 
             let expected_data_len = TokenAccount::LEN;

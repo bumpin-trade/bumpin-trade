@@ -36,10 +36,10 @@ pub struct ClaimRewards<'info> {
 pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, ClaimRewards<'c>>,
 ) -> Result<()> {
-    let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
+    let remaining_accounts = ctx.remaining_accounts;
     let AccountMaps { pool_map: pool_key_map, .. } =
-        load_maps(remaining_accounts_iter, &ctx.accounts.state.admin)?;
-    let token_account_vec = VaultMap::load_vec(remaining_accounts_iter)?;
+        load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
+    let token_account_vec = VaultMap::load_vec(remaining_accounts)?;
 
     let user = &mut ctx.accounts.user.load_mut()?;
     for user_stake in user.user_stakes.iter_mut() {

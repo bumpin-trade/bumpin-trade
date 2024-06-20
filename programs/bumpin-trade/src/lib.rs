@@ -1,6 +1,3 @@
-use std::iter::Peekable;
-use std::slice::Iter;
-
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
 use anchor_spl::token::{Token, TokenAccount};
@@ -44,7 +41,7 @@ pub mod bumpin_trade {
         //     msg!("a: {:?}", a);
         // }
 
-        let r = VaultMap::load(&mut ctx.remaining_accounts.iter().peekable());
+        let r = VaultMap::load(ctx.remaining_accounts);
         msg!("r: {}", r.is_ok());
         let u = r.unwrap();
         msg!("len: {}", u.0.len());
@@ -155,44 +152,42 @@ pub mod bumpin_trade {
     ) -> Result<()> {
         let user_account_loader = &ctx.accounts.user_account;
         let margin_token_account = &ctx.accounts.margin_token;
-        // let pool_account_loader = &ctx.accounts.pool;
-        // let stable_pool_account_loader = &ctx.accounts.stable_pool;
+        let pool_account_loader = &ctx.accounts.pool;
+        let stable_pool_account_loader = &ctx.accounts.stable_pool;
         let market_account_loader = &ctx.accounts.market;
         let state_account = &ctx.accounts.state;
         let user_token_account = &ctx.accounts.user_token_account;
-        // let pool_vault_account = &ctx.accounts.pool_vault;
-        // let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
+        let pool_vault_account = &ctx.accounts.pool_vault;
+        let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
         let trade_token_loader = &ctx.accounts.trade_token;
         let trade_token_vault_account = &ctx.accounts.trade_token_vault;
         let bump_signer_account_info = &ctx.accounts.bump_signer;
         let token_program = &ctx.accounts.token_program;
-        let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
-            &mut ctx.remaining_accounts.iter().peekable();
+        let remaining_accounts = ctx.remaining_accounts;
         let AccountMaps { trade_token_map, mut oracle_map, .. } =
-            load_maps(remaining_accounts_iter, &state_account.admin)?;
+            load_maps(remaining_accounts, &state_account.admin)?;
 
-        Ok(())
-        // handle_execute_order(
-        //     user_account_loader,
-        //     margin_token_account,
-        //     pool_account_loader,
-        //     stable_pool_account_loader,
-        //     market_account_loader,
-        //     state_account,
-        //     user_token_account,
-        //     pool_vault_account,
-        //     stable_pool_vault_account,
-        //     trade_token_loader,
-        //     trade_token_vault_account,
-        //     bump_signer_account_info,
-        //     token_program,
-        //     ctx.program_id,
-        //     &trade_token_map,
-        //     &mut oracle_map,
-        //     &mut UserOrder::default(),
-        //     order_id,
-        //     false,
-        // )
+        handle_execute_order(
+            user_account_loader,
+            margin_token_account,
+            pool_account_loader,
+            stable_pool_account_loader,
+            market_account_loader,
+            state_account,
+            user_token_account,
+            pool_vault_account,
+            stable_pool_vault_account,
+            trade_token_loader,
+            trade_token_vault_account,
+            bump_signer_account_info,
+            token_program,
+            ctx.program_id,
+            &trade_token_map,
+            &mut oracle_map,
+            &mut UserOrder::default(),
+            order_id,
+            false,
+        )
     }
 
     pub fn cancel_order(ctx: Context<CancelOrderCtx>, order_id: u128) -> Result<()> {

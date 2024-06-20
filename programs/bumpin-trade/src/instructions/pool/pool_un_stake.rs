@@ -1,6 +1,3 @@
-use std::iter::Peekable;
-use std::slice::Iter;
-
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
@@ -99,8 +96,7 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
         BumpErrorCode::UnStakeNotEnough
     )?;
 
-    let remaining_accounts: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
-        &mut ctx.remaining_accounts.iter().peekable();
+    let remaining_accounts = ctx.remaining_accounts;
     let mut account_maps = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
 
     validate!(pool.total_supply == 0, BumpErrorCode::UnStakeNotEnough)?;

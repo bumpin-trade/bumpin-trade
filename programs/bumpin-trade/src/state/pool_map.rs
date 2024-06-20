@@ -1,8 +1,6 @@
 use std::cell::{Ref, RefMut};
 use std::collections::BTreeMap;
-use std::iter::Peekable;
 use std::panic::Location;
-use std::slice::Iter;
 
 use anchor_lang::prelude::AccountLoader;
 use anchor_lang::Discriminator;
@@ -15,7 +13,6 @@ use crate::errors::BumpErrorCode::{
     CouldNotLoadPoolData, CouldNotLoadTradeTokenData, TradeTokenNotFind,
 };
 use crate::errors::{BumpErrorCode, BumpResult};
-use crate::math::safe_unwrap::SafeUnwrap;
 use crate::state::pool::Pool;
 use crate::traits::Size;
 use crate::validate;
@@ -99,13 +96,13 @@ impl<'a> PoolMap<'a> {
         Ok(loader)
     }
 
-    pub fn load<'c>(
-        account_info_iter: &'c mut Peekable<Iter<'a, AccountInfo<'a>>>,
+    pub fn load(
+        remaining_accounts: &'a [AccountInfo<'a>],
         admin: &Pubkey,
     ) -> BumpResult<PoolMap<'a>> {
         let mut pool_map = PoolMap(BTreeMap::new());
         let pool_discriminator = Pool::discriminator();
-        while let Some(account_info) = account_info_iter.peek() {
+        for account_info in remaining_accounts.iter() {
             validate!(account_info.owner.eq(admin), CouldNotLoadPoolData)?;
             let data = account_info.try_borrow_data().or(Err(CouldNotLoadPoolData))?;
 
@@ -119,7 +116,7 @@ impl<'a> PoolMap<'a> {
             }
 
             let pool_key = Pubkey::from(*array_ref![data, 8, 32]);
-            let account_info = account_info_iter.next().safe_unwrap()?;
+            // let account_info = account_info_iter.next().safe_unwrap()?;
             let account_loader: AccountLoader<'a, Pool> =
                 AccountLoader::try_from(account_info).or(Err(CouldNotLoadPoolData))?;
 

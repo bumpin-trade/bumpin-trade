@@ -1,6 +1,3 @@
-use std::iter::Peekable;
-use std::slice::Iter;
-
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
@@ -63,11 +60,11 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
 
     let user_token = user.get_user_token_ref(mint)?.ok_or(BumpErrorCode::CouldNotFindUserToken)?;
     validate!(user_token.amount > amount, BumpErrorCode::AmountNotEnough)?;
-    let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
-        &mut ctx.remaining_accounts.iter().peekable();
+
+    let remaining_accounts = ctx.remaining_accounts;
 
     let AccountMaps { trade_token_map, mut oracle_map, .. } =
-        load_maps(remaining_accounts_iter, &ctx.accounts.state.admin)?;
+        load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
 
     let mut user_processor = UserProcessor { user };
 

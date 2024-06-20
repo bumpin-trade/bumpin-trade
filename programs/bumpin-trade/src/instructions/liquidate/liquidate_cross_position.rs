@@ -1,6 +1,3 @@
-use std::iter::Peekable;
-use std::slice::Iter;
-
 use anchor_lang::prelude::*;
 use anchor_spl::token::Token;
 use solana_program::pubkey::Pubkey;
@@ -56,8 +53,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
     let user = &mut ctx.accounts.user.load_mut()?;
     let state = &ctx.accounts.state;
 
-    let remaining_accounts: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
-        &mut ctx.remaining_accounts.iter().peekable();
+    let remaining_accounts = ctx.remaining_accounts;
 
     let AccountMaps {
         market_map,

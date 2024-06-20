@@ -1,6 +1,3 @@
-use std::iter::Peekable;
-use std::slice::Iter;
-
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
@@ -128,11 +125,11 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     let mut user = ctx.accounts.user_account.load_mut()?;
     let pool = ctx.accounts.pool.load()?;
     let token = &ctx.accounts.margin_token;
-    let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
-        &mut ctx.remaining_accounts.iter().peekable();
+    let remaining_accounts = ctx.remaining_accounts;
     let AccountMaps { trade_token_map, mut oracle_map, .. } =
-        load_maps(remaining_accounts_iter, &ctx.accounts.state.admin)?;
+        load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
     let token_price = oracle_map.get_price_data(&token.key()).unwrap().price;
+    msg!("token_price: {}", token_price);
     validate!(
         validate_place_order(
             &order,

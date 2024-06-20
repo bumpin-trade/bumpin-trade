@@ -1,8 +1,6 @@
 use std::cell::Ref;
 use std::collections::BTreeMap;
-use std::iter::Peekable;
 use std::panic::Location;
-use std::slice::Iter;
 
 use anchor_lang::prelude::AccountLoader;
 use anchor_lang::Discriminator;
@@ -76,13 +74,13 @@ impl<'a> TradeTokenMap<'a> {
         };
         Ok(loader)
     }
-    pub fn load<'c>(
-        account_info_iter: &'c mut Peekable<Iter<'a, AccountInfo<'a>>>,
+    pub fn load(
+        remaining_accounts: &'a [AccountInfo<'a>],
         admin: &Pubkey,
     ) -> BumpResult<TradeTokenMap<'a>> {
         let mut trade_token_vec: TradeTokenMap = TradeTokenMap(BTreeMap::new());
         let trade_token_discriminator = TradeToken::discriminator();
-        while let Some(account_info) = account_info_iter.next() {
+        for account_info in remaining_accounts.iter() {
             validate!(account_info.owner.eq(admin), CouldNotLoadTradeTokenData)?;
             let data = account_info.try_borrow_data().or(Err(CouldNotLoadTradeTokenData))?;
 

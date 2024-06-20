@@ -49,15 +49,15 @@ pub struct UpdatePositionMarginParams {
     pub add_initial_margin_from_portfolio: u128,
 }
 
-pub fn handle_add_position_margin(
-    ctx: Context<AddPositionMargin>,
+pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
+    ctx: Context<'a, 'b, 'c, 'info, AddPositionMargin>,
     params: UpdatePositionMarginParams,
 ) -> Result<()> {
     validate!(params.update_margin_amount > 0u128, BumpErrorCode::AmountNotEnough.into())?;
     let mut user = ctx.accounts.user_account.load_mut()?;
     let trade_token = ctx.accounts.trade_token.load_mut()?;
-    let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
-    let mut oracle_map = OracleMap::load(remaining_accounts_iter)?;
+    let remaining_accounts = ctx.remaining_accounts;
+    let mut oracle_map = OracleMap::load(remaining_accounts)?;
     let mut position = user.find_position_mut_by_key(&params.position_key)?;
     let mut position_processor = PositionProcessor { position: &mut position };
     let mut pool = ctx.accounts.pool.load_mut()?;

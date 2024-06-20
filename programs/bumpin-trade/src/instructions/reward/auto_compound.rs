@@ -24,9 +24,9 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
     let user = &mut ctx.accounts.user.load_mut()?;
     validate!(user.authority.eq(&ctx.accounts.authority.owner), BumpErrorCode::UserNotFound)?;
 
-    let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
+    let remaining_accounts = ctx.remaining_accounts;
     for user_stake in user.user_stakes.iter_mut() {
-        let account_maps = load_maps(remaining_accounts_iter, &ctx.accounts.state.admin)?;
+        let account_maps = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
         let pool_key_map = &account_maps.pool_map;
         let pool_account_loader = pool_key_map.get_account_loader(&user_stake.pool_key)?;
 
@@ -35,7 +35,7 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
             account_maps.trade_token_map.get_account_loader(&pool.pool_mint)?;
         let trade_token = trade_token_loader.load()?;
 
-        let account_maps = &mut load_maps(remaining_accounts_iter, &ctx.accounts.state.admin)?;
+        let account_maps = &mut load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
         let stake_amount = stake_processor::stake(
             &pool_account_loader,
             &ctx.accounts.user,
@@ -50,7 +50,7 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
         user_stake.user_rewards.open_rewards_per_stake_token =
             pool.fee_reward.cumulative_rewards_per_stake_token;
 
-        let account_maps = &mut load_maps(remaining_accounts_iter, &ctx.accounts.state.admin)?;
+        let account_maps = &mut load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
         let mut pool_processor = PoolProcessor { pool };
         pool_processor.stake(
             &ctx.accounts.user,

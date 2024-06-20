@@ -1,8 +1,6 @@
 use std::cell::{Ref, RefMut};
 use std::collections::BTreeMap;
-use std::iter::Peekable;
 use std::panic::Location;
-use std::slice::Iter;
 
 use anchor_lang::prelude::*;
 use anchor_lang::Discriminator;
@@ -13,7 +11,6 @@ use crate::errors::BumpErrorCode::{CouldNotLoadTradeTokenData, TradeTokenNotFind
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::state::market::Market;
 use crate::traits::Size;
-use crate::validate;
 
 pub struct MarketMap<'a>(pub BTreeMap<[u8; 32], AccountLoader<'a, Market>>);
 
@@ -84,14 +81,14 @@ impl<'a> MarketMap<'a> {
 }
 
 impl<'a> MarketMap<'a> {
-    pub fn load<'c>(
-        account_info_iter: &'c mut Peekable<Iter<'a, AccountInfo<'a>>>,
+    pub fn load(
+        remaining_accounts: &'a [AccountInfo<'a>],
         admin: &Pubkey,
     ) -> BumpResult<MarketMap<'a>> {
         let mut perp_market_map: MarketMap = MarketMap(BTreeMap::new());
         let market_discriminator: [u8; 8] = Market::discriminator();
-        while let Some(account_info) = account_info_iter.next() {
-            validate!(account_info.owner.eq(admin), BumpErrorCode::CouldNotLoadMarketData)?;
+        for account_info in remaining_accounts {
+            // validate!(account_info.owner.eq(admin), BumpErrorCode::CouldNotLoadMarketData)?;
             let data =
                 account_info.try_borrow_data().or(Err(BumpErrorCode::CouldNotLoadMarketData))?;
 

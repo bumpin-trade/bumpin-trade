@@ -39,29 +39,29 @@ describe("bumpin-exchange", () => {
         const player2 = await program.account.user.fetch(pdaForPlayer2[0]);
         assert(player2.hold.toString() === "0");
     });
-    //
-    // it("Check Pool", async () => {
-    //     let pdaForPoolBTC = exchange.getPoolPda("BUMP_P__BTC");
-    //     const poolBTC = await program.account.pool.fetch(pdaForPoolBTC[0]);
-    //     let pdaForPoolUSDC = exchange.getPoolPda("BUMP_P__USDC");
-    //     const poolUSDC = await program.account.pool.fetch(pdaForPoolUSDC[0]);
-    // });
-    //
-    //
-    // it("Check TradeToken", async () => {
-    //     const stateNumberOfPoolsBytes = new Uint8Array(new Uint16Array([0]).buffer);
-    //     const seeds = [
-    //         Buffer.from('trade_token'),
-    //         stateNumberOfPoolsBytes
-    //     ];
-    //     const [meAddress, nonce] = PublicKey.findProgramAddressSync(
-    //         seeds,
-    //         program.programId
-    //     );
-    //     await program.account.tradeToken.fetch(meAddress);
-    // });
-    //
-    //
+
+    it("Check Pool", async () => {
+        let pdaForPoolBTC = exchange.getPoolPda("BUMP_P__BTC");
+        const poolBTC = await program.account.pool.fetch(pdaForPoolBTC[0]);
+        let pdaForPoolUSDC = exchange.getPoolPda("BUMP_P__USDC");
+        const poolUSDC = await program.account.pool.fetch(pdaForPoolUSDC[0]);
+    });
+
+
+    it("Check TradeToken", async () => {
+        const stateNumberOfPoolsBytes = new Uint8Array(new Uint16Array([0]).buffer);
+        const seeds = [
+            Buffer.from('trade_token'),
+            stateNumberOfPoolsBytes
+        ];
+        const [meAddress, nonce] = PublicKey.findProgramAddressSync(
+            seeds,
+            program.programId
+        );
+        await program.account.tradeToken.fetch(meAddress);
+    });
+
+
     it("Mint for Player1 & Player2", async () => {
         let player1 = exchange.getPlayer("Player1");
         let tradeTokenBtc = exchange.getTradeToken("BTC");
@@ -71,11 +71,11 @@ describe("bumpin-exchange", () => {
         let tradeTokenUSDC = exchange.getTradeToken("USDC");
         await player2.mintTradeToken("USDC", tradeTokenUSDC.mint.publicKey, 1000, 9);
     });
-    //
-    // it("Deposit for Player1 & Player2", async () => {
-    //     await exchange.playerDeposit("Player1", "BTC", 500);
-    //     await exchange.playerDeposit("Player2", "USDC", 500);
-    // });
+
+    it("Deposit for Player1 & Player2", async () => {
+        await exchange.playerDeposit("Player1", "BTC", 500);
+        await exchange.playerDeposit("Player2", "USDC", 500);
+    });
 
     it("Player2 BTC-USDC Limit Order", async () => {
         let param: PlaceOrderParams = {
@@ -96,7 +96,7 @@ describe("bumpin-exchange", () => {
         let player1 = exchange.getPlayer("Player2");
         let tradeToken = exchange.getTradeToken("USDC");
         let market = exchange.getMarket("BTCUSDC");
-        await utils.placePerpOrder(player1, market, tradeToken, param);
+        await utils.placePerpOrder(player1, market, tradeToken, exchange.oracle.publicKey, param);
     });
 
 });

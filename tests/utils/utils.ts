@@ -199,6 +199,7 @@ export class Utils {
     public async placePerpOrder(player: BumpinPlayer,
                                 market: BumpinMarket,
                                 tradeToken: BumpinTradeToken,
+                                oracle: PublicKey,
                                 param: PlaceOrderParams
     ): Promise<void> {
         await this.program.methods.placeOrder(
@@ -216,7 +217,11 @@ export class Utils {
             tradeTokenVault: tradeToken.getVaultPda()[0],
             userTokenAccount: player.getTradeTokenAccount(tradeToken.tradeTokenName).address,
             bumpSigner: this.getStatePda()[0],
-        }).signers([player.user]).rpc();
+        }).remainingAccounts([{
+            pubkey: oracle,
+            isWritable: false,
+            isSigner: false
+        }]).signers([player.user]).rpc();
     }
 
     public async manualCreateAccount(provider: Provider, fromPk: anchor.web3.Keypair, newAccountPk: anchor.web3.Keypair, space: number, lamports: number, programId: PublicKey) {

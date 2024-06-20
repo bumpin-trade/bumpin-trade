@@ -1,6 +1,3 @@
-use std::iter::Peekable;
-use std::slice::Iter;
-
 use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
 
@@ -20,14 +17,14 @@ pub struct AccountMaps<'a> {
 }
 
 pub fn load_maps<'a: 'info, 'info>(
-    account_info_iter: &mut Peekable<Iter<'a, AccountInfo<'info>>>,
+    remaining_accounts: &'info [AccountInfo<'info>],
     admin: &Pubkey,
 ) -> BumpResult<AccountMaps<'info>> {
-    let market_map = MarketMap::load(account_info_iter, admin)?;
-    let trade_token_map = TradeTokenMap::load(account_info_iter, admin)?;
-    let oracle_map = OracleMap::load(account_info_iter)?;
-    let pool_map = PoolMap::load(account_info_iter, admin)?;
-    let vault_map = VaultMap::load(account_info_iter)?;
+    let market_map = MarketMap::load(remaining_accounts, admin)?;
+    let trade_token_map = TradeTokenMap::load(remaining_accounts, admin)?;
+    let oracle_map = OracleMap::load(remaining_accounts)?;
+    let pool_map = PoolMap::load(remaining_accounts, admin)?;
+    let vault_map = VaultMap::load(remaining_accounts)?;
 
     Ok(AccountMaps { market_map, trade_token_map, oracle_map, pool_map, vault_map })
 }

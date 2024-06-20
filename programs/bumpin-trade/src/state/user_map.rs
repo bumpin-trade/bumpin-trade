@@ -1,8 +1,6 @@
 use std::cell::{Ref, RefMut};
 use std::collections::BTreeMap;
-use std::iter::Peekable;
 use std::panic::Location;
-use std::slice::Iter;
 
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::state::traits::Size;
@@ -77,12 +75,12 @@ impl<'a> UserMap<'a> {
         }
     }
     pub fn load(
-        account_info_iter: &mut Peekable<Iter<'a, AccountInfo<'a>>>,
+        remaining_accounts: &'a [AccountInfo<'a>],
         program_id: &Pubkey,
     ) -> BumpResult<UserMap<'a>> {
         let mut user_map = UserMap(BTreeMap::new());
         let user_discriminator = User::discriminator();
-        while let Some(account_info) = account_info_iter.next() {
+        for account_info in remaining_accounts.iter() {
             let user_account_pda = pda::generate_user_pda(account_info.owner, program_id)?;
             validate!(account_info.key.eq(&user_account_pda), BumpErrorCode::CouldNotLoadUserData)?;
 

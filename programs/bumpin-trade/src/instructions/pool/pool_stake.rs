@@ -1,6 +1,3 @@
-use std::iter::Peekable;
-use std::slice::Iter;
-
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
@@ -83,9 +80,8 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(
     let pool = &mut ctx.accounts.pool.load_mut()?;
     let trade_token = ctx.accounts.trade_token.load()?;
 
-    let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
-        &mut ctx.remaining_accounts.iter().peekable();
-    let mut account_maps = load_maps(remaining_accounts_iter, &ctx.accounts.state.admin)?;
+    let remaining_accounts = ctx.remaining_accounts;
+    let mut account_maps = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
 
     let base_mint_amount = stake_processor::stake(
         &ctx.accounts.pool,

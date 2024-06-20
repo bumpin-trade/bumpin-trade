@@ -101,8 +101,8 @@ pub struct LiquidateIsolatePosition<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle_liquidate_isolate_position(
-    ctx: Context<LiquidateIsolatePosition>,
+pub fn handle_liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
+    ctx: Context<'a, 'b, 'c, 'info, LiquidateIsolatePosition>,
     position_key: Pubkey,
     _market_index: u16,
     _pool_index: u16,
@@ -115,7 +115,7 @@ pub fn handle_liquidate_isolate_position(
     validate!(!user_position.cross_margin, BumpErrorCode::OnlyLiquidateIsolatePosition)?;
     let market = &mut ctx.accounts.market.load_mut()?;
 
-    let remaining_accounts = &mut ctx.remaining_accounts.iter().peekable();
+    let remaining_accounts = ctx.remaining_accounts;
     let mut oracle_map = OracleMap::load(remaining_accounts)?;
 
     let mut market_processor = MarketProcessor { market };
