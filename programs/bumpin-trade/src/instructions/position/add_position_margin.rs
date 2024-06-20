@@ -2,7 +2,6 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::pubkey::Pubkey;
 
-use crate::constraints::*;
 use crate::errors::BumpErrorCode;
 use crate::processor::position_processor::PositionProcessor;
 use crate::state::market::Market;
@@ -15,24 +14,61 @@ use crate::utils::token;
 use crate::validate;
 
 #[derive(Accounts)]
+#[instruction(
+    _market_index: u16, _pool_index: u16, _trade_token_index: u16,
+)]
 pub struct AddPositionMargin<'info> {
     #[account(
         mut,
-        constraint = can_sign_for_user(& user_account, & authority) ?
+        seeds = [b"user", authority.key().as_ref()],
+        bump,
     )]
-    pub user_account: AccountLoader<'info, User>,
+    pub user: AccountLoader<'info, User>,
+
     pub authority: Signer<'info>,
-    pub trade_token: AccountLoader<'info, TradeToken>,
-    pub pool: AccountLoader<'info, Pool>,
-    pub state: Box<Account<'info, State>>,
-    pub market: AccountLoader<'info, Market>,
+
     #[account(
         mut,
-        constraint = & pool_vault.mint.eq(& user_token_account.mint),
+        constraint = pool_mint_vault.mint.eq(& user_token_account.mint),
         token::authority = authority
     )]
     pub user_token_account: Box<Account<'info, TokenAccount>>,
-    pub pool_vault: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        mut,
+        seeds = [b"bump_state".as_ref()],
+        bump,
+    )]
+    pub state: Box<Account<'info, State>>,
+
+    #[account(
+        seeds = [b"trade_token", _trade_token_index.to_le_bytes().as_ref()],
+        bump,
+        constraint = trade_token.load() ?.mint.eq(& user_token_account.mint),
+    )]
+    pub trade_token: AccountLoader<'info, TradeToken>,
+
+    #[account(
+        seeds = [b"pool", _pool_index.to_le_bytes().as_ref()],
+        bump,
+        constraint = pool.load() ?.pool_mint.eq(& user_token_account.mint),
+    )]
+    pub pool: AccountLoader<'info, Pool>,
+
+    #[account(
+        seeds = [b"market", _market_index.to_le_bytes().as_ref()],
+        bump,
+        constraint = (market.load() ?.pool_mint.eq(& user_token_account.mint) || market.load() ?.pool_key.eq(& user_token_account.mint)) && market.load() ?.pool_key.eq(& pool.load() ?.pool_key) || market.load() ?.stable_pool_key.eq(& pool.load() ?.pool_key),
+    )]
+    pub market: AccountLoader<'info, Market>,
+
+    #[account(
+        seeds = [b"pool_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        bump,
+        token::mint = pool.load()?.pool_mint,
+        token::authority = bump_signer
+    )]
+    pub pool_mint_vault: Box<Account<'info, TokenAccount>>,
     #[account(
         constraint = state.bump_signer.eq(& bump_signer.key())
     )]
@@ -52,9 +88,12 @@ pub struct UpdatePositionMarginParams {
 pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, AddPositionMargin>,
     params: UpdatePositionMarginParams,
+    _market_index: u16,
+    _pool_index: u16,
+    _trade_token_index: u16,
 ) -> Result<()> {
     validate!(params.update_margin_amount > 0u128, BumpErrorCode::AmountNotEnough.into())?;
-    let mut user = ctx.accounts.user_account.load_mut()?;
+    let mut user = ctx.accounts.user.load_mut()?;
     let trade_token = ctx.accounts.trade_token.load_mut()?;
     let remaining_accounts = ctx.remaining_accounts;
     let mut oracle_map = OracleMap::load(remaining_accounts)?;
@@ -67,7 +106,7 @@ pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
         token::receive(
             &ctx.accounts.token_program,
             &ctx.accounts.user_token_account,
-            &ctx.accounts.pool_vault,
+            &ctx.accounts.pool_mint_vault,
             &ctx.accounts.authority,
             params.update_margin_amount,
         )?;
@@ -96,14 +135,14 @@ pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
         )?;
         token::send_from_program_vault(
             &ctx.accounts.token_program,
-            &ctx.accounts.pool_vault,
+            &ctx.accounts.pool_mint_vault,
             &ctx.accounts.user_token_account,
             &ctx.accounts.bump_signer,
             ctx.accounts.state.bump_signer_nonce,
             reduce_margin_amount,
         )?;
     }
-    let mut user = ctx.accounts.user_account.load_mut()?;
+    let mut user = ctx.accounts.user.load_mut()?;
     user.update_all_orders_leverage(
         position_processor.position.leverage,
         position_processor.position.symbol,

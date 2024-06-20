@@ -11,8 +11,18 @@ use crate::validate;
 
 #[derive(Accounts)]
 pub struct AutoCompoundRewards<'info> {
+    #[account(
+        mut,
+        seeds = [b"user", authority.key().as_ref()],
+        bump,
+    )]
     pub user: AccountLoader<'info, User>,
 
+    #[account(
+        mut,
+        seeds = [b"bump_state".as_ref()],
+        bump,
+    )]
     pub state: Box<Account<'info, State>>,
 
     pub authority: Signer<'info>,

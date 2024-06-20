@@ -20,6 +20,12 @@ pub struct ClaimRewards<'info> {
     )]
     pub state: Box<Account<'info, State>>,
 
+
+    #[account(
+        mut,
+        seeds = [b"user", authority.key().as_ref()],
+        bump,
+    )]
     pub user: AccountLoader<'info, User>,
 
     #[account(
@@ -75,7 +81,7 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
             &ctx.accounts.token_program,
             pool_rewards_vault,
             user_token_account,
-            &ctx.accounts.authority,
+            &ctx.accounts.bump_signer,
             bump_signer_nonce,
             user_stake.user_rewards.realised_rewards_token_amount,
         )?;
