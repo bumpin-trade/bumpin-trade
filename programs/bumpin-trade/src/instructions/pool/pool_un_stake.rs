@@ -26,7 +26,7 @@ pub struct PoolUnStake<'info> {
         seeds = [b"bump_state".as_ref()],
         bump,
     )]
-    pub state: Account<'info, State>,
+    pub state: Box<Account<'info, State>>,
     #[account(
         mut,
         seeds = [b"user", authority.key.as_ref()],

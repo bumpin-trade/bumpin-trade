@@ -24,15 +24,15 @@ pub struct AddPositionMargin<'info> {
     pub authority: Signer<'info>,
     pub trade_token: AccountLoader<'info, TradeToken>,
     pub pool: AccountLoader<'info, Pool>,
-    pub state: Account<'info, State>,
+    pub state: Box<Account<'info, State>>,
     pub market: AccountLoader<'info, Market>,
     #[account(
         mut,
         constraint = & pool_vault.mint.eq(& user_token_account.mint),
         token::authority = authority
     )]
-    pub user_token_account: Account<'info, TokenAccount>,
-    pub pool_vault: Account<'info, TokenAccount>,
+    pub user_token_account: Box<Account<'info, TokenAccount>>,
+    pub pool_vault: Box<Account<'info, TokenAccount>>,
     #[account(
         constraint = state.bump_signer.eq(& bump_signer.key())
     )]

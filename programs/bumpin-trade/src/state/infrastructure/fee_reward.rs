@@ -7,7 +7,6 @@ pub struct FeeReward {
     pub fee_amount: u128,
     pub un_settle_fee_amount: u128,
     pub pnl: i128,
-    pub open_cumulative_rewards_per_stake_token: u128,
     pub cumulative_rewards_per_stake_token: u128,
     pub last_rewards_per_stake_token_deltas: [u128; 3],
 }

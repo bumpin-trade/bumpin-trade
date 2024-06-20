@@ -16,7 +16,7 @@ pub struct ADL<'info> {
         mut,
         constraint = pool.load() ?.pool_mint.eq(& margin_token.mint.key())
     )]
-    pub margin_token: Account<'info, TokenAccount>,
+    pub margin_token: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
@@ -37,26 +37,26 @@ pub struct ADL<'info> {
         mut,
         constraint = & pool_vault.mint.eq(& user_token_account.mint),
     )]
-    pub user_token_account: Account<'info, TokenAccount>,
+    pub user_token_account: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
         constraint = pool_vault.mint == pool.load() ?.pool_mint
     )]
-    pub pool_vault: Account<'info, TokenAccount>,
+    pub pool_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
         constraint = stable_pool_vault.mint == stable_pool.load() ?.pool_mint
     )]
-    pub stable_pool_vault: Account<'info, TokenAccount>,
+    pub stable_pool_vault: Box<Account<'info, TokenAccount>>,
 
     pub trade_token: AccountLoader<'info, TradeToken>,
 
     #[account(
         constraint = trade_token_vault.mint == trade_token.load() ?.trade_token_vault
     )]
-    pub trade_token_vault: Account<'info, TokenAccount>,
+    pub trade_token_vault: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,

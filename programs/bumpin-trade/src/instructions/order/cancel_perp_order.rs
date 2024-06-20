@@ -24,7 +24,7 @@ pub struct CancelOrderCtx<'info> {
         constraint = & pool_vault.mint.eq(& user_token_account.mint),
         token::authority = authority
     )]
-    pub user_token_account: Account<'info, TokenAccount>,
+    pub user_token_account: Box<Account<'info, TokenAccount>>,
 
     pub pool_vault: Account<'info, TokenAccount>,
 
@@ -35,7 +35,7 @@ pub struct CancelOrderCtx<'info> {
 
     pub token_program: Program<'info, Token>,
 
-    pub state: Account<'info, State>,
+    pub state: Box<Account<'info, State>>,
 }
 
 pub fn handle_cancel_order(ctx: Context<CancelOrderCtx>, order_id: u128) -> Result<()> {

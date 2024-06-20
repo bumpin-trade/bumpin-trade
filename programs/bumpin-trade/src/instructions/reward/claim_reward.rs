@@ -18,7 +18,7 @@ pub struct ClaimRewards<'info> {
         seeds = [b"bump_state".as_ref()],
         bump,
     )]
-    pub state: Account<'info, State>,
+    pub state: Box<Account<'info, State>>,
 
     pub user: AccountLoader<'info, User>,
 
@@ -77,6 +77,7 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
         )?;
 
         user_stake.user_rewards.realised_rewards_token_amount = 0;
+        user_stake.user_rewards.open_rewards_per_stake_token = pool.fee_reward.cumulative_rewards_per_stake_token;
     }
     Ok(())
 }

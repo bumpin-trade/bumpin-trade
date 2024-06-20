@@ -44,6 +44,7 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
             },
         )?;
         user_stake.user_rewards.realised_rewards_token_amount = 0;
+        user_stake.user_rewards.open_rewards_per_stake_token = pool.fee_reward.cumulative_rewards_per_stake_token;
 
         let account_maps = &mut load_maps(remaining_accounts_iter)?;
         let mut pool_processor = PoolProcessor { pool };

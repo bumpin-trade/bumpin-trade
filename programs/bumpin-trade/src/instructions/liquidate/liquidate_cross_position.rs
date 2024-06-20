@@ -97,7 +97,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
     .max(0i128);
 
     if cross_net_value <= 0 || cross_net_value.abs().cast::<u128>()? <= total_position_mm {
-        for mut user_position in &mut user_processor.user.user_positions {
+        for user_position in &mut user_processor.user.user_positions {
             let mut position_processor = PositionProcessor { position: user_position };
             //only cross margin position support
             if !position_processor.position.cross_margin {

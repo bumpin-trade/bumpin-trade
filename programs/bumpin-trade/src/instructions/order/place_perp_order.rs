@@ -62,7 +62,7 @@ pub struct PlaceOrder<'info> {
 
     pub market: AccountLoader<'info, Market>,
 
-    pub state: Account<'info, State>,
+    pub state: Box<Account<'info, State>>,
     #[account(
         mut,
         constraint = pool_vault.mint.eq(& user_token_account.mint) || stable_pool_vault.mint.eq(& user_token_account.mint),
@@ -74,20 +74,20 @@ pub struct PlaceOrder<'info> {
         mut,
         constraint = pool_vault.mint == pool.load() ?.pool_mint
     )]
-    pub pool_vault: Account<'info, TokenAccount>,
+    pub pool_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
         constraint = stable_pool_vault.mint == stable_pool.load() ?.pool_mint
     )]
-    pub stable_pool_vault: Account<'info, TokenAccount>,
+    pub stable_pool_vault: Box<Account<'info, TokenAccount>>,
 
     pub trade_token: AccountLoader<'info, TradeToken>,
 
     #[account(
         constraint = trade_token_vault.mint == trade_token.load() ?.trade_token_vault
     )]
-    pub trade_token_vault: Account<'info, TokenAccount>,
+    pub trade_token_vault: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
