@@ -67,12 +67,7 @@ impl<'a> MarketProcessor<'_> {
         market_position.sub_open_interest(params.size)?;
         Ok(())
     }
-    pub fn update_market_funding_fee_rate(
-        &mut self,
-        state: &State,
-        oracle_price: &mut OracleMap,
-    ) -> BumpResult<()> {
-        let oracle_price_data = oracle_price.get_price_data(&self.market.pool_mint)?;
+    pub fn update_market_funding_fee_rate(&mut self, state: &State, price: u128) -> BumpResult<()> {
         let long = self.market.long_open_interest;
         let short = self.market.short_open_interest;
 
@@ -96,9 +91,8 @@ impl<'a> MarketProcessor<'_> {
                 .safe_mul(funding_rate_per_second)?
                 .safe_mul(fee_durations.cast()?)?;
 
-            let mut long_funding_fee_amount_per_size_delta = funding_fee.safe_div(
-                long.open_interest.cast::<i128>()?.safe_mul(oracle_price_data.price.cast()?)?,
-            )?;
+            let mut long_funding_fee_amount_per_size_delta = funding_fee
+                .safe_div(long.open_interest.cast::<i128>()?.safe_mul(price.cast()?)?)?;
 
             long_funding_fee_amount_per_size_delta = long_funding_fee_amount_per_size_delta.min(
                 state
@@ -108,19 +102,11 @@ impl<'a> MarketProcessor<'_> {
             );
 
             let mut short_funding_fee_amount_per_size_delta = funding_fee
-                .safe_div(
-                    short
-                        .open_interest
-                        .cast::<i128>()?
-                        .safe_mul(oracle_price_data.price.cast::<i128>()?)?,
-                )?
+                .safe_div(short.open_interest.cast::<i128>()?.safe_mul(price.cast()?)?)?
                 .safe_mul(-1i128)?;
 
             short_funding_fee_amount_per_size_delta = short_funding_fee_amount_per_size_delta.min(
-                state
-                    .max_funding_base_rate
-                    .cast::<i128>()?
-                    .safe_mul(funding_rate_per_second.cast()?)?,
+                state.max_funding_base_rate.cast::<i128>()?.safe_mul(funding_rate_per_second)?,
             );
 
             self.market.funding_fee.update_market_funding_fee_rate(

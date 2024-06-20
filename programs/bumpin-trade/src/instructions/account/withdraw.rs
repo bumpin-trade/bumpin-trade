@@ -57,6 +57,7 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
     let user = &mut ctx.accounts.user.load_mut()?;
     let trade_token = ctx.accounts.trade_token.load_mut()?;
     let mint = &ctx.accounts.user_token_account.mint.key();
+    let oracle = &trade_token.oracle;
 
     let user_token = user.get_user_token_ref(mint)?.ok_or(BumpErrorCode::CouldNotFindUserToken)?;
     validate!(user_token.amount > amount, BumpErrorCode::AmountNotEnough)?;
@@ -68,7 +69,7 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
 
     let mut user_processor = UserProcessor { user };
 
-    user_processor.withdraw(amount, mint, &mut oracle_map, &trade_token_map)?;
+    user_processor.withdraw(amount, oracle, mint, &mut oracle_map, &trade_token_map)?;
     trade_token.sub_token(amount)?;
     drop(user_processor);
 

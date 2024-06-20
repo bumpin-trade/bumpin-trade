@@ -86,6 +86,8 @@ pub struct PlaceOrder<'info> {
 
     pub trade_token: AccountLoader<'info, TradeToken>,
 
+    pub index_trade_token: AccountLoader<'info, TradeToken>,
+
     #[account(
         constraint = trade_token_vault.key() == trade_token.load() ?.trade_token_vault
     )]
@@ -125,10 +127,11 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     let mut user = ctx.accounts.user_account.load_mut()?;
     let pool = ctx.accounts.pool.load()?;
     let token = &ctx.accounts.margin_token;
+    let trade_token = &ctx.accounts.trade_token.load()?;
     let remaining_accounts = ctx.remaining_accounts;
     let AccountMaps { trade_token_map, mut oracle_map, .. } =
         load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
-    let token_price = oracle_map.get_price_data(&token.key()).unwrap().price;
+    let token_price = oracle_map.get_price_data(&trade_token.oracle).unwrap().price;
     msg!("token_price: {}", token_price);
     validate!(
         validate_place_order(
@@ -197,6 +200,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         let pool_vault_account = &ctx.accounts.pool_vault;
         let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
         let trade_token_loader = &ctx.accounts.trade_token;
+        let index_trade_token_loader = &ctx.accounts.index_trade_token;
         let trade_token_vault_account = &ctx.accounts.trade_token_vault;
         let bump_signer_account_info = &ctx.accounts.bump_signer;
         let token_program = &ctx.accounts.token_program;
@@ -212,6 +216,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
             pool_vault_account,
             stable_pool_vault_account,
             trade_token_loader,
+            index_trade_token_loader,
             trade_token_vault_account,
             bump_signer_account_info,
             token_program,
@@ -241,6 +246,7 @@ pub fn handle_execute_order<'info>(
     pool_vault_account: &Account<'info, TokenAccount>,
     stable_pool_vault_account: &Account<'info, TokenAccount>,
     trade_token_loader: &AccountLoader<'info, TradeToken>,
+    index_trade_token_loader: &AccountLoader<'info, TradeToken>,
     trade_token_vault_account: &Account<'info, TokenAccount>,
     bump_signer: &AccountInfo<'info>,
     token_program: &Program<'info, Token>,
@@ -255,6 +261,7 @@ pub fn handle_execute_order<'info>(
     let margin_token = margin_token_account;
     let market = &mut market_account_loader.load_mut().unwrap();
     let trade_token = trade_token_loader.load().unwrap();
+    let index_trade_token = index_trade_token_loader.load().unwrap();
 
     let order = if execute_from_remote { user.find_ref_order_by_id(order_id)? } else { user_order };
     let next_use_index = user.next_usable_position_index()?;
@@ -267,8 +274,10 @@ pub fn handle_execute_order<'info>(
     //validate order
     validate_execute_order(&order, &market)?;
     let is_long = OrderSide::LONG == order.order_side;
-    let execute_price =
-        get_execution_price(oracle_map.get_price_data(&market.index_mint).unwrap().price, &order)?;
+    let execute_price = get_execution_price(
+        oracle_map.get_price_data(&index_trade_token.oracle).unwrap().price,
+        &order,
+    )?;
 
     let user = &mut user_account_loader.load_mut().unwrap();
     let position =
@@ -276,7 +285,11 @@ pub fn handle_execute_order<'info>(
 
     //update funding_fee_rate and borrowing_fee_rate
     let mut market_processor = MarketProcessor { market };
-    market_processor.update_market_funding_fee_rate(state_account, oracle_map)?;
+
+    market_processor.update_market_funding_fee_rate(
+        state_account,
+        oracle_map.get_price_data(&trade_token.oracle)?.price,
+    )?;
     let mut pool_processor = PoolProcessor { pool };
     pool_processor.update_pool_borrowing_fee_rate()?;
 
@@ -290,7 +303,7 @@ pub fn handle_execute_order<'info>(
             if market.index_mint.eq(&margin_token.key()) {
                 margin_token_price = execute_price;
             } else {
-                margin_token_price = oracle_map.get_price_data(&margin_token.key())?.price;
+                margin_token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
             }
 
             let (order_margin, order_margin_from_balance) = execute_increase_order_margin(

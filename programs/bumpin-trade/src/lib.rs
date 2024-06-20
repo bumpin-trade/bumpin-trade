@@ -111,15 +111,27 @@ pub mod bumpin_trade {
     pub fn pool_stake<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PoolStake>,
         params: StakeParams,
+        _pool_index: u16,
+        _trade_token_index: u16,
+        _stable_trade_token_index: u16,
     ) -> Result<()> {
-        handle_pool_stake(ctx, params)
+        handle_pool_stake(ctx, params, _pool_index, _trade_token_index, _stable_trade_token_index)
     }
 
     pub fn pool_un_stake<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PoolUnStake>,
         params: UnStakeParams,
+        _pool_index: u16,
+        _trade_token_index: u16,
+        _stable_trade_token_index: u16,
     ) -> Result<()> {
-        handle_pool_un_stake(ctx, params)
+        handle_pool_un_stake(
+            ctx,
+            params,
+            _pool_index,
+            _trade_token_index,
+            _stable_trade_token_index,
+        )
     }
 
     /*-----account------*/
@@ -160,6 +172,7 @@ pub mod bumpin_trade {
         let pool_vault_account = &ctx.accounts.pool_vault;
         let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
         let trade_token_loader = &ctx.accounts.trade_token;
+        let index_trade_token_loader = &ctx.accounts.index_trade_token;
         let trade_token_vault_account = &ctx.accounts.trade_token_vault;
         let bump_signer_account_info = &ctx.accounts.bump_signer;
         let token_program = &ctx.accounts.token_program;
@@ -178,6 +191,7 @@ pub mod bumpin_trade {
             pool_vault_account,
             stable_pool_vault_account,
             trade_token_loader,
+            index_trade_token_loader,
             trade_token_vault_account,
             bump_signer_account_info,
             token_program,
@@ -208,8 +222,11 @@ pub mod bumpin_trade {
     pub fn update_position_leverage<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, UpdatePositionLeverage>,
         params: UpdatePositionLeverageParams,
+        _market_index: u16,
+        _pool_index: u16,
+        _trade_token_index: u16,
     ) -> Result<()> {
-        handle_update_position_leverage(ctx, params)
+        handle_update_position_leverage(ctx, params, _market_index, _pool_index, _trade_token_index)
     }
 
     pub fn liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
@@ -235,8 +252,9 @@ pub mod bumpin_trade {
 
     pub fn auto_compound<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, AutoCompoundRewards<'c>>,
+        _stable_trade_token_index: u16,
     ) -> Result<()> {
-        handle_auto_compound(ctx)
+        handle_auto_compound(ctx, _stable_trade_token_index)
     }
 }
 

@@ -27,7 +27,7 @@ pub fn stake(
     let trade_token =
         trade_token_account.load().map_err(|_| BumpErrorCode::UnableToLoadAccountLoader)?;
 
-    let token_price = account_maps.oracle_map.get_price_data(&pool.pool_mint)?.price;
+    let token_price = account_maps.oracle_map.get_price_data(&trade_token.oracle)?.price;
 
     validate!(
         pool.pool_config.mini_stake_amount

@@ -20,7 +20,6 @@ pub struct ClaimRewards<'info> {
     )]
     pub state: Box<Account<'info, State>>,
 
-
     #[account(
         mut,
         seeds = [b"user", authority.key().as_ref()],

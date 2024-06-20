@@ -32,6 +32,7 @@ impl<'a> PoolProcessor<'_> {
         pool_loader: &AccountLoader<Pool>,
         mint_amount: u128,
         trade_token: &TradeToken,
+        stable_trade_token: &TradeToken,
         account_maps: &mut AccountMaps,
     ) -> BumpResult<u128> {
         let mut stake_amount = mint_amount;
@@ -52,16 +53,19 @@ impl<'a> PoolProcessor<'_> {
             BumpErrorCode::AmountNotEnough
         )?;
         if self.pool.total_supply > 0 {
-            let oracle_price_data = account_maps.oracle_map.get_price_data(&self.pool.pool_mint)?;
+            let oracle_price_data = account_maps.oracle_map.get_price_data(&trade_token.oracle)?;
 
             stake_amount = cal_utils::token_to_usd_u(
                 mint_amount,
                 trade_token.decimals,
                 oracle_price_data.price,
             )?
-            .safe_div(
-                self.get_pool_net_price(&mut account_maps.oracle_map, &account_maps.market_map)?,
-            )?;
+            .safe_div(self.get_pool_net_price(
+                trade_token,
+                stable_trade_token,
+                &mut account_maps.oracle_map,
+                &account_maps.market_map,
+            )?)?;
         }
         self.pool.add_supply(stake_amount)?;
         self.pool.add_amount(mint_amount)?;
@@ -76,22 +80,26 @@ impl<'a> PoolProcessor<'_> {
         pool_loader: &AccountLoader<Pool>,
         mint_amount: u128,
         trade_token: &TradeToken,
+        stable_trade_token: &TradeToken,
         account_maps: &mut AccountMaps,
     ) -> BumpResult<u128> {
         let mut stake_amount = mint_amount;
         let mut user = user_loader.load_mut().unwrap();
         let pool = pool_loader.load_mut().unwrap();
         if self.pool.total_supply > 0 {
-            let oracle_price_data = account_maps.oracle_map.get_price_data(&self.pool.pool_mint)?;
+            let oracle_price_data = account_maps.oracle_map.get_price_data(&trade_token.oracle)?;
 
             stake_amount = cal_utils::token_to_usd_u(
                 mint_amount,
                 trade_token.decimals,
                 oracle_price_data.price,
             )?
-            .safe_div(
-                self.get_pool_net_price(&mut account_maps.oracle_map, &account_maps.market_map)?,
-            )?;
+            .safe_div(self.get_pool_net_price(
+                trade_token,
+                stable_trade_token,
+                &mut account_maps.oracle_map,
+                &account_maps.market_map,
+            )?)?;
         }
         self.pool.add_supply(stake_amount)?;
         self.pool.add_amount(mint_amount)?;
@@ -105,15 +113,20 @@ impl<'a> PoolProcessor<'_> {
         pool_loader: &AccountLoader<Pool>,
         user_loader: &AccountLoader<User>,
         un_stake_amount: u128,
+        trade_token_loader: &AccountLoader<TradeToken>,
+        stable_trade_token_loader: &AccountLoader<TradeToken>,
         oracle_map: &mut OracleMap,
         market_map: &MarketMap,
     ) -> BumpResult<u128> {
         let pool = pool_loader.load().unwrap();
         let mut user = user_loader.load_mut().unwrap();
-        let pool_value = self.get_pool_usd_value(oracle_map, market_map)?;
+        let trade_token = trade_token_loader.load().unwrap();
+        let stable_trade_token = stable_trade_token_loader.load().unwrap();
+        let pool_value =
+            self.get_pool_usd_value(oracle_map, &trade_token, &stable_trade_token, market_map)?;
         let un_stake_usd =
             cal_utils::mul_div_u(un_stake_amount, pool_value, self.pool.total_supply)?;
-        let pool_price = oracle_map.get_price_data(&self.pool.pool_mint)?;
+        let pool_price = oracle_map.get_price_data(&trade_token.oracle)?;
         let token_amount = cal_utils::div_u128(un_stake_usd, pool_price.price)?;
         validate!(
             token_amount > pool.pool_config.mini_un_stake_amount,
@@ -131,19 +144,24 @@ impl<'a> PoolProcessor<'_> {
     }
     pub fn get_pool_net_price(
         &self,
+        trade_token: &TradeToken,
+        stable_trade_token: &TradeToken,
         oracle_map: &mut OracleMap,
         market_vec: &MarketMap,
     ) -> BumpResult<u128> {
-        let pool_value = self.get_pool_usd_value(oracle_map, market_vec)?;
+        let pool_value =
+            self.get_pool_usd_value(oracle_map, trade_token, stable_trade_token, market_vec)?;
         let net_price = self.pool.total_supply.safe_div(pool_value.cast()?)?;
         Ok(net_price)
     }
     pub fn get_pool_usd_value(
         &self,
         oracle_map: &mut OracleMap,
+        trade_token: &TradeToken,
+        stable_trade_token: &TradeToken,
         market_vec: &MarketMap,
     ) -> BumpResult<u128> {
-        let oracle_price_data = oracle_map.get_price_data(&self.pool.pool_mint)?;
+        let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle)?;
         let mut pool_value = self
             .pool
             .pool_balance
@@ -172,7 +190,7 @@ impl<'a> PoolProcessor<'_> {
                 .safe_add(self.pool.stable_balance.un_settle_amount)?
                 .safe_sub(self.pool.stable_balance.loss_amount)?;
 
-            let stable_price = oracle_map.get_price_data(&self.pool.stable_balance.pool_mint)?;
+            let stable_price = oracle_map.get_price_data(&stable_trade_token.oracle)?;
             let stable_usd_value = stable_amount.safe_mul(stable_price.price)?;
             pool_value = cal_utils::add_u128(pool_value, stable_usd_value)?;
         }

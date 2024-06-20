@@ -12,7 +12,7 @@ use crate::state::user::User;
 use crate::utils;
 
 #[derive(Accounts)]
-#[instruction(pool_index: u16, trade_token_index: u16)]
+#[instruction(_pool_index: u16, _trade_token_index: u16, _stable_trade_token_index: u16)]
 pub struct PoolStake<'info> {
     #[account(
         mut,
@@ -30,31 +30,38 @@ pub struct PoolStake<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool".as_ref(), pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool".as_ref(), _pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
         mut,
-        seeds = [b"pool_mint_vault".as_ref(), pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_mint_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub pool_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
-        seeds = [b"trade_token_vault".as_ref(), trade_token_index.to_le_bytes().as_ref()],
+        seeds = [b"trade_token_vault".as_ref(), _trade_token_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
-        seeds = [b"trade_token".as_ref(), trade_token_index.to_le_bytes().as_ref()],
+        seeds = [b"trade_token".as_ref(), _trade_token_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub trade_token: AccountLoader<'info, TradeToken>,
+
+    #[account(
+        mut,
+        seeds = [b"trade_token".as_ref(), _stable_trade_token_index.to_le_bytes().as_ref()],
+        bump,
+    )]
+    pub stable_trade_token: AccountLoader<'info, TradeToken>,
 
     #[account(
         mut,
@@ -76,9 +83,13 @@ pub struct StakeParams {
 pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, PoolStake>,
     stake_params: StakeParams,
+    _pool_index: u16,
+    _trade_token_index: u16,
+    _stable_trade_token_index: u16,
 ) -> Result<()> {
     let pool = &mut ctx.accounts.pool.load_mut()?;
     let trade_token = ctx.accounts.trade_token.load()?;
+    let stable_trade_token = ctx.accounts.stable_trade_token.load()?;
 
     let remaining_accounts = ctx.remaining_accounts;
     let mut account_maps = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
@@ -97,6 +108,7 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(
             &ctx.accounts.pool,
             base_mint_amount,
             &trade_token,
+            &stable_trade_token,
             &mut account_maps,
         )?;
         drop(pool_processor);
@@ -115,6 +127,7 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(
             &ctx.accounts.pool,
             base_mint_amount,
             &trade_token,
+            &stable_trade_token,
             &mut account_maps,
         )?;
         drop(pool_processor);

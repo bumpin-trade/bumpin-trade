@@ -19,11 +19,16 @@ pub struct VaultMap<'a>(pub BTreeMap<Pubkey, Account<'a, TokenAccount>>);
 impl<'a> VaultMap<'a> {
     #[track_caller]
     #[inline(always)]
-    pub fn get_account(&self, mint: &Pubkey) -> BumpResult<&Account<'a, TokenAccount>> {
-        let account = match self.0.get(mint) {
+    pub fn get_account(&self, account_key: &Pubkey) -> BumpResult<&Account<'a, TokenAccount>> {
+        let account = match self.0.get(account_key) {
             None => {
                 let caller = Location::caller();
-                msg!("Could not find trade_token {} at {}:{}", mint, caller.file(), caller.line());
+                msg!(
+                    "Could not find trade_token {} at {}:{}",
+                    account_key,
+                    caller.file(),
+                    caller.line()
+                );
                 return Err(TradeTokenNotFind);
             },
             Some(loader) => loader,

@@ -120,7 +120,7 @@ impl PositionProcessor<'_> {
                         authority,
                         params.add_margin_amount,
                     )
-                    .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                        .map_err(|_e| BumpErrorCode::TransferFailed)?;
                 }
             } else {
                 self.position.set_leverage(params.leverage)?;
@@ -156,16 +156,16 @@ impl PositionProcessor<'_> {
                         state.bump_signer_nonce,
                         reduce_margin_amount,
                     )
-                    .unwrap();
+                        .unwrap();
                 }
             }
         }
         Ok(())
     }
 
-    pub fn get_position_value(&self, oracle_map: &mut OracleMap) -> BumpResult<(u128, i128, u128)> {
+    pub fn get_position_value(&self, index_trade_token: &TradeToken, oracle_map: &mut OracleMap) -> BumpResult<(u128, i128, u128)> {
         if self.position.cross_margin {
-            let index_price_data = oracle_map.get_price_data(&&self.position.margin_mint)?;
+            let index_price_data = oracle_map.get_price_data(&index_trade_token.oracle)?;
 
             let position_un_pnl = self.get_position_un_pnl_usd(index_price_data.price)?;
 
@@ -183,10 +183,11 @@ impl PositionProcessor<'_> {
         market: &Market,
         pool: &Pool,
         state: &State,
-        oracle_map: &mut OracleMap,
+        margin_token_price: u128,
+        margin_token_decimals: u8,
     ) -> BumpResult<u128> {
         let mm_usd = self.get_position_mm(market, state)?;
-        let position_fee_usd = self.get_position_fee(market, pool, oracle_map)?;
+        let position_fee_usd = self.get_position_fee(market, pool, margin_token_price, margin_token_decimals)?;
         let position_value = if self.position.is_long {
             position_fee_usd.safe_add(
                 self.position
@@ -225,7 +226,8 @@ impl PositionProcessor<'_> {
         &self,
         market: &Market,
         pool: &Pool,
-        oracle_map: &mut OracleMap,
+        margin_mint_price: u128,
+        trade_token_decimals: u8,
     ) -> BumpResult<i128> {
         let mut funding_fee_total_usd = self.position.realized_funding_fee_in_usd;
         let mut borrowing_fee_total_usd = self.position.realized_borrowing_fee_in_usd;
@@ -239,10 +241,9 @@ impl PositionProcessor<'_> {
             self.position.position_size.cast::<i128>()?,
             funding_fee_amount_per_size.safe_sub(self.position.open_funding_fee_amount_per_size)?,
         )?;
-        let price_data = oracle_map.get_price_data(&self.position.margin_mint)?;
 
         if self.position.is_long {
-            let funding_fee_usd = cal_utils::token_to_usd_i(funding_fee, 8u8, price_data.price)?;
+            let funding_fee_usd = cal_utils::token_to_usd_i(funding_fee, trade_token_decimals, margin_mint_price)?;
             funding_fee_total_usd = funding_fee_total_usd.safe_add(funding_fee_usd)?;
         } else {
             funding_fee_total_usd = funding_fee_total_usd.safe_add(funding_fee)?;
@@ -259,7 +260,7 @@ impl PositionProcessor<'_> {
             initial_margin_leverage,
         )?;
         borrowing_fee_total_usd =
-            borrowing_fee_total_usd.safe_add(borrowing_fee.safe_mul(price_data.price)?)?;
+            borrowing_fee_total_usd.safe_add(borrowing_fee.safe_mul(margin_mint_price)?)?;
         Ok(funding_fee_total_usd
             .safe_add(borrowing_fee_total_usd.cast()?)?
             .safe_add(self.position.close_fee_in_usd.cast()?)?)
@@ -439,6 +440,7 @@ impl PositionProcessor<'_> {
         let trade_token = &mut trade_token_loader.load_mut().unwrap();
         let market = &mut market_account_loader.load_mut().unwrap();
         let position_un_pnl_usd = self.get_position_un_pnl_usd(params.execute_price)?;
+        let margin_mint_token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
         self.update_borrowing_fee(pool, params.execute_price, trade_token)?;
         self.update_funding_fee(market, params.execute_price, trade_token)?;
         let response = self.update_decrease_position(
@@ -447,7 +449,7 @@ impl PositionProcessor<'_> {
             params.is_cross_margin,
             position_un_pnl_usd,
             trade_token.decimals,
-            oracle_map.get_price_data(&self.position.margin_mint)?.price,
+            margin_mint_token_price,
             market,
             state_account,
             trade_token,
@@ -576,13 +578,13 @@ impl PositionProcessor<'_> {
         market: &Market,
         state: &State,
     ) -> BumpResult<u128> {
-        let token_price = oracle_map.get_price_data(&self.position.margin_mint)?.price;
+        let token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
         let max_reduce_margin_in_usd = self.position.initial_margin_usd.safe_sub(
             cal_utils::div_rate_u(
                 self.position.position_size,
                 market.market_trade_config.max_leverage,
             )?
-            .max(state.min_order_margin_usd),
+                .max(state.min_order_margin_usd),
         )?;
         validate!(
             max_reduce_margin_in_usd > params.update_margin_amount,
@@ -596,10 +598,10 @@ impl PositionProcessor<'_> {
 
         if self.position.cross_margin
             && self
-                .position
-                .initial_margin_usd
-                .safe_sub(self.position.initial_margin_usd_from_portfolio)?
-                < reduce_margin_amount
+            .position
+            .initial_margin_usd
+            .safe_sub(self.position.initial_margin_usd_from_portfolio)?
+            < reduce_margin_amount
         {
             self.position.sub_initial_margin_usd_from_portfolio(
                 reduce_margin_amount
@@ -636,7 +638,7 @@ impl PositionProcessor<'_> {
         oracle_map: &mut OracleMap,
         mut pool: &mut Pool,
     ) -> BumpResult<()> {
-        let token_price = oracle_map.get_price_data(&self.position.margin_mint)?.price;
+        let token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
 
         validate!(
             params.update_margin_amount
@@ -682,14 +684,14 @@ impl PositionProcessor<'_> {
         is_cross_margin: bool,
         pnl: i128,
         decimals: u8,
-        token_price: u128,
+        margin_mint_token_price: u128,
         market: &Market,
         state: &State,
         trade_token: &TradeToken,
     ) -> BumpResult<UpdateDecreaseResponse> {
         let mut response = UpdateDecreaseResponse::default();
         response.is_liquidation = is_liquidation;
-        response.margin_token_price = token_price;
+        response.margin_token_price = margin_mint_token_price;
 
         let (settle_borrowing_fee, settle_borrowing_fee_in_usd) =
             self.cal_decrease_borrowing_fee(decrease_size)?;
@@ -698,7 +700,7 @@ impl PositionProcessor<'_> {
         let (settle_close_fee, settle_close_fee_in_usd) = self.cal_decrease_close_fee(
             decrease_size,
             trade_token,
-            token_price,
+            margin_mint_token_price,
             market.market_trade_config.close_fee_rate,
         )?;
 
@@ -746,7 +748,7 @@ impl PositionProcessor<'_> {
                         .safe_add(pnl)?
                         .safe_sub(self.get_position_mm(market, state)?.cast::<i128>()?)?,
                     decimals,
-                    token_price,
+                    margin_mint_token_price,
                 )?
             } else {
                 0i128
@@ -766,7 +768,7 @@ impl PositionProcessor<'_> {
                         settle_close_fee_in_usd,
                     )?)?,
                 decimals,
-                token_price,
+                margin_mint_token_price,
             )?;
         }
 
@@ -780,7 +782,7 @@ impl PositionProcessor<'_> {
             .safe_sub(response.settle_fee)?;
         //(settle_margin - decrease_margin) * price / decimal
         response.user_realized_pnl =
-            cal_utils::token_to_usd_i(response.user_realized_pnl_token, decimals, token_price)?;
+            cal_utils::token_to_usd_i(response.user_realized_pnl_token, decimals, margin_mint_token_price)?;
         response.decrease_margin_in_usd_from_portfolio = if cal_utils::add_u128(
             response.decrease_margin_in_usd,
             self.position.initial_margin_usd_from_portfolio,
@@ -863,7 +865,7 @@ impl PositionProcessor<'_> {
                     trade_token.decimals,
                     token_price,
                 )
-                .unwrap(),
+                    .unwrap(),
                 self.position.close_fee_in_usd,
             ));
         }
@@ -1093,7 +1095,7 @@ impl PositionProcessor<'_> {
         if response.user_realized_pnl_token >= 0i128 {
             if response.settle_fee < 0i128
                 && response.user_realized_pnl_token.abs().cast::<u128>()?
-                    < response.settle_fee.abs().cast::<u128>()?
+                < response.settle_fee.abs().cast::<u128>()?
             {
                 user_processor.user.sub_user_token_amount(
                     &self.position.margin_mint,
@@ -1130,7 +1132,7 @@ impl PositionProcessor<'_> {
                 state_account.bump_signer_nonce,
                 response.pool_pnl_token.abs().cast::<u128>()?,
             )
-            .unwrap();
+                .unwrap();
         } else if response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)? > 0i128 {
             token::receive(
                 token_program,
@@ -1139,7 +1141,7 @@ impl PositionProcessor<'_> {
                 bump_signer,
                 response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)?.cast::<u128>()?,
             )
-            .unwrap();
+                .unwrap();
         }
 
         if !response.is_liquidation {
@@ -1180,7 +1182,7 @@ impl PositionProcessor<'_> {
             state_account.bump_signer_nonce,
             response.settle_margin.abs().cast::<u128>()?,
         )
-        .unwrap();
+            .unwrap();
         Ok(())
     }
 

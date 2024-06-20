@@ -84,7 +84,8 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
 
     let remaining_accounts = ctx.remaining_accounts;
 
-    let AccountMaps { mut oracle_map, .. } = load_maps(remaining_accounts, &state_account.admin)?;
+    let AccountMaps { mut oracle_map, trade_token_map, .. } =
+        load_maps(remaining_accounts, &state_account.admin)?;
     let user_map = UserMap::load(remaining_accounts, ctx.program_id)?;
     let vault_vec = VaultMap::load_vec(remaining_accounts)?;
 
@@ -107,8 +108,9 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
             user_token.user_token_account_key.eq(user_token_account.to_account_info().key),
             BumpErrorCode::InvalidTokenAccount
         )?;
-
         let mut position_processor = PositionProcessor { position };
+        let index_trade_token =
+            trade_token_map.get_trade_token(&position_processor.position.index_mint)?;
         position_processor.decrease_position(
             DecreasePositionParams {
                 order_id: 0,
@@ -116,10 +118,7 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
                 is_cross_margin: position_processor.position.cross_margin,
                 margin_token: position_processor.position.margin_mint,
                 decrease_size: position_processor.position.position_size,
-                execute_price: oracle_map
-                    .get_price_data(&position_processor.position.index_mint)
-                    .unwrap()
-                    .price,
+                execute_price: oracle_map.get_price_data(&index_trade_token.oracle).unwrap().price,
             },
             &user_account_loader,
             pool_account_loader,

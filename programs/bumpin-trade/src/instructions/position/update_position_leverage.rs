@@ -1,3 +1,6 @@
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Token, TokenAccount};
+
 use crate::errors::BumpErrorCode;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::position_processor::PositionProcessor;
@@ -8,34 +11,68 @@ use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::utils::pda;
-use crate::{can_sign_for_user, validate};
-use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
+use crate::validate;
 
 #[derive(Accounts)]
+#[instruction(
+    _market_index: u16, _pool_index: u16, _trade_token_index: u16,
+)]
 pub struct UpdatePositionLeverage<'info> {
     #[account(
         mut,
-        constraint = can_sign_for_user(& user_account, & authority) ?
+        seeds = [b"user", authority.key().as_ref()],
+        bump,
     )]
-    pub user_account: AccountLoader<'info, User>,
+    pub user: AccountLoader<'info, User>,
+
     pub authority: Signer<'info>,
-    pub trade_token: AccountLoader<'info, TradeToken>,
-    pub pool: AccountLoader<'info, Pool>,
-    pub state: Box<Account<'info, State>>,
-    pub market: AccountLoader<'info, Market>,
+
     #[account(
         mut,
-        constraint = & pool_vault.mint.eq(& user_token_account.mint),
+        constraint = pool_mint_vault.mint.eq(& user_token_account.mint),
         token::authority = authority
     )]
     pub user_token_account: Box<Account<'info, TokenAccount>>,
-    pub pool_vault: Box<Account<'info, TokenAccount>>,
 
+    #[account(
+        mut,
+        seeds = [b"bump_state".as_ref()],
+        bump,
+    )]
+    pub state: Box<Account<'info, State>>,
+
+    #[account(
+        seeds = [b"trade_token", _trade_token_index.to_le_bytes().as_ref()],
+        bump,
+        constraint = trade_token.load() ?.mint.eq(& user_token_account.mint),
+    )]
+    pub trade_token: AccountLoader<'info, TradeToken>,
+
+    #[account(
+        seeds = [b"pool", _pool_index.to_le_bytes().as_ref()],
+        bump,
+        constraint = pool.load() ?.pool_mint.eq(& user_token_account.mint),
+    )]
+    pub pool: AccountLoader<'info, Pool>,
+
+    #[account(
+        seeds = [b"market", _market_index.to_le_bytes().as_ref()],
+        bump,
+        constraint = (market.load() ?.pool_mint.eq(& user_token_account.mint) || market.load() ?.pool_key.eq(& user_token_account.mint)) && market.load() ?.pool_key.eq(& pool.load() ?.pool_key) || market.load() ?.stable_pool_key.eq(& pool.load() ?.pool_key),
+    )]
+    pub market: AccountLoader<'info, Market>,
+
+    #[account(
+        seeds = [b"pool_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        bump,
+        token::mint = pool.load()?.pool_mint,
+        token::authority = bump_signer
+    )]
+    pub pool_mint_vault: Box<Account<'info, TokenAccount>>,
     #[account(
         constraint = state.bump_signer.eq(& bump_signer.key())
     )]
-    /// CHECK: ?
+    /// CHECK: forced drift_signer
     pub bump_signer: AccountInfo<'info>,
     pub token_program: Program<'info, Token>,
 }
@@ -52,8 +89,11 @@ pub struct UpdatePositionLeverageParams {
 pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, UpdatePositionLeverage>,
     params: UpdatePositionLeverageParams,
-) -> anchor_lang::Result<()> {
-    let user_mut = &mut ctx.accounts.user_account.load_mut()?;
+    _market_index: u16,
+    _pool_index: u16,
+    _trade_token_index: u16,
+) -> Result<()> {
+    let user_mut = &mut ctx.accounts.user.load_mut()?;
     let trade_token = ctx.accounts.trade_token.load_mut()?;
 
     let remaining_accounts = ctx.remaining_accounts;
@@ -80,20 +120,20 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
         BumpErrorCode::AmountNotEnough.into()
     )?;
 
-    let token_price = oracle_map.get_price_data(&trade_token.mint)?.price;
+    let token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
 
     position_processor.update_leverage(
         token_price,
         params,
         position_key,
-        &ctx.accounts.user_account,
+        &ctx.accounts.user,
         &ctx.accounts.authority,
         &ctx.accounts.trade_token,
         &ctx.accounts.pool,
         &ctx.accounts.state,
         &ctx.accounts.market,
         &ctx.accounts.user_token_account,
-        &ctx.accounts.pool_vault,
+        &ctx.accounts.pool_mint_vault,
         &ctx.accounts.bump_signer,
         &ctx.accounts.token_program,
         &trade_token_map,

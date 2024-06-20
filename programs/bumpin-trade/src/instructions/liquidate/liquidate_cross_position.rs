@@ -81,7 +81,11 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
 
         let market = &mut market_map.get_mut_ref(&user_position.symbol)?;
         let mut market_processor = MarketProcessor { market };
-        market_processor.update_market_funding_fee_rate(&ctx.accounts.state, &mut oracle_map)?;
+        let oracle = &trade_token_map.get_trade_token(&user_position.margin_mint)?.oracle;
+        market_processor.update_market_funding_fee_rate(
+            &ctx.accounts.state,
+            oracle_map.get_price_data(oracle).unwrap().price,
+        )?;
         drop(market_processor);
     }
 
@@ -110,9 +114,10 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
             }
 
             let market = market_map.get_ref(&position_processor.position.symbol)?;
+            let index_trade_token =
+                trade_token_map.get_trade_token(&position_processor.position.index_mint)?;
 
-            let index_price =
-                oracle_map.get_price_data(&position_processor.position.index_mint).unwrap().price;
+            let index_price = oracle_map.get_price_data(&index_trade_token.oracle).unwrap().price;
             let bankruptcy_price = cal_utils::format_to_ticker_size(
                 if position_processor.position.is_long {
                     cal_utils::mul_small_rate_u(

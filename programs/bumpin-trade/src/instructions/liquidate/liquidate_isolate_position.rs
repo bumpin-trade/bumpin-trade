@@ -16,7 +16,7 @@ use crate::validate;
 
 #[derive(Accounts)]
 #[instruction(
-    _market_index: u16, _pool_index: u16, _stable_pool_index: u16, _trade_token_index: u16, _user_authority_key: Pubkey
+    _market_index: u16, _pool_index: u16, _stable_pool_index: u16, _trade_token_index: u16, _index_trade_token_index: u16, _user_authority_key: Pubkey
 )]
 pub struct LiquidateIsolatePosition<'info> {
     #[account(
@@ -85,6 +85,13 @@ pub struct LiquidateIsolatePosition<'info> {
     pub trade_token: AccountLoader<'info, TradeToken>,
 
     #[account(
+        mut,
+        seeds = [b"trade_token", _trade_token_index.to_le_bytes().as_ref()],
+        bump,
+    )]
+    pub index_trade_token: AccountLoader<'info, TradeToken>,
+
+    #[account(
         seeds = [b"trade_token_vault".as_ref(), _trade_token_index.to_le_bytes().as_ref()],
         bump,
     )]
@@ -107,6 +114,7 @@ pub fn handle_liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
     _market_index: u16,
     _pool_index: u16,
     _stable_pool_index: u16,
+    _index_trade_token_index: u16,
     _user_authority_key: Pubkey,
 ) -> Result<()> {
     let user = &mut ctx.accounts.user.load_mut()?;
@@ -119,7 +127,11 @@ pub fn handle_liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
     let mut oracle_map = OracleMap::load(remaining_accounts)?;
 
     let mut market_processor = MarketProcessor { market };
-    market_processor.update_market_funding_fee_rate(&ctx.accounts.state, &mut oracle_map)?;
+    let trade_token = ctx.accounts.trade_token.load()?;
+    market_processor.update_market_funding_fee_rate(
+        &ctx.accounts.state,
+        oracle_map.get_price_data(&trade_token.oracle)?.price,
+    )?;
 
     let pool = &mut ctx.accounts.pool.load_mut().unwrap();
     let stable_pool = &mut ctx.accounts.stable_pool.load_mut().unwrap();
@@ -131,14 +143,17 @@ pub fn handle_liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
     pool_processor.update_pool_borrowing_fee_rate()?;
 
     let mut position_processor = PositionProcessor { position: user_position };
+    let margin_token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
     let liquidation_price = position_processor.get_liquidation_price(
         &market,
         &pool,
         &ctx.accounts.state,
-        &mut oracle_map,
+        margin_token_price,
+        trade_token.decimals
     )?;
+    let index_trade_token = ctx.accounts.index_trade_token.load()?;
 
-    let index_price = oracle_map.get_price_data(&position_processor.position.index_mint)?;
+    let index_price = oracle_map.get_price_data(&index_trade_token.oracle)?;
     if (position_processor.position.is_long && index_price.price > liquidation_price)
         || (!position_processor.position.is_long && index_price.price < liquidation_price)
     {
