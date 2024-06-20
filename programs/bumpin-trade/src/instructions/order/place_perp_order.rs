@@ -121,111 +121,111 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
     order: PlaceOrderParams,
 ) -> Result<()> {
-    let market = ctx.accounts.market.load()?;
-    let mut user = ctx.accounts.user_account.load_mut()?;
-    let pool = ctx.accounts.pool.load()?;
-    let token = &ctx.accounts.margin_token;
-    let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
-        &mut ctx.remaining_accounts.iter().peekable();
-    let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts_iter)?;
-    let token_price = oracle_map.get_price_data(&token.mint).unwrap().price;
-    validate!(
-        validate_place_order(
-            &order,
-            &token.mint,
-            &market,
-            &pool,
-            &ctx.accounts.state,
-            token_price
-        )?,
-        BumpErrorCode::InvalidParam.into()
-    )?;
-
-    if order.position_side == PositionSide::INCREASE && !order.is_cross_margin {
-        //isolate order, transfer order_margin into pool
-        token::receive(
-            &ctx.accounts.token_program,
-            &ctx.accounts.user_token_account,
-            if order.order_side.eq(&OrderSide::LONG) {
-                &ctx.accounts.pool_vault
-            } else {
-                &ctx.accounts.stable_pool_vault
-            },
-            &ctx.accounts.authority,
-            order.order_margin,
-        )?;
-    }
-    if order.position_side.eq(&PositionSide::INCREASE) && order.is_cross_margin {
-        //hold usd
-        user.add_order_hold_in_usd(order.order_margin)?;
-    }
-
-    if user.has_other_short_order(order.symbol, token.mint, order.is_cross_margin)? {
-        return Err(BumpErrorCode::OnlyOneShortOrderAllowed.into());
-    }
-
-    let order_id = get_then_update_id!(user, next_order_id);
-    let mut user_order = UserOrder {
-        authority: user.authority,
-        order_id,
-        symbol: order.symbol,
-        order_side: order.order_side,
-        position_side: order.position_side,
-        order_type: order.order_type,
-        stop_type: order.stop_type,
-        cross_margin: order.is_cross_margin,
-        margin_mint: token.mint,
-        order_margin: order.order_margin,
-        leverage: order.leverage,
-        order_size: order.size,
-        trigger_price: order.trigger_price,
-        acceptable_price: order.acceptable_price,
-        time: cal_utils::current_time(),
-        status: OrderStatus::USING,
-    };
-
-    if order.order_type.eq(&OrderType::MARKET) {
-        //execute order
-        let user_account_loader = &ctx.accounts.user_account;
-        let margin_token_account = &ctx.accounts.margin_token;
-        let pool_account_loader = &ctx.accounts.pool;
-        let stable_pool_account_loader = &ctx.accounts.stable_pool;
-        let market_account_loader = &ctx.accounts.market;
-        let state_account = &ctx.accounts.state;
-        let user_token_account = &ctx.accounts.user_token_account;
-        let pool_vault_account = &ctx.accounts.pool_vault;
-        let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
-        let trade_token_loader = &ctx.accounts.trade_token;
-        let trade_token_vault_account = &ctx.accounts.trade_token_vault;
-        let bump_signer_account_info = &ctx.accounts.bump_signer;
-        let token_program = &ctx.accounts.token_program;
-
-        return handle_execute_order(
-            user_account_loader,
-            margin_token_account,
-            pool_account_loader,
-            stable_pool_account_loader,
-            market_account_loader,
-            state_account,
-            user_token_account,
-            pool_vault_account,
-            stable_pool_vault_account,
-            trade_token_loader,
-            trade_token_vault_account,
-            bump_signer_account_info,
-            token_program,
-            ctx.program_id,
-            &trade_token_map,
-            &mut oracle_map,
-            &mut user_order,
-            order_id,
-            false,
-        );
-    } else {
-        //store order, wait to execute
-        let next_index = user.next_usable_order_index()?;
-        user.add_order(user_order, next_index)?;
-    }
+    // let market = ctx.accounts.market.load()?;
+    // let mut user = ctx.accounts.user_account.load_mut()?;
+    // let pool = ctx.accounts.pool.load()?;
+    // let token = &ctx.accounts.margin_token;
+    // let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
+    //     &mut ctx.remaining_accounts.iter().peekable();
+    // let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts_iter)?;
+    // let token_price = oracle_map.get_price_data(&token.mint).unwrap().price;
+    // validate!(
+    //     validate_place_order(
+    //         &order,
+    //         &token.mint,
+    //         &market,
+    //         &pool,
+    //         &ctx.accounts.state,
+    //         token_price
+    //     )?,
+    //     BumpErrorCode::InvalidParam.into()
+    // )?;
+    //
+    // if order.position_side == PositionSide::INCREASE && !order.is_cross_margin {
+    //     //isolate order, transfer order_margin into pool
+    //     token::receive(
+    //         &ctx.accounts.token_program,
+    //         &ctx.accounts.user_token_account,
+    //         if order.order_side.eq(&OrderSide::LONG) {
+    //             &ctx.accounts.pool_vault
+    //         } else {
+    //             &ctx.accounts.stable_pool_vault
+    //         },
+    //         &ctx.accounts.authority,
+    //         order.order_margin,
+    //     )?;
+    // }
+    // if order.position_side.eq(&PositionSide::INCREASE) && order.is_cross_margin {
+    //     //hold usd
+    //     user.add_order_hold_in_usd(order.order_margin)?;
+    // }
+    //
+    // if user.has_other_short_order(order.symbol, token.mint, order.is_cross_margin)? {
+    //     return Err(BumpErrorCode::OnlyOneShortOrderAllowed.into());
+    // }
+    //
+    // let order_id = get_then_update_id!(user, next_order_id);
+    // let mut user_order = UserOrder {
+    //     authority: user.authority,
+    //     order_id,
+    //     symbol: order.symbol,
+    //     order_side: order.order_side,
+    //     position_side: order.position_side,
+    //     order_type: order.order_type,
+    //     stop_type: order.stop_type,
+    //     cross_margin: order.is_cross_margin,
+    //     margin_mint: token.mint,
+    //     order_margin: order.order_margin,
+    //     leverage: order.leverage,
+    //     order_size: order.size,
+    //     trigger_price: order.trigger_price,
+    //     acceptable_price: order.acceptable_price,
+    //     time: cal_utils::current_time(),
+    //     status: OrderStatus::USING,
+    // };
+    //
+    // if order.order_type.eq(&OrderType::MARKET) {
+    //     //execute order
+    //     let user_account_loader = &ctx.accounts.user_account;
+    //     let margin_token_account = &ctx.accounts.margin_token;
+    //     let pool_account_loader = &ctx.accounts.pool;
+    //     let stable_pool_account_loader = &ctx.accounts.stable_pool;
+    //     let market_account_loader = &ctx.accounts.market;
+    //     let state_account = &ctx.accounts.state;
+    //     let user_token_account = &ctx.accounts.user_token_account;
+    //     let pool_vault_account = &ctx.accounts.pool_vault;
+    //     let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
+    //     let trade_token_loader = &ctx.accounts.trade_token;
+    //     let trade_token_vault_account = &ctx.accounts.trade_token_vault;
+    //     let bump_signer_account_info = &ctx.accounts.bump_signer;
+    //     let token_program = &ctx.accounts.token_program;
+    //
+    //     return handle_execute_order(
+    //         user_account_loader,
+    //         margin_token_account,
+    //         pool_account_loader,
+    //         stable_pool_account_loader,
+    //         market_account_loader,
+    //         state_account,
+    //         user_token_account,
+    //         pool_vault_account,
+    //         stable_pool_vault_account,
+    //         trade_token_loader,
+    //         trade_token_vault_account,
+    //         bump_signer_account_info,
+    //         token_program,
+    //         ctx.program_id,
+    //         &trade_token_map,
+    //         &mut oracle_map,
+    //         &mut user_order,
+    //         order_id,
+    //         false,
+    //     );
+    // } else {
+    //     //store order, wait to execute
+    //     let next_index = user.next_usable_order_index()?;
+    //     user.add_order(user_order, next_index)?;
+    // }
     Ok(())
 }
 
@@ -412,12 +412,10 @@ fn validate_place_order(
     state: &State,
     token_price: u128,
 ) -> BumpResult<bool> {
-    let mut res = true;
-    match order.order_type {
-        OrderType::NONE => res = false,
-        OrderType::MARKET => {}
-        OrderType::LIMIT => {}
-        OrderType::STOP => {}
+
+    let mut res = match order.order_type {
+        OrderType::NONE => false,
+        _ => true
     };
 
     if order.position_side.eq(&PositionSide::DECREASE) && order.size == 0u128 {

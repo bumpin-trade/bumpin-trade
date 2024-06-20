@@ -20,6 +20,8 @@ import {
     TOKEN_PROGRAM_ID
 } from "@solana/spl-token";
 import BN from "bn.js";
+import {PlaceOrderParams} from "../exchange/order_params";
+import {BumpinMarket, BumpinPlayer, BumpinTradeToken} from "../exchange/exchange";
 
 export class Utils {
     provider = anchor.AnchorProvider.local();
@@ -51,7 +53,6 @@ export class Utils {
             await this.airdrop_lamports(provider, user.publicKey, lamports * lamportMultiplier);
         }
         return user;
-
     }
 
 
@@ -146,16 +147,16 @@ export class Utils {
         }).signers([admin]).rpc();
     }
 
-    public async initialize_oracle(oracle: anchor.web3.Keypair, initPrice: number, confidence = undefined, expo = -4): Promise<void> {
-        const conf = new BN(confidence) || new BN((initPrice / 10) * 10 ** -expo);
-        await this.programPyth.methods.initialize(
-            new anchor.BN(initPrice),
-            expo,
-            conf
-        ).accounts({
-            price: oracle.publicKey,
-        }).rpc();
-    }
+    // public async initialize_oracle(oracle: anchor.web3.Keypair, initPrice: number, confidence = undefined, expo = -4): Promise<void> {
+    //     const conf = new BN(confidence) || new BN((initPrice / 10) * 10 ** -expo);
+    //     await this.programPyth.methods.initialize(
+    //         new anchor.BN(initPrice),
+    //         expo,
+    //         conf
+    //     ).accounts({
+    //         price: oracle.publicKey,
+    //     }).rpc();
+    // }
 
 
     public async initialize_trade_token(tradeTokenMint: PublicKey, admin: anchor.web3.Keypair, oracle: PublicKey, discount: BN, liquidationFactor: BN): Promise<void> {
@@ -194,6 +195,30 @@ export class Utils {
         }).signers([authority]).rpc();
     }
 
+
+    public async placePerpOrder(player: BumpinPlayer,
+                                market: BumpinMarket,
+                                tradeToken: BumpinTradeToken,
+                                param: PlaceOrderParams
+    ): Promise<void> {
+
+        await this.program.methods.placeOrder(
+            param
+        ).accounts({
+            userAccount: player.getPda()[0],
+            authority: player.user.publicKey,
+            marginToken: market.pool.mint.publicKey,
+            pool: market.pool.getPda()[0],
+            stablePool: market.stablePool.getPda()[0],
+            market: market.getPda()[0],
+            poolVault: market.pool.mint.publicKey,
+            stablePoolVault: market.stablePool.mint.publicKey,
+            tradeToken: tradeToken.getPda()[0],
+            tradeTokenVault: tradeToken.mint.publicKey,
+            userTokenAccount: player.getTradeTokenAccount(tradeToken.tradeTokenName).address,
+            bumpSigner: this.getStatePda()[0],
+        }).signers([player.user]).rpc();
+    }
 
     public async manualCreateAccount(provider: Provider, fromPk: anchor.web3.Keypair, newAccountPk: anchor.web3.Keypair, space: number, lamports: number, programId: PublicKey) {
         let i = anchor.web3.SystemProgram.createAccount({
@@ -257,11 +282,5 @@ export class Utils {
         return JSON.parse(paramsData);
     }
 
-    public get_bump_state_pk(): PublicKey {
-        return this.bump_state_pk;
-    }
 
-    public get_bump_state_nonce(): number {
-        return this.bump_state_nonce;
-    }
 }

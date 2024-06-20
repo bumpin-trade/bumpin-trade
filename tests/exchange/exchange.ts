@@ -45,6 +45,16 @@ export class BumpinPlayer {
     public getTradeTokenAccount(tradeTokenName: string) {
         return this.tradeTokenAccounts.get(tradeTokenName);
     }
+
+    public getPda(): [PublicKey, number] {
+        const [address, nonce] = PublicKey.findProgramAddressSync(
+            [Buffer.from("user"), this.user.publicKey.toBuffer()],
+            this.program.programId
+        );
+
+        return [address, nonce];
+
+    }
 }
 
 
@@ -79,6 +89,7 @@ export class BumpinPool {
         );
         return [address, nonce];
     }
+
 }
 
 export class BumpinMarket {
@@ -90,19 +101,30 @@ export class BumpinMarket {
     pool: BumpinPool;
     indexToken: BumpinTradeToken;
     stablePool: BumpinPool;
+    numberOfMarkets: number;
 
-    constructor(symbol: string, payer: Keypair, pool: BumpinPool, indexToken: BumpinTradeToken, stablePool: BumpinPool) {
+    constructor(symbol: string, payer: Keypair, pool: BumpinPool, indexToken: BumpinTradeToken, stablePool: BumpinPool, numberOfMarkets: number) {
         this.symbol = symbol;
         this.payer = payer;
         this.pool = pool;
         this.indexToken = indexToken;
         this.stablePool = stablePool;
+        this.numberOfMarkets = numberOfMarkets;
     }
 
     public async initializeMarket() {
         let [poolPda, _] = this.pool.getPda();
         let [stablePoolPda, __] = this.stablePool.getPda();
         await this.utils.initialize_market(this.symbol, this.payer, poolPda, stablePoolPda, this.indexToken.mint.publicKey);
+    }
+
+    public getPda(): [PublicKey, number] {
+        const stateNumberOfMarketsBytes = new Uint8Array(new Uint16Array([this.numberOfMarkets]).buffer);
+        const [address, nonce] = PublicKey.findProgramAddressSync(
+            [Buffer.from("market"), stateNumberOfMarketsBytes],
+            this.program.programId
+        );
+        return [address, nonce];
     }
 
 }
@@ -137,6 +159,16 @@ export class BumpinTradeToken {
     public getMint() {
         return this.mint;
     }
+
+    public getPda(): [PublicKey, number] {
+        const stateNumberOfTradeTokensBytes = new Uint8Array(new Uint16Array([this.numberOfTradeTokens]).buffer);
+        const [address, nonce] = PublicKey.findProgramAddressSync(
+            [Buffer.from("trade_token"), stateNumberOfTradeTokensBytes],
+            this.program.programId
+        );
+        return [address, nonce];
+
+    }
 }
 
 export class BumpinExchangeMocker {
@@ -153,6 +185,7 @@ export class BumpinExchangeMocker {
     players: BumpinPlayer[] = [];
     pools: BumpinPool[] = [];
     tradeTokens: Map<string, BumpinTradeToken> = new Map<string, BumpinTradeToken>();
+    markets: Map<string, BumpinMarket> = new Map<string, BumpinMarket>();
 
     public async initialize(params: ExchangeInitializeParams) {
         this.initialize_params = params;
@@ -197,12 +230,14 @@ export class BumpinExchangeMocker {
             }
         }
 
-        for (let marketInfo of params.marketInfos) {
+        for (let i = 0; i < params.marketInfos.length; i++) {
+            let marketInfo = params.marketInfos[i];
             let pool = this.pools.find(pool => pool.poolName === marketInfo.poolName);
             let indexToken = this.tradeTokens.get(marketInfo.indexTokenName);
             let stablePool = this.pools.find(pool => pool.poolName === marketInfo.stablePoolName);
-            let market = new BumpinMarket(marketInfo.symbol, this.payer, pool, indexToken, stablePool);
+            let market = new BumpinMarket(marketInfo.symbol, this.payer, pool, indexToken, stablePool, i);
             await market.initializeMarket();
+            this.markets.set(marketInfo.symbol, market);
         }
 
         this.initialized = true;
@@ -226,6 +261,10 @@ export class BumpinExchangeMocker {
 
     public getTradeToken(tradeTokenName: string) {
         return this.tradeTokens.get(tradeTokenName);
+    }
+
+    public getMarket(symbol: string) {
+        return this.markets.get(symbol);
     }
 
     public getTradeTokens() {

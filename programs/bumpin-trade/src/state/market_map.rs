@@ -88,6 +88,7 @@ impl<'a> MarketMap<'a> {
         let mut perp_market_map: MarketMap = MarketMap(BTreeMap::new());
         let market_discriminator: [u8; 8] = Market::discriminator();
         while let Some(account_info) = account_info_iter.next() {
+
             let data =
                 account_info.try_borrow_data().or(Err(BumpErrorCode::CouldNotLoadMarketData))?;
 
