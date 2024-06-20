@@ -27,13 +27,13 @@ pub struct ClaimRewards<'info> {
     )]
     pub user: AccountLoader<'info, User>,
 
+    pub authority: Signer<'info>,
+
     #[account(
         constraint = state.bump_signer.eq(& bump_signer.key())
     )]
     /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
-
-    pub authority: Signer<'info>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -42,7 +42,7 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, ClaimRewards<'c>>,
 ) -> Result<()> {
     let remaining_accounts = ctx.remaining_accounts;
-    let AccountMaps { pool_map: pool_key_map, .. } =
+    let AccountMaps { pool_map, .. } =
         load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
     let token_account_vec = VaultMap::load_vec(remaining_accounts)?;
 
@@ -54,7 +54,7 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
             continue;
         }
 
-        let pool_account_loader = pool_key_map.get_account_loader(&user_stake.pool_key)?;
+        let pool_account_loader = pool_map.get_account_loader(&user_stake.pool_key)?;
         update_account_fee_reward(&ctx.accounts.user, pool_account_loader)?;
         let pool = pool_account_loader.load()?;
         let user = ctx.accounts.user.load()?;

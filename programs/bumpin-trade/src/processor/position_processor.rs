@@ -14,7 +14,7 @@ use crate::processor::fee_processor;
 use crate::processor::market_processor::{MarketProcessor, UpdateOIParams};
 use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::user_processor::UserProcessor;
-use crate::state::infrastructure::user_position::UserPosition;
+use crate::state::infrastructure::user_position::{PositionStatus, UserPosition};
 use crate::state::market::Market;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
@@ -32,12 +32,11 @@ pub struct PositionProcessor<'a> {
 impl PositionProcessor<'_> {
     pub fn update_leverage<'info>(
         &mut self,
-        token_price: u128,
+        margin_mint_token_price: u128,
         params: UpdatePositionLeverageParams,
         position_key: Pubkey,
         user_account: &AccountLoader<'info, User>,
         authority: &Signer<'info>,
-        trade_token: &AccountLoader<'info, TradeToken>,
         pool: &AccountLoader<'info, Pool>,
         state: &Account<'info, State>,
         market: &AccountLoader<'info, Market>,
@@ -48,7 +47,7 @@ impl PositionProcessor<'_> {
         trade_token_map: &TradeTokenMap,
         oracle_map: &mut OracleMap,
     ) -> BumpResult<()> {
-        let trade_token = trade_token.load().unwrap();
+        let trade_token = trade_token_map.get_trade_token(&self.position.margin_mint)?;
         let pool = &mut pool.load_mut().unwrap();
 
         if self.position.position_size != 0u128 {
@@ -84,12 +83,12 @@ impl PositionProcessor<'_> {
                     add_margin_amount = cal_utils::usd_to_token_u(
                         add_margin_in_usd,
                         trade_token.decimals,
-                        token_price,
+                        margin_mint_token_price,
                     )?;
                     add_initial_margin_from_portfolio = cal_utils::token_to_usd_u(
                         add_margin_amount.min(available_amount),
                         trade_token.decimals,
-                        token_price,
+                        margin_mint_token_price,
                     )?;
                     user_processor.user.use_token(
                         &trade_token.mint,
@@ -120,7 +119,7 @@ impl PositionProcessor<'_> {
                         authority,
                         params.add_margin_amount,
                     )
-                        .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                    .map_err(|_e| BumpErrorCode::TransferFailed)?;
                 }
             } else {
                 self.position.set_leverage(params.leverage)?;
@@ -156,14 +155,18 @@ impl PositionProcessor<'_> {
                         state.bump_signer_nonce,
                         reduce_margin_amount,
                     )
-                        .unwrap();
+                    .map_err(|_e| BumpErrorCode::TransferFailed)?
                 }
             }
         }
         Ok(())
     }
 
-    pub fn get_position_value(&self, index_trade_token: &TradeToken, oracle_map: &mut OracleMap) -> BumpResult<(u128, i128, u128)> {
+    pub fn get_position_value(
+        &self,
+        index_trade_token: &TradeToken,
+        oracle_map: &mut OracleMap,
+    ) -> BumpResult<(u128, i128, u128)> {
         if self.position.cross_margin {
             let index_price_data = oracle_map.get_price_data(&index_trade_token.oracle)?;
 
@@ -187,7 +190,8 @@ impl PositionProcessor<'_> {
         margin_token_decimals: u8,
     ) -> BumpResult<u128> {
         let mm_usd = self.get_position_mm(market, state)?;
-        let position_fee_usd = self.get_position_fee(market, pool, margin_token_price, margin_token_decimals)?;
+        let position_fee_usd =
+            self.get_position_fee(market, pool, margin_token_price, margin_token_decimals)?;
         let position_value = if self.position.is_long {
             position_fee_usd.safe_add(
                 self.position
@@ -243,7 +247,8 @@ impl PositionProcessor<'_> {
         )?;
 
         if self.position.is_long {
-            let funding_fee_usd = cal_utils::token_to_usd_i(funding_fee, trade_token_decimals, margin_mint_price)?;
+            let funding_fee_usd =
+                cal_utils::token_to_usd_i(funding_fee, trade_token_decimals, margin_mint_price)?;
             funding_fee_total_usd = funding_fee_total_usd.safe_add(funding_fee_usd)?;
         } else {
             funding_fee_total_usd = funding_fee_total_usd.safe_add(funding_fee)?;
@@ -584,7 +589,7 @@ impl PositionProcessor<'_> {
                 self.position.position_size,
                 market.market_trade_config.max_leverage,
             )?
-                .max(state.min_order_margin_usd),
+            .max(state.min_order_margin_usd),
         )?;
         validate!(
             max_reduce_margin_in_usd > params.update_margin_amount,
@@ -598,10 +603,10 @@ impl PositionProcessor<'_> {
 
         if self.position.cross_margin
             && self
-            .position
-            .initial_margin_usd
-            .safe_sub(self.position.initial_margin_usd_from_portfolio)?
-            < reduce_margin_amount
+                .position
+                .initial_margin_usd
+                .safe_sub(self.position.initial_margin_usd_from_portfolio)?
+                < reduce_margin_amount
         {
             self.position.sub_initial_margin_usd_from_portfolio(
                 reduce_margin_amount
@@ -781,8 +786,11 @@ impl PositionProcessor<'_> {
             .safe_sub(response.settle_margin)?
             .safe_sub(response.settle_fee)?;
         //(settle_margin - decrease_margin) * price / decimal
-        response.user_realized_pnl =
-            cal_utils::token_to_usd_i(response.user_realized_pnl_token, decimals, margin_mint_token_price)?;
+        response.user_realized_pnl = cal_utils::token_to_usd_i(
+            response.user_realized_pnl_token,
+            decimals,
+            margin_mint_token_price,
+        )?;
         response.decrease_margin_in_usd_from_portfolio = if cal_utils::add_u128(
             response.decrease_margin_in_usd,
             self.position.initial_margin_usd_from_portfolio,
@@ -865,7 +873,7 @@ impl PositionProcessor<'_> {
                     trade_token.decimals,
                     token_price,
                 )
-                    .unwrap(),
+                .unwrap(),
                 self.position.close_fee_in_usd,
             ));
         }
@@ -1095,7 +1103,7 @@ impl PositionProcessor<'_> {
         if response.user_realized_pnl_token >= 0i128 {
             if response.settle_fee < 0i128
                 && response.user_realized_pnl_token.abs().cast::<u128>()?
-                < response.settle_fee.abs().cast::<u128>()?
+                    < response.settle_fee.abs().cast::<u128>()?
             {
                 user_processor.user.sub_user_token_amount(
                     &self.position.margin_mint,
@@ -1132,7 +1140,7 @@ impl PositionProcessor<'_> {
                 state_account.bump_signer_nonce,
                 response.pool_pnl_token.abs().cast::<u128>()?,
             )
-                .unwrap();
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
         } else if response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)? > 0i128 {
             token::receive(
                 token_program,
@@ -1141,7 +1149,7 @@ impl PositionProcessor<'_> {
                 bump_signer,
                 response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)?.cast::<u128>()?,
             )
-                .unwrap();
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
         }
 
         if !response.is_liquidation {
@@ -1182,7 +1190,7 @@ impl PositionProcessor<'_> {
             state_account.bump_signer_nonce,
             response.settle_margin.abs().cast::<u128>()?,
         )
-            .unwrap();
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
         Ok(())
     }
 
@@ -1194,6 +1202,7 @@ impl PositionProcessor<'_> {
     ) -> BumpResult<()> {
         let mut reduce_amount = change_token_amount;
         for position in &mut user.user_positions {
+            if position.status.eq(&PositionStatus::INIT) { continue; }
             if position.margin_mint.eq(token_mint) && position.cross_margin {
                 let change_amount;
 

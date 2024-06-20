@@ -33,15 +33,14 @@ use crate::{get_then_update_id, validate};
 pub struct PlaceOrder<'info> {
     #[account(
         mut,
-        constraint = can_sign_for_user(& user_account, & authority) ?
+        constraint = can_sign_for_user(& user, & authority) ?
     )]
-    pub user_account: AccountLoader<'info, User>,
+    pub user: AccountLoader<'info, User>,
 
     pub authority: Signer<'info>,
 
     #[account(
-        mut,
-        constraint = pool.load() ?.pool_mint.eq(& margin_token.key())
+        constraint = pool.load() ?.pool_mint.eq(& margin_token.key()) || stable_pool.load() ?.pool_mint.eq(& margin_token.key())
     )]
     pub margin_token: Account<'info, Mint>,
 
@@ -124,7 +123,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     order: PlaceOrderParams,
 ) -> Result<()> {
     let market = ctx.accounts.market.load()?;
-    let mut user = ctx.accounts.user_account.load_mut()?;
+    let mut user = ctx.accounts.user.load_mut()?;
     let pool = ctx.accounts.pool.load()?;
     let token = &ctx.accounts.margin_token;
     let trade_token = &ctx.accounts.trade_token.load()?;
@@ -190,7 +189,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
 
     if order.order_type.eq(&OrderType::MARKET) {
         //execute order
-        let user_account_loader = &ctx.accounts.user_account;
+        let user_account_loader = &ctx.accounts.user;
         let margin_token_account = &ctx.accounts.margin_token;
         let pool_account_loader = &ctx.accounts.pool;
         let stable_pool_account_loader = &ctx.accounts.stable_pool;

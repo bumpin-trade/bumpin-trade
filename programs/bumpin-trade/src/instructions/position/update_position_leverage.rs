@@ -2,20 +2,19 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::errors::BumpErrorCode;
-use crate::processor::optional_accounts::{load_maps, AccountMaps};
+use crate::processor::optional_accounts::{AccountMaps, load_maps};
 use crate::processor::position_processor::PositionProcessor;
 use crate::processor::user_processor::UserProcessor;
 use crate::state::market::Market;
 use crate::state::pool::Pool;
 use crate::state::state::State;
-use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::utils::pda;
 use crate::validate;
 
 #[derive(Accounts)]
 #[instruction(
-    _market_index: u16, _pool_index: u16, _trade_token_index: u16,
+    _market_index: u16, _pool_index: u16,
 )]
 pub struct UpdatePositionLeverage<'info> {
     #[account(
@@ -41,12 +40,6 @@ pub struct UpdatePositionLeverage<'info> {
     )]
     pub state: Box<Account<'info, State>>,
 
-    #[account(
-        seeds = [b"trade_token", _trade_token_index.to_le_bytes().as_ref()],
-        bump,
-        constraint = trade_token.load() ?.mint.eq(& user_token_account.mint),
-    )]
-    pub trade_token: AccountLoader<'info, TradeToken>,
 
     #[account(
         seeds = [b"pool", _pool_index.to_le_bytes().as_ref()],
@@ -91,10 +84,8 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
     params: UpdatePositionLeverageParams,
     _market_index: u16,
     _pool_index: u16,
-    _trade_token_index: u16,
 ) -> Result<()> {
-    let user_mut = &mut ctx.accounts.user.load_mut()?;
-    let trade_token = ctx.accounts.trade_token.load_mut()?;
+    let user = &mut ctx.accounts.user.load_mut()?;
 
     let remaining_accounts = ctx.remaining_accounts;
     let AccountMaps { trade_token_map, mut oracle_map, .. } =
@@ -106,29 +97,30 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
         BumpErrorCode::AmountNotEnough.into()
     )?;
 
-    let user_processor = UserProcessor { user: user_mut };
+    let user_processor = UserProcessor { user };
     let position_key = pda::generate_position_key(
         &user_processor.user.authority,
         params.symbol,
         params.is_cross_margin,
         &ctx.program_id,
     )?;
-    let position_mut = user_processor.user.find_position_mut_by_key(&position_key)?;
-    let mut position_processor = PositionProcessor { position: position_mut };
+    let position = user_processor.user.find_position_mut_by_key(&position_key)?;
+    let mut position_processor = PositionProcessor { position };
     validate!(
         position_processor.position.leverage != params.leverage,
         BumpErrorCode::AmountNotEnough.into()
     )?;
+    let margin_mint_trade_token =
+        trade_token_map.get_trade_token(&position_processor.position.margin_mint)?;
 
-    let token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
+    let margin_mint_token_price = oracle_map.get_price_data(&margin_mint_trade_token.oracle)?.price;
 
     position_processor.update_leverage(
-        token_price,
+        margin_mint_token_price,
         params,
         position_key,
         &ctx.accounts.user,
         &ctx.accounts.authority,
-        &ctx.accounts.trade_token,
         &ctx.accounts.pool,
         &ctx.accounts.state,
         &ctx.accounts.market,

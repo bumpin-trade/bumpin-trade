@@ -80,8 +80,13 @@ impl<'a> UserProcessor<'a> {
             {
                 total_un_pnl_usd = total_un_pnl_usd
                     .safe_add(position_processor.get_position_un_pnl_usd(index_price)?)?;
-                total_position_fee = total_position_fee
-                    .safe_add(position_processor.get_position_fee(&market, &pool, margin_token_price, trade_token.decimals)?)?;
+                total_position_fee =
+                    total_position_fee.safe_add(position_processor.get_position_fee(
+                        &market,
+                        &pool,
+                        margin_token_price,
+                        trade_token.decimals,
+                    )?)?;
                 total_position_mm = total_position_mm
                     .safe_add(position_processor.get_position_mm(&market, state)?)?;
                 total_size = total_size.safe_add(position_processor.position.position_size)?;
@@ -98,6 +103,7 @@ impl<'a> UserProcessor<'a> {
     ) -> BumpResult<u128> {
         let mut total_used_value = 0u128;
         for user_token in &self.user.user_tokens {
+            if user_token.user_token_status.eq(&UserTokenStatus::INIT) { continue; }
             let trade_token = trade_token_map.get_trade_token(&user_token.token_mint)?;
             let oracle_price = oracle_map.get_price_data(&trade_token.oracle)?;
             total_used_value = total_used_value
@@ -116,6 +122,7 @@ impl<'a> UserProcessor<'a> {
     ) -> BumpResult<u128> {
         let total_token_net_value = 0u128;
         for user_token in &self.user.user_tokens {
+            if user_token.user_token_status.eq(&UserTokenStatus::INIT) { continue; }
             let trade_token = trade_token_map.get_trade_token(&user_token.token_mint)?;
             let oracle_price = oracle_map.get_price_data(&trade_token.oracle)?;
             total_token_net_value
@@ -167,7 +174,8 @@ impl<'a> UserProcessor<'a> {
             }
 
             let position_processor = PositionProcessor { position: user_position };
-            let index_trade_token = trade_token_map.get_trade_token(&position_processor.position.index_mint)?;
+            let index_trade_token =
+                trade_token_map.get_trade_token(&position_processor.position.index_mint)?;
             let (initial_margin_usd_from_portfolio, position_un_pnl, mm_usd) =
                 position_processor.get_position_value(&index_trade_token, oracle_map)?;
 
@@ -201,7 +209,13 @@ impl<'a> UserProcessor<'a> {
             self.get_portfolio_net_value(&trade_token_map, &mut oracle_map)?;
         let used_value = self.get_total_used_value(&trade_token_map, &mut oracle_map)?;
         let (total_im_usd, total_un_pnl_usd, total_position_fee, total_position_mm, total_size) =
-            self.get_user_cross_position_value(state, &market_map, &pool_key_map, &trade_token_map, &mut oracle_map)?;
+            self.get_user_cross_position_value(
+                state,
+                &market_map,
+                &pool_key_map,
+                &trade_token_map,
+                &mut oracle_map,
+            )?;
 
         let cross_net_value = portfolio_net_value
             .safe_add(total_im_usd)?
@@ -327,7 +341,7 @@ impl<'a> UserProcessor<'a> {
                 state.bump_signer_nonce,
                 order.order_margin,
             )
-                .unwrap();
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
         }
         Ok(())
     }

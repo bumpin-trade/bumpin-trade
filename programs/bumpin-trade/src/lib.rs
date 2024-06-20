@@ -162,7 +162,7 @@ pub mod bumpin_trade {
         ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
         order_id: u128,
     ) -> Result<()> {
-        let user_account_loader = &ctx.accounts.user_account;
+        let user_account_loader = &ctx.accounts.user;
         let margin_token_account = &ctx.accounts.margin_token;
         let pool_account_loader = &ctx.accounts.pool;
         let stable_pool_account_loader = &ctx.accounts.stable_pool;
@@ -224,9 +224,8 @@ pub mod bumpin_trade {
         params: UpdatePositionLeverageParams,
         _market_index: u16,
         _pool_index: u16,
-        _trade_token_index: u16,
     ) -> Result<()> {
-        handle_update_position_leverage(ctx, params, _market_index, _pool_index, _trade_token_index)
+        handle_update_position_leverage(ctx, params, _market_index, _pool_index)
     }
 
     pub fn liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(

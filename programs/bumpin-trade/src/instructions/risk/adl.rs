@@ -17,11 +17,6 @@ use crate::validate;
 
 #[derive(Accounts)]
 pub struct ADL<'info> {
-    #[account(
-        mut,
-        constraint = pool.load() ?.pool_mint.eq(& margin_token.mint.key())
-    )]
-    pub margin_token: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,

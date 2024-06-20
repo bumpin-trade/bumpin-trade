@@ -149,7 +149,7 @@ pub fn handle_liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
         &pool,
         &ctx.accounts.state,
         margin_token_price,
-        trade_token.decimals
+        trade_token.decimals,
     )?;
     let index_trade_token = ctx.accounts.index_trade_token.load()?;
 

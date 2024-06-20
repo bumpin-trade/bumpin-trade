@@ -20,6 +20,8 @@ pub struct AutoCompoundRewards<'info> {
     )]
     pub user: AccountLoader<'info, User>,
 
+    pub authority: Signer<'info>,
+
     #[account(
         mut,
         seeds = [b"bump_state".as_ref()],
@@ -34,7 +36,6 @@ pub struct AutoCompoundRewards<'info> {
     )]
     pub stable_trade_token: AccountLoader<'info, TradeToken>,
 
-    pub authority: Signer<'info>,
 }
 
 pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
