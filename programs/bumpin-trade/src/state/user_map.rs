@@ -4,17 +4,17 @@ use std::iter::Peekable;
 use std::panic::Location;
 use std::slice::Iter;
 
+use crate::errors::{BumpErrorCode, BumpResult};
+use crate::state::traits::Size;
+use crate::state::user::User;
+use crate::utils::pda;
+use crate::validate;
 use anchor_lang::prelude::AccountLoader;
 use anchor_lang::Discriminator;
 use arrayref::array_ref;
 use solana_program::account_info::AccountInfo;
 use solana_program::msg;
 use solana_program::pubkey::Pubkey;
-
-use crate::errors::BumpErrorCode::{CouldNotLoadUserData, UserNotFound};
-use crate::errors::BumpResult;
-use crate::state::traits::Size;
-use crate::state::user::User;
 
 pub struct UserMap<'a>(pub BTreeMap<Pubkey, AccountLoader<'a, User>>);
 
@@ -26,7 +26,7 @@ impl<'a> UserMap<'a> {
             None => {
                 let caller = Location::caller();
                 msg!("Could not find user {} at {}:{}", user_key, caller.file(), caller.line());
-                return Err(UserNotFound);
+                return Err(BumpErrorCode::UserNotFound);
             },
             Some(loader) => loader,
         };
@@ -36,7 +36,7 @@ impl<'a> UserMap<'a> {
                 let caller = Location::caller();
                 msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", user_key, caller.file(), caller.line());
-                Err(CouldNotLoadUserData)
+                Err(BumpErrorCode::CouldNotLoadUserData)
             },
         }
     }
@@ -48,7 +48,7 @@ impl<'a> UserMap<'a> {
             None => {
                 let caller = Location::caller();
                 msg!("Could not find user {} at {}:{}", user_key, caller.file(), caller.line());
-                return Err(UserNotFound);
+                return Err(BumpErrorCode::UserNotFound);
             },
             Some(loader) => loader.clone(),
         };
@@ -62,7 +62,7 @@ impl<'a> UserMap<'a> {
             None => {
                 let caller = Location::caller();
                 msg!("Could not find user {} at {}:{}", user_key, caller.file(), caller.line());
-                return Err(UserNotFound);
+                return Err(BumpErrorCode::UserNotFound);
             },
             Some(loader) => loader,
         };
@@ -72,17 +72,22 @@ impl<'a> UserMap<'a> {
                 let caller = Location::caller();
                 msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", user_key, caller.file(), caller.line());
-                Err(CouldNotLoadUserData)
+                Err(BumpErrorCode::CouldNotLoadUserData)
             },
         }
     }
     pub fn load(
         account_info_iter: &mut Peekable<Iter<'a, AccountInfo<'a>>>,
+        program_id: &Pubkey,
     ) -> BumpResult<UserMap<'a>> {
         let mut user_map = UserMap(BTreeMap::new());
         let user_discriminator = User::discriminator();
         while let Some(account_info) = account_info_iter.next() {
-            let data = account_info.try_borrow_data().or(Err(CouldNotLoadUserData))?;
+            let user_account_pda = pda::generate_user_pda(account_info.owner, program_id)?;
+            validate!(account_info.key.eq(&user_account_pda), BumpErrorCode::CouldNotLoadUserData)?;
+
+            let data =
+                account_info.try_borrow_data().or(Err(BumpErrorCode::CouldNotLoadUserData))?;
 
             let expected_data_len = User::SIZE;
             if data.len() < expected_data_len {
@@ -94,8 +99,8 @@ impl<'a> UserMap<'a> {
             }
 
             let user_key = Pubkey::from(*array_ref![data, 8, 32]);
-            let account_loader: AccountLoader<'a, User> =
-                AccountLoader::try_from(account_info).or(Err(CouldNotLoadUserData))?;
+            let account_loader: AccountLoader<'a, User> = AccountLoader::try_from(account_info)
+                .or(Err(BumpErrorCode::CouldNotLoadUserData))?;
 
             user_map.0.insert(user_key, account_loader);
         }

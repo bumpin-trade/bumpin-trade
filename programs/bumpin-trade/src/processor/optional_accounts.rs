@@ -2,13 +2,13 @@ use std::iter::Peekable;
 use std::slice::Iter;
 
 use solana_program::account_info::AccountInfo;
+use solana_program::pubkey::Pubkey;
 
 use crate::errors::BumpResult;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool_map::PoolMap;
 use crate::state::trade_token_map::TradeTokenMap;
-use crate::state::user_map::UserMap;
 use crate::state::vault_map::VaultMap;
 
 pub struct AccountMaps<'a> {
@@ -16,26 +16,18 @@ pub struct AccountMaps<'a> {
     pub trade_token_map: TradeTokenMap<'a>,
     pub oracle_map: OracleMap<'a>,
     pub pool_map: PoolMap<'a>,
-    pub user_map: UserMap<'a>,
     pub vault_map: VaultMap<'a>,
 }
 
 pub fn load_maps<'a: 'info, 'info>(
     account_info_iter: &mut Peekable<Iter<'a, AccountInfo<'info>>>,
+    admin: &Pubkey,
 ) -> BumpResult<AccountMaps<'info>> {
-    let market_map = MarketMap::load(account_info_iter)?;
-    let trade_token_map = TradeTokenMap::load(account_info_iter)?;
+    let market_map = MarketMap::load(account_info_iter, admin)?;
+    let trade_token_map = TradeTokenMap::load(account_info_iter, admin)?;
     let oracle_map = OracleMap::load(account_info_iter)?;
-    let pool_key_map = PoolMap::load_key(account_info_iter)?;
-    let user_map = UserMap::load(account_info_iter)?;
+    let pool_map = PoolMap::load(account_info_iter, admin)?;
     let vault_map = VaultMap::load(account_info_iter)?;
 
-    Ok(AccountMaps {
-        market_map,
-        trade_token_map,
-        oracle_map,
-        pool_map: pool_key_map,
-        user_map,
-        vault_map,
-    })
+    Ok(AccountMaps { market_map, trade_token_map, oracle_map, pool_map, vault_map })
 }

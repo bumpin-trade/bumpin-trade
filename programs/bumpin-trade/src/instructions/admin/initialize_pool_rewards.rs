@@ -40,6 +40,9 @@ pub struct InitializePoolRewards<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
 
+    #[account(
+        constraint = state.bump_signer.eq(& bump_signer.key())
+    )]
     /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
 

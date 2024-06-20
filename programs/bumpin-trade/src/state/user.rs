@@ -20,8 +20,8 @@ pub struct User {
     pub next_order_id: u128,
     pub next_liquidation_id: u128,
     pub hold: u128,
-    pub user_tokens: [UserToken; 10], //Max 32
-    pub user_stakes: [UserStake; 10], //Max 32
+    pub user_tokens: [UserToken; 32], //Max 32
+    pub user_stakes: [UserStake; 32], //Max 32
     pub user_positions: [UserPosition; 10],
     pub user_orders: [UserOrder; 10],
 }
@@ -83,7 +83,13 @@ impl User {
         Ok(())
     }
 
-    pub fn use_token(&mut self, token: &Pubkey, amount: u128, is_check: bool) -> BumpResult<u128> {
+    pub fn use_token(
+        &mut self,
+        token: &Pubkey,
+        amount: u128,
+        user_token_account_key: &Pubkey,
+        is_check: bool,
+    ) -> BumpResult<u128> {
         let use_from_balance;
         let user_token_option = self.get_user_token_mut(&token)?;
         let user_token = match user_token_option {
@@ -93,6 +99,7 @@ impl User {
                 let new_token = &mut UserToken {
                     user_token_status: UserTokenStatus::USING,
                     token_mint: *token,
+                    user_token_account_key: *user_token_account_key,
                     amount: 0,
                     used_amount: 0,
                     liability: 0,

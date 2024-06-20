@@ -6,14 +6,13 @@ use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
 
-use crate::{get_then_update_id, validate};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::instructions::constraints::*;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::processor::market_processor::MarketProcessor;
-use crate::processor::optional_accounts::{AccountMaps, load_maps};
+use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::position_processor::{
     DecreasePositionParams, IncreasePositionParams, PositionProcessor,
@@ -31,6 +30,7 @@ use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 use crate::utils::{pda, token};
+use crate::{get_then_update_id, validate};
 
 #[derive(Accounts)]
 pub struct PlaceOrder<'info> {
@@ -94,6 +94,9 @@ pub struct PlaceOrder<'info> {
     )]
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
 
+    #[account(
+        constraint = state.bump_signer.eq(& bump_signer.key())
+    )]
     /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
 
@@ -127,7 +130,8 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     // let token = &ctx.accounts.margin_token;
     // let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
     //     &mut ctx.remaining_accounts.iter().peekable();
-    // let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts_iter)?;
+    // let AccountMaps { trade_token_map, mut oracle_map, .. } =
+    load_maps(remaining_accounts_iter, &ctx.accounts.state.admin)?;
     // let token_price = oracle_map.get_price_data(&token.mint).unwrap().price;
     // validate!(
     //     validate_place_order(
@@ -293,6 +297,7 @@ pub fn handle_execute_order<'info>(
             }
 
             let (order_margin, order_margin_from_balance) = execute_increase_order_margin(
+                user_token_account.to_account_info().key,
                 order,
                 &margin_token.mint,
                 trade_token.decimals,
@@ -306,11 +311,11 @@ pub fn handle_execute_order<'info>(
             if position.position_size == 0u128 && position.status.eq(&PositionStatus::INIT) {
                 if user.has_other_order(order.order_id)?
                     && user.get_order_leverage(
-                    order.symbol,
-                    order.order_side,
-                    order.cross_margin,
-                    order.leverage,
-                )? == order.leverage
+                        order.symbol,
+                        order.order_side,
+                        order.cross_margin,
+                        order.leverage,
+                    )? == order.leverage
                 {
                     return Err(BumpErrorCode::AmountNotEnough.into());
                 }
@@ -412,10 +417,9 @@ fn validate_place_order(
     state: &State,
     token_price: u128,
 ) -> BumpResult<bool> {
-
     let mut res = match order.order_type {
         OrderType::NONE => false,
-        _ => true
+        _ => true,
     };
 
     if order.position_side.eq(&PositionSide::DECREASE) && order.size == 0u128 {
@@ -466,6 +470,7 @@ fn validate_place_order(
 }
 
 fn execute_increase_order_margin(
+    user_token_account_key: &Pubkey,
     order: &UserOrder,
     margin_token: &Pubkey,
     decimals: u8,
@@ -494,7 +499,8 @@ fn execute_increase_order_margin(
             user.sub_order_hold_in_usd(order.order_size)?;
         }
         order_margin = cal_utils::usd_to_token_u(order_margin_temp, decimals, margin_token_price)?;
-        order_margin_from_balance = user.use_token(margin_token, order_margin, false)?;
+        order_margin_from_balance =
+            user.use_token(margin_token, order_margin, user_token_account_key, false)?;
     } else {
         let order_margin_in_usd =
             cal_utils::token_to_usd_u(order.order_margin, decimals, margin_token_price)?;

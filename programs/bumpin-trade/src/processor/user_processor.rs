@@ -89,7 +89,7 @@ impl<'a> UserProcessor<'a> {
         oracle_map: &mut OracleMap,
     ) -> BumpResult<u128> {
         let mut total_used_value = 0u128;
-        for user_token in self.user.user_tokens {
+        for user_token in &self.user.user_tokens {
             let trade_token = trade_token_map.get_trade_token(&user_token.token_mint)?;
             let oracle_price = oracle_map.get_price_data(&user_token.token_mint)?;
             total_used_value = total_used_value
@@ -107,7 +107,7 @@ impl<'a> UserProcessor<'a> {
         oracle_map: &mut OracleMap,
     ) -> BumpResult<u128> {
         let total_token_net_value = 0u128;
-        for user_token in self.user.user_tokens {
+        for user_token in &self.user.user_tokens {
             let trade_token = trade_token_map.get_trade_token(&user_token.token_mint)?;
             let oracle_price = oracle_map.get_price_data(&user_token.token_mint)?;
             total_token_net_value
@@ -131,7 +131,7 @@ impl<'a> UserProcessor<'a> {
         let mut total_un_pnl_value = 0i128;
         let mut total_mm_usd_value = 0u128;
 
-        for user_token in self.user.user_tokens {
+        for user_token in &self.user.user_tokens {
             if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
                 continue;
             }

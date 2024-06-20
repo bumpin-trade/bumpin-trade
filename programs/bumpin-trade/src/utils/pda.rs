@@ -35,3 +35,27 @@ pub fn generate_trade_token_vault_key(
     let (address, _bump_seed) = Pubkey::find_program_address(seeds, program_id);
     Ok(address)
 }
+
+pub fn generate_pool_pda(pool_index: u16, program_id: &Pubkey) -> BumpResult<Pubkey> {
+    let binding = pool_index.to_le_bytes();
+    let seeds: &[&[u8]] = &["pool".as_ref(), binding.as_ref()];
+
+    let (address, _bump_seed) = Pubkey::find_program_address(seeds, program_id);
+    Ok(address)
+}
+
+pub fn generate_market_pda(market_index: u16, program_id: &Pubkey) -> BumpResult<Pubkey> {
+    let binding = market_index.to_le_bytes();
+    let seeds: &[&[u8]] = &["market".as_ref(), binding.as_ref()];
+
+    let (address, _bump_seed) = Pubkey::find_program_address(seeds, program_id);
+    Ok(address)
+}
+
+pub fn generate_user_pda(user_authority: &Pubkey, program_id: &Pubkey) -> BumpResult<Pubkey> {
+    let binding = user_authority.to_bytes();
+    let seeds: &[&[u8]] = &["user".as_ref(), binding.as_ref()];
+
+    let (address, _bump_seed) = Pubkey::find_program_address(seeds, program_id);
+    Ok(address)
+}

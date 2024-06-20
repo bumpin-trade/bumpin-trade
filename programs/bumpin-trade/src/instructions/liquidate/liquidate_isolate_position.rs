@@ -15,7 +15,9 @@ use crate::state::user::User;
 use crate::validate;
 
 #[derive(Accounts)]
-#[instruction(market_index: u16, trade_token_index: u16, user: Pubkey)]
+#[instruction(
+    _market_index: u16, _pool_index: u16, _stable_pool_index: u16, _trade_token_index: u16, _user_authority_key: Pubkey
+)]
 pub struct LiquidateIsolatePosition<'info> {
     #[account(
         mut,
@@ -25,50 +27,74 @@ pub struct LiquidateIsolatePosition<'info> {
     )]
     pub state: Account<'info, State>,
 
+    #[account(
+        seeds = [b"user", _user_authority_key.as_ref()],
+        bump,
+    )]
     pub user: AccountLoader<'info, User>,
 
     #[account(
         mut,
-        constraint = pool_vault.mint.eq(& user_token_account.mint) || stable_pool_vault.mint.eq(& user_token_account.mint),
+        constraint = user_token_account.owner.eq(& user.load() ?.authority)
+        && (pool_mint_vault.mint.eq(& user_token_account.mint) || stable_pool_mint_vault.mint.eq(& user_token_account.mint)),
     )]
     pub user_token_account: Account<'info, TokenAccount>,
 
     #[account(
         mut,
-        seeds = [b"market_index", market_index.to_le_bytes().as_ref()],
+        seeds = [b"market", _market_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub market: AccountLoader<'info, Market>,
 
+    #[account(
+        mut,
+        seeds = [b"pool", _pool_index.to_le_bytes().as_ref()],
+        bump,
+        constraint = pool.load() ?.pool_mint.eq(& market.load() ?.pool_mint)
+    )]
     pub pool: AccountLoader<'info, Pool>,
 
+    #[account(
+        mut,
+        seeds = [b"pool", _stable_pool_index.to_le_bytes().as_ref()],
+        bump,
+        constraint = stable_pool.load() ?.pool_mint.eq(& market.load() ?.stable_pool_mint)
+    )]
     pub stable_pool: AccountLoader<'info, Pool>,
 
     #[account(
         mut,
-        constraint = pool_vault.mint == pool.load() ?.pool_mint
+        seeds = [b"pool_mint_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        bump,
     )]
-    pub pool_vault: Account<'info, TokenAccount>,
+    pub pool_mint_vault: Account<'info, TokenAccount>,
 
     #[account(
         mut,
-        constraint = stable_pool_vault.mint == stable_pool.load() ?.pool_mint
+        seeds = [b"pool_mint_vault".as_ref(), _stable_pool_index.to_le_bytes().as_ref()],
+        bump,
     )]
-    pub stable_pool_vault: Account<'info, TokenAccount>,
+    pub stable_pool_mint_vault: Account<'info, TokenAccount>,
 
     #[account(
         mut,
-        seeds = [b"trade_token", trade_token_index.to_le_bytes().as_ref()],
+        seeds = [b"trade_token", _trade_token_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub trade_token: AccountLoader<'info, TradeToken>,
+
     #[account(
-        constraint = trade_token_vault.mint == trade_token.load() ?.trade_token_vault
+        seeds = [b"trade_token_vault".as_ref(), _trade_token_index.to_le_bytes().as_ref()],
+        bump,
     )]
     pub trade_token_vault: Account<'info, TokenAccount>,
 
     pub keeper_signer: Signer<'info>,
 
+    #[account(
+        constraint = state.bump_signer.eq(& bump_signer.key())
+    )]
     /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
 
@@ -78,6 +104,10 @@ pub struct LiquidateIsolatePosition<'info> {
 pub fn handle_liquidate_isolate_position(
     ctx: Context<LiquidateIsolatePosition>,
     position_key: Pubkey,
+    _market_index: u16,
+    _pool_index: u16,
+    _stable_pool_index: u16,
+    _user_authority_key: Pubkey,
 ) -> Result<()> {
     let user = &mut ctx.accounts.user.load_mut()?;
     let user_position = user.find_position_mut_by_key(&position_key)?;
@@ -128,9 +158,9 @@ pub fn handle_liquidate_isolate_position(
             &ctx.accounts.state,
             Some(&ctx.accounts.user_token_account),
             if position_processor.position.is_long {
-                &ctx.accounts.pool_vault
+                &ctx.accounts.pool_mint_vault
             } else {
-                &ctx.accounts.stable_pool_vault
+                &ctx.accounts.stable_pool_mint_vault
             },
             &ctx.accounts.trade_token,
             &ctx.accounts.trade_token_vault,

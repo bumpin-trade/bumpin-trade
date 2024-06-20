@@ -85,7 +85,7 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(
 
     let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
         &mut ctx.remaining_accounts.iter().peekable();
-    let mut account_maps = load_maps(remaining_accounts_iter)?;
+    let mut account_maps = load_maps(remaining_accounts_iter, &ctx.accounts.state.admin)?;
 
     let base_mint_amount = stake_processor::stake(
         &ctx.accounts.pool,

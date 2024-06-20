@@ -33,6 +33,10 @@ pub struct UpdatePositionLeverage<'info> {
     )]
     pub user_token_account: Box<Account<'info, TokenAccount>>,
     pub pool_vault: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        constraint = state.bump_signer.eq(& bump_signer.key())
+    )]
     /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
     pub token_program: Program<'info, Token>,
@@ -56,7 +60,8 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
 
     let remaining_accounts: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
         &mut ctx.remaining_accounts.iter().peekable();
-    let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts)?;
+    let AccountMaps { trade_token_map, mut oracle_map, .. } =
+        load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
 
     let market = ctx.accounts.market.load_mut()?;
     validate!(

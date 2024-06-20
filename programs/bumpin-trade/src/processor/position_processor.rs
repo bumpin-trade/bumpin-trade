@@ -1,4 +1,5 @@
 use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
+use anchor_lang::ToAccountInfo;
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 
@@ -90,7 +91,12 @@ impl PositionProcessor<'_> {
                         trade_token.decimals,
                         token_price,
                     )?;
-                    user_processor.user.use_token(&trade_token.mint, add_margin_amount, false)?;
+                    user_processor.user.use_token(
+                        &trade_token.mint,
+                        add_margin_amount,
+                        user_token_account.to_account_info().key,
+                        false,
+                    )?;
                 } else {
                     add_margin_amount = params.add_margin_amount;
                 }

@@ -169,7 +169,7 @@ pub mod bumpin_trade {
         let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
             &mut ctx.remaining_accounts.iter().peekable();
         let AccountMaps { trade_token_map, mut oracle_map, .. } =
-            load_maps(remaining_accounts_iter)?;
+            load_maps(remaining_accounts_iter, &state_account.admin)?;
 
         handle_execute_order(
             user_account_loader,

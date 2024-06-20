@@ -3,12 +3,17 @@ use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
 
+use crate::errors::BumpErrorCode;
+use crate::errors::BumpErrorCode::CouldNotFindUserToken;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::position_processor::{DecreasePositionParams, PositionProcessor};
 use crate::state::market::Market;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
+use crate::state::user_map::UserMap;
+use crate::state::vault_map::VaultMap;
+use crate::validate;
 
 #[derive(Accounts)]
 pub struct ADL<'info> {
@@ -33,11 +38,6 @@ pub struct ADL<'info> {
     pub market: AccountLoader<'info, Market>,
 
     pub state: Box<Account<'info, State>>,
-    #[account(
-        mut,
-        constraint = & pool_vault.mint.eq(& user_token_account.mint),
-    )]
-    pub user_token_account: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
@@ -58,6 +58,9 @@ pub struct ADL<'info> {
     )]
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
 
+    #[account(
+        constraint = state.bump_signer.eq(& bump_signer.key())
+    )]
     /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
 
@@ -72,7 +75,6 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
     let stable_pool_account_loader = &ctx.accounts.stable_pool;
     let market_account_loader = &ctx.accounts.market;
     let state_account = &ctx.accounts.state;
-    let user_token_account = &ctx.accounts.user_token_account;
     let pool_vault_account = &ctx.accounts.pool_vault;
     let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
     let trade_token_loader = &ctx.accounts.trade_token;
@@ -82,12 +84,31 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
 
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
 
-    let AccountMaps { user_map, mut oracle_map, .. } = load_maps(remaining_accounts_iter)?;
+    let AccountMaps { mut oracle_map, .. } =
+        load_maps(remaining_accounts_iter, &state_account.admin)?;
+    let user_map = UserMap::load(remaining_accounts_iter, ctx.program_id)?;
+    let vault_vec = VaultMap::load_vec(remaining_accounts_iter)?;
 
     for param in params {
         let user_account_loader = user_map.get_account_loader(&param.user_key)?;
         let user_account = &mut user_map.get_mut_ref(&param.user_key)?;
+
+        let user_token_account = vault_vec
+            .iter()
+            .find(|user_token_account| user_token_account.owner.eq(&user_account.authority))
+            .ok_or(BumpErrorCode::CouldNotLoadUserData)?;
+
         let position = user_account.find_position_mut_by_key(&param.position_key)?;
+
+        let user_account = user_map.get_ref(&param.user_key)?;
+        let user_token =
+            user_account.get_user_token_ref(&position.margin_mint)?.ok_or(CouldNotFindUserToken)?;
+
+        validate!(
+            user_token.user_token_account_key.eq(user_token_account.to_account_info().key),
+            BumpErrorCode::InvalidTokenAccount
+        )?;
+
         let mut position_processor = PositionProcessor { position };
         position_processor.decrease_position(
             DecreasePositionParams {

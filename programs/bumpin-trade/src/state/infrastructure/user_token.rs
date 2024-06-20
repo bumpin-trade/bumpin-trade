@@ -12,6 +12,7 @@ use solana_program::pubkey::Pubkey;
 pub struct UserToken {
     pub user_token_status: UserTokenStatus,
     pub token_mint: Pubkey,
+    pub user_token_account_key: Pubkey,
     pub amount: u128,
     pub used_amount: u128,
     pub liability: u128,

@@ -66,7 +66,8 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
     let remaining_accounts_iter: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
         &mut ctx.remaining_accounts.iter().peekable();
 
-    let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts_iter)?;
+    let AccountMaps { trade_token_map, mut oracle_map, .. } =
+        load_maps(remaining_accounts_iter, &ctx.accounts.state.admin)?;
 
     let mut user_processor = UserProcessor { user };
 

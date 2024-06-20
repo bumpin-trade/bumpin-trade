@@ -73,8 +73,12 @@ pub enum BumpErrorCode {
     AmountZero,
     #[msg("CouldNotLoadTradeTokenData")]
     CouldNotLoadTradeTokenData,
+    #[msg("CouldNotLoadPoolData")]
+    CouldNotLoadPoolData,
     #[msg("InvalidTradeTokenAccount")]
     InvalidTradeTokenAccount,
+    #[msg("InvalidTokenAccount")]
+    InvalidTokenAccount,
     #[msg("InvalidPoolAccount")]
     InvalidPoolAccount,
     #[msg("CanNotFindTradeToken")]

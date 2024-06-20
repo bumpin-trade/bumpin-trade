@@ -30,6 +30,9 @@ pub struct CancelOrderCtx<'info> {
 
     pub trade_token: AccountLoader<'info, TradeToken>,
 
+    #[account(
+        constraint = state.bump_signer.eq(& bump_signer.key())
+    )]
     /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
 

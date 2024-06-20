@@ -67,6 +67,7 @@ pub fn handle_deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> 
             let new_token = &mut UserToken {
                 user_token_status: UserTokenStatus::USING,
                 token_mint: trade_token.mint,
+                user_token_account_key: *ctx.accounts.user_token_account.to_account_info().key,
                 amount: 0,
                 used_amount: 0,
                 liability: 0,

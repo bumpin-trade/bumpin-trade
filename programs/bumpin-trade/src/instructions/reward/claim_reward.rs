@@ -22,6 +22,9 @@ pub struct ClaimRewards<'info> {
 
     pub user: AccountLoader<'info, User>,
 
+    #[account(
+        constraint = state.bump_signer.eq(& bump_signer.key())
+    )]
     /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
 
@@ -34,7 +37,8 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, ClaimRewards<'c>>,
 ) -> Result<()> {
     let remaining_accounts_iter = &mut ctx.remaining_accounts.iter().peekable();
-    let AccountMaps { pool_map: pool_key_map, .. } = load_maps(remaining_accounts_iter)?;
+    let AccountMaps { pool_map: pool_key_map, .. } =
+        load_maps(remaining_accounts_iter, &ctx.accounts.state.admin)?;
     let token_account_vec = VaultMap::load_vec(remaining_accounts_iter)?;
 
     let user = &mut ctx.accounts.user.load_mut()?;

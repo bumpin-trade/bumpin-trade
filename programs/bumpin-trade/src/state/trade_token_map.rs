@@ -14,9 +14,10 @@ use solana_program::pubkey::Pubkey;
 use crate::errors::BumpErrorCode::{
     CouldNotLoadTradeTokenData, InvalidTradeTokenAccount, TradeTokenNotFind,
 };
-use crate::errors::BumpResult;
+use crate::errors::{BumpErrorCode, BumpResult};
 use crate::state::trade_token::TradeToken;
 use crate::traits::Size;
+use crate::validate;
 
 pub struct TradeTokenMap<'a>(pub BTreeMap<Pubkey, AccountLoader<'a, TradeToken>>);
 
@@ -77,10 +78,12 @@ impl<'a> TradeTokenMap<'a> {
     }
     pub fn load<'c>(
         account_info_iter: &'c mut Peekable<Iter<'a, AccountInfo<'a>>>,
+        admin: &Pubkey,
     ) -> BumpResult<TradeTokenMap<'a>> {
         let mut trade_token_vec: TradeTokenMap = TradeTokenMap(BTreeMap::new());
         let trade_token_discriminator = TradeToken::discriminator();
         while let Some(account_info) = account_info_iter.next() {
+            validate!(account_info.owner.eq(admin), CouldNotLoadTradeTokenData)?;
             let data = account_info.try_borrow_data().or(Err(CouldNotLoadTradeTokenData))?;
 
             let expected_data_len = TradeToken::SIZE;

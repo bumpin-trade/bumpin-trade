@@ -12,12 +12,13 @@ use solana_program::msg;
 use solana_program::pubkey::Pubkey;
 
 use crate::errors::BumpErrorCode::{
-    CouldNotLoadTradeTokenData, InvalidPoolAccount, TradeTokenNotFind,
+    CouldNotLoadPoolData, CouldNotLoadTradeTokenData, TradeTokenNotFind,
 };
-use crate::errors::BumpResult;
+use crate::errors::{BumpErrorCode, BumpResult};
 use crate::math::safe_unwrap::SafeUnwrap;
 use crate::state::pool::Pool;
 use crate::traits::Size;
+use crate::validate;
 
 pub struct PoolMap<'a>(pub BTreeMap<Pubkey, AccountLoader<'a, Pool>>);
 
@@ -98,13 +99,15 @@ impl<'a> PoolMap<'a> {
         Ok(loader)
     }
 
-    pub fn load_key<'c>(
+    pub fn load<'c>(
         account_info_iter: &'c mut Peekable<Iter<'a, AccountInfo<'a>>>,
+        admin: &Pubkey,
     ) -> BumpResult<PoolMap<'a>> {
         let mut pool_map = PoolMap(BTreeMap::new());
         let pool_discriminator = Pool::discriminator();
         while let Some(account_info) = account_info_iter.peek() {
-            let data = account_info.try_borrow_data().or(Err(CouldNotLoadTradeTokenData))?;
+            validate!(account_info.owner.eq(admin), CouldNotLoadPoolData)?;
+            let data = account_info.try_borrow_data().or(Err(CouldNotLoadPoolData))?;
 
             let expected_data_len = Pool::SIZE;
             if data.len() < expected_data_len {
@@ -118,34 +121,7 @@ impl<'a> PoolMap<'a> {
             let pool_key = Pubkey::from(*array_ref![data, 8, 32]);
             let account_info = account_info_iter.next().safe_unwrap()?;
             let account_loader: AccountLoader<'a, Pool> =
-                AccountLoader::try_from(account_info).or(Err(InvalidPoolAccount))?;
-
-            pool_map.0.insert(pool_key, account_loader);
-        }
-        Ok(pool_map)
-    }
-
-    pub fn load_mint<'c>(
-        account_info_iter: &'c mut Peekable<Iter<'a, AccountInfo<'a>>>,
-    ) -> BumpResult<PoolMap<'a>> {
-        let mut pool_map = PoolMap(BTreeMap::new());
-        let pool_discriminator = Pool::discriminator();
-        while let Some(account_info) = account_info_iter.peek() {
-            let data = account_info.try_borrow_data().or(Err(CouldNotLoadTradeTokenData))?;
-
-            let expected_data_len = Pool::SIZE;
-            if data.len() < expected_data_len {
-                break;
-            }
-            let account_discriminator = array_ref![data, 0, 8];
-            if account_discriminator != &pool_discriminator {
-                continue;
-            }
-
-            let pool_key = Pubkey::from(*array_ref![data, 40, 32]);
-            let account_info = account_info_iter.next().safe_unwrap()?;
-            let account_loader: AccountLoader<'a, Pool> =
-                AccountLoader::try_from(account_info).or(Err(InvalidPoolAccount))?;
+                AccountLoader::try_from(account_info).or(Err(CouldNotLoadPoolData))?;
 
             pool_map.0.insert(pool_key, account_loader);
         }

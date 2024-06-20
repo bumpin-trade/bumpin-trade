@@ -101,7 +101,7 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
 
     let remaining_accounts: &mut Peekable<Iter<'info, AccountInfo<'info>>> =
         &mut ctx.remaining_accounts.iter().peekable();
-    let mut account_maps = load_maps(remaining_accounts)?;
+    let mut account_maps = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
 
     validate!(pool.total_supply == 0, BumpErrorCode::UnStakeNotEnough)?;
 
@@ -132,6 +132,7 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
                 let new_token = &mut UserToken {
                     user_token_status: UserTokenStatus::USING,
                     token_mint: trade_token.mint,
+                    user_token_account_key: *ctx.accounts.user_token_account.to_account_info().key,
                     amount: 0,
                     used_amount: 0,
                     liability: 0,
