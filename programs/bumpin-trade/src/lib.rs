@@ -198,8 +198,11 @@ pub mod bumpin_trade {
     pub fn add_position_margin<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, AddPositionMargin>,
         params: UpdatePositionMarginParams,
+        _market_index: u16,
+        _pool_index: u16,
+        _trade_token_index: u16,
     ) -> Result<()> {
-        handle_add_position_margin(ctx, params)
+        handle_add_position_margin(ctx, params, _market_index, _pool_index, _trade_token_index)
     }
 
     pub fn update_position_leverage<'a, 'b, 'c: 'info, 'info>(

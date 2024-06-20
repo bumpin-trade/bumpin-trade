@@ -2,17 +2,17 @@ use std::cell::{Ref, RefMut};
 use std::collections::BTreeMap;
 use std::panic::Location;
 
-use crate::errors::{BumpErrorCode, BumpResult};
-use crate::state::traits::Size;
-use crate::state::user::User;
-use crate::utils::pda;
-use crate::validate;
-use anchor_lang::prelude::AccountLoader;
 use anchor_lang::Discriminator;
+use anchor_lang::prelude::AccountLoader;
 use arrayref::array_ref;
 use solana_program::account_info::AccountInfo;
 use solana_program::msg;
 use solana_program::pubkey::Pubkey;
+
+use crate::errors::{BumpErrorCode, BumpResult};
+use crate::state::traits::Size;
+use crate::state::user::User;
+use crate::utils::pda;
 
 pub struct UserMap<'a>(pub BTreeMap<Pubkey, AccountLoader<'a, User>>);
 
@@ -82,7 +82,9 @@ impl<'a> UserMap<'a> {
         let user_discriminator = User::discriminator();
         for account_info in remaining_accounts.iter() {
             let user_account_pda = pda::generate_user_pda(account_info.owner, program_id)?;
-            validate!(account_info.key.eq(&user_account_pda), BumpErrorCode::CouldNotLoadUserData)?;
+            if !account_info.key.eq(&user_account_pda) {
+                continue;
+            }
 
             let data =
                 account_info.try_borrow_data().or(Err(BumpErrorCode::CouldNotLoadUserData))?;

@@ -2,8 +2,8 @@ use std::cell::{Ref, RefMut};
 use std::collections::BTreeMap;
 use std::panic::Location;
 
-use anchor_lang::prelude::AccountLoader;
 use anchor_lang::Discriminator;
+use anchor_lang::prelude::AccountLoader;
 use arrayref::array_ref;
 use solana_program::account_info::AccountInfo;
 use solana_program::msg;
@@ -12,10 +12,9 @@ use solana_program::pubkey::Pubkey;
 use crate::errors::BumpErrorCode::{
     CouldNotLoadPoolData, CouldNotLoadTradeTokenData, TradeTokenNotFind,
 };
-use crate::errors::{BumpErrorCode, BumpResult};
+use crate::errors::BumpResult;
 use crate::state::pool::Pool;
 use crate::traits::Size;
-use crate::validate;
 
 pub struct PoolMap<'a>(pub BTreeMap<Pubkey, AccountLoader<'a, Pool>>);
 
@@ -103,7 +102,9 @@ impl<'a> PoolMap<'a> {
         let mut pool_map = PoolMap(BTreeMap::new());
         let pool_discriminator = Pool::discriminator();
         for account_info in remaining_accounts.iter() {
-            // validate!(account_info.owner.eq(admin), CouldNotLoadPoolData)?;
+            if !account_info.owner.eq(admin) {
+                continue;
+            }
             let data = account_info.try_borrow_data().or(Err(CouldNotLoadPoolData))?;
 
             let expected_data_len = Pool::SIZE;
