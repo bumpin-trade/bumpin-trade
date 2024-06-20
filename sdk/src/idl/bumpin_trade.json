@@ -21,31 +21,151 @@
       ],
       "accounts": [
         {
-          "name": "user_account",
-          "writable": true
+          "name": "user",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
         },
         {
           "name": "authority",
           "signer": true
         },
         {
-          "name": "trade_token"
-        },
-        {
-          "name": "pool"
-        },
-        {
-          "name": "state"
-        },
-        {
-          "name": "market"
-        },
-        {
           "name": "user_token_account",
           "writable": true
         },
         {
-          "name": "pool_vault"
+          "name": "state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  109,
+                  112,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "trade_token",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_trade_token_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "market",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_market_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool_mint_vault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
         },
         {
           "name": "bump_signer"
@@ -63,6 +183,18 @@
               "name": "UpdatePositionMarginParams"
             }
           }
+        },
+        {
+          "name": "_market_index",
+          "type": "u16"
+        },
+        {
+          "name": "_pool_index",
+          "type": "u16"
+        },
+        {
+          "name": "_trade_token_index",
+          "type": "u16"
         }
       ]
     },
@@ -96,10 +228,6 @@
         },
         {
           "name": "state"
-        },
-        {
-          "name": "user_token_account",
-          "writable": true
         },
         {
           "name": "pool_vault",
@@ -153,7 +281,48 @@
       ],
       "accounts": [
         {
-          "name": "user"
+          "name": "user",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  109,
+                  112,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "authority",
@@ -248,7 +417,25 @@
           }
         },
         {
-          "name": "user"
+          "name": "user",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
         },
         {
           "name": "bump_signer"
@@ -421,7 +608,26 @@
           "name": "market"
         },
         {
-          "name": "state"
+          "name": "state",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  109,
+                  112,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "user_token_account",
@@ -602,6 +808,14 @@
           "name": "index_mint"
         },
         {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "state"
+          ]
+        },
+        {
           "name": "state",
           "writable": true,
           "pda": {
@@ -625,12 +839,7 @@
           }
         },
         {
-          "name": "bump_signer",
-          "writable": true,
-          "signer": true,
-          "relations": [
-            "state"
-          ]
+          "name": "bump_signer"
         },
         {
           "name": "rent",
@@ -692,7 +901,7 @@
           "name": "pool_mint"
         },
         {
-          "name": "pool_mint_vault",
+          "name": "pool_vault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -703,11 +912,6 @@
                   111,
                   111,
                   108,
-                  95,
-                  109,
-                  105,
-                  110,
-                  116,
                   95,
                   118,
                   97,
@@ -1083,7 +1287,24 @@
           }
         },
         {
-          "name": "user"
+          "name": "user",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_user_authority_key"
+              }
+            ]
+          }
         },
         {
           "name": "keeper_signer",
@@ -1139,7 +1360,26 @@
           "name": "market"
         },
         {
-          "name": "state"
+          "name": "state",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  109,
+                  112,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "user_token_account",
@@ -2021,56 +2261,66 @@
     },
     {
       "code": 6034,
+      "name": "CouldNotLoadPoolData",
+      "msg": "CouldNotLoadPoolData"
+    },
+    {
+      "code": 6035,
       "name": "InvalidTradeTokenAccount",
       "msg": "InvalidTradeTokenAccount"
     },
     {
-      "code": 6035,
+      "code": 6036,
+      "name": "InvalidTokenAccount",
+      "msg": "InvalidTokenAccount"
+    },
+    {
+      "code": 6037,
       "name": "InvalidPoolAccount",
       "msg": "InvalidPoolAccount"
     },
     {
-      "code": 6036,
+      "code": 6038,
       "name": "TradeTokenNotFind",
       "msg": "CanNotFindTradeToken"
     },
     {
-      "code": 6037,
+      "code": 6039,
       "name": "StakePaused",
       "msg": "StakePaused"
     },
     {
-      "code": 6038,
+      "code": 6040,
       "name": "StakeToSmall",
       "msg": "StakeToSmall"
     },
     {
-      "code": 6039,
+      "code": 6041,
       "name": "UnStakeNotEnough",
       "msg": "UnStakeNotEnough"
     },
     {
-      "code": 6040,
+      "code": 6042,
       "name": "PositionSideNotSupport",
       "msg": "PositionSideNotSupport"
     },
     {
-      "code": 6041,
+      "code": 6043,
       "name": "RewardsNotFound",
       "msg": "RewardsNotFound"
     },
     {
-      "code": 6042,
+      "code": 6044,
       "name": "UserNotFound",
       "msg": "UserNotFound"
     },
     {
-      "code": 6043,
+      "code": 6045,
       "name": "CouldNotLoadUserData",
       "msg": "CouldNotLoadUserData"
     },
     {
-      "code": 6044,
+      "code": 6046,
       "name": "PoolSubUnsettleNotEnough",
       "msg": "PoolSubUnsettleNotEnough"
     }
@@ -2136,10 +2386,6 @@
           {
             "name": "pnl",
             "type": "i128"
-          },
-          {
-            "name": "open_cumulative_rewards_per_stake_token",
-            "type": "u128"
           },
           {
             "name": "cumulative_rewards_per_stake_token",
@@ -3070,7 +3316,7 @@
                     "name": "UserToken"
                   }
                 },
-                10
+                12
               ]
             }
           },
@@ -3083,7 +3329,7 @@
                     "name": "UserStake"
                   }
                 },
-                10
+                12
               ]
             }
           },
@@ -3439,6 +3685,10 @@
           },
           {
             "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "user_token_account_key",
             "type": "pubkey"
           },
           {
