@@ -131,7 +131,6 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     let AccountMaps { trade_token_map, mut oracle_map, .. } =
         load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
     let token_price = oracle_map.get_price_data(&trade_token.oracle).unwrap().price;
-    msg!("token_price: {}", token_price);
     validate!(
         validate_place_order(
             &order,
@@ -426,56 +425,50 @@ fn validate_place_order(
     state: &State,
     token_price: u128,
 ) -> BumpResult<bool> {
-    let mut res = match order.order_type {
-        OrderType::NONE => false,
-        _ => true,
-    };
-
-    if order.position_side.eq(&PositionSide::DECREASE) && order.size == 0u128 {
-        res = false;
+    match order.order_type {
+        OrderType::NONE => Ok(false),
+        _ => {
+            if order.position_side.eq(&PositionSide::DECREASE) && order.size == 0u128 {
+                Ok(false)
+            } else if order.order_side.eq(&OrderSide::NONE) {
+                Ok(false)
+            } else if order.order_type.eq(&OrderType::LIMIT)
+                && order.position_side.eq(&PositionSide::DECREASE)
+            {
+                Ok(false)
+            } else if order.order_type.eq(&OrderType::STOP)
+                && (order.stop_type.eq(&StopType::NONE) || order.trigger_price == 0u128)
+            {
+                Ok(false)
+            } else if order.position_side.eq(&PositionSide::INCREASE) {
+                if order.order_margin == 0u128 {
+                    Ok(false)
+                } else if order.order_side.eq(&OrderSide::LONG) && !token.eq(&market.pool_mint) {
+                    Ok(false)
+                } else if order.order_side.eq(&OrderSide::LONG)
+                    && !market.pool_mint.eq(&pool.pool_mint)
+                {
+                    Ok(false)
+                } else if order.order_side.eq(&OrderSide::SHORT) && !pool.pool_mint.eq(&token) {
+                    Ok(false)
+                } else if order.order_side.eq(&OrderSide::SHORT)
+                    && !market.stable_pool_mint.eq(&pool.pool_mint)
+                {
+                    Ok(false)
+                } else if order.is_cross_margin && order.order_margin < state.min_order_margin_usd {
+                    Ok(false)
+                } else if !order.is_cross_margin
+                    && order.order_margin.safe_mul(token_price)? < state.min_order_margin_usd
+                {
+                    Ok(false)
+                } else {
+                    Ok(true)
+                }
+            } else {
+                Ok(true)
+            }
+        },
     }
-
-    if order.order_side.eq(&OrderSide::NONE) {
-        res = false;
-    }
-    if order.order_type.eq(&OrderType::LIMIT) && order.position_side.eq(&PositionSide::DECREASE) {
-        res = false;
-    }
-    if order.order_type.eq(&OrderType::STOP)
-        && (order.stop_type.eq(&StopType::NONE) || order.trigger_price == 0u128)
-    {
-        res = false;
-    }
-    if order.position_side.eq(&PositionSide::INCREASE) {
-        if order.order_margin == 0u128 {
-            res = false;
-        }
-        if order.order_side.eq(&OrderSide::LONG) && !token.eq(&market.pool_mint) {
-            res = false;
-        }
-
-        if order.order_side.eq(&OrderSide::LONG) && !market.pool_mint.eq(&pool.pool_mint) {
-            res = false;
-        }
-
-        if order.order_side.eq(&OrderSide::SHORT) && !pool.pool_mint.eq(&token) {
-            res = false;
-        }
-
-        if order.order_side.eq(&OrderSide::SHORT) && !market.stable_pool_mint.eq(&pool.pool_mint) {
-            res = false;
-        }
-
-        if order.is_cross_margin && order.order_margin < state.min_order_margin_usd {
-            res = false;
-        }
-        if !order.is_cross_margin
-            && order.order_margin.safe_mul(token_price)? < state.min_order_margin_usd
-        {
-            res = false;
-        }
-    }
-    Ok(res)
 }
 
 fn execute_increase_order_margin(

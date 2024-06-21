@@ -1,5 +1,5 @@
 {
-  "min_order_margin_usd": 1000,
+  "min_order_margin_usd": 100,
   "max_maintenance_margin_rate": 500,
   "funding_fee_base_rate": 100,
   "max_funding_base_rate": 200,

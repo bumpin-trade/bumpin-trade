@@ -87,7 +87,7 @@ describe("bumpin-exchange", () => {
             orderType: OrderType.LIMIT,
             stopType: StopType.NONE,
             size: new BN(100),
-            orderMargin: new BN(0),
+            orderMargin: new BN(100),
             leverage: new BN(11),
             triggerPrice: new BN(65000),
             acceptablePrice: new BN(65000),
