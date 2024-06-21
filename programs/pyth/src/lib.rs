@@ -12,56 +12,58 @@ pub mod pyth {
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>, price: i64, expo: i32, conf: u64) -> Result<()> {
+        let clock = Clock::get()?;
         let oracle = &ctx.accounts.price;
-        msg!("initialize: {:?}", oracle);
 
         let mut price_oracle = Price::load(oracle).unwrap();
 
         price_oracle.magic = 2712847316;
-        price_oracle.agg.price = price;
-        price_oracle.agg.conf = conf;
-        price_oracle.agg.conf = 0;
-        price_oracle.valid_slot = 228506959; //todo just turned 1->2 for negative delay
         price_oracle.ver = 2;
         price_oracle.atype = 3;
-        price_oracle.size = 3216;
-
-        price_oracle.twap = price;
-        price_oracle.expo = expo;
+        price_oracle.size = 3312;
         price_oracle.ptype = pc::PriceType::Price;
-        Ok(())
-    }
+        price_oracle.expo = expo;
+        price_oracle.valid_slot = clock.slot;
+        price_oracle.timestamp = clock.unix_timestamp;
 
-    pub fn set_price(ctx: Context<SetPrice>, price: i64) -> Result<()> {
-        let oracle = &ctx.accounts.price;
-        let mut price_oracle = Price::load(oracle).unwrap();
-
-        price_oracle.twap = price_oracle.twap.checked_add(price).unwrap().checked_div(2).unwrap(); //todo
-        price_oracle.agg.price = price;
-        Ok(())
-    }
-
-    pub fn set_price_info(ctx: Context<SetPrice>, price: i64, conf: u64, slot: u64) -> Result<()> {
-        let oracle = &ctx.accounts.price;
-        let mut price_oracle = Price::load(oracle).unwrap();
-
-        price_oracle.twap = price_oracle.twap.checked_add(price).unwrap().checked_div(2).unwrap(); //todo
         price_oracle.agg.price = price;
         price_oracle.agg.conf = conf;
-        price_oracle.valid_slot = slot;
+        price_oracle.agg.status = pc::PriceStatus::Trading;
+        price_oracle.agg.corp_act = pc::CorpAction::NoCorpAct;
+        price_oracle.agg.pub_slot = clock.slot;
 
+        price_oracle.ema_price.val = price;
+        price_oracle.ema_price.numer = price;
+        price_oracle.ema_price.denom = 1;
+
+        price_oracle.ema_conf.val = conf as i64;
+        price_oracle.ema_conf.numer = conf as i64;
+        price_oracle.ema_conf.denom = 1;
         Ok(())
     }
 
-    pub fn set_twap(ctx: Context<SetPrice>, twap: i64) -> Result<()> {
+    pub fn set_price(ctx: Context<SetPrice>, price: i64, conf: u64) -> Result<()> {
+        let clock = Clock::get()?;
         let oracle = &ctx.accounts.price;
         let mut price_oracle = Price::load(oracle).unwrap();
 
-        price_oracle.twap = twap;
+        price_oracle.ema_price.val = price;
+        price_oracle.ema_price.numer = price;
+        price_oracle.ema_price.denom = 1;
+
+        price_oracle.ema_conf.val = conf as i64;
+        price_oracle.ema_conf.numer = conf as i64;
+        price_oracle.ema_conf.denom = 1;
+
+        price_oracle.agg.price = price as i64;
+        price_oracle.agg.conf = conf;
+
+        price_oracle.agg.pub_slot = clock.slot;
+        price_oracle.timestamp = clock.unix_timestamp;
+
         Ok(())
     }
 }
-
 #[derive(Accounts)]
 pub struct SetPrice<'info> {
     /// CHECK: this program is just for testing
@@ -74,15 +76,4 @@ pub struct Initialize<'info> {
     /// CHECK: this program is just for testing
     #[account(mut)]
     pub price: AccountInfo<'info>,
-}
-
-#[cfg(test)]
-mod test {
-
-    use super::*;
-
-    #[test]
-    pub fn print_price_memory_layout() {
-        println!("Price memory layout: {:?}", std::mem::size_of::<Price>());
-    }
 }

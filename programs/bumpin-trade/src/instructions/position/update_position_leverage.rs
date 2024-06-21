@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::errors::BumpErrorCode;
-use crate::processor::optional_accounts::{AccountMaps, load_maps};
+use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::position_processor::PositionProcessor;
 use crate::processor::user_processor::UserProcessor;
 use crate::state::market::Market;
@@ -39,7 +39,6 @@ pub struct UpdatePositionLeverage<'info> {
         bump,
     )]
     pub state: Box<Account<'info, State>>,
-
 
     #[account(
         seeds = [b"pool", _pool_index.to_le_bytes().as_ref()],

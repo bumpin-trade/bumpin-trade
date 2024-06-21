@@ -335,7 +335,9 @@ impl User {
         is_cross_margin: bool,
     ) -> BumpResult {
         for mut user_order in self.user_orders {
-            if user_order.status.eq(&OrderStatus::INIT) { continue; }
+            if user_order.status.eq(&OrderStatus::INIT) {
+                continue;
+            }
             let is_long_order = user_order.order_side.eq(&OrderSide::LONG);
             if user_order.cross_margin == is_cross_margin
                 && user_order.symbol == symbol
@@ -376,7 +378,9 @@ impl User {
 
     pub fn sub_user_token_amount(&mut self, mint: &Pubkey, mut amount: u128) -> BumpResult {
         for user_position in &mut self.user_positions {
-            if user_position.status.eq(&PositionStatus::INIT) { continue; }
+            if user_position.status.eq(&PositionStatus::INIT) {
+                continue;
+            }
             if user_position.cross_margin && user_position.margin_mint.eq(mint) && amount > 0 {
                 let reduce_amount = user_position.reduce_position_portfolio_balance(amount)?;
                 amount = amount.safe_sub(reduce_amount)?;

@@ -1202,7 +1202,9 @@ impl PositionProcessor<'_> {
     ) -> BumpResult<()> {
         let mut reduce_amount = change_token_amount;
         for position in &mut user.user_positions {
-            if position.status.eq(&PositionStatus::INIT) { continue; }
+            if position.status.eq(&PositionStatus::INIT) {
+                continue;
+            }
             if position.margin_mint.eq(token_mint) && position.cross_margin {
                 let change_amount;
 

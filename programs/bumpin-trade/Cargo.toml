@@ -20,9 +20,8 @@ idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build", ]
 anchor-lang = "0.30.0"
 anchor-spl = { version = "0.30.0" }
 solana-program = "1.18.14"
-pyth-client = "0.5.1"
-pyth-sdk-solana = "0.10.1"
-num-traits = "0.2.19"
-uint = { version = "0.9.5", default-features = false }
-arrayref = "0.3.7"
-
+pyth-client = "0.5"
+pyth-sdk-solana = "0.10"
+num-traits = "0.2"
+uint = { version = "0.9", default-features = false }
+arrayref = "0.3"

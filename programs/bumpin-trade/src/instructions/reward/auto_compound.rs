@@ -35,7 +35,6 @@ pub struct AutoCompoundRewards<'info> {
         bump,
     )]
     pub stable_trade_token: AccountLoader<'info, TradeToken>,
-
 }
 
 pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(

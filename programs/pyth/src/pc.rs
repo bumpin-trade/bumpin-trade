@@ -9,22 +9,32 @@ pub struct AccKey {
     pub val: [u8; 32],
 }
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone)]
 #[repr(C)]
 #[allow(dead_code)]
 pub enum PriceStatus {
     Unknown,
-    #[default]
     Trading,
     Halted,
     Auction,
 }
 
-#[derive(Copy, Clone, Default)]
+impl Default for PriceStatus {
+    fn default() -> Self {
+        PriceStatus::Trading
+    }
+}
+
+#[derive(Copy, Clone)]
 #[repr(C)]
 pub enum CorpAction {
-    #[default]
     NoCorpAct,
+}
+
+impl Default for CorpAction {
+    fn default() -> Self {
+        CorpAction::NoCorpAct
+    }
 }
 
 #[derive(Default, Copy, Clone)]
@@ -44,41 +54,60 @@ pub struct PriceComp {
     latest: PriceInfo,
 }
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone)]
 #[repr(C)]
 #[allow(dead_code, clippy::upper_case_acronyms)]
 pub enum PriceType {
     Unknown,
-    #[default]
     Price,
-    TWAP,
-    Volatility,
+}
+
+impl Default for PriceType {
+    fn default() -> Self {
+        PriceType::Price
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct Rational {
+    pub val: i64,
+    pub numer: i64,
+    pub denom: i64,
+}
+
+impl Default for Rational {
+    fn default() -> Self {
+        Rational { val: 0, numer: 0, denom: 0 }
+    }
 }
 
 #[derive(Default, Copy, Clone)]
 #[repr(C)]
 pub struct Price {
-    pub magic: u32,       // Pyth magic number.
-    pub ver: u32,         // Program version.
-    pub atype: u32,       // Account type.
-    pub size: u32,        // Price account size.
-    pub ptype: PriceType, // Price or calculation type.
-    pub expo: i32,        // Price exponent.
-    pub num: u32,         // Number of component prices.
-    pub unused: u32,
-    pub curr_slot: u64,        // Currently accumulating price slot.
-    pub valid_slot: u64,       // Valid slot-time of agg. price.
-    pub twap: i64,             // Time-weighted average price.
-    pub avol: u64,             // Annualized price volatility.
-    pub drv0: i64,             // Space for future derived values.
-    pub drv1: i64,             // Space for future derived values.
-    pub drv2: i64,             // Space for future derived values.
-    pub drv3: i64,             // Space for future derived values.
-    pub drv4: i64,             // Space for future derived values.
-    pub drv5: i64,             // Space for future derived values.
+    pub magic: u32,            // Pyth magic number.
+    pub ver: u32,              // Program version.
+    pub atype: u32,            // Account type.
+    pub size: u32,             // Price account size.
+    pub ptype: PriceType,      // Price or calculation type.
+    pub expo: i32,             // Price exponent.
+    pub num: u32,              // Number of component prices.
+    pub num_qt: u32,           // Number of quoters that make up aggregate
+    pub last_slot: u64,        // slot of last valid (not unknown) aggregate price
+    pub valid_slot: u64,       // valid slot-time of agg. price
+    pub ema_price: Rational,   // exponentially moving average price
+    pub ema_conf: Rational,    // exponentially moving average confidence interval
+    pub timestamp: i64,        // unix timestamp of aggregate price
+    pub min_pub: u8,           // min publishers for valid price
+    pub drv2: u8,              // Space for future derived values.
+    pub drv3: u16,             // Space for future derived values.
+    pub drv4: u32,             // Space for future derived values.
     pub prod: AccKey,          // Product account key.
     pub next: AccKey,          // Next Price account in linked list.
-    pub agg_pub: AccKey,       // Quoter who computed last aggregate price.
+    pub prev_slot: u64,        // valid slot of previous update
+    pub prev_price: i64,       // aggregate price of previous update with TRADING status
+    pub prev_conf: u64,        // confidence interval of previous update with TRADING status
+    pub prev_timestamp: i64,   // unix timestamp of previous aggregate with TRADING status
     pub agg: PriceInfo,        // Aggregate price info.
     pub comp: [PriceComp; 32], // Price components one per quoter.
 }
@@ -90,7 +119,6 @@ impl Price {
     ) -> std::result::Result<RefMut<'a, Price>, ProgramError> {
         let account_data: RefMut<'a, [u8]> =
             RefMut::map(price_feed.try_borrow_mut_data().unwrap(), |data| *data);
-        msg!("account_data: {:?}", account_data.len());
 
         let state: RefMut<'a, Self> = RefMut::map(account_data, |data| {
             from_bytes_mut(cast_slice_mut::<u8, u8>(try_cast_slice_mut(data).unwrap()))

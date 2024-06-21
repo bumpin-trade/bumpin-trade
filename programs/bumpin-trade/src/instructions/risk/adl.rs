@@ -17,7 +17,6 @@ use crate::validate;
 
 #[derive(Accounts)]
 pub struct ADL<'info> {
-
     #[account(
         mut,
         constraint = pool.load() ?.pool_mint == market.load() ?.pool_mint

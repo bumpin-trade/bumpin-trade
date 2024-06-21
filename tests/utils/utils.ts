@@ -147,19 +147,20 @@ export class Utils {
         }).signers([admin]).rpc();
     }
 
-    // public async initialize_oracle(oracle: anchor.web3.Keypair, initPrice: number, confidence = undefined, expo = -4): Promise<void> {
-    //     const conf = new BN(confidence) || new BN((initPrice / 10) * 10 ** -expo);
-    //     await this.programPyth.methods.initialize(
-    //         new anchor.BN(initPrice),
-    //         expo,
-    //         conf
-    //     ).accounts({
-    //         price: oracle.publicKey,
-    //     }).rpc();
-    // }
+    public async initialize_oracle(oracle: PublicKey, initPrice: number, confidence = undefined, expo = -4): Promise<void> {
+        const conf = new BN(confidence) || new BN((initPrice / 10) * 10 ** -expo);
+        await this.programPyth.methods.initialize(
+            new anchor.BN(initPrice),
+            expo,
+            conf
+        ).accounts({
+            price: oracle,
+        }).rpc();
+    }
 
 
     public async initialize_trade_token(tradeTokenMint: PublicKey, admin: anchor.web3.Keypair, oracle: PublicKey, discount: BN, liquidationFactor: BN): Promise<void> {
+        await this.initialize_oracle(oracle, 70000, 1.0, -4);
         let [pda, nonce] = this.getStatePda();
         await this.program.methods.initializeTradeToken(
             discount, liquidationFactor
@@ -205,7 +206,7 @@ export class Utils {
         await this.program.methods.placeOrder(
             param
         ).accounts({
-            userAccount: player.getPda()[0],
+            user: player.getPda()[0],
             authority: player.user.publicKey,
             marginToken: market.pool.mint.publicKey,
             pool: market.pool.getPda()[0],
@@ -213,6 +214,7 @@ export class Utils {
             market: market.getPda()[0],
             poolVault: market.pool.getVaultPda()[0],
             stablePoolVault: market.stablePool.getVaultPda()[0],
+            indexTradeToken: tradeToken.getPda()[0],
             tradeToken: tradeToken.getPda()[0],
             tradeTokenVault: tradeToken.getVaultPda()[0],
             userTokenAccount: player.getTradeTokenAccount(tradeToken.tradeTokenName).address,

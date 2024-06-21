@@ -42,8 +42,7 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, ClaimRewards<'c>>,
 ) -> Result<()> {
     let remaining_accounts = ctx.remaining_accounts;
-    let AccountMaps { pool_map, .. } =
-        load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
+    let AccountMaps { pool_map, .. } = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
     let token_account_vec = VaultMap::load_vec(remaining_accounts)?;
 
     let user = &mut ctx.accounts.user.load_mut()?;

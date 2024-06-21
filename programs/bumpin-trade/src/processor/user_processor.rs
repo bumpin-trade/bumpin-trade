@@ -103,7 +103,9 @@ impl<'a> UserProcessor<'a> {
     ) -> BumpResult<u128> {
         let mut total_used_value = 0u128;
         for user_token in &self.user.user_tokens {
-            if user_token.user_token_status.eq(&UserTokenStatus::INIT) { continue; }
+            if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
+                continue;
+            }
             let trade_token = trade_token_map.get_trade_token(&user_token.token_mint)?;
             let oracle_price = oracle_map.get_price_data(&trade_token.oracle)?;
             total_used_value = total_used_value
@@ -122,7 +124,9 @@ impl<'a> UserProcessor<'a> {
     ) -> BumpResult<u128> {
         let total_token_net_value = 0u128;
         for user_token in &self.user.user_tokens {
-            if user_token.user_token_status.eq(&UserTokenStatus::INIT) { continue; }
+            if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
+                continue;
+            }
             let trade_token = trade_token_map.get_trade_token(&user_token.token_mint)?;
             let oracle_price = oracle_map.get_price_data(&trade_token.oracle)?;
             total_token_net_value
