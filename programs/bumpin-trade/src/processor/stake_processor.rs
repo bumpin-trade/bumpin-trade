@@ -5,18 +5,18 @@ use crate::instructions::{cal_utils, StakeParams};
 use crate::math::safe_math::SafeMath;
 use crate::processor::fee_processor;
 use crate::processor::fee_reward_processor::update_account_fee_reward;
-use crate::processor::optional_accounts::AccountMaps;
 use crate::state::infrastructure::user_stake::{UserStake, UserStakeStatus};
+use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
-use crate::state::trade_token::TradeToken;
+use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 use crate::validate;
 
 pub fn stake(
     pool_account_loader: &AccountLoader<Pool>,
     user_account_loader: &AccountLoader<User>,
-    trade_token_account: &AccountLoader<TradeToken>,
-    account_maps: &mut AccountMaps,
+    trade_token_map: &TradeTokenMap,
+    oracle_map: &mut OracleMap,
     stake_params: &StakeParams,
 ) -> BumpResult<u128> {
     let mut pool = &mut pool_account_loader
@@ -24,10 +24,9 @@ pub fn stake(
         .map_err(|_| BumpErrorCode::UnableToLoadAccountLoader)?;
     let user =
         &mut user_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
-    let trade_token =
-        trade_token_account.load().map_err(|_| BumpErrorCode::UnableToLoadAccountLoader)?;
+    let trade_token = trade_token_map.get_trade_token(&pool.pool_mint)?;
 
-    let token_price = account_maps.oracle_map.get_price_data(&trade_token.oracle)?.price;
+    let token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
 
     validate!(
         pool.pool_config.mini_stake_amount

@@ -335,7 +335,7 @@ impl<'a> UserProcessor<'a> {
     ) -> BumpResult<()> {
         self.user.delete_order(order.order_id)?;
         if order.position_side.eq(&PositionSide::INCREASE) && order.cross_margin {
-            self.user.sub_order_hold_in_usd(order.order_size)?;
+            self.user.sub_order_hold_in_usd(order.order_margin)?;
         } else if order.position_side.eq(&PositionSide::INCREASE) && !order.cross_margin {
             token::send_from_program_vault(
                 token_program,

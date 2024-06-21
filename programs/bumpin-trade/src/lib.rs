@@ -154,13 +154,31 @@ pub mod bumpin_trade {
     pub fn place_order<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
         params: PlaceOrderParams,
+        _pool_index: u16,
+        _stable_pool_index: u16,
+        _market_index: u16,
+        _trade_token_index: u16,
+        _index_trade_token_index: u16,
     ) -> Result<()> {
-        handle_place_order(ctx, params)
+        handle_place_order(
+            ctx,
+            params,
+            _pool_index,
+            _stable_pool_index,
+            _market_index,
+            _trade_token_index,
+            _index_trade_token_index,
+        )
     }
 
     pub fn execute_order<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
         order_id: u128,
+        _pool_index: u16,
+        _stable_pool_index: u16,
+        _market_index: u16,
+        _trade_token_index: u16,
+        _index_trade_token_index: u16,
     ) -> Result<()> {
         let user_account_loader = &ctx.accounts.user;
         let margin_token_account = &ctx.accounts.margin_token;
@@ -204,8 +222,12 @@ pub mod bumpin_trade {
         )
     }
 
-    pub fn cancel_order(ctx: Context<CancelOrderCtx>, order_id: u128) -> Result<()> {
-        handle_cancel_order(ctx, order_id)
+    pub fn cancel_order(
+        ctx: Context<CancelOrderCtx>,
+        order_id: u128,
+        _pool_index: u16,
+    ) -> Result<()> {
+        handle_cancel_order(ctx, order_id, _pool_index)
     }
 
     /*-----position------*/

@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
 use pyth_sdk_solana::state::SolanaPriceAccount;
-use pyth_sdk_solana::PriceFeed;
 
 use crate::errors::BumpErrorCode::{InvalidOracle, PythOffline};
 use crate::errors::BumpResult;

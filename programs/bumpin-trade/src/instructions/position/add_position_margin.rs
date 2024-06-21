@@ -35,7 +35,6 @@ pub struct AddPositionMargin<'info> {
     pub user_token_account: Box<Account<'info, TokenAccount>>,
 
     #[account(
-        mut,
         seeds = [b"bump_state".as_ref()],
         bump,
     )]
@@ -58,7 +57,7 @@ pub struct AddPositionMargin<'info> {
     #[account(
         seeds = [b"market", _market_index.to_le_bytes().as_ref()],
         bump,
-        constraint = (market.load() ?.pool_mint.eq(& user_token_account.mint) || market.load() ?.pool_key.eq(& user_token_account.mint)) && market.load() ?.pool_key.eq(& pool.load() ?.pool_key) || market.load() ?.stable_pool_key.eq(& pool.load() ?.pool_key),
+        constraint = (market.load() ?.pool_mint.eq(& user_token_account.mint) || market.load() ?.stable_pool_mint.eq(& user_token_account.mint)) && market.load() ?.pool_key.eq(& pool.load() ?.pool_key) || market.load() ?.stable_pool_key.eq(& pool.load() ?.pool_key),
     )]
     pub market: AccountLoader<'info, Market>,
 

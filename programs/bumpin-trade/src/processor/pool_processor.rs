@@ -6,12 +6,11 @@ use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::processor::fee_processor;
 use crate::processor::market_processor::MarketProcessor;
-use crate::processor::optional_accounts::AccountMaps;
 use crate::processor::user_processor::UserProcessor;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
-use crate::state::trade_token::TradeToken;
+use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 use crate::validate;
 
@@ -31,13 +30,14 @@ impl<'a> PoolProcessor<'_> {
         user_loader: &AccountLoader<User>,
         pool_loader: &AccountLoader<Pool>,
         mint_amount: u128,
-        trade_token: &TradeToken,
-        stable_trade_token: &TradeToken,
-        account_maps: &mut AccountMaps,
+        trade_token_map: &TradeTokenMap,
+        oracle_map: &mut OracleMap,
+        market_map: &MarketMap,
     ) -> BumpResult<u128> {
         let mut stake_amount = mint_amount;
         let user = &mut user_loader.load_mut().unwrap();
         let pool = pool_loader.load().unwrap();
+        let trade_token = trade_token_map.get_trade_token(&pool.pool_mint)?;
 
         let user_token = user
             .get_user_token_ref(&pool.pool_mint)?
@@ -47,13 +47,11 @@ impl<'a> PoolProcessor<'_> {
         let mut user_processor = UserProcessor { user };
         user_processor.user.sub_user_token_amount(&pool.pool_mint, mint_amount)?;
         validate!(
-            user_processor
-                .get_available_value(&mut account_maps.oracle_map, &account_maps.trade_token_map)?
-                > 0,
+            user_processor.get_available_value(oracle_map, trade_token_map)? > 0,
             BumpErrorCode::AmountNotEnough
         )?;
         if self.pool.total_supply > 0 {
-            let oracle_price_data = account_maps.oracle_map.get_price_data(&trade_token.oracle)?;
+            let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle)?;
 
             stake_amount = cal_utils::token_to_usd_u(
                 mint_amount,
@@ -61,10 +59,9 @@ impl<'a> PoolProcessor<'_> {
                 oracle_price_data.price,
             )?
             .safe_div(self.get_pool_net_price(
-                trade_token,
-                stable_trade_token,
-                &mut account_maps.oracle_map,
-                &account_maps.market_map,
+                trade_token_map,
+                oracle_map,
+                market_map,
             )?)?;
         }
         self.pool.add_supply(stake_amount)?;
@@ -79,15 +76,16 @@ impl<'a> PoolProcessor<'_> {
         user_loader: &AccountLoader<User>,
         pool_loader: &AccountLoader<Pool>,
         mint_amount: u128,
-        trade_token: &TradeToken,
-        stable_trade_token: &TradeToken,
-        account_maps: &mut AccountMaps,
+        trade_token_map: &TradeTokenMap,
+        oracle_map: &mut OracleMap,
+        market_map: &MarketMap,
     ) -> BumpResult<u128> {
         let mut stake_amount = mint_amount;
-        let mut user = user_loader.load_mut().unwrap();
-        let pool = pool_loader.load_mut().unwrap();
+        let mut user = user_loader.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadUserData)?;
+        let pool = pool_loader.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadUserData)?;
+        let trade_token = trade_token_map.get_trade_token(&pool.pool_mint)?;
         if self.pool.total_supply > 0 {
-            let oracle_price_data = account_maps.oracle_map.get_price_data(&trade_token.oracle)?;
+            let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle)?;
 
             stake_amount = cal_utils::token_to_usd_u(
                 mint_amount,
@@ -95,10 +93,9 @@ impl<'a> PoolProcessor<'_> {
                 oracle_price_data.price,
             )?
             .safe_div(self.get_pool_net_price(
-                trade_token,
-                stable_trade_token,
-                &mut account_maps.oracle_map,
-                &account_maps.market_map,
+                trade_token_map,
+                oracle_map,
+                market_map,
             )?)?;
         }
         self.pool.add_supply(stake_amount)?;
@@ -113,17 +110,16 @@ impl<'a> PoolProcessor<'_> {
         pool_loader: &AccountLoader<Pool>,
         user_loader: &AccountLoader<User>,
         un_stake_amount: u128,
-        trade_token_loader: &AccountLoader<TradeToken>,
-        stable_trade_token_loader: &AccountLoader<TradeToken>,
+        trade_token_map: &TradeTokenMap,
         oracle_map: &mut OracleMap,
         market_map: &MarketMap,
     ) -> BumpResult<u128> {
         let pool = pool_loader.load().unwrap();
         let mut user = user_loader.load_mut().unwrap();
-        let trade_token = trade_token_loader.load().unwrap();
-        let stable_trade_token = stable_trade_token_loader.load().unwrap();
-        let pool_value =
-            self.get_pool_usd_value(oracle_map, &trade_token, &stable_trade_token, market_map)?;
+
+        let trade_token = trade_token_map.get_trade_token(&pool.pool_mint)?;
+        let pool_value = self.get_pool_usd_value(trade_token_map, oracle_map, market_map)?;
+
         let un_stake_usd =
             cal_utils::mul_div_u(un_stake_amount, pool_value, self.pool.total_supply)?;
         let pool_price = oracle_map.get_price_data(&trade_token.oracle)?;
@@ -144,30 +140,27 @@ impl<'a> PoolProcessor<'_> {
     }
     pub fn get_pool_net_price(
         &self,
-        trade_token: &TradeToken,
-        stable_trade_token: &TradeToken,
+        trade_token_map: &TradeTokenMap,
         oracle_map: &mut OracleMap,
         market_vec: &MarketMap,
     ) -> BumpResult<u128> {
-        let pool_value =
-            self.get_pool_usd_value(oracle_map, trade_token, stable_trade_token, market_vec)?;
+        let pool_value = self.get_pool_usd_value(trade_token_map, oracle_map, market_vec)?;
         let net_price = self.pool.total_supply.safe_div(pool_value.cast()?)?;
         Ok(net_price)
     }
     pub fn get_pool_usd_value(
         &self,
+        trade_token_map: &TradeTokenMap,
         oracle_map: &mut OracleMap,
-        trade_token: &TradeToken,
-        stable_trade_token: &TradeToken,
         market_vec: &MarketMap,
     ) -> BumpResult<u128> {
-        let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle)?;
-        let mut pool_value = self
-            .pool
-            .pool_balance
-            .amount
-            .safe_add(self.pool.pool_balance.un_settle_amount)?
-            .safe_mul(oracle_price_data.price)?;
+        let trade_token = trade_token_map.get_trade_token(&self.pool.pool_mint)?;
+        let trade_token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
+        let mut pool_value = cal_utils::token_to_usd_u(
+            self.pool.pool_balance.amount.safe_add(self.pool.pool_balance.un_settle_amount)?,
+            trade_token.decimals,
+            trade_token_price,
+        )?;
         if !self.pool.stable {
             let markets = market_vec.get_all_market()?;
             for mut market in markets {
@@ -189,10 +182,18 @@ impl<'a> PoolProcessor<'_> {
                 .amount
                 .safe_add(self.pool.stable_balance.un_settle_amount)?
                 .safe_sub(self.pool.stable_balance.loss_amount)?;
-
-            let stable_price = oracle_map.get_price_data(&stable_trade_token.oracle)?;
-            let stable_usd_value = stable_amount.safe_mul(stable_price.price)?;
-            pool_value = cal_utils::add_u128(pool_value, stable_usd_value)?;
+            if stable_amount > 0u128 {
+                let stable_trade_token =
+                    trade_token_map.get_trade_token(&self.pool.stable_balance.pool_mint)?;
+                let stable_trade_token_price =
+                    oracle_map.get_price_data(&stable_trade_token.oracle)?.price;
+                let stable_usd_value = cal_utils::token_to_usd_u(
+                    stable_amount,
+                    stable_trade_token.decimals,
+                    stable_trade_token_price,
+                )?;
+                pool_value = cal_utils::add_u128(pool_value, stable_usd_value)?;
+            }
         }
         Ok(if pool_value <= 0 { 0u128 } else { pool_value })
     }

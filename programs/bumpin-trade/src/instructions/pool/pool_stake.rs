@@ -7,7 +7,6 @@ use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::stake_processor;
 use crate::state::pool::Pool;
 use crate::state::state::State;
-use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::utils;
 
@@ -37,39 +36,28 @@ pub struct PoolStake<'info> {
 
     #[account(
         mut,
+        constraint = pool_mint_vault.mint.key().eq(& user_token_account.mint.key()) && trade_token_vault.mint.eq(& user_token_account.mint.key()),
+        token::authority = authority
+    )]
+    pub user_token_account: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        mut,
         seeds = [b"pool_mint_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
         bump,
+        token::mint = pool.load() ?.pool_mint,
+        token::authority = state.bump_signer
     )]
-    pub pool_vault: Box<Account<'info, TokenAccount>>,
+    pub pool_mint_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
         seeds = [b"trade_token_vault".as_ref(), _trade_token_index.to_le_bytes().as_ref()],
         bump,
+        token::mint = pool.load() ?.pool_mint,
+        token::authority = state.bump_signer
     )]
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
-
-    #[account(
-        mut,
-        seeds = [b"trade_token".as_ref(), _trade_token_index.to_le_bytes().as_ref()],
-        bump,
-    )]
-    pub trade_token: AccountLoader<'info, TradeToken>,
-
-    #[account(
-        mut,
-        seeds = [b"trade_token".as_ref(), _stable_trade_token_index.to_le_bytes().as_ref()],
-        bump,
-    )]
-    pub stable_trade_token: AccountLoader<'info, TradeToken>,
-
-    #[account(
-        mut,
-        constraint = pool_vault.mint.key().eq(& user_token_account.mint.key()) && trade_token_vault.mint.eq(& user_token_account.mint.key()),
-        token::authority = authority
-    )]
-    pub user_token_account: Box<Account<'info, TokenAccount>>,
-
     pub authority: Signer<'info>,
     pub token_program: Program<'info, Token>,
 }
@@ -88,8 +76,6 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(
     _stable_trade_token_index: u16,
 ) -> Result<()> {
     let pool = &mut ctx.accounts.pool.load_mut()?;
-    let trade_token = ctx.accounts.trade_token.load()?;
-    let stable_trade_token = ctx.accounts.stable_trade_token.load()?;
 
     let remaining_accounts = ctx.remaining_accounts;
     let mut account_maps = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
@@ -97,8 +83,8 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(
     let base_mint_amount = stake_processor::stake(
         &ctx.accounts.pool,
         &ctx.accounts.user,
-        &ctx.accounts.trade_token,
-        &mut account_maps,
+        &account_maps.trade_token_map,
+        &mut account_maps.oracle_map,
         &stake_params,
     )?;
     if stake_params.portfolio {
@@ -107,15 +93,15 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(
             &ctx.accounts.user,
             &ctx.accounts.pool,
             base_mint_amount,
-            &trade_token,
-            &stable_trade_token,
-            &mut account_maps,
+            &account_maps.trade_token_map,
+            &mut account_maps.oracle_map,
+            &account_maps.market_map,
         )?;
         drop(pool_processor);
         utils::token::receive(
             &ctx.accounts.token_program,
             &ctx.accounts.trade_token_vault,
-            &ctx.accounts.pool_vault,
+            &ctx.accounts.pool_mint_vault,
             &ctx.accounts.authority,
             stake_params.request_token_amount,
         )?;
@@ -126,19 +112,19 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(
             &ctx.accounts.user,
             &ctx.accounts.pool,
             base_mint_amount,
-            &trade_token,
-            &stable_trade_token,
-            &mut account_maps,
+            &account_maps.trade_token_map,
+            &mut account_maps.oracle_map,
+            &account_maps.market_map,
         )?;
         drop(pool_processor);
         utils::token::receive(
             &ctx.accounts.token_program,
             &ctx.accounts.user_token_account,
-            &ctx.accounts.pool_vault,
+            &ctx.accounts.pool_mint_vault,
             &ctx.accounts.authority,
             stake_params.request_token_amount,
         )?;
-        ctx.accounts.pool_vault.reload()?;
+        ctx.accounts.pool_mint_vault.reload()?;
     }
 
     Ok(())

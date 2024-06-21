@@ -30,7 +30,16 @@ use crate::utils::{pda, token};
 use crate::{get_then_update_id, validate};
 
 #[derive(Accounts)]
+#[instruction(
+    _market_index: u16, _pool_index: u16, _stable_pool_index: u16, _trade_token_index: u16, _index_trade_token_index: u16
+)]
 pub struct PlaceOrder<'info> {
+    #[account(
+        seeds = [b"bump_state".as_ref()],
+        bump,
+    )]
+    pub state: Box<Account<'info, State>>,
+
     #[account(
         mut,
         constraint = can_sign_for_user(& user, & authority) ?
@@ -40,29 +49,74 @@ pub struct PlaceOrder<'info> {
     pub authority: Signer<'info>,
 
     #[account(
-        constraint = pool.load() ?.pool_mint.eq(& margin_token.key()) || stable_pool.load() ?.pool_mint.eq(& margin_token.key())
+        mut,
+        seeds = [b"market", _market_index.to_le_bytes().as_ref()],
+        bump,
     )]
-    pub margin_token: Account<'info, Mint>,
+    pub market: AccountLoader<'info, Market>,
+
+    #[account(
+        constraint = market.load() ?.pool_mint.eq(& margin_token.key()) || market.load() ?.stable_pool_mint.eq(& margin_token.key())
+    )]
+    pub margin_token: Box<Account<'info, Mint>>,
 
     #[account(
         mut,
-        constraint = pool.load() ?.pool_mint == market.load() ?.pool_mint
+        seeds = [b"pool", _pool_index.to_le_bytes().as_ref()],
+        bump,
+        constraint = pool.load() ?.pool_key.eq(& market.load() ?.pool_key)
     )]
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
         mut,
-        constraint = stable_pool.load() ?.pool_mint == market.load() ?.stable_pool_mint
+        seeds = [b"pool_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        bump,
+        token::mint = pool.load() ?.pool_mint,
+        token::authority = bump_signer
+    )]
+    pub pool_vault: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        mut,
+        seeds = [b"pool", _stable_pool_index.to_le_bytes().as_ref()],
+        bump,
+        constraint = stable_pool.load() ?.pool_key.eq(& market.load() ?.stable_pool_key)
     )]
     pub stable_pool: AccountLoader<'info, Pool>,
 
-    pub market: AccountLoader<'info, Market>,
+    #[account(
+        mut,
+        seeds = [b"pool_vault".as_ref(), _stable_pool_index.to_le_bytes().as_ref()],
+        bump,
+        token::mint = stable_pool.load() ?.pool_mint,
+        token::authority = bump_signer
+    )]
+    pub stable_pool_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
-        seeds = [b"bump_state".as_ref()],
+        seeds = [b"trade_token", _trade_token_index.to_le_bytes().as_ref()],
         bump,
+        constraint = trade_token.load() ?.mint.eq(& user_token_account.mint),
     )]
-    pub state: Box<Account<'info, State>>,
+    pub trade_token: AccountLoader<'info, TradeToken>,
+
+    #[account(
+        mut,
+        seeds = [b"trade_token_vault".as_ref(), _trade_token_index.to_le_bytes().as_ref()],
+        bump,
+        token::mint = trade_token.load() ?.mint,
+        token::authority = bump_signer,
+        constraint = trade_token_vault.key() == trade_token.load() ?.trade_token_vault
+    )]
+    pub trade_token_vault: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        seeds = [b"trade_token", _index_trade_token_index.to_le_bytes().as_ref()],
+        bump,
+        constraint = index_trade_token.load() ?.mint.eq(& market.load() ?.index_mint),
+    )]
+    pub index_trade_token: AccountLoader<'info, TradeToken>,
 
     #[account(
         mut,
@@ -70,27 +124,6 @@ pub struct PlaceOrder<'info> {
         token::authority = authority
     )]
     pub user_token_account: Account<'info, TokenAccount>,
-
-    #[account(
-        mut,
-        constraint = pool_vault.mint == pool.load() ?.pool_mint
-    )]
-    pub pool_vault: Box<Account<'info, TokenAccount>>,
-
-    #[account(
-        mut,
-        constraint = stable_pool_vault.mint == stable_pool.load() ?.pool_mint
-    )]
-    pub stable_pool_vault: Box<Account<'info, TokenAccount>>,
-
-    pub trade_token: AccountLoader<'info, TradeToken>,
-
-    pub index_trade_token: AccountLoader<'info, TradeToken>,
-
-    #[account(
-        constraint = trade_token_vault.key() == trade_token.load() ?.trade_token_vault
-    )]
-    pub trade_token_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         constraint = state.bump_signer.eq(& bump_signer.key())
@@ -121,6 +154,11 @@ pub struct PlaceOrderParams {
 pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
     order: PlaceOrderParams,
+    _pool_index: u16,
+    _stable_pool_index: u16,
+    _market_index: u16,
+    _trade_token_index: u16,
+    _index_trade_token_index: u16,
 ) -> Result<()> {
     let market = ctx.accounts.market.load()?;
     let mut user = ctx.accounts.user.load_mut()?;
