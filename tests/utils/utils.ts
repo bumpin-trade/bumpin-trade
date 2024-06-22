@@ -34,7 +34,6 @@ export class Utils {
             [Buffer.from("bump_state")],
             this.program.programId
         );
-
     }
 
     public async new_user(provider: anchor.AnchorProvider, secretKey?: Uint8Array, lamportMultiplier: number = 100.0,): Promise<anchor.web3.Keypair> {

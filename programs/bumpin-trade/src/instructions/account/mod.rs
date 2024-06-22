@@ -1,7 +1,7 @@
 pub mod deposit;
-pub mod initialize_user;
+pub mod user;
 pub mod withdraw;
 
 pub use deposit::*;
-pub use initialize_user::*;
+pub use user::*;
 pub use withdraw::*;
