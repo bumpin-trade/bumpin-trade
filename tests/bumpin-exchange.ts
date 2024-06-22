@@ -25,11 +25,11 @@ describe("bumpin-exchange", () => {
         exchange = ex;
     });
 
-    // it("Check State", async () => {
-    //     const state = await program.account.state.fetch(utils.getStatePda(program)[0]);
-    //     assert(state.fundingFeeBaseRate.toString() === "100");
-    // });
-    //
+    it("Check State", async () => {
+        const state = await program.account.state.fetch(utils.getStatePda()[0]);
+        assert(state.fundingFeeBaseRate.toString() === "100");
+    });
+
     it("Check User (Player1, Player2)", async () => {
         let pdaForPlayer1 = exchange.getUserPda("Player1");
         const player1 = await program.account.user.fetch(pdaForPlayer1[0]);
