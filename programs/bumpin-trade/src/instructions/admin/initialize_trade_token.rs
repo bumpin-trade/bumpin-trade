@@ -51,12 +51,14 @@ pub struct InitializeTradeToken<'info> {
 pub fn handle_initialize_trade_token(
     ctx: Context<InitializeTradeToken>,
     discount: u128,
+    mint_name:[u8;32],
     liquidation_factor: u128,
-) -> anchor_lang::Result<()> {
+) -> Result<()> {
     let state = &mut ctx.accounts.state;
     let mut trade_token = ctx.accounts.trade_token.load_init()?;
     *trade_token = TradeToken {
         mint: ctx.accounts.trade_token_mint.key(),
+        mint_name,
         oracle: *ctx.accounts.oracle.to_account_info().key,
         token_index: state.number_of_trade_tokens,
         discount,

@@ -10,6 +10,7 @@ use crate::traits::{MarketIndexOffset, Size};
 #[repr(C)]
 pub struct TradeToken {
     pub mint: Pubkey,
+    pub mint_name: [u8; 32],
     pub oracle: Pubkey,
     pub token_index: u16,
     pub discount: u128,

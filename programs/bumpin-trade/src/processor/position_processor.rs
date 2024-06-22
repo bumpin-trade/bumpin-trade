@@ -2,7 +2,6 @@ use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
 use anchor_lang::ToAccountInfo;
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
-
 use solana_program::pubkey::Pubkey;
 
 use crate::errors::{BumpErrorCode, BumpResult};
@@ -119,7 +118,7 @@ impl PositionProcessor<'_> {
                         authority,
                         params.add_margin_amount,
                     )
-                    .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                        .map_err(|_e| BumpErrorCode::TransferFailed)?;
                 }
             } else {
                 self.position.set_leverage(params.leverage)?;
@@ -155,7 +154,7 @@ impl PositionProcessor<'_> {
                         state.bump_signer_nonce,
                         reduce_margin_amount,
                     )
-                    .map_err(|_e| BumpErrorCode::TransferFailed)?
+                        .map_err(|_e| BumpErrorCode::TransferFailed)?
                 }
             }
         }
@@ -589,7 +588,7 @@ impl PositionProcessor<'_> {
                 self.position.position_size,
                 market.market_trade_config.max_leverage,
             )?
-            .max(state.min_order_margin_usd),
+                .max(state.min_order_margin_usd),
         )?;
         validate!(
             max_reduce_margin_in_usd > params.update_margin_amount,
@@ -603,10 +602,10 @@ impl PositionProcessor<'_> {
 
         if self.position.cross_margin
             && self
-                .position
-                .initial_margin_usd
-                .safe_sub(self.position.initial_margin_usd_from_portfolio)?
-                < reduce_margin_amount
+            .position
+            .initial_margin_usd
+            .safe_sub(self.position.initial_margin_usd_from_portfolio)?
+            < reduce_margin_amount
         {
             self.position.sub_initial_margin_usd_from_portfolio(
                 reduce_margin_amount
@@ -873,7 +872,7 @@ impl PositionProcessor<'_> {
                     trade_token.decimals,
                     token_price,
                 )
-                .unwrap(),
+                    .unwrap(),
                 self.position.close_fee_in_usd,
             ));
         }
@@ -1086,7 +1085,9 @@ impl PositionProcessor<'_> {
         if response.settle_fee > 0i128 {
             add_liability = user_processor.sub_token_with_liability(
                 &self.position.margin_mint,
-                &mut trade_token_account.load_mut().unwrap(),
+                &mut *trade_token_account
+                    .load_mut()
+                    .map_err(|_e| BumpErrorCode::CouldNotLoadTradeTokenData)?,
                 response.settle_fee.abs().cast::<u128>()?,
             )?;
         } else {
@@ -1100,34 +1101,28 @@ impl PositionProcessor<'_> {
         user_processor.user.un_use_token(&self.position.margin_mint, response.decrease_margin)?;
 
         //deal user pnl
-        if response.user_realized_pnl_token >= 0i128 {
-            if response.settle_fee < 0i128
-                && response.user_realized_pnl_token.abs().cast::<u128>()?
-                    < response.settle_fee.abs().cast::<u128>()?
-            {
-                user_processor.user.sub_user_token_amount(
+        if response.user_realized_pnl_token.safe_add(response.settle_fee)? > 0i128 {
+            user_processor.user.add_token_amount(
+                &self.position.margin_mint,
+                response
+                    .user_realized_pnl_token
+                    .safe_add(response.settle_fee)?
+                    .abs()
+                    .cast::<u128>()?,
+            )?;
+        } else {
+            add_liability = add_liability.safe_add(
+                user_processor.sub_token_with_liability(
                     &self.position.margin_mint,
-                    response
-                        .settle_fee
-                        .abs()
-                        .cast::<u128>()?
-                        .safe_sub(response.user_realized_pnl_token.abs().cast::<u128>()?)?,
-                )?;
-            } else {
-                user_processor.user.add_token_amount(
-                    &self.position.margin_mint,
+                    &mut *trade_token_account
+                        .load_mut()
+                        .map_err(|_e| BumpErrorCode::CouldNotLoadTradeTokenData)?,
                     response
                         .user_realized_pnl_token
-                        .safe_sub(response.settle_fee)?
+                        .safe_add(response.settle_fee)?
                         .abs()
                         .cast::<u128>()?,
-                )?;
-            }
-        } else {
-            add_liability += user_processor.sub_token_with_liability(
-                &self.position.margin_mint,
-                &mut trade_token_account.load_mut().unwrap(),
-                response.user_realized_pnl_token.abs().cast::<u128>()?,
+                )?,
             )?;
         }
 
@@ -1140,7 +1135,7 @@ impl PositionProcessor<'_> {
                 state_account.bump_signer_nonce,
                 response.pool_pnl_token.abs().cast::<u128>()?,
             )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                .map_err(|_e| BumpErrorCode::TransferFailed)?;
         } else if response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)? > 0i128 {
             token::receive(
                 token_program,
@@ -1149,7 +1144,7 @@ impl PositionProcessor<'_> {
                 bump_signer,
                 response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)?.cast::<u128>()?,
             )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                .map_err(|_e| BumpErrorCode::TransferFailed)?;
         }
 
         if !response.is_liquidation {
@@ -1190,7 +1185,7 @@ impl PositionProcessor<'_> {
             state_account.bump_signer_nonce,
             response.settle_margin.abs().cast::<u128>()?,
         )
-        .map_err(|_e| BumpErrorCode::TransferFailed)?;
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
         Ok(())
     }
 
