@@ -6,9 +6,10 @@ use solana_program::account_info::AccountInfo;
 use crate::instructions::constraints::*;
 use crate::math::safe_math::SafeMath;
 use crate::processor::user_processor::UserProcessor;
+use crate::state::bump_events::DepositEvent;
 use crate::state::infrastructure::user_token::{UserToken, UserTokenStatus};
 use crate::state::trade_token::TradeToken;
-use crate::state::user::User;
+use crate::state::user::{User, UserTokenUpdateOrigin};
 use crate::utils::token;
 
 #[derive(Accounts)]
@@ -60,7 +61,7 @@ pub fn handle_deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> 
     ctx.accounts.trade_token_vault.reload()?;
 
     let user_token_option = user.get_user_token_mut(&ctx.accounts.trade_token_vault.mint)?;
-    let user_token = match user_token_option {
+    match user_token_option {
         None => {
             let index = user.next_usable_user_token_index()?;
             //init user_token
@@ -74,14 +75,14 @@ pub fn handle_deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> 
             };
             user.add_user_token(new_token, index)?;
             user.get_user_token_mut(&trade_token.mint)?.ok_or(CouldNotFindUserToken)?
-        },
+        }
         Some(exist_user_token) => exist_user_token,
     };
 
-    user_token.add_token_amount(amount)?;
+    user.add_token(&trade_token.mint, amount, &UserTokenUpdateOrigin::DEPOSIT)?;
     trade_token.add_token(amount)?;
 
-    let repay_amount = user_token.repay_liability()?;
+    let repay_amount = user.repay_liability(&trade_token.mint, &UserTokenUpdateOrigin::DEPOSIT)?;
     trade_token.sub_liability(repay_amount)?;
     if amount > repay_amount {
         let left_amount = amount.safe_sub(repay_amount)?;
@@ -94,5 +95,18 @@ pub fn handle_deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> 
         )?;
         drop(user_processor);
     }
+    emit!(DepositEvent {
+        user_key: ctx.accounts.user.to_account_info().key(),
+        token_mint: ctx.accounts.trade_token_vault.mint,
+        amount,
+        deposit_origin: DepositOrigin::MANUAL,
+    });
     Ok(())
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Eq, PartialEq)]
+pub enum DepositOrigin {
+    MANUAL,
+    ORDER,
+    STAKE,
 }

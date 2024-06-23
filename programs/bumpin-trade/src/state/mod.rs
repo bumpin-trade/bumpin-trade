@@ -1,3 +1,4 @@
+pub mod bump_events;
 pub mod dao_rewards;
 pub mod infrastructure;
 pub mod market;

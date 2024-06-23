@@ -43,8 +43,7 @@ impl Default for Market {
     }
 }
 
-#[zero_copy(unsafe)]
-#[derive(Eq, Default, PartialEq, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
 #[repr(C)]
 pub struct MarketPosition {
     pub open_interest: u128,
@@ -68,8 +67,7 @@ impl MarketPosition {
     }
 }
 
-#[zero_copy(unsafe)]
-#[derive(Eq, PartialEq, Default, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
 #[repr(C)]
 pub struct MarketConfig {
     pub max_leverage: u128,

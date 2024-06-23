@@ -17,7 +17,7 @@ use crate::state::pool_map::PoolMap;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
-use crate::state::user::User;
+use crate::state::user::{User, UserTokenUpdateOrigin};
 use crate::utils::token;
 use crate::validate;
 
@@ -30,7 +30,7 @@ impl<'a> UserProcessor<'a> {
         &mut self,
         amount: u128,
         oracle: &Pubkey,
-        mint: &Pubkey,
+        token_mint: &Pubkey,
         oracle_map: &mut OracleMap,
         trade_token_map: &TradeTokenMap,
     ) -> BumpResult {
@@ -39,14 +39,15 @@ impl<'a> UserProcessor<'a> {
 
         let available_value = self.get_available_value(oracle_map, trade_token_map)?;
         validate!(
-            available_value > withdraw_usd.cast::<i128>()?,
+            available_value.abs().cast::<u128>()? > withdraw_usd,
             BumpErrorCode::UserNotEnoughValue
         )?;
-
-        let user_token = self.user.get_user_token_mut(mint)?.ok_or(CouldNotFindUserToken)?;
-        user_token.sub_token_amount(amount)?;
-
-        self.update_cross_position_balance(mint, amount, false)?;
+        self.user.sub_user_token_amount_ignore_used_amount(
+            token_mint,
+            amount,
+            &UserTokenUpdateOrigin::WITHDRAW,
+        )?;
+        self.update_cross_position_balance(token_mint, amount, false)?;
         Ok(())
     }
 
@@ -254,6 +255,10 @@ impl<'a> UserProcessor<'a> {
                     reduce_amount = reduce_amount.safe_sub(change_amount)?;
                 }
             }
+
+            if reduce_amount == 0u128 {
+                break;
+            }
         }
         Ok(())
     }
@@ -350,6 +355,3 @@ impl<'a> UserProcessor<'a> {
         Ok(())
     }
 }
-
-#[derive(Eq, Default, PartialEq, Debug)]
-pub struct UpdateDecreasePositionResponse {}

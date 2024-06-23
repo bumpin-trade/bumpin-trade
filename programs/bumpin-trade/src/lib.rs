@@ -1,12 +1,11 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
 use anchor_spl::token::Mint;
+use anchor_spl::token::{Token, TokenAccount};
 
 use instructions::*;
 
-use crate::borsh::ser;
 use crate::instructions::admin::initialize_state::handle_initialize_state;
-use crate::processor::optional_accounts::{AccountMaps, load_maps};
+use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::state::infrastructure::user_order::UserOrder;
 use crate::state::vault_map::VaultMap;
 use crate::traits::Size;

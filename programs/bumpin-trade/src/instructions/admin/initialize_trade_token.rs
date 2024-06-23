@@ -51,7 +51,7 @@ pub struct InitializeTradeToken<'info> {
 pub fn handle_initialize_trade_token(
     ctx: Context<InitializeTradeToken>,
     discount: u128,
-    mint_name:[u8;32],
+    mint_name: [u8; 32],
     liquidation_factor: u128,
 ) -> Result<()> {
     let state = &mut ctx.accounts.state;

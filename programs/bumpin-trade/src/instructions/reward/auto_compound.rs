@@ -5,6 +5,7 @@ use crate::instructions::StakeParams;
 use crate::processor::optional_accounts::load_maps;
 use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::stake_processor;
+use crate::state::bump_events::StakeOrUnStakeEvent;
 use crate::state::state::State;
 use crate::state::user::User;
 use crate::validate;
@@ -61,7 +62,7 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
 
         let account_maps = &mut load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
         let mut pool_processor = PoolProcessor { pool };
-        pool_processor.stake(
+        let (stake_amount, user_stake) = pool_processor.stake(
             &ctx.accounts.user,
             pool_account_loader,
             stake_amount,
@@ -69,6 +70,12 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
             &mut account_maps.oracle_map,
             &account_maps.market_map,
         )?;
+        emit!(StakeOrUnStakeEvent {
+            user_key: ctx.accounts.user.load()?.user_key,
+            token_mint: pool.pool_mint,
+            change_stake_amount: stake_amount,
+            user_stake,
+        });
     }
     Ok(())
 }

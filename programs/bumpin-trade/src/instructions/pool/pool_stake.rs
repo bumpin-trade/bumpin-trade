@@ -5,6 +5,7 @@ use crate::can_sign_for_user;
 use crate::processor::optional_accounts::load_maps;
 use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::stake_processor;
+use crate::state::bump_events::StakeOrUnStakeEvent;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::user::User;
@@ -89,7 +90,7 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(
     )?;
     if stake_params.portfolio {
         let mut pool_processor = PoolProcessor { pool };
-        pool_processor.portfolio_to_stake(
+        let (stake_amount, user_stake) = pool_processor.portfolio_to_stake(
             &ctx.accounts.user,
             &ctx.accounts.pool,
             base_mint_amount,
@@ -105,10 +106,15 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(
             &ctx.accounts.authority,
             stake_params.request_token_amount,
         )?;
-        ctx.accounts.trade_token_vault.reload()?;
+        emit!(StakeOrUnStakeEvent {
+            user_key: ctx.accounts.user.load()?.user_key,
+            token_mint: ctx.accounts.pool.load()?.pool_mint,
+            change_stake_amount: stake_amount,
+            user_stake,
+        });
     } else {
         let mut pool_processor = PoolProcessor { pool };
-        pool_processor.stake(
+        let (stake_amount, user_stake) = pool_processor.stake(
             &ctx.accounts.user,
             &ctx.accounts.pool,
             base_mint_amount,
@@ -124,7 +130,13 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(
             &ctx.accounts.authority,
             stake_params.request_token_amount,
         )?;
-        ctx.accounts.pool_mint_vault.reload()?;
+
+        emit!(StakeOrUnStakeEvent {
+            user_key: ctx.accounts.user.load()?.user_key,
+            token_mint: ctx.accounts.pool.load()?.pool_mint,
+            change_stake_amount: stake_amount,
+            user_stake,
+        });
     }
 
     Ok(())
