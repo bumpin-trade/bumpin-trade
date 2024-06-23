@@ -70,15 +70,15 @@ export class PollingUserAccountSubscriber implements UserAccountSubscriber<UserA
                     buffer
                 );
                 this.user = {data: account, slot};
-/*                this.eventEmitter.emit('userAccountUpdate', account);
-                this.eventEmitter.emit('update');*/
+                /*                this.eventEmitter.emit('userAccountUpdate', account);
+                                this.eventEmitter.emit('update');*/
             }
         );
 
         this.errorCallbackId = this.accountLoader.addErrorCallbacks((error) => {
-/*
-            this.eventEmitter.emit('error', error);
-*/
+            /*
+                        this.eventEmitter.emit('error', error);
+            */
         });
     }
 

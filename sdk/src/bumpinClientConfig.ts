@@ -1,8 +1,17 @@
-import {Wallet} from "@coral-xyz/anchor";
+import {Wallet, Program} from "@coral-xyz/anchor";
+import {
+    PublicKey
+} from '@solana/web3.js';
+import {OracleClient} from "./oracles/types";
+import {BulkAccountLoader} from "./account/bulkAccountLoader";
 
 export type BumpinClientConfig = {
     endpoint: string;
+    program: Program;
     wallet: Wallet;
+    userAccountPublicKey:PublicKey;
+    oracleClient: OracleClient;
+    bulkAccountLoader: BulkAccountLoader;
 }
 
 export class BumpinClientConfigBuilder {
