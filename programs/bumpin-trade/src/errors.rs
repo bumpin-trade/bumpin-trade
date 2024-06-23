@@ -87,8 +87,10 @@ pub enum BumpErrorCode {
     StakePaused,
     #[msg("StakeToSmall")]
     StakeToSmall,
-    #[msg("UnStakeNotEnough")]
-    UnStakeNotEnough,
+    #[msg("UnStakeTooSmall")]
+    UnStakeTooSmall,
+    #[msg("UnStakeTooLarge")]
+    UnStakeTooLarge,
     #[msg("PositionSideNotSupport")]
     PositionSideNotSupport,
     #[msg("RewardsNotFound")]

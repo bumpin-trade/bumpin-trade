@@ -56,24 +56,26 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
                 portfolio: false,
             },
         )?;
+        let token_amount = user_stake.user_rewards.realised_rewards_token_amount;
         user_stake.user_rewards.realised_rewards_token_amount = 0;
         user_stake.user_rewards.open_rewards_per_stake_token =
             pool.fee_reward.cumulative_rewards_per_stake_token;
 
         let account_maps = &mut load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
         let mut pool_processor = PoolProcessor { pool };
-        let (stake_amount, user_stake) = pool_processor.stake(
+        let (supply_amount, user_stake) = pool_processor.stake(
             &ctx.accounts.user,
-            pool_account_loader,
             stake_amount,
             &account_maps.trade_token_map,
             &mut account_maps.oracle_map,
             &account_maps.market_map,
         )?;
+        //todo transfer from collect vault to pool
+        pool.add_amount_and_supply(token_amount, supply_amount)?;
         emit!(StakeOrUnStakeEvent {
             user_key: ctx.accounts.user.load()?.user_key,
             token_mint: pool.pool_mint,
-            change_stake_amount: stake_amount,
+            change_supply_amount: supply_amount,
             user_stake,
         });
     }

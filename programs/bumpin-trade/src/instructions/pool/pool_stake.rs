@@ -90,7 +90,7 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(
     )?;
     if stake_params.portfolio {
         let mut pool_processor = PoolProcessor { pool };
-        let (stake_amount, user_stake) = pool_processor.portfolio_to_stake(
+        let (supply_amount, user_stake) = pool_processor.portfolio_to_stake(
             &ctx.accounts.user,
             &ctx.accounts.pool,
             base_mint_amount,
@@ -98,7 +98,6 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(
             &mut account_maps.oracle_map,
             &account_maps.market_map,
         )?;
-        drop(pool_processor);
         utils::token::receive(
             &ctx.accounts.token_program,
             &ctx.accounts.trade_token_vault,
@@ -106,17 +105,17 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(
             &ctx.accounts.authority,
             stake_params.request_token_amount,
         )?;
+        pool.add_amount_and_supply(stake_params.request_token_amount, supply_amount)?;
         emit!(StakeOrUnStakeEvent {
             user_key: ctx.accounts.user.load()?.user_key,
             token_mint: ctx.accounts.pool.load()?.pool_mint,
-            change_stake_amount: stake_amount,
+            change_supply_amount: supply_amount,
             user_stake,
         });
     } else {
         let mut pool_processor = PoolProcessor { pool };
-        let (stake_amount, user_stake) = pool_processor.stake(
+        let (supply_amount, user_stake) = pool_processor.stake(
             &ctx.accounts.user,
-            &ctx.accounts.pool,
             base_mint_amount,
             &account_maps.trade_token_map,
             &mut account_maps.oracle_map,
@@ -130,11 +129,11 @@ pub fn handle_pool_stake<'a, 'b, 'c: 'info, 'info>(
             &ctx.accounts.authority,
             stake_params.request_token_amount,
         )?;
-
+        pool.add_amount_and_supply(stake_params.request_token_amount, supply_amount)?;
         emit!(StakeOrUnStakeEvent {
             user_key: ctx.accounts.user.load()?.user_key,
             token_mint: ctx.accounts.pool.load()?.pool_mint,
-            change_stake_amount: stake_amount,
+            change_supply_amount: supply_amount,
             user_stake,
         });
     }

@@ -266,7 +266,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     } else {
         //store order, wait to execute
         let next_index = user.next_usable_order_index()?;
-        user.add_order(user_order, next_index)?;
+        user.add_order(&user_order, next_index)?;
     }
 
     Ok(())

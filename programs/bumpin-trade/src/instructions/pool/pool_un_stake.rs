@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
-use crate::{utils, validate};
 use crate::can_sign_for_user;
 use crate::errors::BumpErrorCode;
 use crate::math::safe_math::SafeMath;
@@ -14,6 +13,7 @@ use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::{User, UserTokenUpdateOrigin};
+use crate::{utils, validate};
 
 #[derive(Accounts)]
 #[instruction(_pool_index: u16, _trade_token_index: u16, _stable_trade_token_index: u16)]
@@ -103,18 +103,18 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
     let user_stake = user.get_user_stake_ref(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
     validate!(
         user_stake.amount >= un_stake_params.un_stake_token_amount,
-        BumpErrorCode::UnStakeNotEnough
+        BumpErrorCode::UnStakeTooSmall
     )?;
 
     let remaining_accounts = ctx.remaining_accounts;
     let mut account_maps = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
 
-    validate!(pool.total_supply == 0, BumpErrorCode::UnStakeNotEnough)?;
+    validate!(pool.total_supply == 0, BumpErrorCode::UnStakeTooSmall)?;
 
+    let pre_pool = pool.clone();
     let mut pool_processor = PoolProcessor { pool };
 
     let un_stake_token_amount = pool_processor.un_stake(
-        &ctx.accounts.pool,
         &ctx.accounts.user,
         un_stake_params.un_stake_token_amount,
         &account_maps.trade_token_map,
@@ -127,7 +127,8 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
     update_account_fee_reward(&ctx.accounts.user, &ctx.accounts.pool)?;
 
     let rewards_amount = user_stake.user_rewards.realised_rewards_token_amount;
-    let transfer_amount = un_stake_token_amount.safe_sub(un_stake_token_amount_fee)?;
+    let transfer_amount =
+        un_stake_token_amount.safe_add(rewards_amount)?.safe_sub(un_stake_token_amount_fee)?;
 
     if un_stake_params.portfolio {
         let trade_token = ctx.accounts.trade_token.load_mut()?;
@@ -139,22 +140,12 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
             transfer_amount,
         )?;
 
-        if rewards_amount > 0 {
-            utils::token::receive(
-                &ctx.accounts.token_program,
-                &ctx.accounts.pool_rewards_vault,
-                &ctx.accounts.trade_token_vault,
-                &ctx.accounts.authority,
-                rewards_amount,
-            )?;
-        }
-
         user.add_token(
             &trade_token.mint,
             rewards_amount.safe_add(transfer_amount)?,
             &UserTokenUpdateOrigin::TransferFromStake,
         )?;
-        trade_token.add_token(rewards_amount.safe_add(transfer_amount)?)?;
+        trade_token.add_token(transfer_amount)?;
 
         let repay_liability =
             user.repay_liability(&trade_token.mint, &UserTokenUpdateOrigin::TransferFromStake)?;
@@ -165,7 +156,7 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
         let mut user_processor = UserProcessor { user };
         user_processor.update_cross_position_balance(
             &pool.pool_mint,
-            rewards_amount.safe_add(transfer_amount)?.safe_sub(repay_liability)?,
+            transfer_amount.safe_sub(repay_liability)?,
             true,
         )?;
     } else {
@@ -179,20 +170,9 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
             bump_signer_nonce,
             transfer_amount,
         )?;
-
-        if rewards_amount > 0 {
-            utils::token::send_from_program_vault(
-                &ctx.accounts.token_program,
-                &ctx.accounts.pool_rewards_vault,
-                &ctx.accounts.user_token_account,
-                &ctx.accounts.authority,
-                bump_signer_nonce,
-                rewards_amount,
-            )?;
-        }
     }
 
-    user.sub_user_stake(&pool.pool_key, un_stake_params.un_stake_token_amount)?;
+    pool.sub_amount_and_supply(un_stake_token_amount, un_stake_params.un_stake_token_amount)?;
 
     let user_stake = user.get_user_stake_mut(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
 
@@ -204,7 +184,7 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
     emit!(StakeOrUnStakeEvent {
         user_key: ctx.accounts.user.load()?.user_key,
         token_mint: ctx.accounts.pool.load()?.pool_mint,
-        change_stake_amount: un_stake_token_amount,
+        change_supply_amount: un_stake_token_amount,
         user_stake: user_stake.clone(),
     });
 

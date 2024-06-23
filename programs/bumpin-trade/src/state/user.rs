@@ -2,7 +2,9 @@ use crate::errors::BumpErrorCode::{CouldNotFindUserPosition, CouldNotFindUserTok
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::math::safe_math::SafeMath;
-use crate::state::bump_events::UserTokenBalanceUpdateEvent;
+use crate::state::bump_events::{
+    AddUserOrderEvent, UserHoldUpdateEvent, UserTokenBalanceUpdateEvent,
+};
 use crate::state::infrastructure::user_order::{OrderSide, OrderStatus, PositionSide, UserOrder};
 use crate::state::infrastructure::user_position::{PositionStatus, UserPosition};
 use crate::state::infrastructure::user_stake::{UserStake, UserStakeStatus};
@@ -94,12 +96,24 @@ impl User {
 
     pub fn sub_order_hold_in_usd(&mut self, amount: u128) -> BumpResult<()> {
         validate!(self.hold >= amount, BumpErrorCode::AmountNotEnough.into())?;
+        let pre_hold = self.hold;
         self.hold = cal_utils::sub_u128(self.hold, amount)?;
+        emit!(UserHoldUpdateEvent {
+            user_key: self.user_key,
+            pre_hold_amount: pre_hold,
+            hold_amount: self.hold,
+        });
         Ok(())
     }
 
     pub fn add_order_hold_in_usd(&mut self, amount: u128) -> BumpResult<()> {
+        let pre_hold = self.hold;
         self.hold = self.hold.safe_add(amount)?;
+        emit!(UserHoldUpdateEvent {
+            user_key: self.user_key,
+            pre_hold_amount: pre_hold,
+            hold_amount: self.hold,
+        });
         Ok(())
     }
 
@@ -277,8 +291,9 @@ impl User {
         Ok(())
     }
 
-    pub fn add_order(&mut self, order: UserOrder, index: usize) -> BumpResult {
-        self.user_orders[index] = order;
+    pub fn add_order(&mut self, order: &UserOrder, index: usize) -> BumpResult {
+        self.user_orders[index] = *order;
+        emit!(AddUserOrderEvent { user_key: self.user_key, order: *order });
         Ok(())
     }
 

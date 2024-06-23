@@ -1,4 +1,4 @@
-use anchor_lang::zero_copy;
+use anchor_lang::prelude::*;
 use num_traits::ToPrimitive;
 use solana_program::clock::Clock;
 use solana_program::sysvar::Sysvar;
@@ -9,8 +9,7 @@ use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::state::pool::PoolBalance;
 
-#[zero_copy(unsafe)]
-#[derive(Default, Eq, PartialEq, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
 #[repr(C)]
 pub struct BorrowingFee {
     pub total_borrowing_fee: u128,
