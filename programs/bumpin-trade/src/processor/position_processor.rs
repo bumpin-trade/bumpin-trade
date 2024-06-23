@@ -1,5 +1,5 @@
 use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
-use anchor_lang::ToAccountInfo;
+use anchor_lang::{AnchorSerialize, ToAccountInfo};
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
@@ -403,7 +403,7 @@ impl PositionProcessor<'_> {
             cal_utils::mul_rate_u(increase_margin, cal_utils::sub_u128(params.leverage, 1u128)?)?;
         self.position.add_hold_pool_amount(increase_hold)?;
 
-        // update market io
+            // update market io
         market_processor.update_oi(
             true,
             UpdateOIParams {

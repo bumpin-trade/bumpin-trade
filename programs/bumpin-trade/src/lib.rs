@@ -1,11 +1,12 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::Mint;
 use anchor_spl::token::{Token, TokenAccount};
+use anchor_spl::token::Mint;
 
 use instructions::*;
 
+use crate::borsh::ser;
 use crate::instructions::admin::initialize_state::handle_initialize_state;
-use crate::processor::optional_accounts::{load_maps, AccountMaps};
+use crate::processor::optional_accounts::{AccountMaps, load_maps};
 use crate::state::infrastructure::user_order::UserOrder;
 use crate::state::vault_map::VaultMap;
 use crate::traits::Size;
@@ -95,9 +96,10 @@ pub mod bumpin_trade {
     pub fn initialize_trade_token<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializeTradeToken>,
         discount: u128,
+        mint_name: [u8; 32],
         liquidation_factor: u128,
     ) -> Result<()> {
-        handle_initialize_trade_token(ctx, discount, liquidation_factor)
+        handle_initialize_trade_token(ctx, discount, mint_name, liquidation_factor)
     }
 
     pub fn initialize_market<'a, 'b, 'c: 'info, 'info>(
