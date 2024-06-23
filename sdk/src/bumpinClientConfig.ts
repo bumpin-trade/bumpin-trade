@@ -4,12 +4,14 @@ import {
 } from '@solana/web3.js';
 import {OracleClient} from "./oracles/types";
 import {BulkAccountLoader} from "./account/bulkAccountLoader";
+import {State} from "./types";
 
 export type BumpinClientConfig = {
     endpoint: string;
     program: Program;
     wallet: Wallet;
     userAccountPublicKey:PublicKey;
+    state:State;
     oracleClient: OracleClient;
     bulkAccountLoader: BulkAccountLoader;
 }

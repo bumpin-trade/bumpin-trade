@@ -1,7 +1,7 @@
 import {PublicKey} from '@solana/web3.js';
 import {OracleClient} from "./oracles/types";
 import {UserAccountSubscriber} from "./account/types";
-import {UserAccount} from "./types";
+import {State, UserAccount} from "./types";
 import {PollingUserAccountSubscriber} from "./account/pollingUserAccountSubscriber";
 import {BumpinClientConfig} from "./bumpinClientConfig";
 import {BN} from "@coral-xyz/anchor";
@@ -10,10 +10,12 @@ export class User {
     oracleClient: OracleClient
     userAccountPublicKey: PublicKey
     userAccountSubscriber: UserAccountSubscriber<UserAccount>
+    state: State
 
     constructor(clientConfig: BumpinClientConfig) {
         this.oracleClient = clientConfig.oracleClient;
-        this.userAccountPublicKey = clientConfig.;
+        this.userAccountPublicKey = clientConfig.userAccountPublicKey;
+        this.state = clientConfig.state;
         this.userAccountSubscriber = new PollingUserAccountSubscriber(clientConfig.program,
             clientConfig.userAccountPublicKey, clientConfig.bulkAccountLoader);
         await this.userAccountSubscriber.subscribe();
@@ -21,7 +23,6 @@ export class User {
 
     public accountExist(): boolean {
         let userAccountAndSlot = this.userAccountSubscriber.getUserAccountAndSlot();
-
         return userAccountAndSlot !== undefined;
     }
 
