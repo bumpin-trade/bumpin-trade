@@ -5,13 +5,14 @@ import {
 import {OracleClient} from "./oracles/types";
 import {BulkAccountLoader} from "./account/bulkAccountLoader";
 import {State} from "./types";
+import {BumpinTrade} from "./types/bumpin_trade";
 
 export type BumpinClientConfig = {
     endpoint: string;
-    program: Program;
+    program: Program<BumpinTrade>;
     wallet: Wallet;
-    userAccountPublicKey:PublicKey;
-    state:State;
+    userAccountPublicKey: PublicKey;
+    state: State;
     oracleClient: OracleClient;
     bulkAccountLoader: BulkAccountLoader;
 }

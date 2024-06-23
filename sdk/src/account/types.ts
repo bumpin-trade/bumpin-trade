@@ -1,16 +1,4 @@
 export interface AccountSubscriber<T> {
-    dataAndSlot?: DataAndSlot<T>;
-
-    subscribe(onChange: (data: T) => void): Promise<void>;
-
-    fetch(): Promise<void>;
-
-    unsubscribe(): Promise<void>;
-
-    setData(userAccount: T, slot?: number): void;
-}
-
-export interface UserAccountSubscriber<T> {
     isSubscribed: boolean;
 
     subscribe(userAccount?: T): Promise<boolean>;

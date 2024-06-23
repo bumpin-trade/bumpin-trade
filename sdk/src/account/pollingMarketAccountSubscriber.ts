@@ -1,13 +1,13 @@
 import {
     DataAndSlot,
-    UserAccountSubscriber,
+    AccountSubscriber,
 } from './types';
 import {Program} from '@coral-xyz/anchor';
 import {PublicKey} from '@solana/web3.js';
 import {Market, Pool, UserAccount} from '../types';
 import {BulkAccountLoader} from './bulkAccountLoader';
 
-export class PollingMarketAccountSubscriber implements UserAccountSubscriber<Market> {
+export class PollingMarketAccountSubscriber implements AccountSubscriber<Market> {
     isSubscribed: boolean;
     program: Program;
     userAccountPublicKey: PublicKey;
@@ -16,7 +16,7 @@ export class PollingMarketAccountSubscriber implements UserAccountSubscriber<Mar
     callbackId?: string;
     errorCallbackId?: string;
 
-    user?: DataAndSlot<Market>;
+    market?: DataAndSlot<Market>;
 
     public constructor(
         program: Program,
@@ -35,7 +35,7 @@ export class PollingMarketAccountSubscriber implements UserAccountSubscriber<Mar
         }
 
         if (userAccount) {
-            this.user = {data: userAccount, slot: undefined};
+            this.market = {data: userAccount, slot: undefined};
         }
 
         await this.addToAccountLoader();
@@ -61,15 +61,15 @@ export class PollingMarketAccountSubscriber implements UserAccountSubscriber<Mar
                     return;
                 }
 
-                if (this.user && this.user.slot > slot) {
+                if (this.market && this.market.slot > slot) {
                     return;
                 }
 
-                const account = this.program.account.user.coder.accounts.decode(
-                    'User',
+                const account = this.program.account.market.coder.accounts.decode(
+                    'Market',
                     buffer
                 );
-                this.user = {data: account, slot};
+                this.market = {data: account, slot};
                 /*           this.eventEmitter.emit('userAccountUpdate', account);
                            this.eventEmitter.emit('update');*/
             }
@@ -83,19 +83,19 @@ export class PollingMarketAccountSubscriber implements UserAccountSubscriber<Mar
     }
 
     async fetchIfUnloaded(): Promise<void> {
-        if (this.user === undefined) {
+        if (this.market === undefined) {
             await this.fetch();
         }
     }
 
     async fetch(): Promise<void> {
         try {
-            const dataAndContext = await this.program.account.user.fetchAndContext(
+            const dataAndContext = await this.program.account.market.fetchAndContext(
                 this.userAccountPublicKey,
                 this.accountLoader.commitment
             );
-            if (dataAndContext.context.slot > (this.user?.slot ?? 0)) {
-                this.user = {
+            if (dataAndContext.context.slot > (this.market?.slot ?? 0)) {
+                this.market = {
                     data: dataAndContext.data as Market,
                     slot: dataAndContext.context.slot,
                 };
@@ -108,7 +108,7 @@ export class PollingMarketAccountSubscriber implements UserAccountSubscriber<Mar
     }
 
     doesAccountExist(): boolean {
-        return this.user !== undefined;
+        return this.market !== undefined;
     }
 
     async unsubscribe(): Promise<void> {
@@ -142,12 +142,12 @@ export class PollingMarketAccountSubscriber implements UserAccountSubscriber<Mar
                 'You must call `subscribe` or `fetch` before using this function'
             );
         }
-        return this.user;
+        return this.market;
     }
 
     public updateData(userAccount: Market, slot: number): void {
-        if (!this.user || this.user.slot < slot) {
-            this.user = {data: userAccount, slot};
+        if (!this.market || this.market.slot < slot) {
+            this.market = {data: userAccount, slot};
             /*
             this.eventEmitter.emit('userAccountUpdate', userAccount);
             this.eventEmitter.emit('update');*/

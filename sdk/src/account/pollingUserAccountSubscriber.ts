@@ -1,13 +1,13 @@
 import {
     DataAndSlot,
-    UserAccountSubscriber,
+    AccountSubscriber,
 } from './types';
 import {Program} from '@coral-xyz/anchor';
 import {PublicKey} from '@solana/web3.js';
 import {UserAccount} from '../types';
 import {BulkAccountLoader} from './bulkAccountLoader';
 
-export class PollingUserAccountSubscriber implements UserAccountSubscriber<UserAccount> {
+export class PollingUserAccountSubscriber implements AccountSubscriber<UserAccount> {
     isSubscribed: boolean;
     program: Program;
     userAccountPublicKey: PublicKey;

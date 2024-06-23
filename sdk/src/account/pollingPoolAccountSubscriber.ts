@@ -1,32 +1,33 @@
 import {
     DataAndSlot,
-    UserAccountSubscriber,
+    AccountSubscriber,
 } from './types';
 import {Program} from '@coral-xyz/anchor';
 import {PublicKey} from '@solana/web3.js';
 import {Pool, UserAccount} from '../types';
 import {BulkAccountLoader} from './bulkAccountLoader';
+import {BumpinTrade} from "../types/bumpin_trade";
 
-export class PollingPoolAccountSubscriber implements UserAccountSubscriber<Pool> {
+export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
     isSubscribed: boolean;
-    program: Program;
-    userAccountPublicKey: PublicKey;
+    program: Program<BumpinTrade>;
+    poolPublicKey: PublicKey;
 
     accountLoader: BulkAccountLoader;
     callbackId?: string;
     errorCallbackId?: string;
 
-    user?: DataAndSlot<Pool>;
+    pool?: DataAndSlot<Pool>;
 
     public constructor(
-        program: Program,
-        userAccountPublicKey: PublicKey,
+        program: Program<BumpinTrade>,
+        poolPublicKey: PublicKey,
         accountLoader: BulkAccountLoader
     ) {
         this.isSubscribed = false;
         this.program = program;
         this.accountLoader = accountLoader;
-        this.userAccountPublicKey = userAccountPublicKey;
+        this.poolPublicKey = poolPublicKey;
     }
 
     async subscribe(userAccount?: Pool): Promise<boolean> {
@@ -35,7 +36,7 @@ export class PollingPoolAccountSubscriber implements UserAccountSubscriber<Pool>
         }
 
         if (userAccount) {
-            this.user = {data: userAccount, slot: undefined};
+            this.pool = {data: userAccount, slot: undefined};
         }
 
         await this.addToAccountLoader();
@@ -55,21 +56,21 @@ export class PollingPoolAccountSubscriber implements UserAccountSubscriber<Pool>
         }
 
         this.callbackId = await this.accountLoader.addAccount(
-            this.userAccountPublicKey,
+            this.poolPublicKey,
             (buffer, slot: number) => {
                 if (!buffer) {
                     return;
                 }
 
-                if (this.user && this.user.slot > slot) {
+                if (this.pool && this.pool.slot > slot) {
                     return;
                 }
 
-                const account = this.program.account.user.coder.accounts.decode(
-                    'User',
+                const account = this.program.account.pool.coder.accounts.decode(
+                    'Pool',
                     buffer
                 );
-                this.user = {data: account, slot};
+                this.pool = {data: account, slot};
                 /*           this.eventEmitter.emit('userAccountUpdate', account);
                            this.eventEmitter.emit('update');*/
             }
@@ -83,19 +84,19 @@ export class PollingPoolAccountSubscriber implements UserAccountSubscriber<Pool>
     }
 
     async fetchIfUnloaded(): Promise<void> {
-        if (this.user === undefined) {
+        if (this.pool === undefined) {
             await this.fetch();
         }
     }
 
     async fetch(): Promise<void> {
         try {
-            const dataAndContext = await this.program.account.user.fetchAndContext(
-                this.userAccountPublicKey,
+            const dataAndContext = await this.program.account.pool.fetchAndContext(
+                this.poolPublicKey,
                 this.accountLoader.commitment
             );
-            if (dataAndContext.context.slot > (this.user?.slot ?? 0)) {
-                this.user = {
+            if (dataAndContext.context.slot > (this.pool?.slot ?? 0)) {
+                this.pool = {
                     data: dataAndContext.data as Pool,
                     slot: dataAndContext.context.slot,
                 };
@@ -108,7 +109,7 @@ export class PollingPoolAccountSubscriber implements UserAccountSubscriber<Pool>
     }
 
     doesAccountExist(): boolean {
-        return this.user !== undefined;
+        return this.pool !== undefined;
     }
 
     async unsubscribe(): Promise<void> {
@@ -117,7 +118,7 @@ export class PollingPoolAccountSubscriber implements UserAccountSubscriber<Pool>
         }
 
         this.accountLoader.removeAccount(
-            this.userAccountPublicKey,
+            this.poolPublicKey,
             this.callbackId
         );
         this.callbackId = undefined;
@@ -142,12 +143,12 @@ export class PollingPoolAccountSubscriber implements UserAccountSubscriber<Pool>
                 'You must call `subscribe` or `fetch` before using this function'
             );
         }
-        return this.user;
+        return this.pool;
     }
 
     public updateData(userAccount: Pool, slot: number): void {
-        if (!this.user || this.user.slot < slot) {
-            this.user = {data: userAccount, slot};
+        if (!this.pool || this.pool.slot < slot) {
+            this.pool = {data: userAccount, slot};
             /*
             this.eventEmitter.emit('userAccountUpdate', userAccount);
             this.eventEmitter.emit('update');*/

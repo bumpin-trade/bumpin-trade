@@ -1,6 +1,6 @@
 import {PublicKey} from '@solana/web3.js';
 import {OracleClient} from "./oracles/types";
-import {UserAccountSubscriber} from "./account/types";
+import {AccountSubscriber} from "./account/types";
 import {State, UserAccount} from "./types";
 import {PollingUserAccountSubscriber} from "./account/pollingUserAccountSubscriber";
 import {BumpinClientConfig} from "./bumpinClientConfig";
@@ -9,7 +9,7 @@ import {BN} from "@coral-xyz/anchor";
 export class User {
     oracleClient: OracleClient
     userAccountPublicKey: PublicKey
-    userAccountSubscriber: UserAccountSubscriber<UserAccount>
+    userAccountSubscriber: AccountSubscriber<UserAccount>
     state: State
 
     constructor(clientConfig: BumpinClientConfig) {
@@ -18,7 +18,6 @@ export class User {
         this.state = clientConfig.state;
         this.userAccountSubscriber = new PollingUserAccountSubscriber(clientConfig.program,
             clientConfig.userAccountPublicKey, clientConfig.bulkAccountLoader);
-        await this.userAccountSubscriber.subscribe();
     }
 
     public accountExist(): boolean {
