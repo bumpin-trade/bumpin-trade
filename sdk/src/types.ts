@@ -21,6 +21,44 @@ export type State = {
     pool_fee_reward_ratio: BN;
 }
 
+
+export type MarketPosition = {
+    open_interest: BN;
+    entry_price: BN;
+}
+
+export type MarketConfig = {
+    max_leverage: BN;
+    tick_size: BN;
+    open_fee_rate: BN;
+    close_fee_rate: BN;
+    max_long_open_interest_cap: BN;
+    max_short_open_interest_cap: BN;
+    long_short_ratio_limit: BN;
+    long_short_oi_bottom_limit: BN;
+}
+
+export type MarketFundingFee = {
+    last_update_time: BN;
+    funding_fee_rate: BN;
+    funding_fee: BN;
+}
+
+export type Market = {
+    symbol: string;
+    market_index: number;
+    pool_key: PublicKey;
+    pool_mint: PublicKey;
+    index_mint: PublicKey;
+    stable_pool_key: PublicKey;
+    stable_pool_mint: PublicKey;
+    long_open_interest: MarketPosition;
+    short_open_interest: MarketPosition;
+    funding_fee: MarketFundingFee;
+    market_trade_config: MarketConfig;
+}
+
+
 export type PoolBalance = {
     pool_mint: PublicKey;
     amount: BN;
@@ -80,6 +118,7 @@ export type Pool = {
 
 export type TradeToken = {
     mint: PublicKey;
+    mintName: string;
     oracle: PublicKey;
     token_index: number;
     discount: BN;

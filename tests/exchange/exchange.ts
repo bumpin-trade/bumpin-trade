@@ -164,7 +164,7 @@ export class BumpinTradeToken {
 
     public async initializeTradeToken() {
         this.mint = await this.utils.create_mint_account(this.payer, this.payer);
-        await this.utils.initialize_trade_token(this.mint.publicKey, this.payer, this.oracle, this.discount, this.liquidationFactor);
+        await this.utils.initialize_trade_token(this.tradeTokenName,this.mint.publicKey, this.payer, this.oracle, this.discount, this.liquidationFactor);
     }
 
     public getMint() {

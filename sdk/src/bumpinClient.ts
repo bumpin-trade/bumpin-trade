@@ -5,7 +5,8 @@ import idlBumpinTrade from "./idl/bumpin_trade.json"
 import {BumpinClientConfig} from "./bumpinClientConfig";
 import {BumpinUtils} from "./utils/utils";
 import {BumpinTrade} from "./types/bumpin_trade";
-import {State, UserAccount} from "./types";
+import {Market, Pool, State, TradeToken, UserAccount} from "./types";
+import {BumpinAccountNotFound, BumpinClientNotInitialized} from "./errors";
 
 
 export class BumpinClient {
@@ -17,6 +18,9 @@ export class BumpinClient {
     isInitialized: boolean = false;
 
     state: State | null = null;
+    tradeTokens: TradeToken[] = [];
+    pools: Pool[] = [];
+    market: Market[] = [];
 
     constructor(config: BumpinClientConfig) {
         this.connection = new Connection(config.endpoint);
@@ -29,8 +33,15 @@ export class BumpinClient {
         if (this.isInitialized) {
             return;
         }
-        this.state = await this.getState();
+        await this.syncInitialize();
         this.isInitialized = true;
+    }
+
+    public async syncInitialize() {
+        this.state = await this.getState();
+        this.tradeTokens = await this.getTradeTokens();
+        this.pools = await this.getPools();
+        this.market = await this.getMarkets();
     }
 
     public async me(): Promise<UserAccount> {
@@ -38,9 +49,51 @@ export class BumpinClient {
         return await this.program.account.user.fetch(pda) as any as UserAccount;
     }
 
-    // public async getAllTradeTokens(): Promise<string[]> {
-    //
-    // }
+    public async getMarkets(): Promise<Market[]> {
+        if (!this.isInitialized) {
+            throw new BumpinClientNotInitialized();
+        }
+        if (!this.state) {
+            throw new BumpinAccountNotFound("State")
+        }
+        let markets = [];
+        for (let i = 0; i < this.state!.number_of_markets; i++) {
+            const [pda, _] = BumpinUtils.getMarketPda(this.program, i);
+            markets.push(await this.program.account.market.fetch(pda) as any as Market);
+        }
+        return markets;
+    }
+
+    public async getPools(): Promise<Pool[]> {
+        if (!this.isInitialized) {
+            throw new BumpinClientNotInitialized();
+        }
+        if (!this.state) {
+            throw new BumpinAccountNotFound("State")
+        }
+        let pools = [];
+        for (let i = 0; i < this.state!.number_of_pools; i++) {
+            const [pda, _] = BumpinUtils.getPoolPda(this.program, i);
+            pools.push(await this.program.account.pool.fetch(pda) as any as Pool);
+        }
+        return pools;
+    }
+
+    public async getTradeTokens(): Promise<TradeToken[]> {
+        if (!this.isInitialized) {
+            throw new BumpinClientNotInitialized();
+        }
+        if (!this.state) {
+            throw new BumpinAccountNotFound("State")
+        }
+
+        let tradeTokens = [];
+        for (let i = 0; i < this.state!.number_of_trade_tokens; i++) {
+            const [pda, _] = BumpinUtils.getTradeTokenPda(this.program, i);
+            tradeTokens.push(await this.program.account.tradeToken.fetch(pda) as any as TradeToken);
+        }
+        return tradeTokens;
+    }
 
     public async getState(): Promise<State> {
         const [statePda, _] = BumpinUtils.getBumpinStatePda(this.program);

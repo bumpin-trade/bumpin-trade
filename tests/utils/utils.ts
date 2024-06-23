@@ -158,11 +158,12 @@ export class Utils {
     }
 
 
-    public async initialize_trade_token(tradeTokenMint: PublicKey, admin: anchor.web3.Keypair, oracle: PublicKey, discount: BN, liquidationFactor: BN): Promise<void> {
+    public async initialize_trade_token(tradeTokenName: string, tradeTokenMint: PublicKey, admin: anchor.web3.Keypair, oracle: PublicKey, discount: BN, liquidationFactor: BN): Promise<void> {
+        const s = this.string2Padded32Bytes(tradeTokenName);
         await this.initialize_oracle(oracle, 70000, 1.0, -4);
         let [pda, nonce] = this.getStatePda();
         await this.program.methods.initializeTradeToken(
-            discount, liquidationFactor
+            discount, s, liquidationFactor
         ).accounts({
             tradeTokenMint,
             oracle,
@@ -253,8 +254,7 @@ export class Utils {
             lastValidBlockHeight,
             signature
         });
-        // const accountInfo = await provider.connection.getAccountInfo(newAccountPk.publicKey);
-        // console.log(accountInfo);
+
     }
 
 
