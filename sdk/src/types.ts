@@ -1,6 +1,16 @@
 import {PublicKey} from "@solana/web3.js";
 import {BN} from "@coral-xyz/anchor";
 
+export class OracleSource {
+    static readonly PYTH = { pyth: {} };
+    static readonly PYTH_1K = { pyth1K: {} };
+    static readonly PYTH_1M = { pyth1M: {} };
+    static readonly SWITCHBOARD = { switchboard: {} };
+    static readonly QUOTE_ASSET = { quoteAsset: {} };
+    static readonly PYTH_STABLE_COIN = { pythStableCoin: {} };
+    static readonly Prelaunch = { prelaunch: {} };
+}
+
 export type State = {
     admin: PublicKey;
     bump_signer: PublicKey;

@@ -53,12 +53,12 @@ export class PythClient implements OracleClient {
 			slot: new BN(priceData.lastSlot.toString()),
 			confidence,
 			twap: convertPythPrice(
-				priceData.twap.value,
+				priceData.price,
 				priceData.exponent,
 				this.multiple
 			),
 			twapConfidence: convertPythPrice(
-				priceData.twac.value,
+				priceData.price,
 				priceData.exponent,
 				this.multiple
 			),

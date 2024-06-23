@@ -101,16 +101,16 @@ export class BumpinAdmin {
         );
 
         const s = BumpinUtils.string2Padded32Bytes(tradeTokenName);
-        await this.initialize_oracle(oracle, 70000, 1.0, -4);
-        let [pda, nonce] = this.getStatePda();
-        await this.program.methods.initializeTradeToken(
-            discount, s, liquidationFactor
-        ).accounts({
-            tradeTokenMint,
-            oracle,
-            bumpSigner: pda,
-            admin: admin.publicKey,
-        }).signers([admin]).rpc();
+        // await this.initialize_oracle(oracle, 70000, 1.0, -4);
+        // let [pda, nonce] = this.getStatePda();
+        // await this.program.methods.initializeTradeToken(
+        //     discount, s, liquidationFactor
+        // ).accounts({
+        //     tradeTokenMint,
+        //     oracle,
+        //     bumpSigner: pda,
+        //     admin: admin.publicKey,
+        // }).signers([admin]).rpc();
 
     }
 

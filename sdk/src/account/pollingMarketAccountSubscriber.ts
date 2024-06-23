@@ -4,12 +4,12 @@ import {
 } from './types';
 import {Program} from '@coral-xyz/anchor';
 import {PublicKey} from '@solana/web3.js';
-import {Market, Pool, UserAccount} from '../types';
+import {Market, } from '../types';
 import {BulkAccountLoader} from './bulkAccountLoader';
-
+import {BumpinTrade} from "../types/bumpin_trade";
 export class PollingMarketAccountSubscriber implements AccountSubscriber<Market> {
     isSubscribed: boolean;
-    program: Program;
+    program: Program<BumpinTrade>;
     userAccountPublicKey: PublicKey;
 
     accountLoader: BulkAccountLoader;
@@ -19,7 +19,7 @@ export class PollingMarketAccountSubscriber implements AccountSubscriber<Market>
     market?: DataAndSlot<Market>;
 
     public constructor(
-        program: Program,
+        program: Program<BumpinTrade>,
         userAccountPublicKey: PublicKey,
         accountLoader: BulkAccountLoader
     ) {
@@ -96,7 +96,7 @@ export class PollingMarketAccountSubscriber implements AccountSubscriber<Market>
             );
             if (dataAndContext.context.slot > (this.market?.slot ?? 0)) {
                 this.market = {
-                    data: dataAndContext.data as Market,
+                    data: dataAndContext.data as any as Market,
                     slot: dataAndContext.context.slot,
                 };
             }

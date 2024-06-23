@@ -24,10 +24,10 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.0",
+    "@pythnetwork/client": "^2.21.0",
     "@solana/spl-token": "^0.4.6",
     "@solana/web3.js": "^1.93.0",
-    "borsh": "^2.0.0",
-    "@pythnetwork/client": "2.5.3"
+    "borsh": "^2.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.5",

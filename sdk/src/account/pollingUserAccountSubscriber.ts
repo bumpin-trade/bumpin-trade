@@ -1,15 +1,13 @@
-import {
-    DataAndSlot,
-    AccountSubscriber,
-} from './types';
+import {AccountSubscriber, DataAndSlot,} from './types';
 import {Program} from '@coral-xyz/anchor';
 import {PublicKey} from '@solana/web3.js';
 import {UserAccount} from '../types';
 import {BulkAccountLoader} from './bulkAccountLoader';
+import {BumpinTrade} from "../types/bumpin_trade";
 
 export class PollingUserAccountSubscriber implements AccountSubscriber<UserAccount> {
     isSubscribed: boolean;
-    program: Program;
+    program: Program<BumpinTrade>;
     userAccountPublicKey: PublicKey;
 
     accountLoader: BulkAccountLoader;
@@ -19,7 +17,7 @@ export class PollingUserAccountSubscriber implements AccountSubscriber<UserAccou
     user?: DataAndSlot<UserAccount>;
 
     public constructor(
-        program: Program,
+        program: Program<BumpinTrade>,
         userAccountPublicKey: PublicKey,
         accountLoader: BulkAccountLoader
     ) {
@@ -96,7 +94,7 @@ export class PollingUserAccountSubscriber implements AccountSubscriber<UserAccou
             );
             if (dataAndContext.context.slot > (this.user?.slot ?? 0)) {
                 this.user = {
-                    data: dataAndContext.data as UserAccount,
+                    data: dataAndContext.data as any as UserAccount,
                     slot: dataAndContext.context.slot,
                 };
             }

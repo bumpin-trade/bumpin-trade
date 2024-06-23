@@ -9,12 +9,7 @@ import {BumpinTrade} from "./types/bumpin_trade";
 
 export type BumpinClientConfig = {
     endpoint: string;
-    program: Program<BumpinTrade>;
     wallet: Wallet;
-    userAccountPublicKey: PublicKey;
-    state: State;
-    oracleClient: OracleClient;
-    bulkAccountLoader: BulkAccountLoader;
 }
 
 export class BumpinClientConfigBuilder {

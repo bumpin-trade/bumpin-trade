@@ -97,7 +97,7 @@ export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
             );
             if (dataAndContext.context.slot > (this.pool?.slot ?? 0)) {
                 this.pool = {
-                    data: dataAndContext.data as Pool,
+                    data: dataAndContext.data as any as Pool,
                     slot: dataAndContext.context.slot,
                 };
             }

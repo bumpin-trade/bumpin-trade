@@ -6,12 +6,12 @@ import {BumpinClientConfig} from "./bumpinClientConfig";
 import {PollingPoolAccountSubscriber} from "./account/pollingPoolAccountSubscriber";
 
 export class Pool {
-    oracleClient: OracleClient
-    poolAccountSubscriber: AccountSubscriber<Pool>
-    state: State
-
-    constructor(poolPublicKey: PublicKey, clientConfig: BumpinClientConfig) {
-        this.oracleClient = clientConfig.oracleClient;
-        this.poolAccountSubscriber = new PollingPoolAccountSubscriber(clientConfig.program, poolPublicKey, clientConfig.bulkAccountLoader);
-    }
+    // oracleClient: OracleClient
+    // poolAccountSubscriber: AccountSubscriber<Pool>
+    // state: State
+    //
+    // constructor(poolPublicKey: PublicKey, clientConfig: BumpinClientConfig) {
+    //     this.oracleClient = clientConfig.oracleClient;
+    //     this.poolAccountSubscriber = new PollingPoolAccountSubscriber(clientConfig.program, poolPublicKey, clientConfig.bulkAccountLoader);
+    // }
 }
