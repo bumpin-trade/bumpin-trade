@@ -43,8 +43,7 @@ pub enum PoolStatus {
     UnStakePaused,
 }
 
-#[zero_copy(unsafe)]
-#[derive(Default, Eq, PartialEq, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
 #[repr(C)]
 pub struct PoolBalance {
     pub pool_mint: Pubkey,
@@ -54,8 +53,7 @@ pub struct PoolBalance {
     pub loss_amount: u128,
 }
 
-#[zero_copy(unsafe)]
-#[derive(Eq, PartialEq, Debug, Default)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
 #[repr(C)]
 pub struct PoolConfig {
     pub mini_stake_amount: u128,

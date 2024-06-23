@@ -1,5 +1,6 @@
-use anchor_lang::zero_copy;
+use anchor_lang::prelude::*;
 use num_traits::ToPrimitive;
+
 use solana_program::clock::Clock;
 use solana_program::sysvar::Sysvar;
 
@@ -7,8 +8,7 @@ use crate::errors::BumpResult;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 
-#[zero_copy(unsafe)]
-#[derive(Eq, PartialEq, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
 #[repr(C)]
 pub struct MarketFundingFee {
     pub long_funding_fee_amount_per_size: i128,
@@ -18,20 +18,6 @@ pub struct MarketFundingFee {
     pub long_funding_fee_rate: i128,
     pub short_funding_fee_rate: i128,
     pub last_update: u128,
-}
-
-impl Default for MarketFundingFee {
-    fn default() -> Self {
-        MarketFundingFee {
-            long_funding_fee_amount_per_size: 0,
-            short_funding_fee_amount_per_size: 0,
-            total_long_funding_fee: 0,
-            total_short_funding_fee: 0,
-            long_funding_fee_rate: 0,
-            short_funding_fee_rate: 0,
-            last_update: 0,
-        }
-    }
 }
 
 impl MarketFundingFee {

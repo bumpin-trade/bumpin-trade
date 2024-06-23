@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
+use crate::{utils, validate};
 use crate::can_sign_for_user;
 use crate::errors::BumpErrorCode;
 use crate::math::safe_math::SafeMath;
@@ -8,12 +9,11 @@ use crate::processor::fee_reward_processor::update_account_fee_reward;
 use crate::processor::optional_accounts::load_maps;
 use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::user_processor::UserProcessor;
-use crate::state::infrastructure::user_token::{UserToken, UserTokenStatus};
+use crate::state::bump_events::StakeOrUnStakeEvent;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
-use crate::state::user::User;
-use crate::{utils, validate};
+use crate::state::user::{User, UserTokenUpdateOrigin};
 
 #[derive(Accounts)]
 #[instruction(_pool_index: u16, _trade_token_index: u16, _stable_trade_token_index: u16)]
@@ -131,26 +131,6 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
 
     if un_stake_params.portfolio {
         let trade_token = ctx.accounts.trade_token.load_mut()?;
-        let user_token_option = user.get_user_token_mut(&ctx.accounts.trade_token_vault.mint)?;
-        let user_token = match user_token_option {
-            None => {
-                let index = user.next_usable_user_token_index()?;
-                //init user_token
-                let new_token = &mut UserToken {
-                    user_token_status: UserTokenStatus::USING,
-                    token_mint: trade_token.mint,
-                    user_token_account_key: *ctx.accounts.user_token_account.to_account_info().key,
-                    amount: 0,
-                    used_amount: 0,
-                    liability: 0,
-                };
-                user.add_user_token(new_token, index)?;
-                user.get_user_token_mut(&ctx.accounts.trade_token_vault.mint)?
-                    .ok_or(BumpErrorCode::CouldNotFindUserToken)?
-            },
-            Some(exist_user_token) => exist_user_token,
-        };
-
         utils::token::receive(
             &ctx.accounts.token_program,
             &ctx.accounts.pool_mint_vault,
@@ -169,10 +149,15 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
             )?;
         }
 
-        user_token.add_token_amount(rewards_amount.safe_add(transfer_amount)?)?;
+        user.add_token(
+            &trade_token.mint,
+            rewards_amount.safe_add(transfer_amount)?,
+            &UserTokenUpdateOrigin::TransferFromStake,
+        )?;
         trade_token.add_token(rewards_amount.safe_add(transfer_amount)?)?;
 
-        let repay_liability = user_token.repay_liability()?;
+        let repay_liability =
+            user.repay_liability(&trade_token.mint, &UserTokenUpdateOrigin::TransferFromStake)?;
         if repay_liability > 0 {
             trade_token.sub_liability(repay_liability)?;
         }
@@ -215,6 +200,13 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
     if user_stake.amount <= 0 {
         user.delete_user_stake(&user_stake.pool_key)?
     }
+
+    emit!(StakeOrUnStakeEvent {
+        user_key: ctx.accounts.user.load()?.user_key,
+        token_mint: ctx.accounts.pool.load()?.pool_mint,
+        change_stake_amount: un_stake_token_amount,
+        user_stake: user_stake.clone(),
+    });
 
     Ok(())
 }

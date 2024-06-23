@@ -7,6 +7,7 @@ use crate::math::safe_math::SafeMath;
 use crate::processor::fee_processor;
 use crate::processor::market_processor::MarketProcessor;
 use crate::processor::user_processor::UserProcessor;
+use crate::state::infrastructure::user_stake::UserStake;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
@@ -33,7 +34,7 @@ impl<'a> PoolProcessor<'_> {
         trade_token_map: &TradeTokenMap,
         oracle_map: &mut OracleMap,
         market_map: &MarketMap,
-    ) -> BumpResult<u128> {
+    ) -> BumpResult<(u128, UserStake)> {
         let mut stake_amount = mint_amount;
         let user = &mut user_loader.load_mut().unwrap();
         let pool = pool_loader.load().unwrap();
@@ -69,7 +70,7 @@ impl<'a> PoolProcessor<'_> {
         let user_stake =
             user.get_user_stake_mut(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
         user_stake.add_user_stake(stake_amount)?;
-        Ok(stake_amount)
+        Ok((stake_amount, user_stake.clone()))
     }
     pub fn stake(
         &mut self,
@@ -79,7 +80,7 @@ impl<'a> PoolProcessor<'_> {
         trade_token_map: &TradeTokenMap,
         oracle_map: &mut OracleMap,
         market_map: &MarketMap,
-    ) -> BumpResult<u128> {
+    ) -> BumpResult<(u128, UserStake)> {
         let mut stake_amount = mint_amount;
         let mut user = user_loader.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadUserData)?;
         let pool = pool_loader.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadUserData)?;
@@ -103,7 +104,7 @@ impl<'a> PoolProcessor<'_> {
         let user_stake =
             user.get_user_stake_mut(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
         user_stake.add_user_stake(stake_amount)?;
-        Ok(stake_amount)
+        Ok((stake_amount, user_stake.clone()))
     }
     pub fn un_stake(
         &self,

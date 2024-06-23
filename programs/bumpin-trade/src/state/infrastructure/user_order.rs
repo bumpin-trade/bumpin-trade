@@ -1,8 +1,7 @@
 use anchor_lang::prelude::*;
 use solana_program::pubkey::Pubkey;
 
-#[zero_copy(unsafe)]
-#[derive(Default, Eq, PartialEq, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
 #[repr(C)]
 pub struct UserOrder {
     pub authority: Pubkey,
@@ -23,7 +22,8 @@ pub struct UserOrder {
     pub status: OrderStatus,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Debug, Eq, Default)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
+#[repr(C)]
 pub enum OrderSide {
     #[default]
     NONE,
@@ -31,14 +31,16 @@ pub enum OrderSide {
     SHORT,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Debug, Eq, Default)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
+#[repr(C)]
 pub enum OrderStatus {
     #[default]
     INIT,
     USING,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Debug, Eq, Default)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
+#[repr(C)]
 pub enum PositionSide {
     #[default]
     NONE,
@@ -46,7 +48,8 @@ pub enum PositionSide {
     DECREASE,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Debug, Eq, Default)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
+#[repr(C)]
 pub enum OrderType {
     #[default]
     NONE,
@@ -55,7 +58,8 @@ pub enum OrderType {
     STOP,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Debug, Eq, Default)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
+#[repr(C)]
 pub enum StopType {
     #[default]
     NONE,

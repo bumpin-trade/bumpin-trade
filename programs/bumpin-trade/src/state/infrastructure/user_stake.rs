@@ -5,8 +5,7 @@ use solana_program::pubkey::Pubkey;
 use crate::math::safe_math::SafeMath;
 use crate::validate;
 
-#[zero_copy(unsafe)]
-#[derive(Default, Eq, PartialEq, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
 #[repr(C)]
 pub struct UserStake {
     pub user_stake_status: UserStakeStatus,
@@ -15,6 +14,7 @@ pub struct UserStake {
     pub user_rewards: UserRewards,
 }
 
+#[repr(C)]
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]
 pub enum UserStakeStatus {
     #[default]
@@ -41,8 +41,7 @@ impl UserStake {
     }
 }
 
-#[zero_copy(unsafe)]
-#[derive(Default, Eq, PartialEq, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
 #[repr(C)]
 pub struct UserRewards {
     pub token: Pubkey,

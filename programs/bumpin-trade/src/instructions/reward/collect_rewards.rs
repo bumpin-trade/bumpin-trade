@@ -48,7 +48,7 @@ pub struct CollectRewards<'info> {
         seeds = [b"trade_token".as_ref(), trade_token_index.to_le_bytes().as_ref()],
         bump,
     )]
-    pub trade_token: Box<Account<'info, TradeToken>>,
+    pub trade_token: AccountLoader<'info, TradeToken>,
 
     #[account(
         mut,

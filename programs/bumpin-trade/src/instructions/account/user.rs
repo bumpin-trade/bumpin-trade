@@ -1,5 +1,6 @@
 use crate::errors::BumpErrorCode;
 use crate::errors::BumpErrorCode::CantPayUserInitFee;
+use crate::state::bump_events::InitUserEvent;
 use crate::state::state::State;
 use crate::state::traits::Size;
 use crate::state::user::User;
@@ -58,6 +59,10 @@ pub fn handle_initialize_user(ctx: Context<InitializeUser>) -> Result<()> {
                 ctx.accounts.system_program.to_account_info().clone(),
             ],
         )?;
+        emit!(InitUserEvent {
+            user_key: *ctx.accounts.user.to_account_info().key,
+            authority: *ctx.accounts.authority.to_account_info().key
+        })
     }
     Ok(())
 }

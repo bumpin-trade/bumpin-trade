@@ -1,14 +1,14 @@
+use anchor_lang::prelude::*;
+use solana_program::pubkey::Pubkey;
+
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::state::oracle::OraclePriceData;
 use crate::state::trade_token::TradeToken;
-use anchor_lang::prelude::*;
-use solana_program::pubkey::Pubkey;
 
-#[zero_copy(unsafe)]
-#[derive(Default, Eq, PartialEq, Debug)]
 #[repr(C)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
 pub struct UserToken {
     pub user_token_status: UserTokenStatus,
     pub token_mint: Pubkey,
@@ -18,6 +18,7 @@ pub struct UserToken {
     pub liability: u128,
 }
 
+#[repr(C)]
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]
 pub enum UserTokenStatus {
     #[default]
@@ -42,18 +43,6 @@ impl UserToken {
     pub fn add_token_used_amount(&mut self, amount: u128) -> BumpResult {
         self.used_amount = self.used_amount.safe_add(amount)?;
         Ok(())
-    }
-    pub fn repay_liability(&mut self) -> BumpResult<u128> {
-        if self.liability > 0 && self.amount > 0 {
-            let repay_liability_amount =
-                if self.amount >= self.liability { self.liability } else { self.amount };
-            self.amount = self.amount.safe_sub(repay_liability_amount)?;
-            self.liability = self.liability.safe_sub(repay_liability_amount)?;
-            self.used_amount = self.used_amount.safe_sub(repay_liability_amount)?;
-            Ok(repay_liability_amount)
-        } else {
-            Ok(0)
-        }
     }
 
     pub fn get_token_net_value(

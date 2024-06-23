@@ -4,8 +4,7 @@ use crate::math::safe_math::SafeMath;
 use anchor_lang::prelude::*;
 use solana_program::pubkey::Pubkey;
 
-#[zero_copy(unsafe)]
-#[derive(Default, Eq, PartialEq, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
 #[repr(C)]
 pub struct UserPosition {
     pub position_key: Pubkey,
@@ -37,7 +36,8 @@ pub struct UserPosition {
     pub status: PositionStatus,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
+#[repr(C)]
 pub enum PositionStatus {
     #[default]
     INIT,

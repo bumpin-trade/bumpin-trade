@@ -21,8 +21,6 @@ pub struct TradeToken {
     pub trade_token_vault: Pubkey,
 }
 
-impl AccountSerialize for TradeToken {}
-
 impl Size for TradeToken {
     const SIZE: usize = std::mem::size_of::<TradeToken>() + 8;
 }

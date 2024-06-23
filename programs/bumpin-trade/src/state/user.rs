@@ -2,6 +2,7 @@ use crate::errors::BumpErrorCode::{CouldNotFindUserPosition, CouldNotFindUserTok
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::math::safe_math::SafeMath;
+use crate::state::bump_events::UserTokenBalanceUpdateEvent;
 use crate::state::infrastructure::user_order::{OrderSide, OrderStatus, PositionSide, UserOrder};
 use crate::state::infrastructure::user_position::{PositionStatus, UserPosition};
 use crate::state::infrastructure::user_stake::{UserStake, UserStakeStatus};
@@ -24,6 +25,25 @@ pub struct User {
     pub user_stakes: [UserStake; 12], //Max 32
     pub user_positions: [UserPosition; 10],
     pub user_orders: [UserOrder; 10],
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]
+pub enum UserTokenUpdateOrigin {
+    #[default]
+    DEFAULT,
+    DEPOSIT,
+    WITHDRAW,
+    SettleFee,
+    SettlePnl,
+    DecreasePosition,
+    IncreasePosition,
+    UpdateLeverage,
+    CollectOpenFee,
+    CollectCloseFee,
+    TransferToStake,
+    TransferFromStake,
+    LiquidateLiability,
+    Liquidation,
 }
 
 impl Size for User {
@@ -284,12 +304,6 @@ impl User {
         Ok(())
     }
 
-    pub fn add_token_amount(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
-        let user_token = self.get_user_token_mut(token)?.ok_or(CouldNotFindUserToken)?;
-        user_token.add_token_amount(amount)?;
-        Ok(())
-    }
-
     pub fn delete_position(
         &mut self,
         symbol: [u8; 32],
@@ -388,6 +402,84 @@ impl User {
         }
         let user_token = self.get_user_token_mut(mint)?.ok_or(CouldNotFindUserToken)?;
         user_token.sub_token_amount(amount)?;
+        Ok(())
+    }
+
+    pub fn sub_user_token_amount_ignore_used_amount(
+        &mut self,
+        token_mint: &Pubkey,
+        amount: u128,
+        user_token_update_origin: &UserTokenUpdateOrigin,
+    ) -> BumpResult {
+        let user_key = self.user_key;
+        let user_token = self.get_user_token_mut(token_mint)?.ok_or(CouldNotFindUserToken)?;
+        validate!(user_token.amount >= amount, BumpErrorCode::AmountNotEnough)?;
+        validate!(
+            user_token.amount >= user_token.used_amount.safe_add(amount)?,
+            BumpErrorCode::AmountNotEnough
+        )?;
+
+        let pre_user_token = user_token.clone();
+
+        user_token.sub_token_amount(amount)?;
+        emit!(UserTokenBalanceUpdateEvent {
+            user_key,
+            token_mint: *token_mint,
+            pre_user_token,
+            user_token: user_token.clone(),
+            update_origin: *user_token_update_origin,
+        });
+        Ok(())
+    }
+
+    pub fn repay_liability(
+        &mut self,
+        token_mint: &Pubkey,
+        user_token_update_origin: &UserTokenUpdateOrigin,
+    ) -> BumpResult<u128> {
+        let user_key = self.user_key;
+        let user_token = self.get_user_token_mut(token_mint)?.ok_or(CouldNotFindUserToken)?;
+        if user_token.liability > 0 && user_token.amount > 0 {
+            let pre_user_token = user_token.clone();
+
+            let repay_liability_amount = if user_token.amount >= user_token.liability {
+                user_token.liability
+            } else {
+                user_token.amount
+            };
+            user_token.amount = user_token.amount.safe_sub(repay_liability_amount)?;
+            user_token.liability = user_token.liability.safe_sub(repay_liability_amount)?;
+            user_token.used_amount = user_token.used_amount.safe_sub(repay_liability_amount)?;
+            emit!(UserTokenBalanceUpdateEvent {
+                user_key,
+                token_mint: *token_mint,
+                pre_user_token,
+                user_token: user_token.clone(),
+                update_origin: *user_token_update_origin,
+            });
+            Ok(repay_liability_amount)
+        } else {
+            Ok(0)
+        }
+    }
+
+    pub fn add_token(
+        &mut self,
+        token_mint: &Pubkey,
+        amount: u128,
+        user_token_update_origin: &UserTokenUpdateOrigin,
+    ) -> BumpResult {
+        let user_key = self.user_key;
+        let user_token = self.get_user_token_mut(token_mint)?.ok_or(CouldNotFindUserToken)?;
+        let pre_user_token = user_token.clone();
+        user_token.add_token_amount(amount)?;
+        emit!(UserTokenBalanceUpdateEvent {
+            user_key,
+            token_mint: *token_mint,
+            pre_user_token,
+            user_token: user_token.clone(),
+            update_origin: *user_token_update_origin,
+        });
         Ok(())
     }
 }
