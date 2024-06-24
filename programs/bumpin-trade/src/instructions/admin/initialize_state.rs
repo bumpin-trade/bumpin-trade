@@ -50,7 +50,7 @@ pub fn handle_initialize_state(
 ) -> Result<()> {
     msg!("state: {}", ctx.accounts.state.to_account_info().key());
     let (bump_signer, bump_signer_nonce) =
-        Pubkey::find_program_address(&[b"bump_signer".as_ref()], ctx.program_id);
+        Pubkey::find_program_address(&[b"bump_state".as_ref()], ctx.program_id);
     *ctx.accounts.state = State {
         admin: *ctx.accounts.admin.key,
         bump_signer,
