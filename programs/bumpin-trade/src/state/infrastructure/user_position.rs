@@ -11,7 +11,7 @@ pub struct UserPosition {
     pub symbol: [u8; 32],
     pub is_long: bool,
     pub cross_margin: bool,
-    pub authority: Pubkey,
+    pub user_key: Pubkey,
     pub margin_mint: Pubkey,
     pub index_mint: Pubkey,
     pub position_size: u128,
@@ -240,8 +240,8 @@ impl UserPosition {
         Ok(())
     }
 
-    pub fn set_authority(&mut self, authority: Pubkey) -> BumpResult {
-        self.authority = authority;
+    pub fn set_user_key(&mut self, authority: Pubkey) -> BumpResult {
+        self.user_key = authority;
         Ok(())
     }
 

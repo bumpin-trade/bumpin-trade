@@ -100,7 +100,7 @@ pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
     let mut position_processor = PositionProcessor { position: &mut position };
     let mut pool = ctx.accounts.pool.load_mut()?;
     let market = ctx.accounts.market.load_mut()?;
-    validate!(position_processor.position.cross_margin, BumpErrorCode::AmountNotEnough.into())?;
+    validate!(position_processor.position.cross_margin, BumpErrorCode::OnlyIsolatePositionAllowed.into())?;
     if params.is_add {
         token::receive(
             &ctx.accounts.token_program,

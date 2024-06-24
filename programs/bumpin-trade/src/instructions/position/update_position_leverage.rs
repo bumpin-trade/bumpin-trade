@@ -98,7 +98,7 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
 
     let user_processor = UserProcessor { user };
     let position_key = pda::generate_position_key(
-        &user_processor.user.authority,
+        &user_processor.user.user_key,
         params.symbol,
         params.is_cross_margin,
         &ctx.program_id,

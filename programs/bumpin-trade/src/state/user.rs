@@ -3,12 +3,13 @@ use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::math::safe_math::SafeMath;
 use crate::state::bump_events::{
-    AddUserOrderEvent, UserHoldUpdateEvent, UserTokenBalanceUpdateEvent,
+    AddOrDeleteUserOrderEvent, UserHoldUpdateEvent, UserTokenBalanceUpdateEvent,
 };
 use crate::state::infrastructure::user_order::{OrderSide, OrderStatus, PositionSide, UserOrder};
 use crate::state::infrastructure::user_position::{PositionStatus, UserPosition};
 use crate::state::infrastructure::user_stake::{UserStake, UserStakeStatus};
 use crate::state::infrastructure::user_token::{UserToken, UserTokenStatus};
+use crate::state::trade_token::TradeToken;
 use crate::state::traits::Size;
 use crate::utils::pda;
 use crate::validate;
@@ -293,7 +294,7 @@ impl User {
 
     pub fn add_order(&mut self, order: &UserOrder, index: usize) -> BumpResult {
         self.user_orders[index] = *order;
-        emit!(AddUserOrderEvent { user_key: self.user_key, order: *order });
+        emit!(AddOrDeleteUserOrderEvent { user_key: self.user_key, order: *order, is_add: true });
         Ok(())
     }
 
@@ -309,7 +310,10 @@ impl User {
 
     pub fn delete_order(&mut self, order_id: u128) -> BumpResult {
         let order_index = self.get_order_index_by_id(order_id);
+        let user_key = self.user_key;
+        let order = self.user_orders[order_index];
         self.user_orders[order_index] = UserOrder::default();
+        emit!(AddOrDeleteUserOrderEvent { user_key, order, is_add: false });
         Ok(())
     }
 
@@ -326,7 +330,7 @@ impl User {
         program_id: &Pubkey,
     ) -> BumpResult {
         let position_key =
-            pda::generate_position_key(&self.authority, symbol, is_cross_margin, program_id)?;
+            pda::generate_position_key(&self.user_key, symbol, is_cross_margin, program_id)?;
         let position_index = self
             .user_positions
             .iter()
@@ -476,6 +480,41 @@ impl User {
         } else {
             Ok(0)
         }
+    }
+
+    pub fn sub_token_with_liability(
+        &mut self,
+        token_mint: &Pubkey,
+        trade_token: &mut TradeToken,
+        amount: u128,
+        user_token_update_origin: &UserTokenUpdateOrigin,
+    ) -> BumpResult<u128> {
+        let mut liability = 0u128;
+        let user_key = self.user_key;
+        let user_token = self.get_user_token_mut(token_mint)?.ok_or(CouldNotFindUserToken)?;
+        let pre_user_token = user_token.clone();
+        if user_token.amount >= amount {
+            user_token.amount = user_token.amount.safe_sub(amount)?;
+        } else if user_token.amount > 0u128 {
+            liability = amount.safe_sub(user_token.amount)?;
+            user_token.liability = user_token.liability.safe_add(liability)?;
+            user_token.used_amount = user_token.used_amount.safe_add(liability)?;
+            user_token.amount = 0u128;
+            trade_token.add_liability(liability)?;
+        } else {
+            user_token.liability = user_token.liability.safe_add(amount)?;
+            user_token.used_amount = user_token.used_amount.safe_add(amount)?;
+            liability = amount;
+            trade_token.add_liability(amount)?;
+        }
+        emit!(UserTokenBalanceUpdateEvent {
+            user_key,
+            token_mint: *token_mint,
+            pre_user_token,
+            user_token: user_token.clone(),
+            update_origin: *user_token_update_origin,
+        });
+        Ok(liability)
     }
 
     pub fn add_token(

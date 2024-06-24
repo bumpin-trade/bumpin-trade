@@ -48,6 +48,8 @@ pub struct Deposit<'info> {
 
 pub fn handle_deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> Result<()> {
     msg!("Token index: {}", token_index);
+    msg!("Token amount: {}", amount);
+
     let user = &mut ctx.accounts.user.load_mut()?;
     let trade_token = ctx.accounts.trade_token.load_mut()?;
     // msg!("User Token Account: {:?}", &ctx.accounts.user_token_account);
@@ -83,6 +85,7 @@ pub fn handle_deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> 
     trade_token.add_token(amount)?;
 
     let repay_amount = user.repay_liability(&trade_token.mint, &UserTokenUpdateOrigin::DEPOSIT)?;
+    msg!("Token repay_amount: {}", repay_amount);
     trade_token.sub_liability(repay_amount)?;
     if amount > repay_amount {
         let left_amount = amount.safe_sub(repay_amount)?;

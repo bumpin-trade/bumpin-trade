@@ -1,5 +1,5 @@
 use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
-use anchor_lang::ToAccountInfo;
+use anchor_lang::{emit, ToAccountInfo};
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
@@ -13,6 +13,9 @@ use crate::processor::fee_processor;
 use crate::processor::market_processor::{MarketProcessor, UpdateOIParams};
 use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::user_processor::UserProcessor;
+use crate::state::bump_events::{
+    AddOrDecreaseMarginEvent, AddOrDeleteUserPositionEvent, UpdateUserPositionEvent,
+};
 use crate::state::infrastructure::user_position::{PositionStatus, UserPosition};
 use crate::state::market::Market;
 use crate::state::oracle_map::OracleMap;
@@ -47,14 +50,16 @@ impl PositionProcessor<'_> {
         oracle_map: &mut OracleMap,
     ) -> BumpResult<()> {
         let trade_token = trade_token_map.get_trade_token(&self.position.margin_mint)?;
-        let pool = &mut pool.load_mut().unwrap();
+        let pool = &mut pool.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
 
         if self.position.position_size != 0u128 {
             if self.position.leverage > params.leverage {
                 let add_margin_amount;
                 let mut add_initial_margin_from_portfolio = 0u128;
                 if self.position.cross_margin {
-                    let user = &mut user_account.load_mut().unwrap();
+                    let user = &mut user_account
+                        .load_mut()
+                        .map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
                     let available_amount = user
                         .get_user_token_ref(&trade_token.mint)?
                         .ok_or(BumpErrorCode::CouldNotFindUserToken)?
@@ -76,9 +81,7 @@ impl PositionProcessor<'_> {
                         BumpErrorCode::AmountNotEnough.into()
                     )?;
 
-                    drop(user_processor);
-                    let user = &mut user_account.load_mut().unwrap();
-                    let user_processor = UserProcessor { user };
+                    let user = &mut user_account.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadUserData);
                     add_margin_amount = cal_utils::usd_to_token_u(
                         add_margin_in_usd,
                         trade_token.decimals,
@@ -89,7 +92,7 @@ impl PositionProcessor<'_> {
                         trade_token.decimals,
                         margin_mint_token_price,
                     )?;
-                    user_processor.user.use_token(
+                    user.use_token(
                         &trade_token.mint,
                         add_margin_amount,
                         user_token_account.to_account_info().key,
@@ -136,15 +139,14 @@ impl PositionProcessor<'_> {
                     &trade_token,
                     oracle_map,
                     pool,
-                    &market.load().unwrap(),
+                    &*market.load().map_err(|_| BumpErrorCode::CouldNotLoadMarketData)?,
                     state,
                 )?;
                 if self.position.cross_margin {
-                    let user = &mut user_account.load_mut().unwrap();
-                    let user_processor = UserProcessor { user };
-                    user_processor
-                        .user
-                        .un_use_token(&self.position.margin_mint, reduce_margin_amount)?;
+                    let user = &mut user_account
+                        .load_mut()
+                        .map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
+                    user.un_use_token(&self.position.margin_mint, reduce_margin_amount)?;
                 } else {
                     token::send_from_program_vault(
                         token_program,
@@ -280,11 +282,16 @@ impl PositionProcessor<'_> {
         state_account: &Account<State>,
         trade_token_loader: &AccountLoader<TradeToken>,
     ) -> BumpResult {
-        let trade_token = trade_token_loader.load().unwrap();
-        let market = market_account_loader.load().unwrap();
+        let trade_token =
+            trade_token_loader.load().map_err(|_| BumpErrorCode::CouldNotLoadTradeTokenData)?;
+        let market =
+            market_account_loader.load().map_err(|_| BumpErrorCode::CouldNotLoadMarketData)?;
 
-        let stable_pool = &mut stable_pool_account_loader.load_mut().unwrap();
-        let base_token_pool = &mut pool_account_loader.load_mut().unwrap();
+        let stable_pool = &mut stable_pool_account_loader
+            .load_mut()
+            .map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
+        let base_token_pool =
+            &mut pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
         let fee = if self.position.is_long {
             fee_processor::collect_long_open_position_fee(
                 &market,
@@ -303,19 +310,32 @@ impl PositionProcessor<'_> {
             )?
         };
 
-        let base_token_pool = &mut pool_account_loader.load_mut().unwrap();
-        let stable_pool = &mut stable_pool_account_loader.load_mut().unwrap();
+        let base_token_pool =
+            &mut pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
+        let stable_pool = &mut stable_pool_account_loader
+            .load_mut()
+            .map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
         let pool = if self.position.is_long { base_token_pool } else { stable_pool };
 
-        let market = &mut market_account_loader.load_mut().unwrap();
-        let user = &mut user_account_loader.load_mut().unwrap();
+        let market = &mut market_account_loader
+            .load_mut()
+            .map_err(|_| BumpErrorCode::CouldNotLoadMarketData)?;
+        let user =
+            &mut user_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
+        let user_key = user.user_key;
         let mut market_processor = MarketProcessor { market };
-        let mut user_processor = UserProcessor { user };
 
         if params.is_cross_margin {
-            let trade_token = &mut trade_token_loader.load_mut().unwrap();
-            user_processor.user.un_use_token(&params.margin_token, fee)?;
-            user_processor.sub_token_with_liability(&params.margin_token, trade_token, fee)?;
+            let trade_token = &mut trade_token_loader
+                .load_mut()
+                .map_err(|_| BumpErrorCode::CouldNotLoadTradeTokenData)?;
+            user.un_use_token(&params.margin_token, fee)?;
+            user.sub_token_with_liability(
+                &params.margin_token,
+                trade_token,
+                fee,
+                &UserTokenUpdateOrigin::SettleFee,
+            )?;
         }
 
         let increase_margin = cal_utils::sub_u128(params.increase_margin, fee)?;
@@ -330,7 +350,8 @@ impl PositionProcessor<'_> {
             decimal,
             params.margin_token_price,
         )?;
-
+        let increase_hold =
+            cal_utils::mul_rate_u(increase_margin, cal_utils::sub_u128(params.leverage, 1u128)?)?;
         if self.position.position_size == 0u128 {
             //new position
             self.position.set_margin_mint(params.margin_token)?;
@@ -364,7 +385,15 @@ impl PositionProcessor<'_> {
             } else {
                 market_processor.market.funding_fee.short_funding_fee_amount_per_size
             })?;
+            self.position.set_last_update(cal_utils::current_time())?;
+            self.position.add_hold_pool_amount(increase_hold)?;
+            emit!(AddOrDeleteUserPositionEvent {
+                user_key,
+                position: self.position.clone(),
+                is_add: true
+            });
         } else {
+            let pre_position = self.position.clone();
             //increase position
             self.update_borrowing_fee(pool, params.margin_token_price, &trade_token)?;
             self.update_funding_fee(
@@ -396,12 +425,14 @@ impl PositionProcessor<'_> {
                 -cal_utils::token_to_usd_u(fee, decimal, params.margin_token_price)?
                     .cast::<i128>()?,
             )?;
+            self.position.set_last_update(cal_utils::current_time())?;
+            self.position.add_hold_pool_amount(increase_hold)?;
+            emit!(UpdateUserPositionEvent {
+                user_key,
+                pre_position,
+                position: self.position.clone(),
+            });
         }
-
-        self.position.set_last_update(cal_utils::current_time())?;
-        let increase_hold =
-            cal_utils::mul_rate_u(increase_margin, cal_utils::sub_u128(params.leverage, 1u128)?)?;
-        self.position.add_hold_pool_amount(increase_hold)?;
 
         // update market io
         market_processor.update_oi(
@@ -437,12 +468,19 @@ impl PositionProcessor<'_> {
         program_id: &Pubkey,
         oracle_map: &mut OracleMap,
     ) -> BumpResult<()> {
-        let stake_token_pool = &mut pool_account_loader.load_mut().unwrap();
-        let stable_pool = &mut stable_pool_account_loader.load_mut().unwrap();
+        let stake_token_pool =
+            &mut pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
+        let stable_pool = &mut stable_pool_account_loader
+            .load_mut()
+            .map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
         let pool = if self.position.is_long { stake_token_pool } else { stable_pool };
 
-        let trade_token = &mut trade_token_loader.load_mut().unwrap();
-        let market = &mut market_account_loader.load_mut().unwrap();
+        let trade_token = &mut trade_token_loader
+            .load_mut()
+            .map_err(|_| BumpErrorCode::CouldNotLoadTradeTokenData)?;
+        let market = &mut market_account_loader
+            .load_mut()
+            .map_err(|_| BumpErrorCode::CouldNotLoadMarketData)?;
         let position_un_pnl_usd = self.get_position_un_pnl_usd(params.execute_price)?;
         let margin_mint_token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
         self.update_borrowing_fee(pool, params.execute_price, trade_token)?;
@@ -462,15 +500,23 @@ impl PositionProcessor<'_> {
         if response.settle_margin < 0i128 && !params.is_liquidation && !self.position.cross_margin {
             return Err(BumpErrorCode::AmountNotEnough);
         }
-        let user = &mut user_account_loader.load_mut().unwrap();
+        let user =
+            &mut user_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
         let mut user_processor = UserProcessor { user };
         if params.decrease_size == self.position.position_size {
+            let position = self.position.clone();
             user_processor.user.delete_position(
                 market.symbol,
                 self.position.cross_margin,
                 program_id,
             )?;
+            emit!(AddOrDeleteUserPositionEvent {
+                user_key: user_processor.user.user_key,
+                position,
+                is_add: false
+            });
         } else {
+            let pre_position = self.position.clone();
             self.position.sub_position_size(params.decrease_size)?;
             self.position.sub_initial_margin(response.decrease_margin)?;
             self.position.sub_initial_margin_usd(response.decrease_margin_in_usd)?;
@@ -485,6 +531,11 @@ impl PositionProcessor<'_> {
             self.position.sub_realized_funding_fee_usd(response.settle_funding_fee_in_usd)?;
             self.position.sub_close_fee_usd(response.settle_close_fee_in_usd)?;
             self.position.set_last_update(cal_utils::current_time())?;
+            emit!(UpdateUserPositionEvent {
+                user_key: user_processor.user.user_key,
+                pre_position,
+                position: self.position.clone(),
+            });
         }
         //collect fee
         if self.position.is_long {
@@ -494,8 +545,12 @@ impl PositionProcessor<'_> {
                 params.is_cross_margin,
             )?;
         } else {
-            let stake_token_pool = &mut pool_account_loader.load_mut().unwrap();
-            let stable_pool = &mut stable_pool_account_loader.load_mut().unwrap();
+            let stake_token_pool = &mut pool_account_loader
+                .load_mut()
+                .map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
+            let stable_pool = &mut stable_pool_account_loader
+                .load_mut()
+                .map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
             fee_processor::collect_short_close_position_fee(
                 stable_pool,
                 stake_token_pool,
@@ -509,8 +564,11 @@ impl PositionProcessor<'_> {
             response.settle_borrowing_fee,
             params.is_cross_margin,
         )?;
-        let stake_token_pool = &mut pool_account_loader.load_mut().unwrap();
-        let stable_pool = &mut stable_pool_account_loader.load_mut().unwrap();
+        let stake_token_pool =
+            &mut pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
+        let stable_pool = &mut stable_pool_account_loader
+            .load_mut()
+            .map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
         Pool::settle_funding_fee(
             stake_token_pool,
             stable_pool,
@@ -594,6 +652,8 @@ impl PositionProcessor<'_> {
             max_reduce_margin_in_usd > params.update_margin_amount,
             BumpErrorCode::AmountNotEnough.into()
         )?;
+        let user_key = self.position.user_key;
+        let pre_position = self.position.clone();
         let reduce_margin_amount = cal_utils::usd_to_token_u(
             params.update_margin_amount,
             trade_token.decimals,
@@ -632,6 +692,12 @@ impl PositionProcessor<'_> {
         }
         self.position.add_hold_pool_amount(reduce_margin_amount)?;
         pool.hold_pool(reduce_margin_amount)?;
+        emit!(AddOrDecreaseMarginEvent {
+            user_key,
+            position: self.position.clone(),
+            pre_position,
+            is_add: false,
+        });
         Ok(reduce_margin_amount)
     }
 
@@ -643,7 +709,7 @@ impl PositionProcessor<'_> {
         mut pool: &mut Pool,
     ) -> BumpResult<()> {
         let token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
-
+        let user_key = self.position.user_key;
         validate!(
             params.update_margin_amount
                 < cal_utils::usd_to_token_u(
@@ -653,6 +719,14 @@ impl PositionProcessor<'_> {
                 )?,
             BumpErrorCode::AmountNotEnough
         )?;
+
+        let mut add_or_decrease_margin_event = AddOrDecreaseMarginEvent {
+            user_key,
+            position: Default::default(),
+            pre_position: self.position.clone(),
+            is_add: true,
+        };
+
         self.position.add_initial_margin(params.update_margin_amount)?;
         if self.position.cross_margin {
             self.position.add_initial_margin_usd(cal_utils::div_rate_u(
@@ -678,6 +752,9 @@ impl PositionProcessor<'_> {
         self.position.sub_hold_pool_amount(sub_amount)?;
         let mut pool_processor = PoolProcessor { pool: &mut pool };
         pool_processor.update_pnl_and_un_hold_pool_amount(sub_amount, 0i128, 0u128, None)?;
+
+        add_or_decrease_margin_event.position = self.position.clone();
+        emit!(add_or_decrease_margin_event);
         Ok(())
     }
 
@@ -1078,20 +1155,20 @@ impl PositionProcessor<'_> {
         token_program: &Program<'info, Token>,
     ) -> BumpResult<u128> {
         let user = &mut user_account_loader.load_mut().unwrap();
-        let mut user_processor = UserProcessor { user };
 
         let mut add_liability = 0u128;
         //record pay fee
         if response.settle_fee > 0i128 {
-            add_liability = user_processor.sub_token_with_liability(
+            add_liability = user.sub_token_with_liability(
                 &self.position.margin_mint,
                 &mut *trade_token_account
                     .load_mut()
                     .map_err(|_e| BumpErrorCode::CouldNotLoadTradeTokenData)?,
                 response.settle_fee.abs().cast::<u128>()?,
+                &UserTokenUpdateOrigin::SettleFee,
             )?;
         } else {
-            user_processor.user.add_token(
+            user.add_token(
                 &self.position.margin_mint,
                 response.settle_fee.abs().cast::<u128>()?,
                 &UserTokenUpdateOrigin::SettleFee,
@@ -1099,11 +1176,11 @@ impl PositionProcessor<'_> {
         }
 
         // release token
-        user_processor.user.un_use_token(&self.position.margin_mint, response.decrease_margin)?;
+        user.un_use_token(&self.position.margin_mint, response.decrease_margin)?;
 
         //deal user pnl
         if response.user_realized_pnl_token.safe_add(response.settle_fee)? > 0i128 {
-            user_processor.user.add_token(
+            user.add_token(
                 &self.position.margin_mint,
                 response
                     .user_realized_pnl_token
@@ -1114,7 +1191,7 @@ impl PositionProcessor<'_> {
             )?;
         } else {
             add_liability = add_liability.safe_add(
-                user_processor.sub_token_with_liability(
+                user.sub_token_with_liability(
                     &self.position.margin_mint,
                     &mut *trade_token_account
                         .load_mut()
@@ -1124,6 +1201,7 @@ impl PositionProcessor<'_> {
                         .safe_add(response.settle_fee)?
                         .abs()
                         .cast::<u128>()?,
+                    &UserTokenUpdateOrigin::SettlePnl,
                 )?,
             )?;
         }

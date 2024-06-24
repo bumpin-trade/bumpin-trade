@@ -77,7 +77,6 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         let pool = &mut pool_key_map.get_mut_ref(&market.pool_key)?;
         let mut pool_processor = PoolProcessor { pool };
         pool_processor.update_pool_borrowing_fee_rate()?;
-        drop(pool_processor);
 
         let market = &mut market_map.get_mut_ref(&user_position.symbol)?;
         let mut market_processor = MarketProcessor { market };
@@ -86,7 +85,6 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
             &ctx.accounts.state,
             oracle_map.get_price_data(oracle).unwrap().price,
         )?;
-        drop(market_processor);
     }
 
     let (cross_net_value, total_position_mm, total_size) = user_processor

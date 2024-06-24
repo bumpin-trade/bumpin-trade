@@ -3,8 +3,8 @@ use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
 
-use crate::errors::BumpErrorCode::CouldNotFindUserToken;
 use crate::errors::{BumpErrorCode, BumpResult};
+use crate::instructions::cal_utils;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::processor::position_processor::PositionProcessor;
@@ -30,12 +30,13 @@ impl<'a> UserProcessor<'a> {
         &mut self,
         amount: u128,
         oracle: &Pubkey,
+        trade_token: &TradeToken,
         token_mint: &Pubkey,
         oracle_map: &mut OracleMap,
         trade_token_map: &TradeTokenMap,
     ) -> BumpResult {
-        let price_data = oracle_map.get_price_data(oracle)?;
-        let withdraw_usd = price_data.price.safe_mul(amount)?;
+        let price = oracle_map.get_price_data(oracle)?.price;
+        let withdraw_usd = cal_utils::token_to_usd_u(amount, trade_token.decimals, price)?;
 
         let available_value = self.get_available_value(oracle_map, trade_token_map)?;
         validate!(
@@ -297,36 +298,6 @@ impl<'a> UserProcessor<'a> {
             }
         }
         Ok(())
-    }
-
-    pub fn sub_token_with_liability(
-        &mut self,
-        token: &Pubkey,
-        trade_token: &mut TradeToken,
-        amount: u128,
-    ) -> BumpResult<u128> {
-        let mut liability = 0u128;
-        let token_balance = self
-            .user
-            .user_tokens
-            .iter_mut()
-            .find(|mint| mint.token_mint.eq(token))
-            .ok_or(CouldNotFindUserToken)?;
-        if token_balance.amount >= amount {
-            token_balance.amount = token_balance.amount.safe_sub(amount)?;
-        } else if token_balance.amount > 0u128 {
-            liability = amount.safe_sub(token_balance.amount)?;
-            token_balance.liability = token_balance.liability.safe_add(liability)?;
-            token_balance.used_amount = token_balance.used_amount.safe_add(liability)?;
-            token_balance.amount = 0u128;
-            trade_token.add_liability(liability)?;
-        } else {
-            token_balance.liability = token_balance.liability.safe_add(amount)?;
-            token_balance.used_amount = token_balance.used_amount.safe_add(amount)?;
-            liability = amount;
-            trade_token.add_liability(amount)?;
-        }
-        Ok(liability)
     }
 
     pub fn cancel_order<'info>(

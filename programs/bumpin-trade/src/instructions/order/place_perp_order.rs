@@ -302,7 +302,7 @@ pub fn handle_execute_order<'info>(
 
     let order = if execute_from_remote { user.find_ref_order_by_id(order_id)? } else { user_order };
     let next_use_index = user.next_usable_position_index()?;
-    let user_authority = user.authority;
+    let user_key = user.user_key;
 
     let stake_token_pool = &mut pool_account_loader.load_mut().unwrap();
     let stable_pool = &mut stable_pool_account_loader.load_mut().unwrap();
@@ -318,7 +318,7 @@ pub fn handle_execute_order<'info>(
 
     let user = &mut user_account_loader.load_mut().unwrap();
     let position =
-        user.find_position_by_seed(&user_authority, market.symbol, order.cross_margin, program_id)?;
+        user.find_position_by_seed(&user_key, market.symbol, order.cross_margin, program_id)?;
 
     //update funding_fee_rate and borrowing_fee_rate
     let mut market_processor = MarketProcessor { market };
@@ -368,12 +368,12 @@ pub fn handle_execute_order<'info>(
                 }
 
                 position.set_position_key(pda::generate_position_key(
-                    &user.authority,
+                    &user.user_key,
                     order.symbol,
                     order.cross_margin,
                     program_id,
                 )?)?;
-                position.set_authority(user.authority)?;
+                position.set_user_key(user.user_key)?;
                 position.set_index_mint(market.index_mint)?;
                 position.set_symbol(order.symbol)?;
                 position.set_margin_mint(order.margin_mint)?;

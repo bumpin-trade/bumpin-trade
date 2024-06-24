@@ -43,6 +43,8 @@ pub enum BumpErrorCode {
     CouldNotFindUserPosition,
     #[msg("OnlyLiquidateIsolatePosition")]
     OnlyLiquidateIsolatePosition,
+    #[msg("OnlyIsolatePositionAllowed")]
+    OnlyIsolatePositionAllowed,
     #[msg("CouldNotFindUserStake")]
     CouldNotFindUserStake,
     #[msg("OracleNotFound")]

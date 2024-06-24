@@ -71,7 +71,14 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
 
     let mut user_processor = UserProcessor { user };
 
-    user_processor.withdraw(amount, oracle, token_mint, &mut oracle_map, &trade_token_map)?;
+    user_processor.withdraw(
+        amount,
+        oracle,
+        &trade_token,
+        token_mint,
+        &mut oracle_map,
+        &trade_token_map,
+    )?;
     trade_token.sub_token(amount)?;
     drop(user_processor);
 

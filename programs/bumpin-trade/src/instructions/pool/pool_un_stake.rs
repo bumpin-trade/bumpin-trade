@@ -111,7 +111,6 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
 
     validate!(pool.total_supply == 0, BumpErrorCode::UnStakeTooSmall)?;
 
-    let pre_pool = pool.clone();
     let mut pool_processor = PoolProcessor { pool };
 
     let un_stake_token_amount = pool_processor.un_stake(

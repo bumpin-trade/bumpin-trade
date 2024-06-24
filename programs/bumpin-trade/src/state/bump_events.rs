@@ -6,6 +6,7 @@ use crate::instructions::DepositOrigin;
 use crate::state::infrastructure::fee_reward::FeeReward;
 use crate::state::infrastructure::pool_borrowing_fee::BorrowingFee;
 use crate::state::infrastructure::user_order::UserOrder;
+use crate::state::infrastructure::user_position::UserPosition;
 use crate::state::infrastructure::user_stake::{UserRewards, UserStake};
 use crate::state::infrastructure::user_token::UserToken;
 use crate::state::pool::PoolBalance;
@@ -64,9 +65,32 @@ pub struct UserHoldUpdateEvent {
 }
 
 #[event]
-pub struct AddUserOrderEvent {
+pub struct AddOrDeleteUserOrderEvent {
     pub user_key: Pubkey,
     pub order: UserOrder,
+    pub is_add: bool,
+}
+
+#[event]
+pub struct UpdateUserPositionEvent {
+    pub user_key: Pubkey,
+    pub pre_position: UserPosition,
+    pub position: UserPosition,
+}
+
+#[event]
+pub struct AddOrDeleteUserPositionEvent {
+    pub user_key: Pubkey,
+    pub position: UserPosition,
+    pub is_add: bool,
+}
+
+#[event]
+pub struct AddOrDecreaseMarginEvent {
+    pub user_key: Pubkey,
+    pub position: UserPosition,
+    pub pre_position: UserPosition,
+    pub is_add: bool,
 }
 
 #[event]
