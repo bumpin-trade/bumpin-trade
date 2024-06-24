@@ -1,8 +1,8 @@
-use crate::errors::BumpErrorCode::CouldNotFindUserToken;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use solana_program::account_info::AccountInfo;
 
+use crate::errors::BumpErrorCode::CouldNotFindUserToken;
 use crate::instructions::constraints::*;
 use crate::math::safe_math::SafeMath;
 use crate::processor::user_processor::UserProcessor;
@@ -51,7 +51,7 @@ pub fn handle_deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> 
     msg!("Token amount: {}", amount);
 
     let user = &mut ctx.accounts.user.load_mut()?;
-    let trade_token = ctx.accounts.trade_token.load_mut()?;
+    let trade_token = ctx.accounts.trade_token.load()?;
     // msg!("User Token Account: {:?}", &ctx.accounts.user_token_account);
     token::receive(
         &ctx.accounts.token_program,
@@ -98,6 +98,7 @@ pub fn handle_deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> 
         )?;
         drop(user_processor);
     }
+    msg!("Final amount: {}", ctx.accounts.user.load()?.get_user_token_ref(&trade_token.mint)?.ok_or(CouldNotFindUserToken)?.amount);
     emit!(DepositEvent {
         user_key: ctx.accounts.user.to_account_info().key(),
         token_mint: ctx.accounts.trade_token_vault.mint,
