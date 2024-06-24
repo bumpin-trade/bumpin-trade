@@ -98,7 +98,6 @@ pub fn handle_deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> 
         )?;
         drop(user_processor);
     }
-    msg!("Final amount: {}", ctx.accounts.user.load()?.get_user_token_ref(&trade_token.mint)?.ok_or(CouldNotFindUserToken)?.amount);
     emit!(DepositEvent {
         user_key: ctx.accounts.user.to_account_info().key(),
         token_mint: ctx.accounts.trade_token_vault.mint,
