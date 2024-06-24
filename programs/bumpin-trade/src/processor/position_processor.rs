@@ -81,7 +81,9 @@ impl PositionProcessor<'_> {
                         BumpErrorCode::AmountNotEnough.into()
                     )?;
 
-                    let user = &mut user_account.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadUserData);
+                    let user = &mut user_account
+                        .load_mut()
+                        .map_err(|_e| BumpErrorCode::CouldNotLoadUserData)?;
                     add_margin_amount = cal_utils::usd_to_token_u(
                         add_margin_in_usd,
                         trade_token.decimals,
