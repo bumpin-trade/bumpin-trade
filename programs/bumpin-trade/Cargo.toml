@@ -10,6 +10,7 @@ name = "bumpin_trade"
 
 [features]
 default = []
+mainnet-beta = []
 cpi = ["no-entrypoint"]
 no-entrypoint = []
 no-idl = []

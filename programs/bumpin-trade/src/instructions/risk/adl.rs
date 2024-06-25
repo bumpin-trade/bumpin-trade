@@ -134,7 +134,7 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
     Ok(())
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Eq, PartialEq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Copy, Eq, PartialEq)]
 pub struct ADLParams {
     position_key: Pubkey,
     user_key: Pubkey,

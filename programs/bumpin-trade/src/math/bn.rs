@@ -4,7 +4,6 @@
 #![allow(clippy::ptr_offset_with_cast)]
 #![allow(clippy::manual_range_contains)]
 
-use anchor_lang::prelude::borsh::maybestd::io::Read;
 use anchor_lang::prelude::borsh::{BorshDeserialize, BorshSerialize};
 use std::borrow::BorrowMut;
 use std::convert::TryInto;
@@ -40,12 +39,12 @@ macro_rules! impl_borsh_deserialize_for_bn {
                 Ok(res)
             }
 
-            #[inline]
-            fn deserialize_reader<R: Read>(reader: &mut R) -> std::io::Result<Self> {
-                let mut buf = [0u8; size_of::<$type>()];
-                reader.read_exact(&mut buf)?;
-                Ok($type::from_le_bytes(buf))
-            }
+            // #[inline]
+            // fn deserialize_reader<R: Read>(reader: &mut R) -> std::io::Result<Self> {
+            //     let mut buf = [0u8; size_of::<$type>()];
+            //     reader.read_exact(&mut buf)?;
+            //     Ok($type::from_le_bytes(buf))
+            // }
         }
     };
 }

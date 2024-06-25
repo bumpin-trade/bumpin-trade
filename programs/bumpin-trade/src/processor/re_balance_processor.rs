@@ -129,8 +129,8 @@ pub fn rebalance_pool_unsettle<'a>(
 
 pub fn rebalance_stable_pool<'a>(
     account_maps: &mut AccountMaps<'a>,
-    bump_signer: &AccountInfo<'a>,
-    token_program: &Program<'a, Token>,
+    _bump_signer: &AccountInfo<'a>,
+    _token_program: &Program<'a, Token>,
 ) -> BumpResult {
     let pool_map = &account_maps.pool_map;
     let pool_vec = pool_map.get_all_pool()?;
@@ -139,7 +139,7 @@ pub fn rebalance_stable_pool<'a>(
             pool.sub_amount(pool.stable_balance.loss_amount)?;
             pool.sub_loss_amount(pool.stable_balance.loss_amount)?;
 
-            let transfer_amount =
+            let _transfer_amount =
                 pool.stable_balance.amount.safe_sub(pool.stable_balance.loss_amount)?;
             let swap_amount = swap::jup_swap()?;
 
@@ -149,7 +149,7 @@ pub fn rebalance_stable_pool<'a>(
             pool.sub_amount(pool.stable_balance.amount)?;
             pool.sub_loss_amount(pool.stable_balance.amount)?;
 
-            let transfer_amount =
+            let _transfer_amount =
                 pool.stable_balance.loss_amount.safe_sub(pool.stable_balance.amount)?;
             let swap_amount = swap::jup_swap()?;
 
