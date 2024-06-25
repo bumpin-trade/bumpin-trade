@@ -52,21 +52,11 @@ export class BumpinClient {
     }
 
     public async subscriptionMe() {
-        const [pda, _] = BumpinUtils.getPdaSync(this.program, [Buffer.from("user"), this.wallet.publicKey.toBuffer()]);
-        let er = new WebSocketAccountSubscriber<UserAccount>("user", this.program, pda);
-        await er.subscribe((data) => {
-            console.log(data);
-        });
+
     }
 
     public async me(): Promise<UserAccount> {
         const [pda, _] = BumpinUtils.getPdaSync(this.program, [Buffer.from("user"), this.wallet.publicKey.toBuffer()]);
-        console.log(await this.program.account.user.fetch(pda) as any);
-        let me = await this.program.account.user.fetch(pda) as any as UserAccount;
-        for (let userToken of me.userTokens) {
-            console.log("__________", userToken.amount.toString());
-            console.log("__________", userToken.usedAmount.toString());
-        }
         return await this.program.account.user.fetch(pda) as any as UserAccount;
     }
 
@@ -103,9 +93,6 @@ export class BumpinClient {
         for (let i = 0; i < this.state!.numberOfTradeTokens; i++) {
             const [pda, _] = BumpinUtils.getTradeTokenPda(this.program, i);
             let tradeToken = (await this.program.account.tradeToken.fetch(pda)) as TradeToken;
-
-            console.log("TradeToken discount: ", tradeToken.discount.toString());
-            console.log("TradeToken liquidationFactor: ", tradeToken.liquidationFactor.toString(10));
             tradeTokens.push(tradeToken);
         }
         return tradeTokens;
@@ -113,12 +100,7 @@ export class BumpinClient {
 
     public async syncState(): Promise<State> {
         const [statePda, _] = BumpinUtils.getBumpinStatePda(this.program);
-        let state = await this.program.account.state.fetch(statePda) as any as State;
-        console.log("State minOrderMarginUsd: ", state.minOrderMarginUsd.toString());
-        console.log("State maxMaintenanceMarginRate: ", state.maxMaintenanceMarginRate.toString());
-        console.log("State fundingFeeBaseRate: ", state.fundingFeeBaseRate.toString());
-        console.log("State maxFundingBaseRate: ", state.maxFundingBaseRate.toString());
-        return state;
+        return await this.program.account.state.fetch(statePda) as any as State;
     }
 
     public async initializeUser() {

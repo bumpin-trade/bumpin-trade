@@ -3423,39 +3423,6 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
-            "name": "symbol",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
-            "name": "marketIndex",
-            "type": "u16"
-          },
-          {
-            "name": "poolKey",
-            "type": "pubkey"
-          },
-          {
-            "name": "poolMint",
-            "type": "pubkey"
-          },
-          {
-            "name": "indexMint",
-            "type": "pubkey"
-          },
-          {
-            "name": "stablePoolKey",
-            "type": "pubkey"
-          },
-          {
-            "name": "stablePoolMint",
-            "type": "pubkey"
-          },
-          {
             "name": "longOpenInterest",
             "type": {
               "defined": {
@@ -3485,6 +3452,48 @@ export type BumpinTrade = {
               "defined": {
                 "name": "marketConfig"
               }
+            }
+          },
+          {
+            "name": "poolKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "poolMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "indexMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "stablePoolKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "stablePoolMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "marketIndex",
+            "type": "u16"
+          },
+          {
+            "name": "symbol",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                5
+              ]
             }
           }
         ]
@@ -3742,29 +3751,20 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
-            "name": "poolKey",
-            "type": "pubkey"
+            "name": "pnl",
+            "type": "i128"
           },
           {
-            "name": "poolMint",
-            "type": "pubkey"
+            "name": "apr",
+            "type": "u128"
           },
           {
-            "name": "poolIndex",
-            "type": "u16"
+            "name": "insuranceFundAmount",
+            "type": "u128"
           },
           {
-            "name": "poolMintVault",
-            "type": "pubkey"
-          },
-          {
-            "name": "poolName",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
+            "name": "totalSupply",
+            "type": "u128"
           },
           {
             "name": "poolBalance",
@@ -3815,8 +3815,20 @@ export type BumpinTrade = {
             }
           },
           {
-            "name": "totalSupply",
-            "type": "u128"
+            "name": "poolMintVault",
+            "type": "pubkey"
+          },
+          {
+            "name": "poolKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "poolMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "poolIndex",
+            "type": "u16"
           },
           {
             "name": "poolStatus",
@@ -3831,16 +3843,22 @@ export type BumpinTrade = {
             "type": "bool"
           },
           {
-            "name": "pnl",
-            "type": "i128"
+            "name": "poolName",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           },
           {
-            "name": "apr",
-            "type": "u128"
-          },
-          {
-            "name": "insuranceFundAmount",
-            "type": "u128"
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                3
+              ]
+            }
           }
         ]
       }
@@ -3853,10 +3871,6 @@ export type BumpinTrade = {
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "poolMint",
-            "type": "pubkey"
-          },
           {
             "name": "amount",
             "type": "u128"
@@ -3872,6 +3886,19 @@ export type BumpinTrade = {
           {
             "name": "lossAmount",
             "type": "u128"
+          },
+          {
+            "name": "poolMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
           }
         ]
       }
@@ -4449,7 +4476,7 @@ export type BumpinTrade = {
                     "name": "userToken"
                   }
                 },
-                8
+                12
               ]
             }
           },
@@ -4462,7 +4489,7 @@ export type BumpinTrade = {
                     "name": "userStake"
                   }
                 },
-                8
+                12
               ]
             }
           },
@@ -4770,16 +4797,25 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
-            "name": "token",
-            "type": "pubkey"
-          },
-          {
             "name": "realisedRewardsTokenAmount",
             "type": "u128"
           },
           {
             "name": "openRewardsPerStakeToken",
             "type": "u128"
+          },
+          {
+            "name": "token",
+            "type": "pubkey"
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
           }
         ]
       }
@@ -4821,6 +4857,14 @@ export type BumpinTrade = {
             "type": "u128"
           },
           {
+            "name": "userRewards",
+            "type": {
+              "defined": {
+                "name": "userRewards"
+              }
+            }
+          },
+          {
             "name": "poolKey",
             "type": "pubkey"
           },
@@ -4833,19 +4877,11 @@ export type BumpinTrade = {
             }
           },
           {
-            "name": "userRewards",
-            "type": {
-              "defined": {
-                "name": "userRewards"
-              }
-            }
-          },
-          {
             "name": "padding",
             "type": {
               "array": [
                 "u8",
-                6
+                7
               ]
             }
           }

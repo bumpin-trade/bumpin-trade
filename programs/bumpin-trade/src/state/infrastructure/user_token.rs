@@ -27,10 +27,7 @@ pub enum UserTokenStatus {
 
 impl UserToken {
     pub fn add_token_amount(&mut self, amount: u128) -> BumpResult {
-        msg!("current_amount:{}", self.amount);
         self.amount = self.amount.safe_add(amount)?;
-        msg!("after_add_amount:{}", self.amount);
-        self.amount = 98765;
         Ok(())
     }
     pub fn sub_token_amount(&mut self, amount: u128) -> BumpResult {

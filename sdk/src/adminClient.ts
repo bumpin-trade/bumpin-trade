@@ -71,50 +71,7 @@ export class BumpinAdmin {
     }
 
     public async initTradeToken(tradeTokenName: string, tradeTokenMint: string, discount: BN, liquidationFactor: BN) {
-        // const lamports = await this.provider.connection.getMinimumBalanceForRentExemption(ACCOUNT_SIZE);
         let tradeTokenMintPublicKey = new PublicKey(tradeTokenMint);
-
-        // let account = anchor.web3.Keypair.generate();
-
-        // let ata = await getAssociatedTokenAddress(
-        //     tradeTokenMintPublicKey,
-        //     this.wallet.publicKey,
-        // );
-        // console.log(`ata: ${ata.toBase58()}`);
-        //
-        // const instructions = [
-        //     createAssociatedTokenAccountInstruction(
-        //         this.wallet.publicKey,
-        //         ata,
-        //         this.wallet.publicKey,
-        //         tradeTokenMintPublicKey
-        //     )
-        // ];
-        //
-        // let recentBlockhash = (await this.connection.getLatestBlockhash('finalized')).blockhash;
-        // const message = new TransactionMessage({
-        //     payerKey: this.wallet.publicKey,
-        //     recentBlockhash,
-        //     instructions,
-        // }).compileToV0Message();
-        //
-        // const transaction = new VersionedTransaction(message);
-        // const signedTransaction = await this.wallet.signTransaction(transaction);
-        // // signedTransaction.sign([account]);
-        //
-        // let lastBlockHash = await this.provider.connection
-        //     .getLatestBlockhash();
-        // let blockhash = lastBlockHash.blockhash;
-        // let lastValidBlockHeight = lastBlockHash.lastValidBlockHeight;
-        //
-        //
-        // const signature = await this.connection.sendTransaction(signedTransaction);
-        // await this.provider.connection.confirmTransaction({
-        //     blockhash,
-        //     lastValidBlockHeight,
-        //     signature
-        // });
-
         const s = BumpinUtils.string2Padded32Bytes(tradeTokenName);
         let oracleKeypair = await this.DEV_TEST_ONLY__INIT_ORACLE(70000, 1.0, -4);
 

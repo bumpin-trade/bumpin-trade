@@ -3417,39 +3417,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "symbol",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
-            "name": "market_index",
-            "type": "u16"
-          },
-          {
-            "name": "pool_key",
-            "type": "pubkey"
-          },
-          {
-            "name": "pool_mint",
-            "type": "pubkey"
-          },
-          {
-            "name": "index_mint",
-            "type": "pubkey"
-          },
-          {
-            "name": "stable_pool_key",
-            "type": "pubkey"
-          },
-          {
-            "name": "stable_pool_mint",
-            "type": "pubkey"
-          },
-          {
             "name": "long_open_interest",
             "type": {
               "defined": {
@@ -3479,6 +3446,48 @@
               "defined": {
                 "name": "MarketConfig"
               }
+            }
+          },
+          {
+            "name": "pool_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "index_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "stable_pool_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "stable_pool_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "market_index",
+            "type": "u16"
+          },
+          {
+            "name": "symbol",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                5
+              ]
             }
           }
         ]
@@ -3736,29 +3745,20 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "pool_key",
-            "type": "pubkey"
+            "name": "pnl",
+            "type": "i128"
           },
           {
-            "name": "pool_mint",
-            "type": "pubkey"
+            "name": "apr",
+            "type": "u128"
           },
           {
-            "name": "pool_index",
-            "type": "u16"
+            "name": "insurance_fund_amount",
+            "type": "u128"
           },
           {
-            "name": "pool_mint_vault",
-            "type": "pubkey"
-          },
-          {
-            "name": "pool_name",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
+            "name": "total_supply",
+            "type": "u128"
           },
           {
             "name": "pool_balance",
@@ -3809,8 +3809,20 @@
             }
           },
           {
-            "name": "total_supply",
-            "type": "u128"
+            "name": "pool_mint_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool_index",
+            "type": "u16"
           },
           {
             "name": "pool_status",
@@ -3825,16 +3837,22 @@
             "type": "bool"
           },
           {
-            "name": "pnl",
-            "type": "i128"
+            "name": "pool_name",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           },
           {
-            "name": "apr",
-            "type": "u128"
-          },
-          {
-            "name": "insurance_fund_amount",
-            "type": "u128"
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                3
+              ]
+            }
           }
         ]
       }
@@ -3847,10 +3865,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "pool_mint",
-            "type": "pubkey"
-          },
           {
             "name": "amount",
             "type": "u128"
@@ -3866,6 +3880,19 @@
           {
             "name": "loss_amount",
             "type": "u128"
+          },
+          {
+            "name": "pool_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
           }
         ]
       }
@@ -4443,7 +4470,7 @@
                     "name": "UserToken"
                   }
                 },
-                8
+                12
               ]
             }
           },
@@ -4456,7 +4483,7 @@
                     "name": "UserStake"
                   }
                 },
-                8
+                12
               ]
             }
           },
@@ -4764,16 +4791,25 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "token",
-            "type": "pubkey"
-          },
-          {
             "name": "realised_rewards_token_amount",
             "type": "u128"
           },
           {
             "name": "open_rewards_per_stake_token",
             "type": "u128"
+          },
+          {
+            "name": "token",
+            "type": "pubkey"
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
           }
         ]
       }
@@ -4815,6 +4851,14 @@
             "type": "u128"
           },
           {
+            "name": "user_rewards",
+            "type": {
+              "defined": {
+                "name": "UserRewards"
+              }
+            }
+          },
+          {
             "name": "pool_key",
             "type": "pubkey"
           },
@@ -4827,19 +4871,11 @@
             }
           },
           {
-            "name": "user_rewards",
-            "type": {
-              "defined": {
-                "name": "UserRewards"
-              }
-            }
-          },
-          {
             "name": "padding",
             "type": {
               "array": [
                 "u8",
-                6
+                7
               ]
             }
           }

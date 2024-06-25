@@ -52,23 +52,8 @@ pub mod bumpin_trade {
         Ok(())
     }
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+    pub fn initialize(_ctx: Context<Initialize>) -> Result<()> {
         msg!("initialize");
-
-        let trade_token_vault = &ctx.accounts.trade_token_vault;
-
-        // 打印 TokenAccount 的已知字段
-        msg!("trade_token_vault owner: {:?}", trade_token_vault.owner);
-        msg!("trade_token_vault mint: {:?}", trade_token_vault.mint);
-        msg!("trade_token_vault amount: {:?}", trade_token_vault.amount);
-
-        let binding = trade_token_vault.to_account_info();
-        // let account :Account<TokenAccount> = Account::try_from(&binding).unwrap();
-
-        // let data1 = binding.try_borrow_data().unwrap();
-        // let d1 =  array_ref![data1, 0, 8];
-        msg!("data1: {:?}", binding);
-        msg!("data1 owner: {:?}", binding.owner);
         Ok(())
     }
 
