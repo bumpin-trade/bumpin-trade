@@ -8,9 +8,8 @@ use anchor_lang::error;
 use anchor_lang::prelude::Pubkey;
 use anchor_lang::prelude::*;
 use anchor_lang::require_keys_neq;
-use solana_program::msg;
-use solana_program::program::invoke;
-use solana_program::system_instruction::transfer;
+use anchor_lang::solana_program::program::invoke;
+use anchor_lang::solana_program::system_instruction::transfer;
 
 #[derive(Accounts)]
 pub struct InitializeUser<'info> {

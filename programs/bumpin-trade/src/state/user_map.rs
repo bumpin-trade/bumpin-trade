@@ -6,7 +6,6 @@ use anchor_lang::prelude::AccountLoader;
 use anchor_lang::prelude::*;
 use anchor_lang::Discriminator;
 use arrayref::array_ref;
-use solana_program::msg;
 
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::state::traits::Size;

@@ -645,9 +645,7 @@ dependencies = [
  "anchor-spl",
  "arrayref",
  "num-traits",
- "pyth-client",
  "pyth-sdk-solana",
- "solana-program",
  "uint",
 ]
 
@@ -1563,22 +1561,6 @@ dependencies = [
  "arrayref",
  "bytemuck",
  "pyth-sdk-solana",
-]
-
-[[package]]
-name = "pyth-client"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "398f9e51e126a13903254c56f75b3201583db075d0fbb77e931f7515af9b3d16"
-dependencies = [
- "borsh 0.9.3",
- "borsh-derive 0.9.3",
- "bytemuck",
- "num-derive 0.3.3",
- "num-traits",
- "serde",
- "solana-program",
- "thiserror",
 ]
 
 [[package]]

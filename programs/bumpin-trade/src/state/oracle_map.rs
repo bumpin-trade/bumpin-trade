@@ -2,7 +2,6 @@ use std::collections::BTreeMap;
 
 use anchor_lang::prelude::*;
 use anchor_lang::Key;
-use solana_program::msg;
 
 use crate::errors::BumpErrorCode::OracleNotFound;
 use crate::errors::BumpResult;

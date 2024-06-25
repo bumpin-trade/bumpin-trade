@@ -1,7 +1,5 @@
 use anchor_lang::prelude::*;
 use num_traits::ToPrimitive;
-use solana_program::clock::Clock;
-use solana_program::sysvar::Sysvar;
 
 use crate::errors::BumpResult;
 use crate::instructions::cal_utils;

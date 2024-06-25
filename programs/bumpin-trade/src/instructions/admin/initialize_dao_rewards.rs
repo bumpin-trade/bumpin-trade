@@ -2,7 +2,6 @@ use crate::state::dao_rewards::DaoRewards;
 use crate::state::state::State;
 use crate::traits::Size;
 use anchor_lang::prelude::*;
-use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
 #[derive(Accounts)]

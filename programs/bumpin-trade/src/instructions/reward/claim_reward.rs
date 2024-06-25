@@ -1,6 +1,5 @@
 use crate::errors::BumpErrorCode;
 use anchor_lang::prelude::*;
-use anchor_lang::prelude::*;
 use anchor_spl::token::Token;
 
 use crate::processor::fee_reward_processor::update_account_fee_reward;

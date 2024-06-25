@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 use std::panic::Location;
 
-use solana_program::msg;
+use anchor_lang::prelude::*;
 
 use crate::errors::BumpErrorCode::CastingFailure;
 use crate::errors::BumpResult;

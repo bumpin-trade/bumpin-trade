@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::errors::BumpErrorCode::CouldNotFindUserToken;

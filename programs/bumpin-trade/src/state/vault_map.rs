@@ -6,7 +6,6 @@ use anchor_lang::prelude::*;
 use anchor_lang::Key;
 use anchor_spl::token;
 use anchor_spl::token::TokenAccount;
-use solana_program::msg;
 
 use crate::errors::BumpErrorCode::{
     CouldNotLoadTradeTokenData, InvalidTradeTokenAccount, TradeTokenNotFind,

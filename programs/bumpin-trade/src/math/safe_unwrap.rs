@@ -1,7 +1,7 @@
 use std::panic::Location;
 
 use crate::errors::BumpErrorCode::FailedUnwrap;
-use solana_program::msg;
+use anchor_lang::prelude::*;
 
 use crate::errors::BumpResult;
 
@@ -28,7 +28,7 @@ impl<T> SafeUnwrap for Option<T> {
     }
 }
 
-impl<T, U> SafeUnwrap for Result<T, U> {
+impl<T, U> SafeUnwrap for std::result::Result<T, U> {
     type Item = T;
 
     #[track_caller]

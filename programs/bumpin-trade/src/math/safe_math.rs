@@ -4,7 +4,7 @@ use crate::math::casting::Cast;
 use crate::math::ceil_div::CheckedCeilDiv;
 use crate::math::constants::{RATE_PRECISION, SMALL_RATE_PRECISION};
 use crate::math::floor_div::CheckedFloorDiv;
-use solana_program::msg;
+use anchor_lang::prelude::*;
 use std::panic::Location;
 
 pub trait SafeMath: Sized {

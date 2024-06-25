@@ -1,9 +1,6 @@
 use anchor_lang::prelude::*;
 use num_traits::ToPrimitive;
 
-use solana_program::clock::Clock;
-use solana_program::sysvar::Sysvar;
-
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
