@@ -22,7 +22,7 @@ use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
-use crate::state::user::{User, UserTokenUpdateOrigin};
+use crate::state::user::{User, UserTokenUpdateReason};
 use crate::utils::token;
 use crate::validate;
 
@@ -33,7 +33,7 @@ pub struct PositionProcessor<'a> {
 impl PositionProcessor<'_> {
     pub fn update_leverage<'info>(
         &mut self,
-        margin_mint_token_price: u128,
+        _margin_mint_token_price: u128,
         params: UpdatePositionLeverageParams,
         position_key: Pubkey,
         user_account: &AccountLoader<'info, User>,
@@ -122,7 +122,7 @@ impl PositionProcessor<'_> {
                         authority,
                         params.add_margin_amount,
                     )
-                        .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                    .map_err(|_e| BumpErrorCode::TransferFailed)?;
                 }
             } else {
                 self.position.set_leverage(params.leverage)?;
@@ -157,7 +157,7 @@ impl PositionProcessor<'_> {
                         state.bump_signer_nonce,
                         reduce_margin_amount,
                     )
-                        .map_err(|_e| BumpErrorCode::TransferFailed)?
+                    .map_err(|_e| BumpErrorCode::TransferFailed)?
                 }
             }
         }
@@ -335,7 +335,7 @@ impl PositionProcessor<'_> {
                 &params.margin_token,
                 trade_token,
                 fee,
-                &UserTokenUpdateOrigin::SettleFee,
+                &UserTokenUpdateReason::SettleFee,
             )?;
         }
 
@@ -647,7 +647,7 @@ impl PositionProcessor<'_> {
                 self.position.position_size,
                 market.market_trade_config.max_leverage,
             )?
-                .max(state.min_order_margin_usd),
+            .max(state.min_order_margin_usd),
         )?;
         validate!(
             max_reduce_margin_in_usd > params.update_margin_amount,
@@ -663,10 +663,10 @@ impl PositionProcessor<'_> {
 
         if self.position.cross_margin
             && self
-            .position
-            .initial_margin_usd
-            .safe_sub(self.position.initial_margin_usd_from_portfolio)?
-            < reduce_margin_amount
+                .position
+                .initial_margin_usd
+                .safe_sub(self.position.initial_margin_usd_from_portfolio)?
+                < reduce_margin_amount
         {
             self.position.sub_initial_margin_usd_from_portfolio(
                 reduce_margin_amount
@@ -950,7 +950,7 @@ impl PositionProcessor<'_> {
                     trade_token.decimals,
                     token_price,
                 )
-                    .unwrap(),
+                .unwrap(),
                 self.position.close_fee_in_usd,
             ));
         }
@@ -1112,7 +1112,7 @@ impl PositionProcessor<'_> {
 
             let repay_amount = user.repay_liability(
                 &self.position.margin_mint,
-                &UserTokenUpdateOrigin::DecreasePosition,
+                UserTokenUpdateReason::DecreasePosition,
             )?;
             let mut trade_token = trade_token_account.load_mut().unwrap();
             trade_token.sub_liability(repay_amount)?;
@@ -1166,13 +1166,13 @@ impl PositionProcessor<'_> {
                     .load_mut()
                     .map_err(|_e| BumpErrorCode::CouldNotLoadTradeTokenData)?,
                 response.settle_fee.abs().cast::<u128>()?,
-                &UserTokenUpdateOrigin::SettleFee,
+                &UserTokenUpdateReason::SettleFee,
             )?;
         } else {
             user.add_token(
                 &self.position.margin_mint,
                 response.settle_fee.abs().cast::<u128>()?,
-                &UserTokenUpdateOrigin::SettleFee,
+                &UserTokenUpdateReason::SettleFee,
             )?;
         }
 
@@ -1188,7 +1188,7 @@ impl PositionProcessor<'_> {
                     .safe_add(response.settle_fee)?
                     .abs()
                     .cast::<u128>()?,
-                &UserTokenUpdateOrigin::SettlePnl,
+                &UserTokenUpdateReason::SettlePnl,
             )?;
         } else {
             add_liability = add_liability.safe_add(
@@ -1202,7 +1202,7 @@ impl PositionProcessor<'_> {
                         .safe_add(response.settle_fee)?
                         .abs()
                         .cast::<u128>()?,
-                    &UserTokenUpdateOrigin::SettlePnl,
+                    &UserTokenUpdateReason::SettlePnl,
                 )?,
             )?;
         }
@@ -1216,7 +1216,7 @@ impl PositionProcessor<'_> {
                 state_account.bump_signer_nonce,
                 response.pool_pnl_token.abs().cast::<u128>()?,
             )
-                .map_err(|_e| BumpErrorCode::TransferFailed)?;
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
         } else if response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)? > 0i128 {
             token::receive(
                 token_program,
@@ -1225,7 +1225,7 @@ impl PositionProcessor<'_> {
                 bump_signer,
                 response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)?.cast::<u128>()?,
             )
-                .map_err(|_e| BumpErrorCode::TransferFailed)?;
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
         }
 
         if !response.is_liquidation {
@@ -1266,7 +1266,7 @@ impl PositionProcessor<'_> {
             state_account.bump_signer_nonce,
             response.settle_margin.abs().cast::<u128>()?,
         )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
         Ok(())
     }
 

@@ -4,11 +4,10 @@ use anchor_spl::token::{Token, TokenAccount};
 use crate::errors::BumpErrorCode::CouldNotFindUserToken;
 use crate::instructions::constraints::*;
 use crate::math::safe_math::SafeMath;
-use crate::processor::user_processor::UserProcessor;
-use crate::state::bump_events::DepositEvent;
-use crate::state::infrastructure::user_token::{UserToken, UserTokenStatus};
+use crate::state::bump_events::{DepositEvent, UserTokenBalanceUpdateEvent};
+use crate::state::infrastructure::user_token::UserToken;
 use crate::state::trade_token::TradeToken;
-use crate::state::user::{User, UserTokenUpdateOrigin};
+use crate::state::user::{User, UserCrossPosition, UserTokenUpdateReason};
 use crate::utils::token;
 
 #[derive(Accounts)]
@@ -47,7 +46,9 @@ pub struct Deposit<'info> {
 
 pub fn handle_deposit(ctx: Context<Deposit>, _token_index: u16, amount: u128) -> Result<()> {
     let mut user = ctx.accounts.user.load_mut()?;
+    let user_key = user.user_key;
     let trade_token = &mut ctx.accounts.trade_token.load_mut()?;
+    let token_mint = trade_token.mint;
 
     token::receive(
         &ctx.accounts.token_program,
@@ -58,40 +59,40 @@ pub fn handle_deposit(ctx: Context<Deposit>, _token_index: u16, amount: u128) ->
     )?;
     ctx.accounts.trade_token_vault.reload()?;
 
-    let user_token_option = user.get_user_token_mut(&ctx.accounts.trade_token_vault.mint)?;
-    match user_token_option {
+    let user_token = match User::token_get_mut(&mut user.user_tokens, &trade_token.mint) {
         None => {
-            let index = user.next_usable_user_token_index()?;
-            //init user_token
-            let new_token = &mut UserToken {
-                user_token_status: UserTokenStatus::USING,
-                token_mint: trade_token.mint,
-                user_token_account_key: *ctx.accounts.user_token_account.to_account_info().key,
-                amount: 0,
-                used_amount: 0,
-                liability: 0,
-                padding: [0; 15],
-            };
-            user.add_user_token(new_token, index)?;
-            user.get_user_token_mut(&trade_token.mint)?.ok_or(CouldNotFindUserToken)?
+            User::token_insert(
+                &mut user.user_tokens,
+                UserToken::new_using(
+                    ctx.accounts.trade_token_vault.mint,
+                    *ctx.accounts.user_token_account.to_account_info().key,
+                ),
+            )?;
+            User::token_get_mut(&mut user.user_tokens, &token_mint).ok_or(CouldNotFindUserToken)?
         },
         Some(exist_user_token) => exist_user_token,
     };
+    trade_token.add_amount(amount)?;
+    let pre_user_token = user_token.add_amount(amount)?;
 
-    user.add_token(&trade_token.mint, amount, &UserTokenUpdateOrigin::DEPOSIT)?;
-    trade_token.add_token(amount)?;
+    emit!(UserTokenBalanceUpdateEvent {
+        user_key,
+        token_mint,
+        pre_user_token,
+        user_token: user_token.clone(),
+        update_origin: UserTokenUpdateReason::DEPOSIT,
+    });
 
-    let repay_amount = user.repay_liability(&trade_token.mint, &UserTokenUpdateOrigin::DEPOSIT)?;
+    let repay_amount = user.repay_liability(&trade_token.mint, UserTokenUpdateReason::DEPOSIT)?;
     trade_token.sub_liability(repay_amount)?;
     if amount > repay_amount {
         let left_amount = amount.safe_sub(repay_amount)?;
-        let mut user_processor = UserProcessor { user: &mut user };
-        user_processor.update_cross_position_balance(
-            &ctx.accounts.user_token_account.mint,
+        UserCrossPosition::update_balance(
+            &mut user.user_positions,
+            &trade_token.mint,
             left_amount,
             true,
         )?;
-        drop(user_processor);
     }
     emit!(DepositEvent {
         user_key: ctx.accounts.user.to_account_info().key(),

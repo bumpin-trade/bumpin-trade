@@ -1,10 +1,12 @@
+use anchor_lang::prelude::*;
+
+use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
+
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::state::oracle::OraclePriceData;
 use crate::state::trade_token::TradeToken;
-use anchor_lang::prelude::*;
-use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
 #[bumpin_zero_copy_unsafe]
 pub struct UserToken {
@@ -25,20 +27,32 @@ pub enum UserTokenStatus {
 }
 
 impl UserToken {
-    pub fn add_token_amount(&mut self, amount: u128) -> BumpResult {
-        self.amount = self.amount.safe_add(amount)?;
-        Ok(())
+    pub fn new_using(token_mint: Pubkey, user_token_account_key: Pubkey) -> Self {
+        Self {
+            amount: 0,
+            used_amount: 0,
+            liability: 0,
+            user_token_status: UserTokenStatus::USING,
+            token_mint,
+            user_token_account_key,
+            padding: [0; 15],
+        }
     }
-    pub fn sub_token_amount(&mut self, amount: u128) -> BumpResult {
+    pub fn add_amount(&mut self, amount: u128) -> BumpResult<Self> {
+        let before = self.clone();
+        self.amount = self.amount.safe_add(amount)?;
+        Ok(before)
+    }
+    pub fn sub_amount(&mut self, amount: u128) -> BumpResult {
         self.amount = self.amount.safe_sub(amount)?;
         Ok(())
     }
-    pub fn sub_token_used_amount(&mut self, amount: u128) -> BumpResult {
+    pub fn sub_used_amount(&mut self, amount: u128) -> BumpResult {
         self.used_amount = self.used_amount.safe_sub(amount)?;
         Ok(())
     }
 
-    pub fn add_token_used_amount(&mut self, amount: u128) -> BumpResult {
+    pub fn add_used_amount(&mut self, amount: u128) -> BumpResult {
         self.used_amount = self.used_amount.safe_add(amount)?;
         Ok(())
     }

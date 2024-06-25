@@ -16,6 +16,8 @@ use crate::state::traits::Size;
 use crate::utils::pda;
 use crate::validate;
 
+// pub type UserCrossPosition = User;
+pub struct UserCrossPosition;
 #[account(zero_copy(unsafe))]
 #[derive(Default, Eq, PartialEq, Debug)]
 #[repr(C)]
@@ -32,7 +34,7 @@ pub struct User {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]
-pub enum UserTokenUpdateOrigin {
+pub enum UserTokenUpdateReason {
     #[default]
     DEFAULT,
     DEPOSIT,
@@ -52,6 +54,61 @@ pub enum UserTokenUpdateOrigin {
 
 impl Size for User {
     const SIZE: usize = std::mem::size_of::<User>() + 8;
+}
+
+impl User {
+    #[inline(always)]
+    pub fn token_insert(user_tokens: &mut [UserToken], token: UserToken) -> BumpResult<usize> {
+        for (index, user_token) in user_tokens.iter().enumerate() {
+            if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
+                user_tokens[index] = token;
+                return Ok(index);
+            }
+        }
+        Err(BumpErrorCode::NoMoreUserTokenSpace)
+    }
+    pub fn token_get_mut<'a>(
+        user_tokens: &'a mut [UserToken],
+        mint: &Pubkey,
+    ) -> Option<&'a mut UserToken> {
+        user_tokens.iter_mut().find(|user_token| {
+            user_token.token_mint.eq(mint)
+                && user_token.user_token_status.eq(&UserTokenStatus::USING)
+        })
+    }
+}
+
+impl UserCrossPosition {
+    pub fn update_balance(
+        user_positions: &mut [UserPosition],
+        mint: &Pubkey,
+        mut reduce_amount: u128,
+        add_amount: bool,
+    ) -> BumpResult {
+        // let mut reduce_amount = amount;
+        for user_position in user_positions.iter_mut() {
+            if user_position.status.eq(&PositionStatus::INIT) {
+                continue;
+            }
+            if user_position.cross_margin && user_position.margin_mint.eq(mint) && reduce_amount > 0
+            {
+                if add_amount {
+                    let change_amount =
+                        user_position.add_position_portfolio_balance(reduce_amount)?;
+                    reduce_amount = reduce_amount.safe_sub(change_amount)?;
+                } else {
+                    let change_amount =
+                        user_position.reduce_position_portfolio_balance(reduce_amount)?;
+                    reduce_amount = reduce_amount.safe_sub(change_amount)?;
+                }
+            }
+
+            if reduce_amount == 0u128 {
+                break;
+            }
+        }
+        Ok(())
+    }
 }
 
 impl User {
@@ -153,13 +210,13 @@ impl User {
             )?;
         };
         if user_token.amount >= user_token.used_amount + amount {
-            user_token.add_token_used_amount(amount)?;
+            user_token.add_used_amount(amount)?;
             use_from_balance = amount;
         } else if user_token.amount > user_token.used_amount {
             use_from_balance = user_token.amount - user_token.used_amount;
-            user_token.add_token_used_amount(amount)?;
+            user_token.add_used_amount(amount)?;
         } else {
-            user_token.add_token_used_amount(amount)?;
+            user_token.add_used_amount(amount)?;
             use_from_balance = 0u128;
         }
 
@@ -169,7 +226,7 @@ impl User {
     pub fn un_use_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
         let token_balance = self.get_user_token_mut(token)?.ok_or(CouldNotFindUserToken)?;
         validate!(token_balance.used_amount > amount, BumpErrorCode::AmountNotEnough.into())?;
-        token_balance.sub_token_used_amount(amount)?;
+        token_balance.sub_used_amount(amount)?;
         Ok(())
     }
 
@@ -251,7 +308,7 @@ impl User {
                 return Ok(index);
             }
         }
-        Err(BumpErrorCode::NoMoreOrderSpace)
+        Err(BumpErrorCode::NoMoreUserTokenSpace)
     }
 
     pub fn next_usable_position_index(&self) -> BumpResult<usize> {
@@ -405,7 +462,7 @@ impl User {
             }
         }
         let user_token = self.get_user_token_mut(mint)?.ok_or(CouldNotFindUserToken)?;
-        user_token.sub_token_amount(amount)?;
+        user_token.sub_amount(amount)?;
         Ok(())
     }
 
@@ -413,7 +470,7 @@ impl User {
         &mut self,
         token_mint: &Pubkey,
         amount: u128,
-        user_token_update_origin: &UserTokenUpdateOrigin,
+        user_token_update_origin: &UserTokenUpdateReason,
     ) -> BumpResult {
         let user_key = self.user_key;
         let user_token = self.get_user_token_mut(token_mint)?.ok_or(CouldNotFindUserToken)?;
@@ -425,7 +482,7 @@ impl User {
 
         let pre_user_token = user_token.clone();
 
-        user_token.sub_token_amount(amount)?;
+        user_token.sub_amount(amount)?;
         emit!(UserTokenBalanceUpdateEvent {
             user_key,
             token_mint: *token_mint,
@@ -439,7 +496,7 @@ impl User {
     pub fn repay_liability(
         &mut self,
         token_mint: &Pubkey,
-        user_token_update_origin: &UserTokenUpdateOrigin,
+        by: UserTokenUpdateReason,
     ) -> BumpResult<u128> {
         let user_key = self.user_key;
         let user_token = self.get_user_token_mut(token_mint)?.ok_or(CouldNotFindUserToken)?;
@@ -459,7 +516,7 @@ impl User {
                 token_mint: *token_mint,
                 pre_user_token,
                 user_token: user_token.clone(),
-                update_origin: *user_token_update_origin,
+                update_origin: by,
             });
             Ok(repay_liability_amount)
         } else {
@@ -472,7 +529,7 @@ impl User {
         token_mint: &Pubkey,
         trade_token: &mut TradeToken,
         amount: u128,
-        user_token_update_origin: &UserTokenUpdateOrigin,
+        user_token_update_origin: &UserTokenUpdateReason,
     ) -> BumpResult<u128> {
         let mut liability = 0u128;
         let user_key = self.user_key;
@@ -506,12 +563,12 @@ impl User {
         &mut self,
         token_mint: &Pubkey,
         amount: u128,
-        user_token_update_origin: &UserTokenUpdateOrigin,
+        user_token_update_origin: &UserTokenUpdateReason,
     ) -> BumpResult {
         let user_key = self.user_key;
         let user_token = self.get_user_token_mut(token_mint)?.ok_or(CouldNotFindUserToken)?;
         let pre_user_token = user_token.clone();
-        user_token.add_token_amount(amount)?;
+        user_token.add_amount(amount)?;
         emit!(UserTokenBalanceUpdateEvent {
             user_key,
             token_mint: *token_mint,

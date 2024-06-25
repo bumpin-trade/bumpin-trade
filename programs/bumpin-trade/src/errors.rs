@@ -17,6 +17,8 @@ pub enum BumpErrorCode {
     OrderNotExist,
     #[msg("TokenNotMatch")]
     TokenNotMatch,
+    #[msg("NoMoreUserTokenSpace")]
+    NoMoreUserTokenSpace,
     #[msg("NoMoreOrderSpace")]
     NoMoreOrderSpace,
     #[msg("LeverageIsNotAllowed")]

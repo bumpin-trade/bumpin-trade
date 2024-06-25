@@ -16,7 +16,7 @@ use crate::state::pool_map::PoolMap;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
-use crate::state::user::{User, UserTokenUpdateOrigin};
+use crate::state::user::{User, UserTokenUpdateReason};
 use crate::utils::token;
 use crate::validate;
 
@@ -45,7 +45,7 @@ impl<'a> UserProcessor<'a> {
         self.user.sub_user_token_amount_ignore_used_amount(
             token_mint,
             amount,
-            &UserTokenUpdateOrigin::WITHDRAW,
+            &UserTokenUpdateReason::WITHDRAW,
         )?;
         self.update_cross_position_balance(token_mint, amount, false)?;
         Ok(())

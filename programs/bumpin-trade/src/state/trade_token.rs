@@ -26,11 +26,11 @@ impl Size for TradeToken {
 }
 
 impl TradeToken {
-    pub fn add_token(&mut self, amount: u128) -> BumpResult {
+    pub fn add_amount(&mut self, amount: u128) -> BumpResult {
         self.total_amount = self.total_amount.safe_add(amount)?;
         Ok(())
     }
-    pub fn sub_token(&mut self, amount: u128) -> BumpResult {
+    pub fn sub_amount(&mut self, amount: u128) -> BumpResult {
         self.total_amount = self.total_amount.safe_sub(amount)?;
         Ok(())
     }

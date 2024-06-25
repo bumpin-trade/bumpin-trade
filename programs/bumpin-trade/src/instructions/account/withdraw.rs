@@ -79,7 +79,7 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
         &mut oracle_map,
         &trade_token_map,
     )?;
-    trade_token.sub_token(amount)?;
+    trade_token.sub_amount(amount)?;
     drop(user_processor);
 
     let bump_signer_nonce = ctx.accounts.state.bump_signer_nonce;

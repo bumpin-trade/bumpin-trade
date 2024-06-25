@@ -12,7 +12,7 @@ use crate::state::bump_events::StakeOrUnStakeEvent;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
-use crate::state::user::{User, UserTokenUpdateOrigin};
+use crate::state::user::{User, UserTokenUpdateReason};
 use crate::{utils, validate};
 
 #[derive(Accounts)]
@@ -142,12 +142,12 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
         user.add_token(
             &trade_token.mint,
             rewards_amount.safe_add(transfer_amount)?,
-            &UserTokenUpdateOrigin::TransferFromStake,
+            &UserTokenUpdateReason::TransferFromStake,
         )?;
-        trade_token.add_token(transfer_amount)?;
+        trade_token.add_amount(transfer_amount)?;
 
         let repay_liability =
-            user.repay_liability(&trade_token.mint, &UserTokenUpdateOrigin::TransferFromStake)?;
+            user.repay_liability(&trade_token.mint, UserTokenUpdateReason::TransferFromStake)?;
         if repay_liability > 0 {
             trade_token.sub_liability(repay_liability)?;
         }

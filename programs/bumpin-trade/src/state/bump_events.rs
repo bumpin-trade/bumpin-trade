@@ -9,7 +9,7 @@ use crate::state::infrastructure::user_position::UserPosition;
 use crate::state::infrastructure::user_stake::{UserRewards, UserStake};
 use crate::state::infrastructure::user_token::UserToken;
 use crate::state::pool::PoolBalance;
-use crate::state::user::UserTokenUpdateOrigin;
+use crate::state::user::UserTokenUpdateReason;
 
 #[event]
 pub struct InitUserEvent {
@@ -53,7 +53,7 @@ pub struct UserTokenBalanceUpdateEvent {
     pub token_mint: Pubkey,
     pub pre_user_token: UserToken,
     pub user_token: UserToken,
-    pub update_origin: UserTokenUpdateOrigin,
+    pub update_origin: UserTokenUpdateReason,
 }
 
 #[event]
