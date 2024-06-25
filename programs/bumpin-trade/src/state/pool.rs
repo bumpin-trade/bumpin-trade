@@ -34,7 +34,7 @@ pub struct Pool {
     pub pool_status: PoolStatus,
     pub stable: bool,
     pub pool_name: [u8; 32],
-    pub padding: [u8; 3],
+    pub padding: [u8; 12],
 }
 
 impl Size for Pool {
@@ -55,7 +55,6 @@ pub struct PoolBalance {
     pub un_settle_amount: u128,
     pub loss_amount: u128,
     pub pool_mint: Pubkey,
-    pub padding: [u8; 8],
 }
 
 #[bumpin_zero_copy_unsafe]
@@ -89,7 +88,7 @@ impl Default for Pool {
             pnl: 0,
             apr: 0u128,
             insurance_fund_amount: 0,
-            padding: [0; 3],
+            padding: [0; 12],
         }
     }
 }

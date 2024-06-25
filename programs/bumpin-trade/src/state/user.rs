@@ -29,7 +29,6 @@ pub struct User {
     pub user_orders: [UserOrder; 8],
     pub user_key: Pubkey,
     pub authority: Pubkey,
-    // pub padding: [u8; 14],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]

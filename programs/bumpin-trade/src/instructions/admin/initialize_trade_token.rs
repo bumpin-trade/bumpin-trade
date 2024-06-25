@@ -68,7 +68,7 @@ pub fn handle_initialize_trade_token(
         total_liability: 0,
         total_amount: 0,
         trade_token_vault: *ctx.accounts.trade_token_vault.to_account_info().key,
-        padding: [0; 3],
+        padding: [0; 12],
     };
     safe_increment!(state.number_of_trade_tokens, 1);
     Ok(())

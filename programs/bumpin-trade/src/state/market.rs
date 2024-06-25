@@ -20,7 +20,7 @@ pub struct Market {
     pub stable_pool_mint: Pubkey,
     pub market_index: u16,
     pub symbol: [u8; 32],
-    pub padding: [u8; 5],
+    pub padding: [u8; 14],
 }
 
 impl Size for Market {
@@ -41,7 +41,7 @@ impl Default for Market {
             short_open_interest: MarketPosition::default(),
             funding_fee: MarketFundingFee::default(),
             market_trade_config: MarketConfig::default(),
-            padding: [0u8; 5],
+            padding: [0u8; 14],
         }
     }
 }

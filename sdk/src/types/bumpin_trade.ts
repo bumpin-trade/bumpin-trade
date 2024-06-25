@@ -3492,7 +3492,7 @@ export type BumpinTrade = {
             "type": {
               "array": [
                 "u8",
-                5
+                14
               ]
             }
           }
@@ -3847,7 +3847,7 @@ export type BumpinTrade = {
             "type": {
               "array": [
                 "u8",
-                3
+                12
               ]
             }
           }
@@ -3881,15 +3881,6 @@ export type BumpinTrade = {
           {
             "name": "poolMint",
             "type": "pubkey"
-          },
-          {
-            "name": "padding",
-            "type": {
-              "array": [
-                "u8",
-                8
-              ]
-            }
           }
         ]
       }
@@ -4312,7 +4303,7 @@ export type BumpinTrade = {
             "type": {
               "array": [
                 "u8",
-                3
+                12
               ]
             }
           }
