@@ -49,7 +49,7 @@ pub fn handle_deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> 
     msg!("Token index: {}", token_index);
     msg!("Token amount: {}", amount);
 
-    let user = &mut ctx.accounts.user.load_mut()?;
+    let mut user = ctx.accounts.user.load_mut()?;
     let trade_token = &mut ctx.accounts.trade_token.load_mut()?;
     // msg!("User Token Account: {:?}", &ctx.accounts.user_token_account);
     token::receive(
@@ -89,7 +89,7 @@ pub fn handle_deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> 
     if amount > repay_amount {
         let left_amount = amount.safe_sub(repay_amount)?;
 
-        let mut user_processor = UserProcessor { user };
+        let mut user_processor = UserProcessor { user: &mut user };
         user_processor.update_cross_position_balance(
             &ctx.accounts.user_token_account.mint,
             left_amount,

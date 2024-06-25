@@ -49,7 +49,7 @@ pub struct LiquidateCrossPosition<'info> {
 pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, LiquidateCrossPosition<'c>>,
 ) -> Result<()> {
-    let user = &mut ctx.accounts.user.load_mut()?;
+    let mut user = ctx.accounts.user.load_mut()?;
     let state = &ctx.accounts.state;
 
     let remaining_accounts = ctx.remaining_accounts;
@@ -63,7 +63,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         ..
     } = load_maps(remaining_accounts, &state.admin)?;
 
-    let mut user_processor = UserProcessor { user };
+    let mut user_processor = UserProcessor { user: &mut user };
     user_processor.cancel_all_cross_orders()?;
 
     for user_position in &user_processor.user.user_positions {

@@ -103,7 +103,7 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
         params.is_cross_margin,
         &ctx.program_id,
     )?;
-    let position = user_processor.user.find_position_mut_by_key(&position_key)?;
+    let position = user_processor.user.find_position_mut_ref_by_key(&position_key)?;
     let mut position_processor = PositionProcessor { position };
     validate!(
         position_processor.position.leverage != params.leverage,

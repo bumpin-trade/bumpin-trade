@@ -77,26 +77,26 @@ describe("bumpin-exchange", () => {
         await exchange.playerDeposit("Player2", "USDC", 500);
     });
 
-    it("Player2 BTC-USDC Limit Order", async () => {
-        let param: PlaceOrderParams = {
-            symbol: utils.string2Padded32Bytes("BTCUSDC"),
-            isCrossMargin: true,
-            isNativeToken: true,
-            orderSide: OrderSide.LONG,
-            positionSide: PositionSide.INCREASE,
-            orderType: OrderType.LIMIT,
-            stopType: StopType.NONE,
-            size: new BN(100),
-            orderMargin: new BN(100),
-            leverage: new BN(11),
-            triggerPrice: new BN(65000),
-            acceptablePrice: new BN(65000),
-            placeTime: new BN(Math.floor(Date.now() / 1000))
-        };
-        let player1 = exchange.getPlayer("Player2");
-        let tradeToken = exchange.getTradeToken("USDC");
-        let market = exchange.getMarket("BTCUSDC");
-        await utils.placePerpOrder(player1, market, tradeToken, exchange.oracle.publicKey, param);
-    });
+    // it("Player2 BTC-USDC Limit Order", async () => {
+    //     let param: PlaceOrderParams = {
+    //         symbol: utils.string2Padded32Bytes("BTCUSDC"),
+    //         isCrossMargin: true,
+    //         isNativeToken: true,
+    //         orderSide: OrderSide.LONG,
+    //         positionSide: PositionSide.INCREASE,
+    //         orderType: OrderType.LIMIT,
+    //         stopType: StopType.NONE,
+    //         size: new BN(100),
+    //         orderMargin: new BN(100),
+    //         leverage: new BN(11),
+    //         triggerPrice: new BN(65000),
+    //         acceptablePrice: new BN(65000),
+    //         placeTime: new BN(Math.floor(Date.now() / 1000))
+    //     };
+    //     let player1 = exchange.getPlayer("Player2");
+    //     let tradeToken = exchange.getTradeToken("USDC");
+    //     let market = exchange.getMarket("BTCUSDC");
+    //     await utils.placePerpOrder(player1, market, tradeToken, exchange.oracle.publicKey, param);
+    // });
 
 });

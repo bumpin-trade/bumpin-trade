@@ -66,7 +66,7 @@ pub fn handle_cancel_order(
     order_id: u128,
     _pool_index: u16,
 ) -> Result<()> {
-    let user = ctx.accounts.user.load().unwrap();
+    let user = ctx.accounts.user.load()?;
     let order = user.find_ref_order_by_id(order_id)?;
     if order.status.eq(&OrderStatus::INIT) {
         return Err(BumpErrorCode::InvalidParam.into());
@@ -78,8 +78,8 @@ pub fn handle_cancel_order(
         BumpErrorCode::InvalidParam
     )?;
 
-    let user = &mut ctx.accounts.user.load_mut().unwrap();
-    let mut user_processor = UserProcessor { user };
+    let mut user = ctx.accounts.user.load_mut().unwrap();
+    let mut user_processor = UserProcessor { user: &mut user };
     user_processor.cancel_order(
         order,
         &ctx.accounts.token_program,

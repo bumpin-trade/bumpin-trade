@@ -55,7 +55,7 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
 ) -> Result<()> {
     validate!(amount > 0, BumpErrorCode::AmountZero)?;
 
-    let user = &mut ctx.accounts.user.load_mut()?;
+    let mut user = ctx.accounts.user.load_mut()?;
     let mut trade_token = ctx.accounts.trade_token.load_mut()?;
     let token_mint = &ctx.accounts.user_token_account.mint;
     let oracle = &trade_token.oracle;
@@ -69,7 +69,7 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
     let AccountMaps { trade_token_map, mut oracle_map, .. } =
         load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
 
-    let mut user_processor = UserProcessor { user };
+    let mut user_processor = UserProcessor { user: &mut user };
 
     user_processor.withdraw(
         amount,

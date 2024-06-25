@@ -95,7 +95,7 @@ pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
     let trade_token = ctx.accounts.trade_token.load_mut()?;
     let remaining_accounts = ctx.remaining_accounts;
     let mut oracle_map = OracleMap::load(remaining_accounts)?;
-    let mut position = user.find_position_mut_by_key(&params.position_key)?;
+    let mut position = user.find_position_mut_ref_by_key(&params.position_key)?;
     let mut position_processor = PositionProcessor { position: &mut position };
     let mut pool = ctx.accounts.pool.load_mut()?;
     let market = ctx.accounts.market.load_mut()?;

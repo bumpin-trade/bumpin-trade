@@ -173,29 +173,12 @@ impl User {
 
     pub fn find_position_by_seed(
         &mut self,
-        user: &Pubkey,
-        symbol: [u8; 32],
-        is_cross_margin: bool,
-        program_id: &Pubkey,
-    ) -> BumpResult<&mut UserPosition> {
-        let position_key = pda::generate_position_key(user, symbol, is_cross_margin, program_id)?;
-        Ok(self
-            .user_positions
-            .iter_mut()
-            .find(|position| position.position_key.eq(&position_key))
-            .ok_or(&mut UserPosition::default())
-            .unwrap())
+        position_key: &Pubkey,
+    ) -> BumpResult<Option<&mut UserPosition>> {
+        Ok(self.user_positions.iter_mut().find(|position| position.position_key.eq(&position_key)))
     }
 
-    pub fn find_position_by_key(&self, position_key: &Pubkey) -> BumpResult<&UserPosition> {
-        Ok(self
-            .user_positions
-            .iter()
-            .find(|user_position| user_position.position_key.eq(position_key))
-            .ok_or(CouldNotFindUserPosition)?)
-    }
-
-    pub fn find_position_mut_by_key(
+    pub fn find_position_mut_ref_by_key(
         &mut self,
         position_key: &Pubkey,
     ) -> BumpResult<&mut UserPosition> {
@@ -242,7 +225,7 @@ impl User {
         Ok(false)
     }
 
-    pub fn has_other_order(&self, order_id: u128) -> BumpResult<bool> {
+    pub fn has_other_order(self, order_id: u128) -> BumpResult<bool> {
         for order in self.user_orders {
             if order.order_id == order_id {
                 return Ok(true);

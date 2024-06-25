@@ -17,7 +17,7 @@ use crate::processor::user_processor::UserProcessor;
 use crate::state::infrastructure::user_order::{
     OrderSide, OrderStatus, OrderType, PositionSide, StopType, UserOrder,
 };
-use crate::state::infrastructure::user_position::PositionStatus;
+use crate::state::infrastructure::user_position::{PositionStatus, UserPosition};
 use crate::state::market::Market;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
@@ -293,19 +293,30 @@ pub fn handle_execute_order<'info>(
     order_id: u128,
     execute_from_remote: bool,
 ) -> Result<()> {
-    let user = user_account_loader.load().unwrap();
+    let user = user_account_loader.load()?;
+
     let margin_token = margin_token_account;
-    let market = &mut market_account_loader.load_mut().unwrap();
-    let trade_token = trade_token_loader.load().unwrap();
-    let index_trade_token = index_trade_token_loader.load().unwrap();
+    let mut market = market_account_loader.load_mut()?;
+    let trade_token = trade_token_loader.load()?;
+    let index_trade_token = index_trade_token_loader.load()?;
 
     let order = if execute_from_remote { user.find_ref_order_by_id(order_id)? } else { user_order };
+
+    let user_has_other_order = user.has_other_order(order.order_id)?;
+    let pre_order_leverage = user.get_order_leverage(
+        order.symbol,
+        order.order_side,
+        order.cross_margin,
+        order.leverage,
+    )?;
+
     let next_use_index = user.next_usable_position_index()?;
     let user_key = user.user_key;
 
-    let stake_token_pool = &mut pool_account_loader.load_mut().unwrap();
-    let stable_pool = &mut stable_pool_account_loader.load_mut().unwrap();
-    let pool = if order.order_side.eq(&OrderSide::LONG) { stake_token_pool } else { stable_pool };
+    let stake_token_pool = pool_account_loader.load_mut()?;
+    let stable_pool = stable_pool_account_loader.load_mut()?;
+    let mut pool =
+        if order.order_side.eq(&OrderSide::LONG) { stake_token_pool } else { stable_pool };
 
     //validate order
     validate_execute_order(&order, &market)?;
@@ -315,22 +326,39 @@ pub fn handle_execute_order<'info>(
         &order,
     )?;
 
-    let user = &mut user_account_loader.load_mut().unwrap();
-    let position =
-        user.find_position_by_seed(&user_key, market.symbol, order.cross_margin, program_id)?;
-
     //update funding_fee_rate and borrowing_fee_rate
-    let mut market_processor = MarketProcessor { market };
+    let mut market_processor = MarketProcessor { market: &mut market };
 
     market_processor.update_market_funding_fee_rate(
         state_account,
         oracle_map.get_price_data(&trade_token.oracle)?.price,
     )?;
-    let mut pool_processor = PoolProcessor { pool };
+    drop(market_processor);
+    let mut pool_processor = PoolProcessor { pool: &mut pool };
     pool_processor.update_pool_borrowing_fee_rate()?;
+    drop(pool_processor);
 
-    let user = &mut user_account_loader.load_mut().unwrap();
-    let market = market_account_loader.load().unwrap();
+    let market = market_account_loader.load()?;
+
+    let position_key =
+        pda::generate_position_key(&user_key, market.symbol, order.cross_margin, program_id)?;
+
+    drop(user);
+    let mut user = user_account_loader.load_mut()?;
+
+    let position_option = user.find_position_by_seed(&position_key)?;
+    let mut position = match position_option {
+        None => {
+            let mut new_position = UserPosition::default();
+            new_position.set_position_key(position_key)?;
+
+            user.add_position(&new_position, next_use_index)?;
+            user.find_position_mut_ref_by_key(&position_key)?
+        },
+        Some(position) => position,
+    };
+
+
     //do execute order and change position, cal fee....
     match order.position_side {
         PositionSide::NONE => Err(BumpErrorCode::PositionSideNotSupport),
@@ -347,7 +375,7 @@ pub fn handle_execute_order<'info>(
                 order,
                 &margin_token.key(),
                 trade_token.decimals,
-                user,
+                &mut user,
                 margin_token_price,
                 oracle_map,
                 trade_token_map,
@@ -355,24 +383,10 @@ pub fn handle_execute_order<'info>(
             )?;
 
             if position.position_size == 0u128 && position.status.eq(&PositionStatus::INIT) {
-                if user.has_other_order(order.order_id)?
-                    && user.get_order_leverage(
-                        order.symbol,
-                        order.order_side,
-                        order.cross_margin,
-                        order.leverage,
-                    )? == order.leverage
-                {
+                if user_has_other_order && pre_order_leverage == order.leverage {
                     return Err(BumpErrorCode::AmountNotEnough.into());
                 }
-
-                position.set_position_key(pda::generate_position_key(
-                    &user.user_key,
-                    order.symbol,
-                    order.cross_margin,
-                    program_id,
-                )?)?;
-                position.set_user_key(user.user_key)?;
+                position.set_user_key(user_key)?;
                 position.set_index_mint(market.index_mint)?;
                 position.set_symbol(order.symbol)?;
                 position.set_margin_mint(order.margin_mint)?;
@@ -380,12 +394,11 @@ pub fn handle_execute_order<'info>(
                 position.set_is_long(order.order_side.eq(&OrderSide::LONG))?;
                 position.set_cross_margin(order.cross_margin)?;
                 position.set_status(PositionStatus::USING)?;
-                user.add_position(position, next_use_index)?;
             } else if position.leverage != order.leverage {
                 return Err(BumpErrorCode::LeverageIsNotAllowed.into());
             }
 
-            let mut position_processor = PositionProcessor { position };
+            let mut position_processor = PositionProcessor { position: &mut position };
             position_processor.increase_position(
                 IncreasePositionParams {
                     margin_token: order.margin_mint,
@@ -408,6 +421,9 @@ pub fn handle_execute_order<'info>(
         }),
 
         PositionSide::DECREASE => Ok({
+            let mut user = user_account_loader.load_mut()?;
+            let position = user.find_position_mut_ref_by_key(&position_key)?;
+
             //decrease
             if position.position_size == 0u128 || position.status.eq(&PositionStatus::INIT) {
                 return Err(BumpErrorCode::InvalidParam.into());

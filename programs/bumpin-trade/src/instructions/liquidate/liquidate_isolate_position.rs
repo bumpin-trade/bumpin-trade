@@ -116,28 +116,28 @@ pub fn handle_liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
     _index_trade_token_index: u16,
     _user_authority_key: Pubkey,
 ) -> Result<()> {
-    let user = &mut ctx.accounts.user.load_mut()?;
-    let user_position = user.find_position_mut_by_key(&position_key)?;
+    let mut user = ctx.accounts.user.load_mut()?;
+    let user_position = user.find_position_mut_ref_by_key(&position_key)?;
 
     validate!(!user_position.cross_margin, BumpErrorCode::OnlyLiquidateIsolatePosition)?;
-    let market = &mut ctx.accounts.market.load_mut()?;
+    let mut market = ctx.accounts.market.load_mut()?;
 
     let remaining_accounts = ctx.remaining_accounts;
     let mut oracle_map = OracleMap::load(remaining_accounts)?;
 
-    let mut market_processor = MarketProcessor { market };
+    let mut market_processor = MarketProcessor { market: &mut market };
     let trade_token = ctx.accounts.trade_token.load()?;
     market_processor.update_market_funding_fee_rate(
         &ctx.accounts.state,
         oracle_map.get_price_data(&trade_token.oracle)?.price,
     )?;
 
-    let pool = &mut ctx.accounts.pool.load_mut().unwrap();
-    let stable_pool = &mut ctx.accounts.stable_pool.load_mut().unwrap();
+    let mut pool = ctx.accounts.pool.load_mut()?;
+    let mut stable_pool = ctx.accounts.stable_pool.load_mut()?;
     let mut pool_processor = if user_position.is_long {
-        PoolProcessor { pool }
+        PoolProcessor { pool: &mut pool }
     } else {
-        PoolProcessor { pool: stable_pool }
+        PoolProcessor { pool: &mut stable_pool }
     };
     pool_processor.update_pool_borrowing_fee_rate()?;
 

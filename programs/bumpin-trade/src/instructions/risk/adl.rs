@@ -90,7 +90,7 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
             .find(|user_token_account| user_token_account.owner.eq(&user_account.authority))
             .ok_or(BumpErrorCode::CouldNotLoadUserData)?;
 
-        let position = user_account.find_position_mut_by_key(&param.position_key)?;
+        let position = user_account.find_position_mut_ref_by_key(&param.position_key)?;
 
         let user_account = user_map.get_ref(&param.user_key)?;
         let user_token =
