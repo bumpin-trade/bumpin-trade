@@ -1,3 +1,5 @@
+use std::cell::RefMut;
+use std::ops::DerefMut;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 //
@@ -302,6 +304,7 @@ pub fn handle_execute_order<'info>(
     let index_trade_token = index_trade_token_loader.load()?;
 
     let order = if execute_from_remote { user.find_ref_order_by_id(order_id)? } else { user_order };
+    let order = order.clone();
 
     let user_has_other_order = user.has_other_order(order.order_id)?;
     let pre_order_leverage = user.get_order_leverage(
@@ -345,25 +348,16 @@ pub fn handle_execute_order<'info>(
         pda::generate_position_key(&user_key, market.symbol, order.cross_margin, program_id)?;
 
     drop(user);
-    let mut user = user_account_loader.load_mut()?;
 
-    let position_option = user.find_position_by_seed(&position_key)?;
-    let mut position = match position_option {
-        None => {
-            let mut new_position = UserPosition::default();
-            new_position.set_position_key(position_key)?;
-
-            user.add_position(&new_position, next_use_index)?;
-            user.find_position_mut_ref_by_key(&position_key)?
-        },
-        Some(position) => position,
-    };
 
 
     //do execute order and change position, cal fee....
     match order.position_side {
         PositionSide::NONE => Err(BumpErrorCode::PositionSideNotSupport),
         PositionSide::INCREASE => Ok({
+            let mut user = user_account_loader.load_mut()?;
+            let user = user.deref_mut();
+
             let margin_token_price;
             if market.index_mint.eq(&margin_token.key()) {
                 margin_token_price = execute_price;
@@ -373,15 +367,27 @@ pub fn handle_execute_order<'info>(
 
             let (order_margin, order_margin_from_balance) = execute_increase_order_margin(
                 user_token_account.to_account_info().key,
-                order,
+                &order,
                 &margin_token.key(),
                 trade_token.decimals,
-                &mut user,
+                user,
                 margin_token_price,
                 oracle_map,
                 trade_token_map,
                 state_account,
             )?;
+
+            let position_option = user.find_position_by_seed(&position_key)?;
+            let mut position = match position_option {
+                None => {
+                    let mut new_position = UserPosition::default();
+                    new_position.set_position_key(position_key)?;
+
+                    user.add_position(&new_position, next_use_index)?;
+                    user.find_position_mut_ref_by_key(&position_key)?
+                },
+                Some(position) => position,
+            };
 
             if position.position_size == 0u128 && position.status.eq(&PositionStatus::INIT) {
                 if user_has_other_order && pre_order_leverage == order.leverage {
@@ -467,6 +473,8 @@ pub fn handle_execute_order<'info>(
             )?
         }),
     }?;
+    let mut user = user_account_loader.load_mut()?;
+    let user = user.deref_mut();
     //delete order
     user.delete_order(order_id)?;
     Ok(())
@@ -531,7 +539,7 @@ fn execute_increase_order_margin(
     order: &UserOrder,
     margin_token: &Pubkey,
     decimals: u16,
-    user: &mut User,
+    user:  &mut User,
     margin_token_price: u128,
     oracle_map: &mut OracleMap,
     trade_token_map: &TradeTokenMap,
