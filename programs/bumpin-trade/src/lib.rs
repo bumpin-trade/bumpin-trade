@@ -20,7 +20,7 @@ pub mod state;
 pub mod traits;
 pub mod utils;
 
-declare_id!("46tVQFuV65zkUdHMm7eZZqcmDYbPjw5rkWKmUsXURmcc");
+declare_id!("EocqPSYv49uCVMEze1sPZJ6vVEpTRmJjD8sHY6EKEPa3");
 
 #[program]
 pub mod bumpin_trade {
@@ -30,16 +30,6 @@ pub mod bumpin_trade {
         ctx: Context<'a, 'b, 'c, 'info, Initialize1>,
     ) -> Result<()> {
         msg!("initialize1");
-
-        // let key_value = &ctx.accounts.key_value;
-
-        // 打印 KeyValue 的已知字段
-        // msg!("key_value key: {:?}", key_value.key);
-        // msg!("key_value value: {:?}", key_value.value);
-        // for x in ctx.remaining_accounts.iter() {
-        //     let a: Account<TokenAccount> = Account::try_from(x).unwrap();
-        //     msg!("a: {:?}", a);
-        // }
 
         let r = VaultMap::load(ctx.remaining_accounts);
         msg!("r: {}", r.is_ok());

@@ -220,7 +220,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         acceptable_price: order.acceptable_price,
         time: cal_utils::current_time(),
         status: OrderStatus::USING,
-        padding: [0u8; 9],
+        padding: [0u8; 10],
     };
 
     if order.order_type.eq(&OrderType::MARKET) {

@@ -11,10 +11,9 @@ pub struct UserStake {
     pub user_rewards: UserRewards,
     pub pool_key: Pubkey,
     pub user_stake_status: UserStakeStatus,
-    pub padding: [u8; 7],
+    pub padding: [u8; 15],
 }
 
-#[repr(C)]
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]
 pub enum UserStakeStatus {
     #[default]

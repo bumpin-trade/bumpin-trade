@@ -10,20 +10,19 @@ pub struct UserOrder {
     pub acceptable_price: u128,
     pub time: u128,
     pub order_id: u128,
-    pub margin_mint: Pubkey,
-    pub authority: Pubkey,
-    pub symbol: [u8; 32],
     pub order_side: OrderSide,
     pub position_side: PositionSide,
     pub order_type: OrderType,
     pub stop_type: StopType,
-    pub cross_margin: bool,
     pub status: OrderStatus,
-    pub padding: [u8; 9],
+    pub margin_mint: Pubkey,
+    pub authority: Pubkey,
+    pub symbol: [u8; 32],
+    pub cross_margin: bool,
+    pub padding: [u8; 10],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
-#[repr(C)]
 pub enum OrderSide {
     #[default]
     NONE,
@@ -32,7 +31,6 @@ pub enum OrderSide {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
-#[repr(C)]
 pub enum OrderStatus {
     #[default]
     INIT,
@@ -40,7 +38,6 @@ pub enum OrderStatus {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
-#[repr(C)]
 pub enum PositionSide {
     #[default]
     NONE,
@@ -49,7 +46,6 @@ pub enum PositionSide {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
-#[repr(C)]
 pub enum OrderType {
     #[default]
     NONE,
@@ -59,7 +55,6 @@ pub enum OrderType {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
-#[repr(C)]
 pub enum StopType {
     #[default]
     NONE,

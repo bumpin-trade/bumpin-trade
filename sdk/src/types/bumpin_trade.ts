@@ -3602,9 +3602,6 @@ export type BumpinTrade = {
     },
     {
       "name": "orderSide",
-      "repr": {
-        "kind": "c"
-      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -3622,9 +3619,6 @@ export type BumpinTrade = {
     },
     {
       "name": "orderStatus",
-      "repr": {
-        "kind": "c"
-      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -3639,9 +3633,6 @@ export type BumpinTrade = {
     },
     {
       "name": "orderType",
-      "repr": {
-        "kind": "c"
-      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -4093,9 +4084,6 @@ export type BumpinTrade = {
     },
     {
       "name": "positionSide",
-      "repr": {
-        "kind": "c"
-      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -4113,9 +4101,6 @@ export type BumpinTrade = {
     },
     {
       "name": "positionStatus",
-      "repr": {
-        "kind": "c"
-      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -4253,9 +4238,6 @@ export type BumpinTrade = {
     },
     {
       "name": "stopType",
-      "repr": {
-        "kind": "c"
-      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -4448,14 +4430,6 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
-            "name": "userKey",
-            "type": "pubkey"
-          },
-          {
-            "name": "authority",
-            "type": "pubkey"
-          },
-          {
             "name": "nextOrderId",
             "type": "u128"
           },
@@ -4518,6 +4492,14 @@ export type BumpinTrade = {
                 8
               ]
             }
+          },
+          {
+            "name": "userKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
           }
         ]
       }
@@ -4579,23 +4561,6 @@ export type BumpinTrade = {
             "type": "u128"
           },
           {
-            "name": "marginMint",
-            "type": "pubkey"
-          },
-          {
-            "name": "authority",
-            "type": "pubkey"
-          },
-          {
-            "name": "symbol",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
             "name": "orderSide",
             "type": {
               "defined": {
@@ -4628,10 +4593,6 @@ export type BumpinTrade = {
             }
           },
           {
-            "name": "crossMargin",
-            "type": "bool"
-          },
-          {
             "name": "status",
             "type": {
               "defined": {
@@ -4640,11 +4601,32 @@ export type BumpinTrade = {
             }
           },
           {
+            "name": "marginMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "symbol",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "crossMargin",
+            "type": "bool"
+          },
+          {
             "name": "padding",
             "type": {
               "array": [
                 "u8",
-                9
+                10
               ]
             }
           }
@@ -4781,7 +4763,7 @@ export type BumpinTrade = {
             "type": {
               "array": [
                 "u8",
-                12
+                13
               ]
             }
           }
@@ -4881,7 +4863,7 @@ export type BumpinTrade = {
             "type": {
               "array": [
                 "u8",
-                7
+                15
               ]
             }
           }
@@ -4890,9 +4872,6 @@ export type BumpinTrade = {
     },
     {
       "name": "userStakeStatus",
-      "repr": {
-        "kind": "c"
-      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -4914,14 +4893,6 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
-            "name": "tokenMint",
-            "type": "pubkey"
-          },
-          {
-            "name": "userTokenAccountKey",
-            "type": "pubkey"
-          },
-          {
             "name": "amount",
             "type": "u128"
           },
@@ -4940,6 +4911,14 @@ export type BumpinTrade = {
                 "name": "userTokenStatus"
               }
             }
+          },
+          {
+            "name": "tokenMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "userTokenAccountKey",
+            "type": "pubkey"
           },
           {
             "name": "padding",
@@ -4995,9 +4974,6 @@ export type BumpinTrade = {
     },
     {
       "name": "userTokenStatus",
-      "repr": {
-        "kind": "c"
-      },
       "type": {
         "kind": "enum",
         "variants": [

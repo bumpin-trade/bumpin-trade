@@ -5,8 +5,8 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-bumpin_trade = "46tVQFuV65zkUdHMm7eZZqcmDYbPjw5rkWKmUsXURmcc"
-pyth = "ETiy97w4dwFnyPLXSjRerh9fG4YprQyyTiEj3JBMVuJo"
+bumpin_trade = "EocqPSYv49uCVMEze1sPZJ6vVEpTRmJjD8sHY6EKEPa3"
+pyth = "AszCjfpwoxuCy4wiHVo5R4sHFuAzp4bDEgYC1VC5jHT8"
 
 [registry]
 url = "https://api.apr.dev"

@@ -10,8 +10,6 @@ pub struct AccKey {
 }
 
 #[derive(Copy, Clone)]
-#[repr(C)]
-#[allow(dead_code)]
 pub enum PriceStatus {
     Unknown,
     Trading,
@@ -26,7 +24,6 @@ impl Default for PriceStatus {
 }
 
 #[derive(Copy, Clone)]
-#[repr(C)]
 pub enum CorpAction {
     NoCorpAct,
 }
@@ -55,7 +52,6 @@ pub struct PriceComp {
 }
 
 #[derive(Copy, Clone)]
-#[repr(C)]
 #[allow(dead_code, clippy::upper_case_acronyms)]
 pub enum PriceType {
     Unknown,

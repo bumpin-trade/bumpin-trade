@@ -1,5 +1,5 @@
 {
-  "address": "46tVQFuV65zkUdHMm7eZZqcmDYbPjw5rkWKmUsXURmcc",
+  "address": "EocqPSYv49uCVMEze1sPZJ6vVEpTRmJjD8sHY6EKEPa3",
   "metadata": {
     "name": "bumpin_trade",
     "version": "0.1.0",
@@ -581,7 +581,7 @@
               },
               {
                 "kind": "arg",
-                "path": "token_index"
+                "path": "_token_index"
               }
             ]
           }
@@ -615,7 +615,7 @@
               },
               {
                 "kind": "arg",
-                "path": "token_index"
+                "path": "_token_index"
               }
             ]
           }
@@ -3596,9 +3596,6 @@
     },
     {
       "name": "OrderSide",
-      "repr": {
-        "kind": "c"
-      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -3616,9 +3613,6 @@
     },
     {
       "name": "OrderStatus",
-      "repr": {
-        "kind": "c"
-      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -3633,9 +3627,6 @@
     },
     {
       "name": "OrderType",
-      "repr": {
-        "kind": "c"
-      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -4087,9 +4078,6 @@
     },
     {
       "name": "PositionSide",
-      "repr": {
-        "kind": "c"
-      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -4107,9 +4095,6 @@
     },
     {
       "name": "PositionStatus",
-      "repr": {
-        "kind": "c"
-      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -4247,9 +4232,6 @@
     },
     {
       "name": "StopType",
-      "repr": {
-        "kind": "c"
-      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -4442,14 +4424,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "user_key",
-            "type": "pubkey"
-          },
-          {
-            "name": "authority",
-            "type": "pubkey"
-          },
-          {
             "name": "next_order_id",
             "type": "u128"
           },
@@ -4512,6 +4486,14 @@
                 8
               ]
             }
+          },
+          {
+            "name": "user_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
           }
         ]
       }
@@ -4573,23 +4555,6 @@
             "type": "u128"
           },
           {
-            "name": "margin_mint",
-            "type": "pubkey"
-          },
-          {
-            "name": "authority",
-            "type": "pubkey"
-          },
-          {
-            "name": "symbol",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
             "name": "order_side",
             "type": {
               "defined": {
@@ -4622,10 +4587,6 @@
             }
           },
           {
-            "name": "cross_margin",
-            "type": "bool"
-          },
-          {
             "name": "status",
             "type": {
               "defined": {
@@ -4634,11 +4595,32 @@
             }
           },
           {
+            "name": "margin_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "symbol",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "cross_margin",
+            "type": "bool"
+          },
+          {
             "name": "padding",
             "type": {
               "array": [
                 "u8",
-                9
+                10
               ]
             }
           }
@@ -4775,7 +4757,7 @@
             "type": {
               "array": [
                 "u8",
-                12
+                13
               ]
             }
           }
@@ -4875,7 +4857,7 @@
             "type": {
               "array": [
                 "u8",
-                7
+                15
               ]
             }
           }
@@ -4884,9 +4866,6 @@
     },
     {
       "name": "UserStakeStatus",
-      "repr": {
-        "kind": "c"
-      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -4908,14 +4887,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "token_mint",
-            "type": "pubkey"
-          },
-          {
-            "name": "user_token_account_key",
-            "type": "pubkey"
-          },
-          {
             "name": "amount",
             "type": "u128"
           },
@@ -4934,6 +4905,14 @@
                 "name": "UserTokenStatus"
               }
             }
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "user_token_account_key",
+            "type": "pubkey"
           },
           {
             "name": "padding",
@@ -4989,9 +4968,6 @@
     },
     {
       "name": "UserTokenStatus",
-      "repr": {
-        "kind": "c"
-      },
       "type": {
         "kind": "enum",
         "variants": [

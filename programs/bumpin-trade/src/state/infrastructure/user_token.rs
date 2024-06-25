@@ -8,16 +8,15 @@ use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
 #[bumpin_zero_copy_unsafe]
 pub struct UserToken {
-    pub token_mint: Pubkey,
-    pub user_token_account_key: Pubkey,
     pub amount: u128,
     pub used_amount: u128,
     pub liability: u128,
     pub user_token_status: UserTokenStatus,
+    pub token_mint: Pubkey,
+    pub user_token_account_key: Pubkey,
     pub padding: [u8; 15],
 }
 
-#[repr(C)]
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]
 pub enum UserTokenStatus {
     #[default]

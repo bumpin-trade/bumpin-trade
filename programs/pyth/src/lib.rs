@@ -3,7 +3,7 @@ pub mod pc;
 use pc::Price;
 
 #[cfg(feature = "local-net")]
-declare_id!("ETiy97w4dwFnyPLXSjRerh9fG4YprQyyTiEj3JBMVuJo");
+declare_id!("AszCjfpwoxuCy4wiHVo5R4sHFuAzp4bDEgYC1VC5jHT8");
 #[cfg(not(feature = "local-net"))]
 declare_id!("CC1ePebfvPy7QRTimPoVecS2UsBvYv46ynrzWocc92s");
 
@@ -14,7 +14,6 @@ pub mod pyth {
     pub fn initialize(ctx: Context<Initialize>, price: i64, expo: i32, conf: u64) -> Result<()> {
         let clock = Clock::get()?;
         let oracle = &ctx.accounts.price;
-
         let mut price_oracle = Price::load(oracle).unwrap();
 
         price_oracle.magic = 2712847316;

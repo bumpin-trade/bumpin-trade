@@ -33,11 +33,10 @@ pub struct UserPosition {
     pub is_long: bool,
     pub cross_margin: bool,
     pub status: PositionStatus,
-    pub padding: [u8; 12],
+    pub padding: [u8; 13],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
-#[repr(C)]
 pub enum PositionStatus {
     #[default]
     INIT,

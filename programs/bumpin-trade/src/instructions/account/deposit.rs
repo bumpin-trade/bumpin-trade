@@ -12,7 +12,7 @@ use crate::state::user::{User, UserTokenUpdateOrigin};
 use crate::utils::token;
 
 #[derive(Accounts)]
-#[instruction(token_index: u16)]
+#[instruction(_token_index: u16)]
 pub struct Deposit<'info> {
     #[account(
         mut,
@@ -31,27 +31,24 @@ pub struct Deposit<'info> {
 
     #[account(
         mut,
-        seeds = [b"trade_token", token_index.to_le_bytes().as_ref()],
+        seeds = [b"trade_token", _token_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub trade_token: AccountLoader<'info, TradeToken>,
 
     #[account(
         mut,
-        seeds = [b"trade_token_vault", token_index.to_le_bytes().as_ref()],
+        seeds = [b"trade_token_vault", _token_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub trade_token_vault: Account<'info, TokenAccount>,
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle_deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> Result<()> {
-    msg!("Token index: {}", token_index);
-    msg!("Token amount: {}", amount);
-
+pub fn handle_deposit(ctx: Context<Deposit>, _token_index: u16, amount: u128) -> Result<()> {
     let mut user = ctx.accounts.user.load_mut()?;
     let trade_token = &mut ctx.accounts.trade_token.load_mut()?;
-    // msg!("User Token Account: {:?}", &ctx.accounts.user_token_account);
+
     token::receive(
         &ctx.accounts.token_program,
         &ctx.accounts.user_token_account,
@@ -85,11 +82,9 @@ pub fn handle_deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> 
     trade_token.add_token(amount)?;
 
     let repay_amount = user.repay_liability(&trade_token.mint, &UserTokenUpdateOrigin::DEPOSIT)?;
-    msg!("Token repay_amount: {}", repay_amount);
     trade_token.sub_liability(repay_amount)?;
     if amount > repay_amount {
         let left_amount = amount.safe_sub(repay_amount)?;
-
         let mut user_processor = UserProcessor { user: &mut user };
         user_processor.update_cross_position_balance(
             &ctx.accounts.user_token_account.mint,

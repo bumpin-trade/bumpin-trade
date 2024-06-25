@@ -20,15 +20,16 @@ use crate::validate;
 #[derive(Default, Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct User {
-    pub user_key: Pubkey,
-    pub authority: Pubkey,
-    pub next_order_id: u128,
+    pub next_order_id: u128, //16
     pub next_liquidation_id: u128,
     pub hold: u128,
-    pub user_tokens: [UserToken; 12],
+    pub user_tokens: [UserToken; 12], //16
     pub user_stakes: [UserStake; 12],
     pub user_positions: [UserPosition; 8],
     pub user_orders: [UserOrder; 8],
+    pub user_key: Pubkey,
+    pub authority: Pubkey,
+    // pub padding: [u8; 14],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]
