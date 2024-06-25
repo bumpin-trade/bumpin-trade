@@ -1,13 +1,14 @@
 import {OracleClient} from "./oracles/types";
 import {PublicKey} from '@solana/web3.js';
 import {AccountSubscriber, DataAndSlot} from "./account/types";
-import {Pool, State, UserAccount} from "./types";
+import {Pool, State, TradeToken, UserAccount} from "./types";
 import {BumpinClientConfig} from "./bumpinClientConfig";
 import {PollingPoolAccountSubscriber} from "./account/pollingPoolAccountSubscriber";
 import {BulkAccountLoader} from "./account/bulkAccountLoader";
 import {AnchorProvider, BN, Program, Wallet} from "@coral-xyz/anchor";
 import {BumpinUtils} from "./utils/utils";
 import {BumpinTrade} from "./types/bumpin_trade";
+import {tokenToUsd} from "./utils/cal_utils";
 
 export class PoolComponent {
     oracleClient: OracleClient
@@ -44,10 +45,11 @@ export class PoolComponent {
         let pool = this.getPool(poolKey);
     }
 
-    public async getPoolUsd(poolKey: PublicKey): Promise<BN> {
+    public async getPoolUsd(poolKey: PublicKey, tradeTokenMap: Map<PublicKey, TradeToken>): Promise<BN> {
         let pool = this.getPool(poolKey);
+        let tradeToken = tradeTokenMap.get(pool.poolMint);
         let oraclePriceData = await this.oracleClient.getOraclePriceData(pool.poolMint);
-
-        pool.poolBalance.amount.add(pool.poolBalance.unSettleAmount).multiple(oraclePriceData.price);
+        let poolUsd = tokenToUsd(pool.poolBalance.amount.add(pool.poolBalance.unSettleAmount),
+            tradeToken.decimals, oraclePriceData.price);
     }
 }
