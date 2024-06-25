@@ -86,12 +86,12 @@ impl PositionProcessor<'_> {
                     add_margin_amount = cal_utils::usd_to_token_u(
                         add_margin_in_usd,
                         trade_token.decimals,
-                        margin_mint_token_price,
+                        self.position.entry_price,
                     )?;
                     add_initial_margin_from_portfolio = cal_utils::token_to_usd_u(
                         add_margin_amount.min(available_amount),
                         trade_token.decimals,
-                        margin_mint_token_price,
+                        self.position.entry_price,
                     )?;
                     user.use_token(
                         &trade_token.mint,
@@ -122,7 +122,7 @@ impl PositionProcessor<'_> {
                         authority,
                         params.add_margin_amount,
                     )
-                    .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                        .map_err(|_e| BumpErrorCode::TransferFailed)?;
                 }
             } else {
                 self.position.set_leverage(params.leverage)?;
@@ -157,7 +157,7 @@ impl PositionProcessor<'_> {
                         state.bump_signer_nonce,
                         reduce_margin_amount,
                     )
-                    .map_err(|_e| BumpErrorCode::TransferFailed)?
+                        .map_err(|_e| BumpErrorCode::TransferFailed)?
                 }
             }
         }
@@ -647,7 +647,7 @@ impl PositionProcessor<'_> {
                 self.position.position_size,
                 market.market_trade_config.max_leverage,
             )?
-            .max(state.min_order_margin_usd),
+                .max(state.min_order_margin_usd),
         )?;
         validate!(
             max_reduce_margin_in_usd > params.update_margin_amount,
@@ -663,10 +663,10 @@ impl PositionProcessor<'_> {
 
         if self.position.cross_margin
             && self
-                .position
-                .initial_margin_usd
-                .safe_sub(self.position.initial_margin_usd_from_portfolio)?
-                < reduce_margin_amount
+            .position
+            .initial_margin_usd
+            .safe_sub(self.position.initial_margin_usd_from_portfolio)?
+            < reduce_margin_amount
         {
             self.position.sub_initial_margin_usd_from_portfolio(
                 reduce_margin_amount
@@ -950,7 +950,7 @@ impl PositionProcessor<'_> {
                     trade_token.decimals,
                     token_price,
                 )
-                .unwrap(),
+                    .unwrap(),
                 self.position.close_fee_in_usd,
             ));
         }
@@ -1216,7 +1216,7 @@ impl PositionProcessor<'_> {
                 state_account.bump_signer_nonce,
                 response.pool_pnl_token.abs().cast::<u128>()?,
             )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                .map_err(|_e| BumpErrorCode::TransferFailed)?;
         } else if response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)? > 0i128 {
             token::receive(
                 token_program,
@@ -1225,7 +1225,7 @@ impl PositionProcessor<'_> {
                 bump_signer,
                 response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)?.cast::<u128>()?,
             )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                .map_err(|_e| BumpErrorCode::TransferFailed)?;
         }
 
         if !response.is_liquidation {
@@ -1266,7 +1266,7 @@ impl PositionProcessor<'_> {
             state_account.bump_signer_nonce,
             response.settle_margin.abs().cast::<u128>()?,
         )
-        .map_err(|_e| BumpErrorCode::TransferFailed)?;
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
         Ok(())
     }
 
