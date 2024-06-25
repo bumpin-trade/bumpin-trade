@@ -1,22 +1,16 @@
-import {Wallet, Program} from "@coral-xyz/anchor";
-import {
-    PublicKey
-} from '@solana/web3.js';
-import {OracleClient} from "./oracles/types";
-import {BulkAccountLoader} from "./account/bulkAccountLoader";
-import {State} from "./types";
-import {BumpinTrade} from "./types/bumpin_trade";
+import {Wallet} from "@coral-xyz/anchor";
 
 export type BumpinClientConfig = {
     endpoint: string;
     wallet: Wallet;
+    pollingFrequency: number
 }
 
 export class BumpinClientConfigBuilder {
     private config: BumpinClientConfig;
 
     private constructor(endpoint: string) {
-        this.config = {endpoint, wallet: undefined};
+        this.config = {endpoint, wallet: undefined, pollingFrequency: 1000};
     }
 
     public static mainnet_beta(): BumpinClientConfigBuilder {
@@ -29,6 +23,11 @@ export class BumpinClientConfigBuilder {
 
     public wallet(wallet: Wallet): BumpinClientConfigBuilder {
         this.config.wallet = wallet;
+        return this;
+    }
+
+    public pollingFrequency(pollingFrequency: number): BumpinClientConfigBuilder {
+        this.config.pollingFrequency = pollingFrequency;
         return this;
     }
 

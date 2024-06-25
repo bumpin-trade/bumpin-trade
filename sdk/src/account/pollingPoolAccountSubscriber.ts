@@ -67,7 +67,7 @@ export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
                 }
 
                 const account = this.program.account.pool.coder.accounts.decode(
-                    'Pool',
+                    'pool',
                     buffer
                 );
                 this.pool = {data: account, slot};

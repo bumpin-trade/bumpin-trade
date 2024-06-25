@@ -66,7 +66,7 @@ export class PollingMarketAccountSubscriber implements AccountSubscriber<Market>
                 }
 
                 const account = this.program.account.market.coder.accounts.decode(
-                    'Market',
+                    'market',
                     buffer
                 );
                 this.market = {data: account, slot};

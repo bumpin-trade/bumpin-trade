@@ -6,8 +6,10 @@ import {BumpinClientConfig} from "./bumpinClientConfig";
 import {BumpinUtils} from "./utils/utils";
 import {BumpinTrade} from "./types/bumpin_trade";
 import {Market, Pool, State, TradeToken, UserAccount} from "./types";
-import {BumpinAccountNotFound} from "./errors";
-import {WebSocketAccountSubscriber} from "./account/webSocketAccountSubscriber";
+import {BumpinAccountNotFound, BumpinSubscriptionFailed} from "./errors";
+import {PollingUserAccountSubscriber} from "./account/pollingUserAccountSubscriber";
+import {BulkAccountLoader} from "./account/bulkAccountLoader";
+import {DataAndSlot} from "./account/types";
 
 
 export class BumpinClient {
@@ -17,6 +19,10 @@ export class BumpinClient {
     public program: Program<BumpinTrade>;
 
     isInitialized: boolean = false;
+    bulkAccountLoader: BulkAccountLoader;
+
+    //subscriptions
+    userAccountSubscriber: PollingUserAccountSubscriber;
 
     state: State | null = null;
     tradeTokens: TradeToken[] = [];
@@ -28,6 +34,7 @@ export class BumpinClient {
         this.wallet = config.wallet;
         this.provider = new anchor.AnchorProvider(this.connection, this.wallet, anchor.AnchorProvider.defaultOptions());
         this.program = new anchor.Program(JSON.parse(JSON.stringify(idlBumpinTrade)), this.provider);
+        this.bulkAccountLoader = new BulkAccountLoader(this.connection, "confirmed", config.pollingFrequency);
     }
 
 
@@ -51,13 +58,52 @@ export class BumpinClient {
         this.market = await this.syncMarket();
     }
 
-    public async subscriptionMe() {
+    public async subscriptionMe(): Promise<PollingUserAccountSubscriber> {
+        if (this.userAccountSubscriber) {
+            await this.userAccountSubscriber.unsubscribe();
+            this.userAccountSubscriber = undefined;
+        }
 
+        const [pda, _] = BumpinUtils.getPdaSync(this.program, [Buffer.from("user"), this.wallet.publicKey.toBuffer()]);
+        let subscriptionMe = new PollingUserAccountSubscriber(this.program, pda, this.bulkAccountLoader);
+        let success = subscriptionMe.subscribe();
+        if (!success) {
+            throw new BumpinSubscriptionFailed("User Account, pda: " + pda.toString() + " wallet: " + this.wallet.publicKey.toString());
+        }
+        this.userAccountSubscriber = subscriptionMe;
+        return subscriptionMe;
     }
 
-    public async me(): Promise<UserAccount> {
+    public async login(autoSubscription: boolean = true): Promise<UserAccount> {
         const [pda, _] = BumpinUtils.getPdaSync(this.program, [Buffer.from("user"), this.wallet.publicKey.toBuffer()]);
-        return await this.program.account.user.fetch(pda) as any as UserAccount;
+        let me = await this.program.account.user.fetch(pda) as any as UserAccount;
+        if (autoSubscription) {
+            await this.subscriptionMe();
+        }
+        return me;
+    }
+
+    public async getUserAccount(sync: boolean = false, withSlot: boolean = false, autoSubscription: boolean = true): Promise<UserAccount | DataAndSlot<UserAccount>> {
+        if (!this.userAccountSubscriber || !this.userAccountSubscriber.isSubscribed) {
+            if (autoSubscription) {
+                await this.subscriptionMe();
+            } else {
+                throw new BumpinAccountNotFound("User")
+            }
+        }
+
+        if (sync) {
+            await this.userAccountSubscriber.fetch();
+        }
+
+        let userAccount = this.userAccountSubscriber.user;
+        if (!userAccount) {
+            throw new BumpinAccountNotFound("User")
+        }
+        if (withSlot) {
+            return userAccount;
+        }
+        return userAccount.data;
     }
 
     public async syncMarket(): Promise<Market[]> {

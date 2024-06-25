@@ -64,19 +64,15 @@ export class PollingUserAccountSubscriber implements AccountSubscriber<UserAccou
                 }
 
                 const account = this.program.account.user.coder.accounts.decode(
-                    'User',
+                    'user',
                     buffer
                 );
                 this.user = {data: account, slot};
-                /*                this.eventEmitter.emit('userAccountUpdate', account);
-                                this.eventEmitter.emit('update');*/
+                console.log('UserAccount updated', this.user);
             }
         );
 
         this.errorCallbackId = this.accountLoader.addErrorCallbacks((error) => {
-            /*
-                        this.eventEmitter.emit('error', error);
-            */
         });
     }
 
