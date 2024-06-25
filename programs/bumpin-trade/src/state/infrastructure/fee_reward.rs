@@ -1,9 +1,9 @@
 use crate::errors::BumpResult;
 use crate::math::safe_math::SafeMath;
 use anchor_lang::prelude::*;
+use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
-#[repr(C)]
-#[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]
+#[bumpin_zero_copy_unsafe]
 pub struct FeeReward {
     pub fee_amount: u128,
     pub un_settle_fee_amount: u128,

@@ -17,8 +17,6 @@ pub struct UserToken {
     pub padding: [u8; 15],
 }
 
-
-
 #[repr(C)]
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]
 pub enum UserTokenStatus {

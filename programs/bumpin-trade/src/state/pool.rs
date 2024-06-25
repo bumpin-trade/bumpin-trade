@@ -1,3 +1,7 @@
+use anchor_lang::prelude::*;
+
+use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
+
 use crate::errors::BumpErrorCode::PoolSubUnsettleNotEnough;
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{add_u128, sub_u128};
@@ -8,29 +12,29 @@ use crate::state::infrastructure::fee_reward::FeeReward;
 use crate::state::infrastructure::pool_borrowing_fee::BorrowingFee;
 use crate::traits::Size;
 use crate::validate;
-use anchor_lang::prelude::*;
 
 #[account(zero_copy(unsafe))]
 #[derive(Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct Pool {
-    pub pool_key: Pubkey,
-    pub pool_mint: Pubkey,
-    pub pool_index: u16,
-    pub pool_mint_vault: Pubkey,
-    pub pool_name: [u8; 32],
-    pub pool_balance: PoolBalance,
-    pub stable_balance: PoolBalance,
-    pub borrowing_fee: BorrowingFee,
-    pub fee_reward: FeeReward,
-    pub stable_fee_reward: FeeReward,
-    pub pool_config: PoolConfig,
-    pub total_supply: u128,
-    pub pool_status: PoolStatus,
-    pub stable: bool,
     pub pnl: i128,
     pub apr: u128,
     pub insurance_fund_amount: u128,
+    pub total_supply: u128,
+    pub pool_balance: PoolBalance, //16
+    pub stable_balance: PoolBalance,
+    pub borrowing_fee: BorrowingFee, //16
+    pub fee_reward: FeeReward,       //16
+    pub stable_fee_reward: FeeReward,
+    pub pool_config: PoolConfig, //16
+    pub pool_mint_vault: Pubkey,
+    pub pool_key: Pubkey,
+    pub pool_mint: Pubkey,
+    pub pool_index: u16,
+    pub pool_status: PoolStatus,
+    pub stable: bool,
+    pub pool_name: [u8; 32],
+    pub padding: [u8; 3],
 }
 
 impl Size for Pool {
@@ -44,18 +48,17 @@ pub enum PoolStatus {
     UnStakePaused,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
-#[repr(C)]
+#[bumpin_zero_copy_unsafe]
 pub struct PoolBalance {
-    pub pool_mint: Pubkey,
     pub amount: u128,
     pub hold_amount: u128,
     pub un_settle_amount: u128,
     pub loss_amount: u128,
+    pub pool_mint: Pubkey,
+    pub padding: [u8; 8],
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
-#[repr(C)]
+#[bumpin_zero_copy_unsafe]
 pub struct PoolConfig {
     pub mini_stake_amount: u128,
     pub mini_un_stake_amount: u128,
@@ -86,6 +89,7 @@ impl Default for Pool {
             pnl: 0,
             apr: 0u128,
             insurance_fund_amount: 0,
+            padding: [0; 3],
         }
     }
 }

@@ -1,9 +1,3 @@
-use std::cell::RefMut;
-use std::ops::DerefMut;
-use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
-//
-
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::instructions::constraints::*;
@@ -29,6 +23,9 @@ use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 use crate::utils::{pda, token};
 use crate::{get_then_update_id, validate};
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Mint, Token, TokenAccount};
+use std::ops::DerefMut;
 
 #[derive(Accounts)]
 #[instruction(
@@ -349,8 +346,6 @@ pub fn handle_execute_order<'info>(
 
     drop(user);
 
-
-
     //do execute order and change position, cal fee....
     match order.position_side {
         PositionSide::NONE => Err(BumpErrorCode::PositionSideNotSupport),
@@ -539,7 +534,7 @@ fn execute_increase_order_margin(
     order: &UserOrder,
     margin_token: &Pubkey,
     decimals: u16,
-    user:  &mut User,
+    user: &mut User,
     margin_token_price: u128,
     oracle_map: &mut OracleMap,
     trade_token_map: &TradeTokenMap,

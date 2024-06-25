@@ -25,8 +25,8 @@ pub struct User {
     pub next_order_id: u128,
     pub next_liquidation_id: u128,
     pub hold: u128,
-    pub user_tokens: [UserToken; 8],
-    pub user_stakes: [UserStake; 8],
+    pub user_tokens: [UserToken; 12],
+    pub user_stakes: [UserStake; 12],
     pub user_positions: [UserPosition; 8],
     pub user_orders: [UserOrder; 8],
 }
@@ -51,7 +51,7 @@ pub enum UserTokenUpdateOrigin {
 }
 
 impl Size for User {
-    const SIZE: usize = std::mem::size_of::<User>() + 8 + 100;
+    const SIZE: usize = std::mem::size_of::<User>() + 8;
 }
 
 impl User {

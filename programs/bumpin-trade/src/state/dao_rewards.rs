@@ -9,6 +9,7 @@ pub struct DaoRewards {
     pub dao_rewards_vault: Pubkey,
     pub un_claim_amount: u128,
     pub total_rewards_amount: u128,
+    pub padding: [u8; 6],
 }
 
 impl Size for DaoRewards {

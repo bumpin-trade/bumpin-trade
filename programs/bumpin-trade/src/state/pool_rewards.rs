@@ -1,14 +1,16 @@
-use crate::traits::Size;
 use anchor_lang::prelude::*;
+
+use crate::traits::Size;
 
 #[account(zero_copy(unsafe))]
 #[derive(Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct PoolRewards {
-    pub pool_index: u16,
-    pub poo_rewards_vault: Pubkey,
     pub un_claim_amount: u128,
     pub total_rewards_amount: u128,
+    pub poo_rewards_vault: Pubkey,
+    pub pool_index: u16,
+    pub padding: [u8; 6],
 }
 
 impl Size for PoolRewards {

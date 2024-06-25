@@ -1,12 +1,12 @@
 use anchor_lang::prelude::*;
+use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 use num_traits::ToPrimitive;
 
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
-#[repr(C)]
+#[bumpin_zero_copy_unsafe]
 pub struct MarketFundingFee {
     pub long_funding_fee_amount_per_size: i128,
     pub short_funding_fee_amount_per_size: i128,

@@ -1,12 +1,12 @@
+use anchor_lang::error;
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Mint, Token, TokenAccount};
+
+use crate::math::casting::Cast;
 use crate::math_error;
 use crate::safe_increment;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
-use anchor_lang::error;
-use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
-// use solana_program::rent::Rent;
-use crate::math::casting::Cast;
 
 #[derive(Accounts)]
 pub struct InitializeTradeToken<'info> {

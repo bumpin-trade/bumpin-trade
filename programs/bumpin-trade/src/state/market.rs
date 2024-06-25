@@ -3,22 +3,24 @@ use crate::instructions::cal_utils;
 use crate::state::infrastructure::market_funding_fee::MarketFundingFee;
 use crate::traits::Size;
 use anchor_lang::prelude::*;
+use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
 #[account(zero_copy(unsafe))]
 #[derive(Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct Market {
-    pub symbol: [u8; 32],
-    pub market_index: u16,
+    pub long_open_interest: MarketPosition,
+    pub short_open_interest: MarketPosition,
+    pub funding_fee: MarketFundingFee,
+    pub market_trade_config: MarketConfig,
     pub pool_key: Pubkey,
     pub pool_mint: Pubkey,
     pub index_mint: Pubkey,
     pub stable_pool_key: Pubkey,
     pub stable_pool_mint: Pubkey,
-    pub long_open_interest: MarketPosition,
-    pub short_open_interest: MarketPosition,
-    pub funding_fee: MarketFundingFee,
-    pub market_trade_config: MarketConfig,
+    pub market_index: u16,
+    pub symbol: [u8; 32],
+    pub padding: [u8; 5],
 }
 
 impl Size for Market {
@@ -39,12 +41,12 @@ impl Default for Market {
             short_open_interest: MarketPosition::default(),
             funding_fee: MarketFundingFee::default(),
             market_trade_config: MarketConfig::default(),
+            padding: [0u8; 5],
         }
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
-#[repr(C)]
+#[bumpin_zero_copy_unsafe]
 pub struct MarketPosition {
     pub open_interest: u128,
     pub entry_price: u128,
@@ -67,8 +69,7 @@ impl MarketPosition {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
-#[repr(C)]
+#[bumpin_zero_copy_unsafe]
 pub struct MarketConfig {
     pub max_leverage: u128,
     pub tick_size: u128,
