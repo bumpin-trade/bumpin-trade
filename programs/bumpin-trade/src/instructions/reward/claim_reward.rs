@@ -1,7 +1,7 @@
 use crate::errors::BumpErrorCode;
 use anchor_lang::prelude::*;
+use anchor_lang::prelude::*;
 use anchor_spl::token::Token;
-use solana_program::account_info::AccountInfo;
 
 use crate::processor::fee_reward_processor::update_account_fee_reward;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};

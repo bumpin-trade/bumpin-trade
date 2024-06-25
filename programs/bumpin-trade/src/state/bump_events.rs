@@ -1,6 +1,5 @@
 use anchor_lang::event;
 use anchor_lang::prelude::*;
-use solana_program::pubkey::Pubkey;
 
 use crate::instructions::DepositOrigin;
 use crate::state::infrastructure::fee_reward::FeeReward;

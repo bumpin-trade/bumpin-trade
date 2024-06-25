@@ -1,9 +1,8 @@
 use std::collections::BTreeMap;
 
 use anchor_lang::prelude::Program;
+use anchor_lang::prelude::*;
 use anchor_spl::token::Token;
-use solana_program::account_info::AccountInfo;
-use solana_program::pubkey::Pubkey;
 
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::swap;

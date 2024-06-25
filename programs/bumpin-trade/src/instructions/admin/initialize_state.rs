@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::Token;
-use solana_program::pubkey::Pubkey;
 
 use crate::state::state::State;
 

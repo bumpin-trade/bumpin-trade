@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
+use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-use solana_program::account_info::AccountInfo;
-use solana_program::pubkey::Pubkey;
+//
 
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
@@ -397,7 +397,7 @@ pub fn handle_execute_order<'info>(
                     leverage: order.leverage,
                     is_long,
                     is_cross_margin: order.cross_margin,
-                    decimals: trade_token.decimals,
+                    decimals: trade_token.decimals as u8,
                 },
                 user_account_loader,
                 pool_account_loader,
@@ -514,7 +514,7 @@ fn execute_increase_order_margin(
     user_token_account_key: &Pubkey,
     order: &UserOrder,
     margin_token: &Pubkey,
-    decimals: u8,
+    decimals: u16,
     user: &mut User,
     margin_token_price: u128,
     oracle_map: &mut OracleMap,

@@ -56,7 +56,7 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
     validate!(amount > 0, BumpErrorCode::AmountZero)?;
 
     let user = &mut ctx.accounts.user.load_mut()?;
-    let trade_token = ctx.accounts.trade_token.load_mut()?;
+    let mut trade_token = ctx.accounts.trade_token.load_mut()?;
     let token_mint = &ctx.accounts.user_token_account.mint;
     let oracle = &trade_token.oracle;
 

@@ -2,9 +2,9 @@ use crate::state::pool_rewards::PoolRewards;
 use crate::state::state::State;
 use crate::traits::Size;
 use anchor_lang::prelude::*;
+use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-use solana_program::account_info::AccountInfo;
-use solana_program::rent::Rent;
+// use solana_program::rent::Rent;
 
 #[derive(Accounts)]
 #[instruction(pool_index: u16)]

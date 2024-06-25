@@ -1,5 +1,5 @@
+use anchor_lang::prelude::*;
 use anchor_lang::zero_copy;
-use solana_program::pubkey::Pubkey;
 
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;

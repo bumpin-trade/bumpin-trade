@@ -57,7 +57,6 @@ export type BumpinTrade = {
         },
         {
           "name": "state",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -218,10 +217,6 @@ export type BumpinTrade = {
       ],
       "accounts": [
         {
-          "name": "marginToken",
-          "writable": true
-        },
-        {
           "name": "pool",
           "writable": true
         },
@@ -308,6 +303,10 @@ export type BumpinTrade = {
           }
         },
         {
+          "name": "authority",
+          "signer": true
+        },
+        {
           "name": "state",
           "writable": true,
           "pda": {
@@ -329,13 +328,14 @@ export type BumpinTrade = {
               }
             ]
           }
-        },
-        {
-          "name": "authority",
-          "signer": true
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "stableTradeTokenIndex",
+          "type": "u16"
+        }
+      ]
     },
     {
       "name": "cancelOrder",
@@ -351,7 +351,29 @@ export type BumpinTrade = {
       ],
       "accounts": [
         {
-          "name": "userAccount",
+          "name": "state",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  109,
+                  112,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "user",
           "writable": true
         },
         {
@@ -359,14 +381,56 @@ export type BumpinTrade = {
           "signer": true
         },
         {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "poolVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
           "name": "userTokenAccount",
           "writable": true
-        },
-        {
-          "name": "poolVault"
-        },
-        {
-          "name": "tradeToken"
         },
         {
           "name": "bumpSigner"
@@ -374,15 +438,16 @@ export type BumpinTrade = {
         {
           "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "state"
         }
       ],
       "args": [
         {
           "name": "orderId",
           "type": "u128"
+        },
+        {
+          "name": "poolIndex",
+          "type": "u16"
         }
       ]
     },
@@ -444,11 +509,11 @@ export type BumpinTrade = {
           }
         },
         {
-          "name": "bumpSigner"
-        },
-        {
           "name": "authority",
           "signer": true
+        },
+        {
+          "name": "bumpSigner"
         },
         {
           "name": "tokenProgram",
@@ -591,29 +656,6 @@ export type BumpinTrade = {
       ],
       "accounts": [
         {
-          "name": "userAccount",
-          "writable": true
-        },
-        {
-          "name": "authority",
-          "signer": true
-        },
-        {
-          "name": "marginToken",
-          "writable": true
-        },
-        {
-          "name": "pool",
-          "writable": true
-        },
-        {
-          "name": "stablePool",
-          "writable": true
-        },
-        {
-          "name": "market"
-        },
-        {
           "name": "state",
           "pda": {
             "seeds": [
@@ -636,22 +678,226 @@ export type BumpinTrade = {
           }
         },
         {
-          "name": "userTokenAccount",
+          "name": "user",
           "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "marketIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "marginToken"
+        },
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
         },
         {
           "name": "poolVault",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "stablePool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "stablePoolIndex"
+              }
+            ]
+          }
         },
         {
           "name": "stablePoolVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "stablePoolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tradeToken",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "tradeTokenIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tradeTokenVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "tradeTokenIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "indexTradeToken",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "indexTradeTokenIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "userTokenAccount",
           "writable": true
-        },
-        {
-          "name": "tradeToken"
-        },
-        {
-          "name": "tradeTokenVault"
         },
         {
           "name": "bumpSigner"
@@ -665,6 +911,26 @@ export type BumpinTrade = {
         {
           "name": "orderId",
           "type": "u128"
+        },
+        {
+          "name": "poolIndex",
+          "type": "u16"
+        },
+        {
+          "name": "stablePoolIndex",
+          "type": "u16"
+        },
+        {
+          "name": "marketIndex",
+          "type": "u16"
+        },
+        {
+          "name": "tradeTokenIndex",
+          "type": "u16"
+        },
+        {
+          "name": "indexTradeTokenIndex",
+          "type": "u16"
         }
       ]
     },
@@ -1194,6 +1460,15 @@ export type BumpinTrade = {
           "type": "u128"
         },
         {
+          "name": "mintName",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
           "name": "liquidationFactor",
           "type": "u128"
         }
@@ -1343,29 +1618,6 @@ export type BumpinTrade = {
       ],
       "accounts": [
         {
-          "name": "userAccount",
-          "writable": true
-        },
-        {
-          "name": "authority",
-          "signer": true
-        },
-        {
-          "name": "marginToken",
-          "writable": true
-        },
-        {
-          "name": "pool",
-          "writable": true
-        },
-        {
-          "name": "stablePool",
-          "writable": true
-        },
-        {
-          "name": "market"
-        },
-        {
           "name": "state",
           "pda": {
             "seeds": [
@@ -1388,22 +1640,226 @@ export type BumpinTrade = {
           }
         },
         {
-          "name": "userTokenAccount",
+          "name": "user",
           "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "marketIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "marginToken"
+        },
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
         },
         {
           "name": "poolVault",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "stablePool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "stablePoolIndex"
+              }
+            ]
+          }
         },
         {
           "name": "stablePoolVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "stablePoolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tradeToken",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "tradeTokenIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tradeTokenVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "tradeTokenIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "indexTradeToken",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "indexTradeTokenIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "userTokenAccount",
           "writable": true
-        },
-        {
-          "name": "tradeToken"
-        },
-        {
-          "name": "tradeTokenVault"
         },
         {
           "name": "bumpSigner"
@@ -1421,6 +1877,26 @@ export type BumpinTrade = {
               "name": "placeOrderParams"
             }
           }
+        },
+        {
+          "name": "poolIndex",
+          "type": "u16"
+        },
+        {
+          "name": "stablePoolIndex",
+          "type": "u16"
+        },
+        {
+          "name": "marketIndex",
+          "type": "u16"
+        },
+        {
+          "name": "tradeTokenIndex",
+          "type": "u16"
+        },
+        {
+          "name": "indexTradeTokenIndex",
+          "type": "u16"
         }
       ]
     },
@@ -1503,7 +1979,11 @@ export type BumpinTrade = {
           }
         },
         {
-          "name": "poolVault",
+          "name": "userTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "poolMintVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1569,38 +2049,6 @@ export type BumpinTrade = {
           }
         },
         {
-          "name": "tradeToken",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "tradeTokenIndex"
-              }
-            ]
-          }
-        },
-        {
-          "name": "userTokenAccount",
-          "writable": true
-        },
-        {
           "name": "authority",
           "signer": true
         },
@@ -1617,6 +2065,18 @@ export type BumpinTrade = {
               "name": "stakeParams"
             }
           }
+        },
+        {
+          "name": "poolIndex",
+          "type": "u16"
+        },
+        {
+          "name": "tradeTokenIndex",
+          "type": "u16"
+        },
+        {
+          "name": "stableTradeTokenIndex",
+          "type": "u16"
         }
       ]
     },
@@ -1699,7 +2159,7 @@ export type BumpinTrade = {
           }
         },
         {
-          "name": "poolVault",
+          "name": "poolMintVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1793,6 +2253,34 @@ export type BumpinTrade = {
           }
         },
         {
+          "name": "stableTradeToken",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "stableTradeTokenIndex"
+              }
+            ]
+          }
+        },
+        {
           "name": "poolRewardsVault",
           "pda": {
             "seeds": [
@@ -1847,6 +2335,18 @@ export type BumpinTrade = {
               "name": "unStakeParams"
             }
           }
+        },
+        {
+          "name": "poolIndex",
+          "type": "u16"
+        },
+        {
+          "name": "tradeTokenIndex",
+          "type": "u16"
+        },
+        {
+          "name": "stableTradeTokenIndex",
+          "type": "u16"
         }
       ]
     },
@@ -1864,31 +2364,124 @@ export type BumpinTrade = {
       ],
       "accounts": [
         {
-          "name": "userAccount",
-          "writable": true
+          "name": "user",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
         },
         {
           "name": "authority",
           "signer": true
         },
         {
-          "name": "tradeToken"
-        },
-        {
-          "name": "pool"
-        },
-        {
-          "name": "state"
-        },
-        {
-          "name": "market"
-        },
-        {
           "name": "userTokenAccount",
           "writable": true
         },
         {
-          "name": "poolVault"
+          "name": "state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  109,
+                  112,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "market",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "marketIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "poolMintVault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
         },
         {
           "name": "bumpSigner"
@@ -1906,6 +2499,14 @@ export type BumpinTrade = {
               "name": "updatePositionLeverageParams"
             }
           }
+        },
+        {
+          "name": "marketIndex",
+          "type": "u16"
+        },
+        {
+          "name": "poolIndex",
+          "type": "u16"
         }
       ]
     },
@@ -2094,6 +2695,164 @@ export type BumpinTrade = {
       ]
     }
   ],
+  "events": [
+    {
+      "name": "addOrDecreaseMarginEvent",
+      "discriminator": [
+        255,
+        34,
+        9,
+        229,
+        17,
+        100,
+        24,
+        85
+      ]
+    },
+    {
+      "name": "addOrDeleteUserOrderEvent",
+      "discriminator": [
+        226,
+        197,
+        6,
+        41,
+        154,
+        69,
+        25,
+        217
+      ]
+    },
+    {
+      "name": "addOrDeleteUserPositionEvent",
+      "discriminator": [
+        62,
+        52,
+        185,
+        169,
+        23,
+        84,
+        198,
+        48
+      ]
+    },
+    {
+      "name": "depositEvent",
+      "discriminator": [
+        120,
+        248,
+        61,
+        83,
+        31,
+        142,
+        107,
+        144
+      ]
+    },
+    {
+      "name": "initUserEvent",
+      "discriminator": [
+        172,
+        69,
+        161,
+        169,
+        238,
+        167,
+        121,
+        162
+      ]
+    },
+    {
+      "name": "poolUpdateEvent",
+      "discriminator": [
+        124,
+        213,
+        52,
+        182,
+        189,
+        225,
+        61,
+        254
+      ]
+    },
+    {
+      "name": "stakeOrUnStakeEvent",
+      "discriminator": [
+        80,
+        62,
+        133,
+        137,
+        171,
+        83,
+        189,
+        214
+      ]
+    },
+    {
+      "name": "updateUserPositionEvent",
+      "discriminator": [
+        102,
+        98,
+        41,
+        238,
+        50,
+        237,
+        214,
+        100
+      ]
+    },
+    {
+      "name": "userHoldUpdateEvent",
+      "discriminator": [
+        134,
+        142,
+        93,
+        85,
+        54,
+        61,
+        131,
+        93
+      ]
+    },
+    {
+      "name": "userRewardsUpdateEvent",
+      "discriminator": [
+        93,
+        62,
+        28,
+        230,
+        211,
+        53,
+        192,
+        119
+      ]
+    },
+    {
+      "name": "userTokenBalanceUpdateEvent",
+      "discriminator": [
+        6,
+        46,
+        145,
+        182,
+        47,
+        123,
+        79,
+        108
+      ]
+    },
+    {
+      "name": "withdrawEvent",
+      "discriminator": [
+        22,
+        9,
+        133,
+        26,
+        160,
+        44,
+        71,
+        192
+      ]
+    }
+  ],
   "errors": [
     {
       "code": 6000,
@@ -2192,141 +2951,151 @@ export type BumpinTrade = {
     },
     {
       "code": 6019,
+      "name": "onlyIsolatePositionAllowed",
+      "msg": "onlyIsolatePositionAllowed"
+    },
+    {
+      "code": 6020,
       "name": "couldNotFindUserStake",
       "msg": "couldNotFindUserStake"
     },
     {
-      "code": 6020,
+      "code": 6021,
       "name": "oracleNotFound",
       "msg": "oracleNotFound"
     },
     {
-      "code": 6021,
+      "code": 6022,
       "name": "oraclePriceToOld",
       "msg": "oraclePriceToOld"
     },
     {
-      "code": 6022,
+      "code": 6023,
       "name": "unableToLoadOracle",
       "msg": "Unable To Load Oracles"
     },
     {
-      "code": 6023,
+      "code": 6024,
       "name": "invalidOracle",
       "msg": "invalidOracle"
     },
     {
-      "code": 6024,
+      "code": 6025,
       "name": "bnConversionError",
       "msg": "Conversion to u128/u128 failed with an overflow or underflow"
     },
     {
-      "code": 6025,
+      "code": 6026,
       "name": "mathError",
       "msg": "Math Error"
     },
     {
-      "code": 6026,
+      "code": 6027,
       "name": "castingFailure",
       "msg": "Casting Failure"
     },
     {
-      "code": 6027,
+      "code": 6028,
       "name": "couldNotLoadMarketData",
       "msg": "couldNotLoadMarketData"
     },
     {
-      "code": 6028,
+      "code": 6029,
       "name": "invalidMarketAccount",
       "msg": "invalidMarketAccount"
     },
     {
-      "code": 6029,
+      "code": 6030,
       "name": "marketWrongMutability",
       "msg": "marketWrongMutability"
     },
     {
-      "code": 6030,
+      "code": 6031,
       "name": "failedUnwrap",
       "msg": "Failed Unwrap"
     },
     {
-      "code": 6031,
+      "code": 6032,
       "name": "userNotEnoughValue",
       "msg": "User Not Enough Value"
     },
     {
-      "code": 6032,
+      "code": 6033,
       "name": "amountZero",
       "msg": "amountZero"
     },
     {
-      "code": 6033,
+      "code": 6034,
       "name": "couldNotLoadTradeTokenData",
       "msg": "couldNotLoadTradeTokenData"
     },
     {
-      "code": 6034,
+      "code": 6035,
       "name": "couldNotLoadPoolData",
       "msg": "couldNotLoadPoolData"
     },
     {
-      "code": 6035,
+      "code": 6036,
       "name": "invalidTradeTokenAccount",
       "msg": "invalidTradeTokenAccount"
     },
     {
-      "code": 6036,
+      "code": 6037,
       "name": "invalidTokenAccount",
       "msg": "invalidTokenAccount"
     },
     {
-      "code": 6037,
+      "code": 6038,
       "name": "invalidPoolAccount",
       "msg": "invalidPoolAccount"
     },
     {
-      "code": 6038,
+      "code": 6039,
       "name": "tradeTokenNotFind",
       "msg": "canNotFindTradeToken"
     },
     {
-      "code": 6039,
+      "code": 6040,
       "name": "stakePaused",
       "msg": "stakePaused"
     },
     {
-      "code": 6040,
+      "code": 6041,
       "name": "stakeToSmall",
       "msg": "stakeToSmall"
     },
     {
-      "code": 6041,
-      "name": "unStakeNotEnough",
-      "msg": "unStakeNotEnough"
+      "code": 6042,
+      "name": "unStakeTooSmall",
+      "msg": "unStakeTooSmall"
     },
     {
-      "code": 6042,
+      "code": 6043,
+      "name": "unStakeTooLarge",
+      "msg": "unStakeTooLarge"
+    },
+    {
+      "code": 6044,
       "name": "positionSideNotSupport",
       "msg": "positionSideNotSupport"
     },
     {
-      "code": 6043,
+      "code": 6045,
       "name": "rewardsNotFound",
       "msg": "rewardsNotFound"
     },
     {
-      "code": 6044,
+      "code": 6046,
       "name": "userNotFound",
       "msg": "userNotFound"
     },
     {
-      "code": 6045,
+      "code": 6047,
       "name": "couldNotLoadUserData",
       "msg": "couldNotLoadUserData"
     },
     {
-      "code": 6046,
+      "code": 6048,
       "name": "poolSubUnsettleNotEnough",
       "msg": "poolSubUnsettleNotEnough"
     }
@@ -2349,8 +3118,87 @@ export type BumpinTrade = {
       }
     },
     {
+      "name": "addOrDecreaseMarginEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "userKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "position",
+            "type": {
+              "defined": {
+                "name": "userPosition"
+              }
+            }
+          },
+          {
+            "name": "prePosition",
+            "type": {
+              "defined": {
+                "name": "userPosition"
+              }
+            }
+          },
+          {
+            "name": "isAdd",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "addOrDeleteUserOrderEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "userKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "order",
+            "type": {
+              "defined": {
+                "name": "userOrder"
+              }
+            }
+          },
+          {
+            "name": "isAdd",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "addOrDeleteUserPositionEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "userKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "position",
+            "type": {
+              "defined": {
+                "name": "userPosition"
+              }
+            }
+          },
+          {
+            "name": "isAdd",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
       "name": "borrowingFee",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -2377,7 +3225,55 @@ export type BumpinTrade = {
       }
     },
     {
+      "name": "depositEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "userKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "tokenMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u128"
+          },
+          {
+            "name": "depositOrigin",
+            "type": {
+              "defined": {
+                "name": "depositOrigin"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "depositOrigin",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "manual"
+          },
+          {
+            "name": "order"
+          },
+          {
+            "name": "stake"
+          }
+        ]
+      }
+    },
+    {
       "name": "feeReward",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "struct",
         "fields": [
@@ -2388,10 +3284,6 @@ export type BumpinTrade = {
           {
             "name": "unSettleFeeAmount",
             "type": "u128"
-          },
-          {
-            "name": "pnl",
-            "type": "i128"
           },
           {
             "name": "cumulativeRewardsPerStakeToken",
@@ -2405,6 +3297,22 @@ export type BumpinTrade = {
                 3
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "initUserEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "userKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
           }
         ]
       }
@@ -2584,7 +3492,6 @@ export type BumpinTrade = {
     },
     {
       "name": "marketConfig",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -2628,7 +3535,6 @@ export type BumpinTrade = {
     },
     {
       "name": "marketFundingFee",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -2668,7 +3574,6 @@ export type BumpinTrade = {
     },
     {
       "name": "marketPosition",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -2688,6 +3593,9 @@ export type BumpinTrade = {
     },
     {
       "name": "orderSide",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -2705,6 +3613,9 @@ export type BumpinTrade = {
     },
     {
       "name": "orderStatus",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -2719,6 +3630,9 @@ export type BumpinTrade = {
     },
     {
       "name": "orderType",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -2917,8 +3831,8 @@ export type BumpinTrade = {
             "type": "bool"
           },
           {
-            "name": "decimals",
-            "type": "u8"
+            "name": "pnl",
+            "type": "i128"
           },
           {
             "name": "apr",
@@ -2933,7 +3847,6 @@ export type BumpinTrade = {
     },
     {
       "name": "poolBalance",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -2965,7 +3878,6 @@ export type BumpinTrade = {
     },
     {
       "name": "poolConfig",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -3021,7 +3933,142 @@ export type BumpinTrade = {
       }
     },
     {
+      "name": "poolUpdateEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "poolKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "poolMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "poolIndex",
+            "type": "u16"
+          },
+          {
+            "name": "poolBalance",
+            "type": {
+              "defined": {
+                "name": "poolBalance"
+              }
+            }
+          },
+          {
+            "name": "stableBalance",
+            "type": {
+              "defined": {
+                "name": "poolBalance"
+              }
+            }
+          },
+          {
+            "name": "borrowingFee",
+            "type": {
+              "defined": {
+                "name": "borrowingFee"
+              }
+            }
+          },
+          {
+            "name": "feeReward",
+            "type": {
+              "defined": {
+                "name": "feeReward"
+              }
+            }
+          },
+          {
+            "name": "stableFeeReward",
+            "type": {
+              "defined": {
+                "name": "feeReward"
+              }
+            }
+          },
+          {
+            "name": "totalSupply",
+            "type": "u128"
+          },
+          {
+            "name": "pnl",
+            "type": "i128"
+          },
+          {
+            "name": "apr",
+            "type": "u128"
+          },
+          {
+            "name": "insuranceFundAmount",
+            "type": "u128"
+          },
+          {
+            "name": "prePoolBalance",
+            "type": {
+              "defined": {
+                "name": "poolBalance"
+              }
+            }
+          },
+          {
+            "name": "preStableBalance",
+            "type": {
+              "defined": {
+                "name": "poolBalance"
+              }
+            }
+          },
+          {
+            "name": "preBorrowingFee",
+            "type": {
+              "defined": {
+                "name": "borrowingFee"
+              }
+            }
+          },
+          {
+            "name": "preFeeReward",
+            "type": {
+              "defined": {
+                "name": "feeReward"
+              }
+            }
+          },
+          {
+            "name": "preStableFeeReward",
+            "type": {
+              "defined": {
+                "name": "feeReward"
+              }
+            }
+          },
+          {
+            "name": "preTotalSupply",
+            "type": "u128"
+          },
+          {
+            "name": "prePnl",
+            "type": "i128"
+          },
+          {
+            "name": "preApr",
+            "type": "u128"
+          },
+          {
+            "name": "preInsuranceFundAmount",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
       "name": "positionSide",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -3039,6 +4086,9 @@ export type BumpinTrade = {
     },
     {
       "name": "positionStatus",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -3047,6 +4097,34 @@ export type BumpinTrade = {
           },
           {
             "name": "using"
+          }
+        ]
+      }
+    },
+    {
+      "name": "stakeOrUnStakeEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "userKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "tokenMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "changeSupplyAmount",
+            "type": "u128"
+          },
+          {
+            "name": "userStake",
+            "type": {
+              "defined": {
+                "name": "userStake"
+              }
+            }
           }
         ]
       }
@@ -3148,6 +4226,9 @@ export type BumpinTrade = {
     },
     {
       "name": "stopType",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -3173,28 +4254,12 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
-            "name": "mint",
-            "type": "pubkey"
-          },
-          {
-            "name": "oracle",
-            "type": "pubkey"
-          },
-          {
-            "name": "tokenIndex",
-            "type": "u16"
-          },
-          {
             "name": "discount",
             "type": "u128"
           },
           {
             "name": "liquidationFactor",
             "type": "u128"
-          },
-          {
-            "name": "decimals",
-            "type": "u8"
           },
           {
             "name": "totalLiability",
@@ -3205,8 +4270,42 @@ export type BumpinTrade = {
             "type": "u128"
           },
           {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "oracle",
+            "type": "pubkey"
+          },
+          {
             "name": "tradeTokenVault",
             "type": "pubkey"
+          },
+          {
+            "name": "tokenIndex",
+            "type": "u16"
+          },
+          {
+            "name": "decimals",
+            "type": "u16"
+          },
+          {
+            "name": "mintName",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                3
+              ]
+            }
           }
         ]
       }
@@ -3280,6 +4379,34 @@ export type BumpinTrade = {
           {
             "name": "addInitialMarginFromPortfolio",
             "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "updateUserPositionEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "userKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "prePosition",
+            "type": {
+              "defined": {
+                "name": "userPosition"
+              }
+            }
+          },
+          {
+            "name": "position",
+            "type": {
+              "defined": {
+                "name": "userPosition"
+              }
+            }
           }
         ]
       }
@@ -3369,8 +4496,27 @@ export type BumpinTrade = {
       }
     },
     {
+      "name": "userHoldUpdateEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "userKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "preHoldAmount",
+            "type": "u128"
+          },
+          {
+            "name": "holdAmount",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
       "name": "userOrder",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -3471,7 +4617,6 @@ export type BumpinTrade = {
     },
     {
       "name": "userPosition",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -3500,7 +4645,7 @@ export type BumpinTrade = {
             "type": "bool"
           },
           {
-            "name": "authority",
+            "name": "userKey",
             "type": "pubkey"
           },
           {
@@ -3600,7 +4745,6 @@ export type BumpinTrade = {
     },
     {
       "name": "userRewards",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -3623,8 +4767,31 @@ export type BumpinTrade = {
       }
     },
     {
+      "name": "userRewardsUpdateEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "userKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "tokenMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "userRewards",
+            "type": {
+              "defined": {
+                "name": "userRewards"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "userStake",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -3660,6 +4827,9 @@ export type BumpinTrade = {
     },
     {
       "name": "userStakeStatus",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -3674,7 +4844,6 @@ export type BumpinTrade = {
     },
     {
       "name": "userToken",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -3713,7 +4882,50 @@ export type BumpinTrade = {
       }
     },
     {
+      "name": "userTokenBalanceUpdateEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "userKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "tokenMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "preUserToken",
+            "type": {
+              "defined": {
+                "name": "userToken"
+              }
+            }
+          },
+          {
+            "name": "userToken",
+            "type": {
+              "defined": {
+                "name": "userToken"
+              }
+            }
+          },
+          {
+            "name": "updateOrigin",
+            "type": {
+              "defined": {
+                "name": "userTokenUpdateOrigin"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "userTokenStatus",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -3722,6 +4934,76 @@ export type BumpinTrade = {
           },
           {
             "name": "using"
+          }
+        ]
+      }
+    },
+    {
+      "name": "userTokenUpdateOrigin",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "default"
+          },
+          {
+            "name": "deposit"
+          },
+          {
+            "name": "withdraw"
+          },
+          {
+            "name": "settleFee"
+          },
+          {
+            "name": "settlePnl"
+          },
+          {
+            "name": "decreasePosition"
+          },
+          {
+            "name": "increasePosition"
+          },
+          {
+            "name": "updateLeverage"
+          },
+          {
+            "name": "collectOpenFee"
+          },
+          {
+            "name": "collectCloseFee"
+          },
+          {
+            "name": "transferToStake"
+          },
+          {
+            "name": "transferFromStake"
+          },
+          {
+            "name": "liquidateLiability"
+          },
+          {
+            "name": "liquidation"
+          }
+        ]
+      }
+    },
+    {
+      "name": "withdrawEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "userKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "tokenMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u128"
           }
         ]
       }

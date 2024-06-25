@@ -1,5 +1,7 @@
 import {PublicKey} from "@solana/web3.js";
+// import BN from "bn.js";
 import {BN} from "@coral-xyz/anchor";
+
 
 export class OracleSource {
     static readonly PYTH = { pyth: {} };
@@ -13,90 +15,89 @@ export class OracleSource {
 
 export type State = {
     admin: PublicKey;
-    bump_signer: PublicKey;
-    keeper_signer: PublicKey;
-    bump_signer_nonce: number;
-    number_of_markets: number;
-    number_of_pools: number;
-    number_of_trade_tokens: number;
-    min_order_margin_usd: BN;
-    max_maintenance_margin_rate: BN;
-    funding_fee_base_rate: BN;
-    max_funding_base_rate: BN;
-    min_precision_multiple: BN;
-    pool_rewards_interval_limit: BN;
-    init_fee: BN;
-    trading_fee_usd_pool_rewards_ratio: BN;
-    staking_fee_reward_ratio: BN;
-    pool_fee_reward_ratio: BN;
+    bumpSigner: PublicKey;
+    keeperSigner: PublicKey;
+    bumpSignerNonce: number;
+    numberOfMarkets: number;
+    numberOfPools: number;
+    numberOfTradeTokens: number;
+    minOrderMarginUsd: BN;
+    maxMaintenanceMarginRate: BN;
+    fundingFeeBaseRate: BN;
+    maxFundingBaseRate: BN;
+    minPrecisionMultiple: BN;
+    poolRewardsIntervalLimit: BN;
+    initFee: BN;
+    tradingFeeUsdPoolRewardsRatio: BN;
+    stakingFeeRewardRatio: BN;
+    poolFeeRewardRatio: BN;
 }
 
 
 export type MarketPosition = {
-    open_interest: BN;
-    entry_price: BN;
+    openInterest: BN;
+    entryPrice: BN;
 }
 
 export type MarketConfig = {
-    max_leverage: BN;
-    tick_size: BN;
-    open_fee_rate: BN;
-    close_fee_rate: BN;
-    max_long_open_interest_cap: BN;
-    max_short_open_interest_cap: BN;
-    long_short_ratio_limit: BN;
-    long_short_oi_bottom_limit: BN;
+    maxLeverage: BN;
+    tickSize: BN;
+    openFeeRate: BN;
+    closeFeeRate: BN;
+    maxLongOpenInterestCap: BN;
+    maxShortOpenInterestCap: BN;
+    longShortRatioLimit: BN;
+    longShortOiBottomLimit: BN;
 }
 
 export type MarketFundingFee = {
-    last_update_time: BN;
-    funding_fee_rate: BN;
-    funding_fee: BN;
+    lastUpdateTime: BN;
+    fundingFeeRate: BN;
+    fundingFee: BN;
 }
 
 export type Market = {
     symbol: string;
-    market_index: number;
-    pool_key: PublicKey;
-    pool_mint: PublicKey;
-    index_mint: PublicKey;
-    stable_pool_key: PublicKey;
-    stable_pool_mint: PublicKey;
-    long_open_interest: MarketPosition;
-    short_open_interest: MarketPosition;
-    funding_fee: MarketFundingFee;
-    market_trade_config: MarketConfig;
+    marketIndex: number;
+    poolKey: PublicKey;
+    poolMint: PublicKey;
+    indexMint: PublicKey;
+    stablePoolKey: PublicKey;
+    stablePoolMint: PublicKey;
+    longOpenInterest: MarketPosition;
+    shortOpenInterest: MarketPosition;
+    fundingFee: MarketFundingFee;
+    marketTradeConfig: MarketConfig;
 }
 
-
 export type PoolBalance = {
-    pool_mint: PublicKey;
+    poolMint: PublicKey;
     amount: BN;
-    hold_amount: BN;
-    un_settle_amount: BN;
-    loss_amount: BN;
+    holdAmount: BN;
+    unSettleAmount: BN;
+    lossAmount: BN;
 }
 
 export type BorrowingFee = {
-    pool_mint: PublicKey;
-    fee_rate: BN;
-    last_update_time: BN;
+    poolMint: PublicKey;
+    feeRate: BN;
+    lastUpdateTime: BN;
 }
 
 export type FeeReward = {
-    pool_mint: PublicKey;
+    poolMint: PublicKey;
     reward: BN;
-    last_update_time: BN;
+    lastUpdateTime: BN;
 }
 
 export type PoolConfig = {
-    mini_stake_amount: BN;
-    mini_un_stake_amount: BN;
-    pool_liquidity_limit: BN;
-    stake_fee_rate: BN;
-    un_stake_fee_rate: BN;
-    un_settle_mint_ratio_limit: BN;
-    borrowing_interest_rate: BN;
+    miniStakeAmount: BN;
+    miniUnStakeAmount: BN;
+    poolLiquidityLimit: BN;
+    stakeFeeRate: BN;
+    unStakeFeeRate: BN;
+    unSettleMintRatioLimit: BN;
+    borrowingInterestRate: BN;
 }
 
 export enum PoolStatus {
@@ -106,72 +107,68 @@ export enum PoolStatus {
 }
 
 export type Pool = {
-    pool_key: PublicKey;
-    pool_mint: PublicKey;
-    pool_index: number;
-    pool_mint_vault: PublicKey;
-    pool_name: string;
-    pool_balance: PoolBalance;
-    stable_balance: PoolBalance;
-    borrowing_fee: BorrowingFee;
-    fee_reward: FeeReward;
-    stable_fee_reward: FeeReward;
-    pool_config: PoolConfig;
-    total_supply: BN;
-    pool_status: PoolStatus;
+    poolKey: PublicKey;
+    poolMint: PublicKey;
+    poolIndex: number;
+    poolMintVault: PublicKey;
+    poolName: string;
+    poolBalance: PoolBalance;
+    stableBalance: PoolBalance;
+    borrowingFee: BorrowingFee;
+    feeReward: FeeReward;
+    stableFeeReward: FeeReward;
+    poolConfig: PoolConfig;
+    totalSupply: BN;
+    poolStatus: PoolStatus;
     stable: boolean;
     pnl: BN;
     apr: BN;
-    insurance_fund_amount: BN;
+    insuranceFundAmount: BN;
 }
-
 
 export type TradeToken = {
     mint: PublicKey;
-    mintName: string;
+    mintName: number[];
     oracle: PublicKey;
-    token_index: number;
+    tokenIndex: number;
     discount: BN;
-    liquidation_factor: BN;
+    liquidationFactor: BN;
     decimals: number;
-    total_liability: BN;
-    total_amount: BN;
-    trade_token_vault: PublicKey;
-
+    totalLiability: BN;
+    totalAmount: BN;
+    tradeTokenVault: PublicKey;
 }
+
 
 export enum UserStakeStatus {
     INIT = 0,
     USING = 1
-
 }
 
 export type UserRewards = {
     token: PublicKey;
-    realised_rewards_token_amount: BN;
-    open_rewards_per_stake_token: BN;
+    realisedRewardsTokenAmount: BN;
+    openRewardsPerStakeToken: BN;
 }
 
 export type UserStake = {
-    user_stake_status: UserStakeStatus;
-    pool_key: PublicKey;
+    userStakeStatus: UserStakeStatus;
+    poolKey: PublicKey;
     amount: BN;
-    user_rewards: UserRewards;
+    userRewards: UserRewards;
 }
-
 
 export enum UserTokenStatus {
     INIT = 0,
     USING = 1
 }
 
-
 export type UserToken = {
-    user_token_status: UserTokenStatus;
-    token_mint: PublicKey;
-    user_token_account_key: PublicKey;
+    userTokenStatus: UserTokenStatus;
+    tokenMint: PublicKey;
+    userTokenAccountKey: PublicKey;
     amount: BN;
-    used_amount: BN;
+    usedAmount: BN;
     liability: BN;
 }
 
@@ -181,34 +178,33 @@ export enum PositionStatus {
 }
 
 export type UserPosition = {
-    position_key: PublicKey;
+    positionKey: PublicKey;
     symbol: string;
-    is_long: boolean;
-    cross_margin: boolean;
+    isLong: boolean;
+    crossMargin: boolean;
     authority: PublicKey;
-    margin_mint: PublicKey;
-    index_mint: PublicKey;
-    position_size: BN;
-    entry_price: BN;
+    marginMint: PublicKey;
+    indexMint: PublicKey;
+    positionSize: BN;
+    entryPrice: BN;
     leverage: BN;
-    initial_margin: BN;
-    initial_margin_usd: BN;
-    initial_margin_usd_from_portfolio: BN;
-    mm_usd: BN;
-    hold_pool_amount: BN;
-    open_fee: BN;
-    open_fee_in_usd: BN;
-    realized_borrowing_fee: BN;
-    realized_borrowing_fee_in_usd: BN;
-    open_borrowing_fee_per_token: BN;
-    realized_funding_fee: BN;
-    realized_funding_fee_in_usd: BN;
-    open_funding_fee_amount_per_size: BN;
-    close_fee_in_usd: BN;
-    last_update_time: BN;
-    realized_pnl: BN;
+    initialMargin: BN;
+    initialMarginUsd: BN;
+    initialMarginUsdFromPortfolio: BN;
+    mmUsd: BN;
+    holdPoolAmount: BN;
+    openFee: BN;
+    openFeeInUsd: BN;
+    realizedBorrowingFee: BN;
+    realizedBorrowingFeeInUsd: BN;
+    openBorrowingFeePerToken: BN;
+    realizedFundingFee: BN;
+    realizedFundingFeeInUsd: BN;
+    openFundingFeeAmountPerSize: BN;
+    closeFeeInUsd: BN;
+    lastUpdateTime: BN;
+    realizedPnl: BN;
     status: PositionStatus;
-
 }
 
 export enum OrderSide {
@@ -261,13 +257,13 @@ export type UserOrder = {
 }
 
 export type UserAccount = {
-    user_key: PublicKey;
+    userKey: PublicKey;
     authority: PublicKey;
-    next_order_id: BN;
-    next_liquidation_id: BN;
+    nextOrderId: BN;
+    nextLiquidationId: BN;
     hold: BN;
-    user_tokens: Array<UserToken>;
-    user_stakes: Array<UserStake>;
-    user_positions: Array<UserPosition>;
-    user_orders: Array<UserOrder>;
+    userTokens: UserToken[];
+    userStakes: UserStake[];
+    userPositions: UserPosition[];
+    userOrders: UserOrder[];
 }

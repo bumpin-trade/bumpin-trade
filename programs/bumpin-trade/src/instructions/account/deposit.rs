@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
+use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
-use solana_program::account_info::AccountInfo;
 
 use crate::errors::BumpErrorCode::CouldNotFindUserToken;
 use crate::instructions::constraints::*;
@@ -51,7 +51,7 @@ pub fn handle_deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> 
     msg!("Token amount: {}", amount);
 
     let user = &mut ctx.accounts.user.load_mut()?;
-    let trade_token = ctx.accounts.trade_token.load()?;
+    let trade_token = &mut ctx.accounts.trade_token.load_mut()?;
     // msg!("User Token Account: {:?}", &ctx.accounts.user_token_account);
     token::receive(
         &ctx.accounts.token_program,

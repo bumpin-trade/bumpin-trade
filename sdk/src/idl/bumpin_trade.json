@@ -51,7 +51,6 @@
         },
         {
           "name": "state",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -212,10 +211,6 @@
       ],
       "accounts": [
         {
-          "name": "margin_token",
-          "writable": true
-        },
-        {
           "name": "pool",
           "writable": true
         },
@@ -302,6 +297,10 @@
           }
         },
         {
+          "name": "authority",
+          "signer": true
+        },
+        {
           "name": "state",
           "writable": true,
           "pda": {
@@ -323,13 +322,14 @@
               }
             ]
           }
-        },
-        {
-          "name": "authority",
-          "signer": true
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "_stable_trade_token_index",
+          "type": "u16"
+        }
+      ]
     },
     {
       "name": "cancel_order",
@@ -345,7 +345,29 @@
       ],
       "accounts": [
         {
-          "name": "user_account",
+          "name": "state",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  109,
+                  112,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "user",
           "writable": true
         },
         {
@@ -353,14 +375,56 @@
           "signer": true
         },
         {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
+        },
+        {
           "name": "user_token_account",
           "writable": true
-        },
-        {
-          "name": "pool_vault"
-        },
-        {
-          "name": "trade_token"
         },
         {
           "name": "bump_signer"
@@ -368,15 +432,16 @@
         {
           "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "state"
         }
       ],
       "args": [
         {
           "name": "order_id",
           "type": "u128"
+        },
+        {
+          "name": "_pool_index",
+          "type": "u16"
         }
       ]
     },
@@ -438,11 +503,11 @@
           }
         },
         {
-          "name": "bump_signer"
-        },
-        {
           "name": "authority",
           "signer": true
+        },
+        {
+          "name": "bump_signer"
         },
         {
           "name": "token_program",
@@ -585,29 +650,6 @@
       ],
       "accounts": [
         {
-          "name": "user_account",
-          "writable": true
-        },
-        {
-          "name": "authority",
-          "signer": true
-        },
-        {
-          "name": "margin_token",
-          "writable": true
-        },
-        {
-          "name": "pool",
-          "writable": true
-        },
-        {
-          "name": "stable_pool",
-          "writable": true
-        },
-        {
-          "name": "market"
-        },
-        {
           "name": "state",
           "pda": {
             "seeds": [
@@ -630,22 +672,226 @@
           }
         },
         {
-          "name": "user_token_account",
+          "name": "user",
           "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_market_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "margin_token"
+        },
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
         },
         {
           "name": "pool_vault",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "stable_pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_stable_pool_index"
+              }
+            ]
+          }
         },
         {
           "name": "stable_pool_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_stable_pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "trade_token",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_trade_token_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "trade_token_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_trade_token_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "index_trade_token",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_index_trade_token_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_token_account",
           "writable": true
-        },
-        {
-          "name": "trade_token"
-        },
-        {
-          "name": "trade_token_vault"
         },
         {
           "name": "bump_signer"
@@ -659,6 +905,26 @@
         {
           "name": "order_id",
           "type": "u128"
+        },
+        {
+          "name": "_pool_index",
+          "type": "u16"
+        },
+        {
+          "name": "_stable_pool_index",
+          "type": "u16"
+        },
+        {
+          "name": "_market_index",
+          "type": "u16"
+        },
+        {
+          "name": "_trade_token_index",
+          "type": "u16"
+        },
+        {
+          "name": "_index_trade_token_index",
+          "type": "u16"
         }
       ]
     },
@@ -1188,6 +1454,15 @@
           "type": "u128"
         },
         {
+          "name": "mint_name",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
           "name": "liquidation_factor",
           "type": "u128"
         }
@@ -1337,29 +1612,6 @@
       ],
       "accounts": [
         {
-          "name": "user_account",
-          "writable": true
-        },
-        {
-          "name": "authority",
-          "signer": true
-        },
-        {
-          "name": "margin_token",
-          "writable": true
-        },
-        {
-          "name": "pool",
-          "writable": true
-        },
-        {
-          "name": "stable_pool",
-          "writable": true
-        },
-        {
-          "name": "market"
-        },
-        {
           "name": "state",
           "pda": {
             "seeds": [
@@ -1382,22 +1634,226 @@
           }
         },
         {
-          "name": "user_token_account",
+          "name": "user",
           "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_market_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "margin_token"
+        },
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
         },
         {
           "name": "pool_vault",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "stable_pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_stable_pool_index"
+              }
+            ]
+          }
         },
         {
           "name": "stable_pool_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_stable_pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "trade_token",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_trade_token_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "trade_token_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_trade_token_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "index_trade_token",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_index_trade_token_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_token_account",
           "writable": true
-        },
-        {
-          "name": "trade_token"
-        },
-        {
-          "name": "trade_token_vault"
         },
         {
           "name": "bump_signer"
@@ -1415,6 +1871,26 @@
               "name": "PlaceOrderParams"
             }
           }
+        },
+        {
+          "name": "_pool_index",
+          "type": "u16"
+        },
+        {
+          "name": "_stable_pool_index",
+          "type": "u16"
+        },
+        {
+          "name": "_market_index",
+          "type": "u16"
+        },
+        {
+          "name": "_trade_token_index",
+          "type": "u16"
+        },
+        {
+          "name": "_index_trade_token_index",
+          "type": "u16"
         }
       ]
     },
@@ -1491,13 +1967,17 @@
               },
               {
                 "kind": "arg",
-                "path": "pool_index"
+                "path": "_pool_index"
               }
             ]
           }
         },
         {
-          "name": "pool_vault",
+          "name": "user_token_account",
+          "writable": true
+        },
+        {
+          "name": "pool_mint_vault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1523,7 +2003,7 @@
               },
               {
                 "kind": "arg",
-                "path": "pool_index"
+                "path": "_pool_index"
               }
             ]
           }
@@ -1557,42 +2037,10 @@
               },
               {
                 "kind": "arg",
-                "path": "trade_token_index"
+                "path": "_trade_token_index"
               }
             ]
           }
-        },
-        {
-          "name": "trade_token",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "trade_token_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "user_token_account",
-          "writable": true
         },
         {
           "name": "authority",
@@ -1611,6 +2059,18 @@
               "name": "StakeParams"
             }
           }
+        },
+        {
+          "name": "_pool_index",
+          "type": "u16"
+        },
+        {
+          "name": "_trade_token_index",
+          "type": "u16"
+        },
+        {
+          "name": "_stable_trade_token_index",
+          "type": "u16"
         }
       ]
     },
@@ -1687,13 +2147,13 @@
               },
               {
                 "kind": "arg",
-                "path": "pool_index"
+                "path": "_pool_index"
               }
             ]
           }
         },
         {
-          "name": "pool_vault",
+          "name": "pool_mint_vault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1719,7 +2179,7 @@
               },
               {
                 "kind": "arg",
-                "path": "pool_index"
+                "path": "_pool_index"
               }
             ]
           }
@@ -1753,7 +2213,7 @@
               },
               {
                 "kind": "arg",
-                "path": "trade_token_index"
+                "path": "_trade_token_index"
               }
             ]
           }
@@ -1781,7 +2241,35 @@
               },
               {
                 "kind": "arg",
-                "path": "trade_token_index"
+                "path": "_trade_token_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "stable_trade_token",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_stable_trade_token_index"
               }
             ]
           }
@@ -1815,7 +2303,7 @@
               },
               {
                 "kind": "arg",
-                "path": "pool_index"
+                "path": "_pool_index"
               }
             ]
           }
@@ -1841,6 +2329,18 @@
               "name": "UnStakeParams"
             }
           }
+        },
+        {
+          "name": "_pool_index",
+          "type": "u16"
+        },
+        {
+          "name": "_trade_token_index",
+          "type": "u16"
+        },
+        {
+          "name": "_stable_trade_token_index",
+          "type": "u16"
         }
       ]
     },
@@ -1858,31 +2358,124 @@
       ],
       "accounts": [
         {
-          "name": "user_account",
-          "writable": true
+          "name": "user",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
         },
         {
           "name": "authority",
           "signer": true
         },
         {
-          "name": "trade_token"
-        },
-        {
-          "name": "pool"
-        },
-        {
-          "name": "state"
-        },
-        {
-          "name": "market"
-        },
-        {
           "name": "user_token_account",
           "writable": true
         },
         {
-          "name": "pool_vault"
+          "name": "state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  109,
+                  112,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "market",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_market_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool_mint_vault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
         },
         {
           "name": "bump_signer"
@@ -1900,6 +2493,14 @@
               "name": "UpdatePositionLeverageParams"
             }
           }
+        },
+        {
+          "name": "_market_index",
+          "type": "u16"
+        },
+        {
+          "name": "_pool_index",
+          "type": "u16"
         }
       ]
     },
@@ -2088,6 +2689,164 @@
       ]
     }
   ],
+  "events": [
+    {
+      "name": "AddOrDecreaseMarginEvent",
+      "discriminator": [
+        255,
+        34,
+        9,
+        229,
+        17,
+        100,
+        24,
+        85
+      ]
+    },
+    {
+      "name": "AddOrDeleteUserOrderEvent",
+      "discriminator": [
+        226,
+        197,
+        6,
+        41,
+        154,
+        69,
+        25,
+        217
+      ]
+    },
+    {
+      "name": "AddOrDeleteUserPositionEvent",
+      "discriminator": [
+        62,
+        52,
+        185,
+        169,
+        23,
+        84,
+        198,
+        48
+      ]
+    },
+    {
+      "name": "DepositEvent",
+      "discriminator": [
+        120,
+        248,
+        61,
+        83,
+        31,
+        142,
+        107,
+        144
+      ]
+    },
+    {
+      "name": "InitUserEvent",
+      "discriminator": [
+        172,
+        69,
+        161,
+        169,
+        238,
+        167,
+        121,
+        162
+      ]
+    },
+    {
+      "name": "PoolUpdateEvent",
+      "discriminator": [
+        124,
+        213,
+        52,
+        182,
+        189,
+        225,
+        61,
+        254
+      ]
+    },
+    {
+      "name": "StakeOrUnStakeEvent",
+      "discriminator": [
+        80,
+        62,
+        133,
+        137,
+        171,
+        83,
+        189,
+        214
+      ]
+    },
+    {
+      "name": "UpdateUserPositionEvent",
+      "discriminator": [
+        102,
+        98,
+        41,
+        238,
+        50,
+        237,
+        214,
+        100
+      ]
+    },
+    {
+      "name": "UserHoldUpdateEvent",
+      "discriminator": [
+        134,
+        142,
+        93,
+        85,
+        54,
+        61,
+        131,
+        93
+      ]
+    },
+    {
+      "name": "UserRewardsUpdateEvent",
+      "discriminator": [
+        93,
+        62,
+        28,
+        230,
+        211,
+        53,
+        192,
+        119
+      ]
+    },
+    {
+      "name": "UserTokenBalanceUpdateEvent",
+      "discriminator": [
+        6,
+        46,
+        145,
+        182,
+        47,
+        123,
+        79,
+        108
+      ]
+    },
+    {
+      "name": "WithdrawEvent",
+      "discriminator": [
+        22,
+        9,
+        133,
+        26,
+        160,
+        44,
+        71,
+        192
+      ]
+    }
+  ],
   "errors": [
     {
       "code": 6000,
@@ -2186,141 +2945,151 @@
     },
     {
       "code": 6019,
+      "name": "OnlyIsolatePositionAllowed",
+      "msg": "OnlyIsolatePositionAllowed"
+    },
+    {
+      "code": 6020,
       "name": "CouldNotFindUserStake",
       "msg": "CouldNotFindUserStake"
     },
     {
-      "code": 6020,
+      "code": 6021,
       "name": "OracleNotFound",
       "msg": "OracleNotFound"
     },
     {
-      "code": 6021,
+      "code": 6022,
       "name": "OraclePriceToOld",
       "msg": "OraclePriceToOld"
     },
     {
-      "code": 6022,
+      "code": 6023,
       "name": "UnableToLoadOracle",
       "msg": "Unable To Load Oracles"
     },
     {
-      "code": 6023,
+      "code": 6024,
       "name": "InvalidOracle",
       "msg": "InvalidOracle"
     },
     {
-      "code": 6024,
+      "code": 6025,
       "name": "BnConversionError",
       "msg": "Conversion to u128/u128 failed with an overflow or underflow"
     },
     {
-      "code": 6025,
+      "code": 6026,
       "name": "MathError",
       "msg": "Math Error"
     },
     {
-      "code": 6026,
+      "code": 6027,
       "name": "CastingFailure",
       "msg": "Casting Failure"
     },
     {
-      "code": 6027,
+      "code": 6028,
       "name": "CouldNotLoadMarketData",
       "msg": "CouldNotLoadMarketData"
     },
     {
-      "code": 6028,
+      "code": 6029,
       "name": "InvalidMarketAccount",
       "msg": "InvalidMarketAccount"
     },
     {
-      "code": 6029,
+      "code": 6030,
       "name": "MarketWrongMutability",
       "msg": "MarketWrongMutability"
     },
     {
-      "code": 6030,
+      "code": 6031,
       "name": "FailedUnwrap",
       "msg": "Failed Unwrap"
     },
     {
-      "code": 6031,
+      "code": 6032,
       "name": "UserNotEnoughValue",
       "msg": "User Not Enough Value"
     },
     {
-      "code": 6032,
+      "code": 6033,
       "name": "AmountZero",
       "msg": "AmountZero"
     },
     {
-      "code": 6033,
+      "code": 6034,
       "name": "CouldNotLoadTradeTokenData",
       "msg": "CouldNotLoadTradeTokenData"
     },
     {
-      "code": 6034,
+      "code": 6035,
       "name": "CouldNotLoadPoolData",
       "msg": "CouldNotLoadPoolData"
     },
     {
-      "code": 6035,
+      "code": 6036,
       "name": "InvalidTradeTokenAccount",
       "msg": "InvalidTradeTokenAccount"
     },
     {
-      "code": 6036,
+      "code": 6037,
       "name": "InvalidTokenAccount",
       "msg": "InvalidTokenAccount"
     },
     {
-      "code": 6037,
+      "code": 6038,
       "name": "InvalidPoolAccount",
       "msg": "InvalidPoolAccount"
     },
     {
-      "code": 6038,
+      "code": 6039,
       "name": "TradeTokenNotFind",
       "msg": "CanNotFindTradeToken"
     },
     {
-      "code": 6039,
+      "code": 6040,
       "name": "StakePaused",
       "msg": "StakePaused"
     },
     {
-      "code": 6040,
+      "code": 6041,
       "name": "StakeToSmall",
       "msg": "StakeToSmall"
     },
     {
-      "code": 6041,
-      "name": "UnStakeNotEnough",
-      "msg": "UnStakeNotEnough"
+      "code": 6042,
+      "name": "UnStakeTooSmall",
+      "msg": "UnStakeTooSmall"
     },
     {
-      "code": 6042,
+      "code": 6043,
+      "name": "UnStakeTooLarge",
+      "msg": "UnStakeTooLarge"
+    },
+    {
+      "code": 6044,
       "name": "PositionSideNotSupport",
       "msg": "PositionSideNotSupport"
     },
     {
-      "code": 6043,
+      "code": 6045,
       "name": "RewardsNotFound",
       "msg": "RewardsNotFound"
     },
     {
-      "code": 6044,
+      "code": 6046,
       "name": "UserNotFound",
       "msg": "UserNotFound"
     },
     {
-      "code": 6045,
+      "code": 6047,
       "name": "CouldNotLoadUserData",
       "msg": "CouldNotLoadUserData"
     },
     {
-      "code": 6046,
+      "code": 6048,
       "name": "PoolSubUnsettleNotEnough",
       "msg": "PoolSubUnsettleNotEnough"
     }
@@ -2343,8 +3112,87 @@
       }
     },
     {
+      "name": "AddOrDecreaseMarginEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "position",
+            "type": {
+              "defined": {
+                "name": "UserPosition"
+              }
+            }
+          },
+          {
+            "name": "pre_position",
+            "type": {
+              "defined": {
+                "name": "UserPosition"
+              }
+            }
+          },
+          {
+            "name": "is_add",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AddOrDeleteUserOrderEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "order",
+            "type": {
+              "defined": {
+                "name": "UserOrder"
+              }
+            }
+          },
+          {
+            "name": "is_add",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AddOrDeleteUserPositionEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "position",
+            "type": {
+              "defined": {
+                "name": "UserPosition"
+              }
+            }
+          },
+          {
+            "name": "is_add",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
       "name": "BorrowingFee",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -2371,7 +3219,55 @@
       }
     },
     {
+      "name": "DepositEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u128"
+          },
+          {
+            "name": "deposit_origin",
+            "type": {
+              "defined": {
+                "name": "DepositOrigin"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "DepositOrigin",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "MANUAL"
+          },
+          {
+            "name": "ORDER"
+          },
+          {
+            "name": "STAKE"
+          }
+        ]
+      }
+    },
+    {
       "name": "FeeReward",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "struct",
         "fields": [
@@ -2382,10 +3278,6 @@
           {
             "name": "un_settle_fee_amount",
             "type": "u128"
-          },
-          {
-            "name": "pnl",
-            "type": "i128"
           },
           {
             "name": "cumulative_rewards_per_stake_token",
@@ -2399,6 +3291,22 @@
                 3
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitUserEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
           }
         ]
       }
@@ -2578,7 +3486,6 @@
     },
     {
       "name": "MarketConfig",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -2622,7 +3529,6 @@
     },
     {
       "name": "MarketFundingFee",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -2662,7 +3568,6 @@
     },
     {
       "name": "MarketPosition",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -2682,6 +3587,9 @@
     },
     {
       "name": "OrderSide",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -2699,6 +3607,9 @@
     },
     {
       "name": "OrderStatus",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -2713,6 +3624,9 @@
     },
     {
       "name": "OrderType",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -2911,8 +3825,8 @@
             "type": "bool"
           },
           {
-            "name": "decimals",
-            "type": "u8"
+            "name": "pnl",
+            "type": "i128"
           },
           {
             "name": "apr",
@@ -2927,7 +3841,6 @@
     },
     {
       "name": "PoolBalance",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -2959,7 +3872,6 @@
     },
     {
       "name": "PoolConfig",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -3015,7 +3927,142 @@
       }
     },
     {
+      "name": "PoolUpdateEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pool_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool_index",
+            "type": "u16"
+          },
+          {
+            "name": "pool_balance",
+            "type": {
+              "defined": {
+                "name": "PoolBalance"
+              }
+            }
+          },
+          {
+            "name": "stable_balance",
+            "type": {
+              "defined": {
+                "name": "PoolBalance"
+              }
+            }
+          },
+          {
+            "name": "borrowing_fee",
+            "type": {
+              "defined": {
+                "name": "BorrowingFee"
+              }
+            }
+          },
+          {
+            "name": "fee_reward",
+            "type": {
+              "defined": {
+                "name": "FeeReward"
+              }
+            }
+          },
+          {
+            "name": "stable_fee_reward",
+            "type": {
+              "defined": {
+                "name": "FeeReward"
+              }
+            }
+          },
+          {
+            "name": "total_supply",
+            "type": "u128"
+          },
+          {
+            "name": "pnl",
+            "type": "i128"
+          },
+          {
+            "name": "apr",
+            "type": "u128"
+          },
+          {
+            "name": "insurance_fund_amount",
+            "type": "u128"
+          },
+          {
+            "name": "pre_pool_balance",
+            "type": {
+              "defined": {
+                "name": "PoolBalance"
+              }
+            }
+          },
+          {
+            "name": "pre_stable_balance",
+            "type": {
+              "defined": {
+                "name": "PoolBalance"
+              }
+            }
+          },
+          {
+            "name": "pre_borrowing_fee",
+            "type": {
+              "defined": {
+                "name": "BorrowingFee"
+              }
+            }
+          },
+          {
+            "name": "pre_fee_reward",
+            "type": {
+              "defined": {
+                "name": "FeeReward"
+              }
+            }
+          },
+          {
+            "name": "pre_stable_fee_reward",
+            "type": {
+              "defined": {
+                "name": "FeeReward"
+              }
+            }
+          },
+          {
+            "name": "pre_total_supply",
+            "type": "u128"
+          },
+          {
+            "name": "pre_pnl",
+            "type": "i128"
+          },
+          {
+            "name": "pre_apr",
+            "type": "u128"
+          },
+          {
+            "name": "pre_insurance_fund_amount",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
       "name": "PositionSide",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -3033,6 +4080,9 @@
     },
     {
       "name": "PositionStatus",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -3041,6 +4091,34 @@
           },
           {
             "name": "USING"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StakeOrUnStakeEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "change_supply_amount",
+            "type": "u128"
+          },
+          {
+            "name": "user_stake",
+            "type": {
+              "defined": {
+                "name": "UserStake"
+              }
+            }
           }
         ]
       }
@@ -3142,6 +4220,9 @@
     },
     {
       "name": "StopType",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -3167,28 +4248,12 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "mint",
-            "type": "pubkey"
-          },
-          {
-            "name": "oracle",
-            "type": "pubkey"
-          },
-          {
-            "name": "token_index",
-            "type": "u16"
-          },
-          {
             "name": "discount",
             "type": "u128"
           },
           {
             "name": "liquidation_factor",
             "type": "u128"
-          },
-          {
-            "name": "decimals",
-            "type": "u8"
           },
           {
             "name": "total_liability",
@@ -3199,8 +4264,42 @@
             "type": "u128"
           },
           {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "oracle",
+            "type": "pubkey"
+          },
+          {
             "name": "trade_token_vault",
             "type": "pubkey"
+          },
+          {
+            "name": "token_index",
+            "type": "u16"
+          },
+          {
+            "name": "decimals",
+            "type": "u16"
+          },
+          {
+            "name": "mint_name",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                3
+              ]
+            }
           }
         ]
       }
@@ -3274,6 +4373,34 @@
           {
             "name": "add_initial_margin_from_portfolio",
             "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateUserPositionEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "pre_position",
+            "type": {
+              "defined": {
+                "name": "UserPosition"
+              }
+            }
+          },
+          {
+            "name": "position",
+            "type": {
+              "defined": {
+                "name": "UserPosition"
+              }
+            }
           }
         ]
       }
@@ -3363,8 +4490,27 @@
       }
     },
     {
+      "name": "UserHoldUpdateEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "pre_hold_amount",
+            "type": "u128"
+          },
+          {
+            "name": "hold_amount",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
       "name": "UserOrder",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -3465,7 +4611,6 @@
     },
     {
       "name": "UserPosition",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -3494,7 +4639,7 @@
             "type": "bool"
           },
           {
-            "name": "authority",
+            "name": "user_key",
             "type": "pubkey"
           },
           {
@@ -3594,7 +4739,6 @@
     },
     {
       "name": "UserRewards",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -3617,8 +4761,31 @@
       }
     },
     {
+      "name": "UserRewardsUpdateEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "user_rewards",
+            "type": {
+              "defined": {
+                "name": "UserRewards"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "UserStake",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -3654,6 +4821,9 @@
     },
     {
       "name": "UserStakeStatus",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -3668,7 +4838,6 @@
     },
     {
       "name": "UserToken",
-      "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
       },
@@ -3707,7 +4876,50 @@
       }
     },
     {
+      "name": "UserTokenBalanceUpdateEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "pre_user_token",
+            "type": {
+              "defined": {
+                "name": "UserToken"
+              }
+            }
+          },
+          {
+            "name": "user_token",
+            "type": {
+              "defined": {
+                "name": "UserToken"
+              }
+            }
+          },
+          {
+            "name": "update_origin",
+            "type": {
+              "defined": {
+                "name": "UserTokenUpdateOrigin"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "UserTokenStatus",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "enum",
         "variants": [
@@ -3716,6 +4928,76 @@
           },
           {
             "name": "USING"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserTokenUpdateOrigin",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "DEFAULT"
+          },
+          {
+            "name": "DEPOSIT"
+          },
+          {
+            "name": "WITHDRAW"
+          },
+          {
+            "name": "SettleFee"
+          },
+          {
+            "name": "SettlePnl"
+          },
+          {
+            "name": "DecreasePosition"
+          },
+          {
+            "name": "IncreasePosition"
+          },
+          {
+            "name": "UpdateLeverage"
+          },
+          {
+            "name": "CollectOpenFee"
+          },
+          {
+            "name": "CollectCloseFee"
+          },
+          {
+            "name": "TransferToStake"
+          },
+          {
+            "name": "TransferFromStake"
+          },
+          {
+            "name": "LiquidateLiability"
+          },
+          {
+            "name": "Liquidation"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u128"
           }
         ]
       }

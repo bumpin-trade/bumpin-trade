@@ -10,7 +10,6 @@ use anchor_lang::prelude::*;
 use anchor_lang::require_keys_neq;
 use solana_program::msg;
 use solana_program::program::invoke;
-use solana_program::rent::Rent;
 use solana_program::system_instruction::transfer;
 
 #[derive(Accounts)]
@@ -58,7 +57,8 @@ pub fn handle_initialize_user(ctx: Context<InitializeUser>) -> Result<()> {
                 ctx.accounts.user.to_account_info().clone(),
                 ctx.accounts.system_program.to_account_info().clone(),
             ],
-        )?;
+        )
+        .unwrap();
         emit!(InitUserEvent {
             user_key: *ctx.accounts.user.to_account_info().key,
             authority: *ctx.accounts.authority.to_account_info().key

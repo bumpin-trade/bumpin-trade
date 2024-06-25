@@ -71,7 +71,7 @@ pub fn div_u128(x: u128, y: u128) -> BumpResult<u128> {
     Ok(x.safe_div(y)?)
 }
 
-pub fn usd_to_token_u(usd_value: u128, decimals: u8, token_price: u128) -> BumpResult<u128> {
+pub fn usd_to_token_u(usd_value: u128, decimals: u16, token_price: u128) -> BumpResult<u128> {
     mul_div_u(
         usd_value,
         10u128.pow(decimals.cast::<u32>()?),
@@ -79,7 +79,7 @@ pub fn usd_to_token_u(usd_value: u128, decimals: u8, token_price: u128) -> BumpR
     )
 }
 
-pub fn usd_to_token_i(usd_value: i128, decimals: u8, token_price: u128) -> BumpResult<i128> {
+pub fn usd_to_token_i(usd_value: i128, decimals: u16, token_price: u128) -> BumpResult<i128> {
     mul_div_i(
         usd_value,
         10i128.pow(decimals.cast::<u32>()?),
@@ -87,14 +87,14 @@ pub fn usd_to_token_i(usd_value: i128, decimals: u8, token_price: u128) -> BumpR
     )
 }
 
-pub fn token_to_usd_u(token_amount: u128, decimals: u8, token_price: u128) -> BumpResult<u128> {
+pub fn token_to_usd_u(token_amount: u128, decimals: u16, token_price: u128) -> BumpResult<u128> {
     token_amount
         .safe_mul(token_price)?
         .safe_mul(PRICE_TO_LAMPORT)?
         .safe_div(10u128.pow(decimals.cast::<u32>()?))
 }
 
-pub fn token_to_usd_i(token_amount: i128, decimals: u8, token_price: u128) -> BumpResult<i128> {
+pub fn token_to_usd_i(token_amount: i128, decimals: u16, token_price: u128) -> BumpResult<i128> {
     token_amount
         .safe_mul(token_price.cast::<i128>()?)?
         .safe_mul(PRICE_TO_LAMPORT.cast::<i128>()?)?

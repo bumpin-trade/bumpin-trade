@@ -1,8 +1,7 @@
+use anchor_lang::prelude::*;
 use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
 use anchor_lang::{emit, ToAccountInfo};
 use anchor_spl::token::{Token, TokenAccount};
-use solana_program::account_info::AccountInfo;
-use solana_program::pubkey::Pubkey;
 
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{cal_utils, UpdatePositionLeverageParams, UpdatePositionMarginParams};
@@ -190,7 +189,7 @@ impl PositionProcessor<'_> {
         pool: &Pool,
         state: &State,
         margin_token_price: u128,
-        margin_token_decimals: u8,
+        margin_token_decimals: u16,
     ) -> BumpResult<u128> {
         let mm_usd = self.get_position_mm(market, state)?;
         let position_fee_usd =
@@ -234,7 +233,7 @@ impl PositionProcessor<'_> {
         market: &Market,
         pool: &Pool,
         margin_mint_price: u128,
-        trade_token_decimals: u8,
+        trade_token_decimals: u16,
     ) -> BumpResult<i128> {
         let mut funding_fee_total_usd = self.position.realized_funding_fee_in_usd;
         let mut borrowing_fee_total_usd = self.position.realized_borrowing_fee_in_usd;
@@ -766,7 +765,7 @@ impl PositionProcessor<'_> {
         is_liquidation: bool,
         is_cross_margin: bool,
         pnl: i128,
-        decimals: u8,
+        decimals: u16,
         margin_mint_token_price: u128,
         market: &Market,
         state: &State,
@@ -1115,7 +1114,7 @@ impl PositionProcessor<'_> {
                 &self.position.margin_mint,
                 &UserTokenUpdateOrigin::DecreasePosition,
             )?;
-            let trade_token = trade_token_account.load_mut().unwrap();
+            let mut trade_token = trade_token_account.load_mut().unwrap();
             trade_token.sub_liability(repay_amount)?;
 
             pool_processor.update_pnl_and_un_hold_pool_amount(

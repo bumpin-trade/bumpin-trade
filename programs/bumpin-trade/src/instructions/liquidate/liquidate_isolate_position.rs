@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
-use solana_program::pubkey::Pubkey;
 
 use crate::errors::BumpErrorCode;
 use crate::processor::market_processor::MarketProcessor;

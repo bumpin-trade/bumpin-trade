@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use solana_program::pubkey::Pubkey;
 
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;
@@ -7,15 +6,17 @@ use crate::math::safe_math::SafeMath;
 use crate::state::oracle::OraclePriceData;
 use crate::state::trade_token::TradeToken;
 
+// #[zero_copy(unsafe)]
 #[repr(C)]
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Default, Debug, Eq)]
 pub struct UserToken {
-    pub user_token_status: UserTokenStatus,
     pub token_mint: Pubkey,
     pub user_token_account_key: Pubkey,
     pub amount: u128,
     pub used_amount: u128,
     pub liability: u128,
+    pub user_token_status: UserTokenStatus,
+    // pub padding : [u8; 15],
 }
 
 #[repr(C)]
@@ -28,9 +29,10 @@ pub enum UserTokenStatus {
 
 impl UserToken {
     pub fn add_token_amount(&mut self, amount: u128) -> BumpResult {
-        msg!("current_amount:{}",self.amount);
+        msg!("current_amount:{}", self.amount);
         self.amount = self.amount.safe_add(amount)?;
-        msg!("after_add_amount:{}",self.amount);
+        msg!("after_add_amount:{}", self.amount);
+        self.amount = 98765;
         Ok(())
     }
     pub fn sub_token_amount(&mut self, amount: u128) -> BumpResult {

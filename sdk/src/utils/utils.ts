@@ -1,10 +1,22 @@
 import {PublicKey, TransactionMessage, VersionedTransaction} from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import {Program, Provider} from "@coral-xyz/anchor";
+import {Program, Provider, Wallet} from "@coral-xyz/anchor";
 import {Buffer} from "buffer";
 import {BumpinTrade} from "../types/bumpin_trade";
+import {TradeToken} from "../types";
+import {BumpinAccountNotFound} from "../errors";
 
 export class BumpinUtils {
+    public static capitalize(value: string): string {
+        return value[0].toUpperCase() + value.slice(1);
+    }
+
+    public static numberToLEBytes(number: number): Buffer {
+        const buffer = Buffer.alloc(8);
+        buffer.writeUInt32LE(number, 0);
+        return buffer;
+    }
+
     public static string2Padded32Bytes(str: string): number[] {
         const buffer = Buffer.from(str, 'utf-8');
         const paddedBuffer = Buffer.concat([buffer, Buffer.alloc(32 - buffer.length)]);
@@ -28,28 +40,45 @@ export class BumpinUtils {
 
     public static getTradeTokenPda(program: Program<BumpinTrade>, index: number): [PublicKey, number] {
         return PublicKey.findProgramAddressSync(
-            [Buffer.from("trade_token"), Buffer.from(index.toString())],
+            [Buffer.from("trade_token"), new anchor.BN(index).toArrayLike(Buffer, 'le', 2)],
+            program.programId
+        );
+    }
+
+    public static getTradeTokenVaultPda(program: Program<BumpinTrade>, index: number): [PublicKey, number] {
+        return PublicKey.findProgramAddressSync(
+            [Buffer.from("trade_token_vault"), new anchor.BN(index).toArrayLike(Buffer, 'le', 2)],
             program.programId
         );
     }
 
     public static getPoolPda(program: Program<BumpinTrade>, index: number): [PublicKey, number] {
         return PublicKey.findProgramAddressSync(
-            [Buffer.from("pool"), Buffer.from(index.toString())],
+            [Buffer.from("pool"), new anchor.BN(index).toArrayLike(Buffer, 'le', 2)],
             program.programId
         );
     }
 
     public static getMarketPda(program: Program<BumpinTrade>, index: number): [PublicKey, number] {
         return PublicKey.findProgramAddressSync(
-            [Buffer.from("market"), Buffer.from(index.toString())],
+            [Buffer.from("market"), new anchor.BN(index).toArrayLike(Buffer, 'le', 2)],
             program.programId
         );
     }
 
-    public static async manualCreateAccount(provider: Provider, fromPk: PublicKey, newAccountPk: anchor.web3.Keypair, space: number, lamports: number, programId: PublicKey) {
+    public static getTradeTokenByMintPublicKey(mint: PublicKey, tradeTokens: TradeToken[]): TradeToken {
+        let tradeToken = tradeTokens.find((tradeToken) => {
+            return tradeToken.mint.equals(mint);
+        });
+        if (tradeToken === undefined) {
+            throw new BumpinAccountNotFound("TradeToken: " + mint);
+        }
+        return tradeToken;
+    }
+
+    public static async manualCreateAccount(provider: Provider, wallet: Wallet, newAccountPk: anchor.web3.Keypair, space: number, lamports: number, programId: PublicKey) {
         let i = anchor.web3.SystemProgram.createAccount({
-            fromPubkey: fromPk,
+            fromPubkey: wallet.publicKey,
             newAccountPubkey: newAccountPk.publicKey,
             space: space,
             lamports: lamports,
@@ -63,12 +92,13 @@ export class BumpinUtils {
 
         const messageV0 = new TransactionMessage({
             instructions: [i],
-            payerKey: fromPk,
+            payerKey: wallet.publicKey,
             recentBlockhash: blockhash,
         }).compileToV0Message();
         const transaction = new VersionedTransaction(messageV0);
-        transaction.sign([newAccountPk]);
-        const signature = await provider.connection.sendTransaction(transaction);
+        let signedTransaction = await wallet.signTransaction(transaction);
+        signedTransaction.sign([newAccountPk]);
+        const signature = await provider.connection.sendTransaction(signedTransaction);
         await provider.connection.confirmTransaction({
             blockhash,
             lastValidBlockHeight,

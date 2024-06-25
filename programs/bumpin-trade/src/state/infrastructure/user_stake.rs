@@ -1,6 +1,5 @@
 use crate::errors::{BumpErrorCode, BumpResult};
 use anchor_lang::prelude::*;
-use solana_program::pubkey::Pubkey;
 
 use crate::math::safe_math::SafeMath;
 use crate::validate;

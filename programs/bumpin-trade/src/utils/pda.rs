@@ -1,4 +1,4 @@
-use solana_program::pubkey::Pubkey;
+use anchor_lang::prelude::*;
 
 use crate::errors::BumpResult;
 

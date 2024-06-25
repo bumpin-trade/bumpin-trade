@@ -130,7 +130,7 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
         un_stake_token_amount.safe_add(rewards_amount)?.safe_sub(un_stake_token_amount_fee)?;
 
     if un_stake_params.portfolio {
-        let trade_token = ctx.accounts.trade_token.load_mut()?;
+        let mut trade_token = ctx.accounts.trade_token.load_mut()?;
         utils::token::receive(
             &ctx.accounts.token_program,
             &ctx.accounts.pool_mint_vault,

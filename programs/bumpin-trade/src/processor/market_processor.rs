@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use solana_program::pubkey::Pubkey;
 
 use crate::errors::BumpResult;
 use crate::instructions::cal_utils;

@@ -67,64 +67,10 @@ export type Pyth = {
         {
           "name": "price",
           "type": "i64"
-        }
-      ]
-    },
-    {
-      "name": "setPriceInfo",
-      "discriminator": [
-        52,
-        225,
-        243,
-        132,
-        19,
-        89,
-        254,
-        181
-      ],
-      "accounts": [
-        {
-          "name": "price",
-          "writable": true
-        }
-      ],
-      "args": [
-        {
-          "name": "price",
-          "type": "i64"
         },
         {
           "name": "conf",
           "type": "u64"
-        },
-        {
-          "name": "slot",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "setTwap",
-      "discriminator": [
-        10,
-        194,
-        43,
-        204,
-        120,
-        214,
-        177,
-        206
-      ],
-      "accounts": [
-        {
-          "name": "price",
-          "writable": true
-        }
-      ],
-      "args": [
-        {
-          "name": "twap",
-          "type": "i64"
         }
       ]
     }

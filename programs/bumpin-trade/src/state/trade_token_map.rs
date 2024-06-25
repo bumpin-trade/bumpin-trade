@@ -2,12 +2,11 @@ use std::cell::Ref;
 use std::collections::BTreeMap;
 use std::panic::Location;
 
-use anchor_lang::prelude::AccountLoader;
+use anchor_lang::prelude::*;
 use anchor_lang::Discriminator;
 use arrayref::array_ref;
-use solana_program::account_info::AccountInfo;
+
 use solana_program::msg;
-use solana_program::pubkey::Pubkey;
 
 use crate::errors::BumpErrorCode::{
     CouldNotLoadTradeTokenData, InvalidTradeTokenAccount, TradeTokenNotFind,
