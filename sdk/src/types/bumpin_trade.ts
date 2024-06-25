@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/bumpin_trade.json`.
  */
 export type BumpinTrade = {
-  "address": "46tVQFuV65zkUdHMm7eZZqcmDYbPjw5rkWKmUsXURmcc",
+  "address": "3vxLXJqLqF3JG5TCbYycbKWRBbCJQLxQmBGCkyqEEefL",
   "metadata": {
     "name": "bumpinTrade",
     "version": "0.1.0",
@@ -4449,7 +4449,7 @@ export type BumpinTrade = {
                     "name": "userToken"
                   }
                 },
-                12
+                8
               ]
             }
           },
@@ -4462,7 +4462,7 @@ export type BumpinTrade = {
                     "name": "userStake"
                   }
                 },
-                12
+                8
               ]
             }
           },
@@ -4475,7 +4475,7 @@ export type BumpinTrade = {
                     "name": "userPosition"
                   }
                 },
-                10
+                8
               ]
             }
           },
@@ -4488,7 +4488,7 @@ export type BumpinTrade = {
                     "name": "userOrder"
                   }
                 },
-                10
+                8
               ]
             }
           }
@@ -4524,12 +4524,40 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
-            "name": "authority",
-            "type": "pubkey"
+            "name": "orderMargin",
+            "type": "u128"
+          },
+          {
+            "name": "leverage",
+            "type": "u128"
+          },
+          {
+            "name": "orderSize",
+            "type": "u128"
+          },
+          {
+            "name": "triggerPrice",
+            "type": "u128"
+          },
+          {
+            "name": "acceptablePrice",
+            "type": "u128"
+          },
+          {
+            "name": "time",
+            "type": "u128"
           },
           {
             "name": "orderId",
             "type": "u128"
+          },
+          {
+            "name": "marginMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
           },
           {
             "name": "symbol",
@@ -4577,39 +4605,20 @@ export type BumpinTrade = {
             "type": "bool"
           },
           {
-            "name": "marginMint",
-            "type": "pubkey"
-          },
-          {
-            "name": "orderMargin",
-            "type": "u128"
-          },
-          {
-            "name": "leverage",
-            "type": "u128"
-          },
-          {
-            "name": "orderSize",
-            "type": "u128"
-          },
-          {
-            "name": "triggerPrice",
-            "type": "u128"
-          },
-          {
-            "name": "acceptablePrice",
-            "type": "u128"
-          },
-          {
-            "name": "time",
-            "type": "u128"
-          },
-          {
             "name": "status",
             "type": {
               "defined": {
                 "name": "orderStatus"
               }
+            }
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                9
+              ]
             }
           }
         ]
@@ -4623,39 +4632,6 @@ export type BumpinTrade = {
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "positionKey",
-            "type": "pubkey"
-          },
-          {
-            "name": "symbol",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
-            "name": "isLong",
-            "type": "bool"
-          },
-          {
-            "name": "crossMargin",
-            "type": "bool"
-          },
-          {
-            "name": "userKey",
-            "type": "pubkey"
-          },
-          {
-            "name": "marginMint",
-            "type": "pubkey"
-          },
-          {
-            "name": "indexMint",
-            "type": "pubkey"
-          },
           {
             "name": "positionSize",
             "type": "u128"
@@ -4733,11 +4709,53 @@ export type BumpinTrade = {
             "type": "i128"
           },
           {
+            "name": "userKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "marginMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "indexMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "positionKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "symbol",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "isLong",
+            "type": "bool"
+          },
+          {
+            "name": "crossMargin",
+            "type": "bool"
+          },
+          {
             "name": "status",
             "type": {
               "defined": {
                 "name": "positionStatus"
               }
+            }
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                12
+              ]
             }
           }
         ]
@@ -4799,6 +4817,14 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
+            "name": "amount",
+            "type": "u128"
+          },
+          {
+            "name": "poolKey",
+            "type": "pubkey"
+          },
+          {
             "name": "userStakeStatus",
             "type": {
               "defined": {
@@ -4807,19 +4833,20 @@ export type BumpinTrade = {
             }
           },
           {
-            "name": "poolKey",
-            "type": "pubkey"
-          },
-          {
-            "name": "amount",
-            "type": "u128"
-          },
-          {
             "name": "userRewards",
             "type": {
               "defined": {
                 "name": "userRewards"
               }
+            }
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                6
+              ]
             }
           }
         ]
@@ -4851,14 +4878,6 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
-            "name": "userTokenStatus",
-            "type": {
-              "defined": {
-                "name": "userTokenStatus"
-              }
-            }
-          },
-          {
             "name": "tokenMint",
             "type": "pubkey"
           },
@@ -4877,6 +4896,23 @@ export type BumpinTrade = {
           {
             "name": "liability",
             "type": "u128"
+          },
+          {
+            "name": "userTokenStatus",
+            "type": {
+              "defined": {
+                "name": "userTokenStatus"
+              }
+            }
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                15
+              ]
+            }
           }
         ]
       }

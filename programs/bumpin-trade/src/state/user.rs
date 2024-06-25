@@ -1,3 +1,5 @@
+use anchor_lang::prelude::*;
+
 use crate::errors::BumpErrorCode::{CouldNotFindUserPosition, CouldNotFindUserToken};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
@@ -13,7 +15,6 @@ use crate::state::trade_token::TradeToken;
 use crate::state::traits::Size;
 use crate::utils::pda;
 use crate::validate;
-use anchor_lang::prelude::*;
 
 #[account(zero_copy(unsafe))]
 #[derive(Default, Eq, PartialEq, Debug)]
@@ -24,10 +25,10 @@ pub struct User {
     pub next_order_id: u128,
     pub next_liquidation_id: u128,
     pub hold: u128,
-    pub user_tokens: [UserToken; 12],
-    pub user_stakes: [UserStake; 12],
-    pub user_positions: [UserPosition; 10],
-    pub user_orders: [UserOrder; 10],
+    pub user_tokens: [UserToken; 8],
+    pub user_stakes: [UserStake; 8],
+    pub user_positions: [UserPosition; 8],
+    pub user_orders: [UserOrder; 8],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]
@@ -50,7 +51,7 @@ pub enum UserTokenUpdateOrigin {
 }
 
 impl Size for User {
-    const SIZE: usize = std::mem::size_of::<User>() + 8;
+    const SIZE: usize = std::mem::size_of::<User>() + 8 + 100;
 }
 
 impl User {
@@ -138,6 +139,7 @@ impl User {
                     amount: 0,
                     used_amount: 0,
                     liability: 0,
+                    padding: [0; 15],
                 };
                 self.add_user_token(new_token, index)?;
                 self.get_user_token_mut(token)?.ok_or(CouldNotFindUserToken)?

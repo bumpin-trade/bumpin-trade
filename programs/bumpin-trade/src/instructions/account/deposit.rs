@@ -73,6 +73,7 @@ pub fn handle_deposit(ctx: Context<Deposit>, token_index: u16, amount: u128) -> 
                 amount: 0,
                 used_amount: 0,
                 liability: 0,
+                padding: [0; 15],
             };
             user.add_user_token(new_token, index)?;
             user.get_user_token_mut(&trade_token.mint)?.ok_or(CouldNotFindUserToken)?

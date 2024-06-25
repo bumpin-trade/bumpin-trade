@@ -21,7 +21,11 @@ pub struct UpdateOIParams {
 }
 
 impl<'a> MarketProcessor<'_> {
-    pub fn get_market_un_pnl(&mut self, _is_long: bool, _oracle_map: &OracleMap) -> BumpResult<u128> {
+    pub fn get_market_un_pnl(
+        &mut self,
+        _is_long: bool,
+        _oracle_map: &OracleMap,
+    ) -> BumpResult<u128> {
         //todo
         Ok(0u128)
     }
