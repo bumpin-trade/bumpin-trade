@@ -2,17 +2,10 @@ use crate::errors::BumpResult;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use anchor_lang::prelude::*;
+use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
-#[repr(C)]
+#[bumpin_zero_copy_unsafe]
 pub struct UserPosition {
-    pub position_key: Pubkey,
-    pub symbol: [u8; 32],
-    pub is_long: bool,
-    pub cross_margin: bool,
-    pub user_key: Pubkey,
-    pub margin_mint: Pubkey,
-    pub index_mint: Pubkey,
     pub position_size: u128,
     pub entry_price: u128,
     pub leverage: u128,
@@ -32,7 +25,15 @@ pub struct UserPosition {
     pub close_fee_in_usd: u128,
     pub last_update_time: u128,
     pub realized_pnl: i128,
+    pub user_key: Pubkey,
+    pub margin_mint: Pubkey,
+    pub index_mint: Pubkey,
+    pub position_key: Pubkey,
+    pub symbol: [u8; 32],
+    pub is_long: bool,
+    pub cross_margin: bool,
     pub status: PositionStatus,
+    pub padding: [u8; 12],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]

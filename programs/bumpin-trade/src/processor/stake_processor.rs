@@ -48,6 +48,7 @@ pub fn stake(
                 pool_key: pool.pool_key,
                 amount: 0,
                 user_rewards: Default::default(),
+                padding: [0; 7],
             };
 
             let next_index = user.next_usable_stake_index()?;

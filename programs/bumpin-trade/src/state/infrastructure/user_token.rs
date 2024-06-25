@@ -1,14 +1,12 @@
-use anchor_lang::prelude::*;
-
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::state::oracle::OraclePriceData;
 use crate::state::trade_token::TradeToken;
+use anchor_lang::prelude::*;
+use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
-// #[zero_copy(unsafe)]
-#[repr(C)]
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Default, Debug, Eq)]
+#[bumpin_zero_copy_unsafe]
 pub struct UserToken {
     pub token_mint: Pubkey,
     pub user_token_account_key: Pubkey,
@@ -16,7 +14,7 @@ pub struct UserToken {
     pub used_amount: u128,
     pub liability: u128,
     pub user_token_status: UserTokenStatus,
-    // pub padding : [u8; 15],
+    pub padding: [u8; 15],
 }
 
 #[repr(C)]

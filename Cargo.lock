@@ -644,9 +644,19 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "arrayref",
+ "bumpin-trade-attribute",
  "num-traits",
  "pyth-sdk-solana",
  "uint",
+]
+
+[[package]]
+name = "bumpin-trade-attribute"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]

@@ -4443,7 +4443,7 @@
                     "name": "UserToken"
                   }
                 },
-                12
+                8
               ]
             }
           },
@@ -4456,7 +4456,7 @@
                     "name": "UserStake"
                   }
                 },
-                12
+                8
               ]
             }
           },
@@ -4469,7 +4469,7 @@
                     "name": "UserPosition"
                   }
                 },
-                10
+                8
               ]
             }
           },
@@ -4482,7 +4482,7 @@
                     "name": "UserOrder"
                   }
                 },
-                10
+                8
               ]
             }
           }
@@ -4518,12 +4518,40 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "authority",
-            "type": "pubkey"
+            "name": "order_margin",
+            "type": "u128"
+          },
+          {
+            "name": "leverage",
+            "type": "u128"
+          },
+          {
+            "name": "order_size",
+            "type": "u128"
+          },
+          {
+            "name": "trigger_price",
+            "type": "u128"
+          },
+          {
+            "name": "acceptable_price",
+            "type": "u128"
+          },
+          {
+            "name": "time",
+            "type": "u128"
           },
           {
             "name": "order_id",
             "type": "u128"
+          },
+          {
+            "name": "margin_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
           },
           {
             "name": "symbol",
@@ -4571,39 +4599,20 @@
             "type": "bool"
           },
           {
-            "name": "margin_mint",
-            "type": "pubkey"
-          },
-          {
-            "name": "order_margin",
-            "type": "u128"
-          },
-          {
-            "name": "leverage",
-            "type": "u128"
-          },
-          {
-            "name": "order_size",
-            "type": "u128"
-          },
-          {
-            "name": "trigger_price",
-            "type": "u128"
-          },
-          {
-            "name": "acceptable_price",
-            "type": "u128"
-          },
-          {
-            "name": "time",
-            "type": "u128"
-          },
-          {
             "name": "status",
             "type": {
               "defined": {
                 "name": "OrderStatus"
               }
+            }
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                9
+              ]
             }
           }
         ]
@@ -4617,39 +4626,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "position_key",
-            "type": "pubkey"
-          },
-          {
-            "name": "symbol",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
-            "name": "is_long",
-            "type": "bool"
-          },
-          {
-            "name": "cross_margin",
-            "type": "bool"
-          },
-          {
-            "name": "user_key",
-            "type": "pubkey"
-          },
-          {
-            "name": "margin_mint",
-            "type": "pubkey"
-          },
-          {
-            "name": "index_mint",
-            "type": "pubkey"
-          },
           {
             "name": "position_size",
             "type": "u128"
@@ -4727,11 +4703,53 @@
             "type": "i128"
           },
           {
+            "name": "user_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "margin_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "index_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "position_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "symbol",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "is_long",
+            "type": "bool"
+          },
+          {
+            "name": "cross_margin",
+            "type": "bool"
+          },
+          {
             "name": "status",
             "type": {
               "defined": {
                 "name": "PositionStatus"
               }
+            }
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                12
+              ]
             }
           }
         ]
@@ -4793,6 +4811,14 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "amount",
+            "type": "u128"
+          },
+          {
+            "name": "pool_key",
+            "type": "pubkey"
+          },
+          {
             "name": "user_stake_status",
             "type": {
               "defined": {
@@ -4801,19 +4827,20 @@
             }
           },
           {
-            "name": "pool_key",
-            "type": "pubkey"
-          },
-          {
-            "name": "amount",
-            "type": "u128"
-          },
-          {
             "name": "user_rewards",
             "type": {
               "defined": {
                 "name": "UserRewards"
               }
+            }
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                6
+              ]
             }
           }
         ]
@@ -4845,14 +4872,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "user_token_status",
-            "type": {
-              "defined": {
-                "name": "UserTokenStatus"
-              }
-            }
-          },
-          {
             "name": "token_mint",
             "type": "pubkey"
           },
@@ -4871,6 +4890,23 @@
           {
             "name": "liability",
             "type": "u128"
+          },
+          {
+            "name": "user_token_status",
+            "type": {
+              "defined": {
+                "name": "UserTokenStatus"
+              }
+            }
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                15
+              ]
+            }
           }
         ]
       }
