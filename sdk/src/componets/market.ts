@@ -13,7 +13,7 @@ import {PollingMarketAccountSubscriber} from "../account/pollingMarketAccountSub
 
 export class MarketComponent extends Component {
     program: Program<BumpinTrade>;
-    markets: Map<PublicKey, PollingMarketAccountSubscriber>;
+    markets: Map<PublicKey, PollingMarketAccountSubscriber> = new Map();
 
     constructor(bulkAccountLoader: BulkAccountLoader, stateSubscriber: PollingStateAccountSubscriber, program: Program<BumpinTrade>) {
         super(stateSubscriber, program);

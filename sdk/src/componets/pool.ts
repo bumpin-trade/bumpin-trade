@@ -15,7 +15,7 @@ import {DataAndSlot} from "../account/types";
 export class PoolComponent extends Component {
     oracleClient: OracleClient
     program: Program<BumpinTrade>;
-    pools: Map<PublicKey, PollingPoolAccountSubscriber>;
+    pools: Map<PublicKey, PollingPoolAccountSubscriber> = new Map();
 
     constructor(oracleClient: OracleClient, bulkAccountLoader: BulkAccountLoader, stateSubscriber: PollingStateAccountSubscriber, program: Program<BumpinTrade>) {
         super(stateSubscriber, program);

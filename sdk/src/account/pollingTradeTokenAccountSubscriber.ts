@@ -83,7 +83,7 @@ export class PollingTradeTokenAccountSubscriber implements AccountSubscriber<Tra
 
     async fetch(): Promise<void> {
         try {
-            const dataAndContext = await this.program.account.pool.fetchAndContext(
+            const dataAndContext = await this.program.account.tradeToken.fetchAndContext(
                 this.tradeTokenPublicKey,
                 this.accountLoader.commitment
             );

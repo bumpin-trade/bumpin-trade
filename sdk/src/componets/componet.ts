@@ -27,10 +27,7 @@ export abstract class Component {
     }
 
     protected getStateSync(): State {
-        let stateAccount = this.stateSubscriber.state;
-        if (!stateAccount) {
-            throw new BumpinAccountNotFound("State")
-        }
+        let stateAccount = this.stateSubscriber.getAccountAndSlot();
         return stateAccount.data;
     }
 

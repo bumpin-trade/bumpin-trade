@@ -85,7 +85,7 @@ export class PollingStateAccountSubscriber implements AccountSubscriber<State> {
 
     async fetch(): Promise<void> {
         try {
-            const dataAndContext = await this.program.account.market.fetchAndContext(
+            const dataAndContext = await this.program.account.state.fetchAndContext(
                 this.userAccountPublicKey,
                 this.accountLoader.commitment
             );

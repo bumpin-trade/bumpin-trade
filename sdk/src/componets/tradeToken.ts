@@ -1,4 +1,3 @@
-import {OracleClient} from "../oracles/types";
 import {PublicKey} from '@solana/web3.js';
 import {TradeToken} from "../types";
 import {BulkAccountLoader} from "../account/bulkAccountLoader";
@@ -14,7 +13,7 @@ import {PollingTradeTokenAccountSubscriber} from "../account/pollingTradeTokenAc
 
 export class TradeTokenComponent extends Component {
     program: Program<BumpinTrade>;
-    tradeTokens: Map<PublicKey, PollingTradeTokenAccountSubscriber>;
+    tradeTokens: Map<PublicKey, PollingTradeTokenAccountSubscriber> = new Map();
 
     constructor(bulkAccountLoader: BulkAccountLoader, stateSubscriber: PollingStateAccountSubscriber, program: Program<BumpinTrade>) {
         super(stateSubscriber, program);

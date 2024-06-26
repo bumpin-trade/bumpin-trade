@@ -71,7 +71,7 @@ export class BumpinClient {
         const [statePda, _] = BumpinUtils.getBumpinStatePda(this.program);
         this.stateSubscriber = new PollingStateAccountSubscriber(this.program, statePda, this.bulkAccountLoader);
         await this.stateSubscriber.subscribe();
-        // let state: State = this.stateSubscriber.state.data;
+
 
         this.poolComponent = new PoolComponent(this.pythClient, this.bulkAccountLoader, this.stateSubscriber, this.program);
         await this.poolComponent.subscribe();
