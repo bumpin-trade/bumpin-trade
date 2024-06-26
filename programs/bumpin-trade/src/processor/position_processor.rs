@@ -1204,19 +1204,6 @@ impl PositionProcessor<'_> {
                 .safe_div(self.position.entry_price.cast::<i128>()?)?)
         }
     }
-
-    pub fn get_position_un_pnl_token(
-        &self,
-        trade_token: &TradeToken,
-        mint_token_price: u128,
-        index_price: u128,
-    ) -> BumpResult<i128> {
-        if self.position.position_size == 0u128 {
-            return Ok(0i128);
-        };
-        let un_pnl_usd = self.get_position_un_pnl_usd(index_price)?;
-        Ok(cal_utils::usd_to_token_i(un_pnl_usd, trade_token.decimals, mint_token_price)?)
-    }
 }
 
 #[derive(Eq, PartialEq, Debug)]

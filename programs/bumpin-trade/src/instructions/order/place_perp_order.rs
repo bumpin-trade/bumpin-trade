@@ -1,5 +1,3 @@
-use std::ops::DerefMut;
-
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
@@ -226,9 +224,6 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
 
     if order.order_type.eq(&OrderType::MARKET) {
         drop(user);
-        drop(market);
-        drop(pool);
-        drop(stable_pool);
         //execute order
         let user_account_loader = &ctx.accounts.user;
         let margin_token_account = &ctx.accounts.margin_token;
@@ -338,7 +333,6 @@ pub fn handle_execute_order<'info>(
 
     let position_key =
         pda::generate_position_key(&user_key, market.symbol, order.cross_margin, program_id)?;
-    drop(user);
 
     //do execute order and change position
     match order.position_side {
@@ -357,7 +351,7 @@ pub fn handle_execute_order<'info>(
                 &order,
                 &margin_token.key(),
                 trade_token.decimals,
-                user.deref_mut(),
+                &mut user,
                 margin_token_price,
                 oracle_map,
                 trade_token_map,
@@ -401,6 +395,7 @@ pub fn handle_execute_order<'info>(
 
             drop(user);
             drop(market);
+            drop(pool);
             drop(base_token_pool);
             drop(stable_pool);
 
@@ -432,6 +427,8 @@ pub fn handle_execute_order<'info>(
                 return Err(BumpErrorCode::InvalidParam.into());
             }
             drop(user);
+            drop(market);
+            drop(pool);
 
             position_processor::decrease_position(
                 DecreasePositionParams {
