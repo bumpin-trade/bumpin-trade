@@ -52,7 +52,7 @@ impl<'a> UserProcessor<'a> {
     }
 
     pub fn get_user_cross_position_value(
-        &mut self,
+        &self,
         state: &State,
         market_map: &MarketMap,
         pool_map: &PoolMap,
@@ -65,7 +65,7 @@ impl<'a> UserProcessor<'a> {
         let mut total_position_mm = 0u128;
         let mut total_size = 0u128;
 
-        for mut user_position in &mut self.user.user_positions {
+        for user_position in &self.user.user_positions {
             if user_position.status.eq(&PositionStatus::INIT) {
                 continue;
             }
@@ -77,22 +77,17 @@ impl<'a> UserProcessor<'a> {
             let pool = pool_map.get_ref(&market.pool_key)?;
             total_im_usd = total_im_usd.safe_add(user_position.initial_margin_usd)?;
 
-            let position_processor = PositionProcessor { position: &mut user_position };
-            {
-                total_un_pnl_usd = total_un_pnl_usd
-                    .safe_add(position_processor.get_position_un_pnl_usd(index_price)?)?;
-                total_position_fee =
-                    total_position_fee.safe_add(position_processor.get_position_fee(
-                        &market,
-                        &pool,
-                        margin_token_price,
-                        trade_token.decimals,
-                    )?)?;
-                total_position_mm = total_position_mm
-                    .safe_add(position_processor.get_position_mm(&market, state)?)?;
-                total_size = total_size.safe_add(position_processor.position.position_size)?;
-            }
-            drop(position_processor);
+            total_un_pnl_usd =
+                total_un_pnl_usd.safe_add(user_position.get_position_un_pnl_usd(index_price)?)?;
+            total_position_fee = total_position_fee.safe_add(user_position.get_position_fee(
+                &market,
+                &pool,
+                margin_token_price,
+                trade_token.decimals,
+            )?)?;
+            total_position_mm =
+                total_position_mm.safe_add(user_position.get_position_mm(&market, state)?)?;
+            total_size = total_size.safe_add(user_position.position_size)?;
         }
         Ok((total_im_usd, total_un_pnl_usd, total_position_fee, total_position_mm, total_size))
     }
@@ -203,7 +198,7 @@ impl<'a> UserProcessor<'a> {
     }
 
     pub fn get_user_cross_net_value(
-        &mut self,
+        &self,
         trade_token_map: &TradeTokenMap,
         mut oracle_map: &mut OracleMap,
         market_map: &MarketMap,

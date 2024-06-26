@@ -109,13 +109,8 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
         position_processor.position.leverage != params.leverage,
         BumpErrorCode::AmountNotEnough.into()
     )?;
-    let margin_mint_trade_token =
-        trade_token_map.get_trade_token(&position_processor.position.margin_mint)?;
-
-    let margin_mint_token_price = oracle_map.get_price_data(&margin_mint_trade_token.oracle)?.price;
 
     position_processor.update_leverage(
-        margin_mint_token_price,
         params,
         position_key,
         &ctx.accounts.user,

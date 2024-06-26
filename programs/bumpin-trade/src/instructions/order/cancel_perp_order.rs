@@ -67,7 +67,7 @@ pub fn handle_cancel_order(
     _pool_index: u16,
 ) -> Result<()> {
     let user = ctx.accounts.user.load()?;
-    let order = user.find_ref_order_by_id(order_id)?;
+    let order = user.get_user_order_ref(order_id)?;
     if order.status.eq(&OrderStatus::INIT) {
         return Err(BumpErrorCode::InvalidParam.into());
     }

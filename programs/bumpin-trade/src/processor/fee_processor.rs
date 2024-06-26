@@ -1,4 +1,5 @@
 use crate::errors::BumpResult;
+use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::state::market::Market;
 use crate::state::pool::Pool;
@@ -99,4 +100,41 @@ pub fn collect_borrowing_fee(
     }
 
     Ok(fee_amount)
+}
+
+pub fn settle_funding_fee(
+    base_token_pool: &mut Pool,
+    stable_token_pool: &mut Pool,
+    fee_amount_usd: i128,
+    fee_amount: i128,
+    is_long: bool,
+    is_cross: bool,
+) -> BumpResult<()> {
+    if !is_long {
+        if fee_amount_usd <= 0i128 {
+            //stable_pool should pay to user, count loss on base_token_pool
+            base_token_pool.add_stable_loss_amount(fee_amount_usd.cast::<u128>()?)?;
+            stable_token_pool.add_unsettle(fee_amount_usd.cast::<u128>()?)?;
+        } else {
+            if is_cross {
+                stable_token_pool.add_unsettle(fee_amount_usd.cast::<u128>()?)?;
+            } else {
+                //user should pay to stable_pool, count amount on base_token_pool
+                base_token_pool.add_stable_amount(fee_amount_usd.cast::<u128>()?)?;
+            }
+        }
+    } else {
+        if fee_amount_usd <= 0i128 {
+            //base_token_pool should pay to user, count amount on base_token_pool
+            base_token_pool.sub_amount(fee_amount.cast::<u128>()?)?;
+        } else {
+            if is_cross {
+                //user should pay to base_token_pool, count amount on base_token_pool
+                base_token_pool.add_unsettle(fee_amount.cast::<u128>()?)?;
+            } else {
+                base_token_pool.add_amount(fee_amount.cast::<u128>()?)?;
+            }
+        }
+    }
+    Ok(())
 }
