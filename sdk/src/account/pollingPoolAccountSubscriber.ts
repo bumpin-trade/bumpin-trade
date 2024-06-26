@@ -1,10 +1,7 @@
-import {
-    DataAndSlot,
-    AccountSubscriber,
-} from './types';
+import {AccountSubscriber, DataAndSlot,} from './types';
 import {Program} from '@coral-xyz/anchor';
 import {PublicKey} from '@solana/web3.js';
-import {Pool, UserAccount} from '../types';
+import {Pool} from '../types';
 import {BulkAccountLoader} from './bulkAccountLoader';
 import {BumpinTrade} from "../types/bumpin_trade";
 
@@ -43,7 +40,6 @@ export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
 
         await this.fetchIfUnloaded();
         if (this.doesAccountExist()) {
-            //  this.eventEmitter.emit('update');
         }
 
         this.isSubscribed = true;
@@ -71,15 +67,12 @@ export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
                     buffer
                 );
                 this.pool = {data: account, slot};
-                /*           this.eventEmitter.emit('userAccountUpdate', account);
-                           this.eventEmitter.emit('update');*/
+
             }
         );
 
         this.errorCallbackId = this.accountLoader.addErrorCallbacks((error) => {
-            /*
-                        this.eventEmitter.emit('error', error);
-            */
+
         });
     }
 
@@ -103,7 +96,7 @@ export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
             }
         } catch (e) {
             console.log(
-                `PollingUserAccountSubscriber.fetch() UserAccount does not exist: ${e.message}`
+                `PollingUserAccountSubscriber.fetch() PoolAccount does not exist: ${e.message}`
             );
         }
     }
@@ -137,7 +130,7 @@ export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
         }
     }
 
-    public getUserAccountAndSlot(): DataAndSlot<Pool> {
+    public getAccountAndSlot(): DataAndSlot<Pool> {
         if (!this.doesAccountExist()) {
             throw new Error(
                 'You must call `subscribe` or `fetch` before using this function'

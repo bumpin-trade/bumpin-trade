@@ -1,48 +1,45 @@
-import {
-    DataAndSlot,
-    AccountSubscriber,
-} from './types';
+import {AccountSubscriber, DataAndSlot,} from './types';
 import {Program} from '@coral-xyz/anchor';
 import {PublicKey} from '@solana/web3.js';
-import {Market, } from '../types';
+import {TradeToken} from '../types';
 import {BulkAccountLoader} from './bulkAccountLoader';
 import {BumpinTrade} from "../types/bumpin_trade";
-export class PollingMarketAccountSubscriber implements AccountSubscriber<Market> {
+
+export class PollingTradeTokenAccountSubscriber implements AccountSubscriber<TradeToken> {
     isSubscribed: boolean;
     program: Program<BumpinTrade>;
-    userAccountPublicKey: PublicKey;
+    tradeTokenPublicKey: PublicKey;
 
     accountLoader: BulkAccountLoader;
     callbackId?: string;
     errorCallbackId?: string;
 
-    market?: DataAndSlot<Market>;
+    tradeToken?: DataAndSlot<TradeToken>;
 
     public constructor(
         program: Program<BumpinTrade>,
-        userAccountPublicKey: PublicKey,
+        tradeTokenPublicKey: PublicKey,
         accountLoader: BulkAccountLoader
     ) {
         this.isSubscribed = false;
         this.program = program;
         this.accountLoader = accountLoader;
-        this.userAccountPublicKey = userAccountPublicKey;
+        this.tradeTokenPublicKey = tradeTokenPublicKey;
     }
 
-    async subscribe(userAccount?: Market): Promise<boolean> {
+    async subscribe(userAccount?: TradeToken): Promise<boolean> {
         if (this.isSubscribed) {
             return true;
         }
 
         if (userAccount) {
-            this.market = {data: userAccount, slot: undefined};
+            this.tradeToken = {data: userAccount, slot: undefined};
         }
 
         await this.addToAccountLoader();
 
         await this.fetchIfUnloaded();
         if (this.doesAccountExist()) {
-            //  this.eventEmitter.emit('update');
         }
 
         this.isSubscribed = true;
@@ -55,21 +52,21 @@ export class PollingMarketAccountSubscriber implements AccountSubscriber<Market>
         }
 
         this.callbackId = await this.accountLoader.addAccount(
-            this.userAccountPublicKey,
+            this.tradeTokenPublicKey,
             (buffer, slot: number) => {
                 if (!buffer) {
                     return;
                 }
 
-                if (this.market && this.market.slot > slot) {
+                if (this.tradeToken && this.tradeToken.slot > slot) {
                     return;
                 }
 
-                const account = this.program.account.market.coder.accounts.decode(
-                    'market',
+                const account = this.program.account.pool.coder.accounts.decode(
+                    'tradeToken',
                     buffer
                 );
-                this.market = {data: account, slot};
+                this.tradeToken = {data: account, slot};
 
             }
         );
@@ -79,32 +76,32 @@ export class PollingMarketAccountSubscriber implements AccountSubscriber<Market>
     }
 
     async fetchIfUnloaded(): Promise<void> {
-        if (this.market === undefined) {
+        if (this.tradeToken === undefined) {
             await this.fetch();
         }
     }
 
     async fetch(): Promise<void> {
         try {
-            const dataAndContext = await this.program.account.market.fetchAndContext(
-                this.userAccountPublicKey,
+            const dataAndContext = await this.program.account.pool.fetchAndContext(
+                this.tradeTokenPublicKey,
                 this.accountLoader.commitment
             );
-            if (dataAndContext.context.slot > (this.market?.slot ?? 0)) {
-                this.market = {
-                    data: dataAndContext.data as any as Market,
+            if (dataAndContext.context.slot > (this.tradeToken?.slot ?? 0)) {
+                this.tradeToken = {
+                    data: dataAndContext.data as any as TradeToken,
                     slot: dataAndContext.context.slot,
                 };
             }
         } catch (e) {
             console.log(
-                `PollingUserAccountSubscriber.fetch() UserAccount does not exist: ${e.message}`
+                `PollingUserAccountSubscriber.fetch() TradeTokenAccount does not exist: ${e.message}`
             );
         }
     }
 
     doesAccountExist(): boolean {
-        return this.market !== undefined;
+        return this.tradeToken !== undefined;
     }
 
     async unsubscribe(): Promise<void> {
@@ -113,7 +110,7 @@ export class PollingMarketAccountSubscriber implements AccountSubscriber<Market>
         }
 
         this.accountLoader.removeAccount(
-            this.userAccountPublicKey,
+            this.tradeTokenPublicKey,
             this.callbackId
         );
         this.callbackId = undefined;
@@ -132,21 +129,19 @@ export class PollingMarketAccountSubscriber implements AccountSubscriber<Market>
         }
     }
 
-    public getAccountAndSlot(): DataAndSlot<Market> {
+    public getAccountAndSlot(): DataAndSlot<TradeToken> {
         if (!this.doesAccountExist()) {
             throw new Error(
                 'You must call `subscribe` or `fetch` before using this function'
             );
         }
-        return this.market;
+        return this.tradeToken;
     }
 
-    public updateData(userAccount: Market, slot: number): void {
-        if (!this.market || this.market.slot < slot) {
-            this.market = {data: userAccount, slot};
-            /*
-            this.eventEmitter.emit('userAccountUpdate', userAccount);
-            this.eventEmitter.emit('update');*/
+    public updateData(userAccount: TradeToken, slot: number): void {
+        if (!this.tradeToken || this.tradeToken.slot < slot) {
+            this.tradeToken = {data: userAccount, slot};
+
         }
     }
 }

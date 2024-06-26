@@ -130,7 +130,7 @@ export class PollingUserAccountSubscriber implements AccountSubscriber<UserAccou
         }
     }
 
-    public getUserAccountAndSlot(): DataAndSlot<UserAccount> {
+    public getAccountAndSlot(): DataAndSlot<UserAccount> {
         if (!this.doesAccountExist()) {
             throw new Error(
                 'You must call `subscribe` or `fetch` before using this function'

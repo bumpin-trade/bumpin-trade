@@ -12,9 +12,12 @@ import {PollingUserAccountSubscriber} from "./account/pollingUserAccountSubscrib
 import {BulkAccountLoader} from "./account/bulkAccountLoader";
 import {DataAndSlot} from "./account/types";
 import {PollingStateAccountSubscriber} from "./account/pollingStateAccountSubscriber";
-import {PoolComponent} from "./pool";
+import {PoolComponent} from "./componets/pool";
 import {Pyth} from "./types/pyth";
 import {PythClient} from "./oracles/pythClient";
+import {UserComponent} from "./componets/user";
+import {TradeTokenComponent} from "./componets/tradeToken";
+import {MarketComponent} from "./componets/market";
 
 
 export class BumpinClient {
@@ -36,6 +39,9 @@ export class BumpinClient {
 
     // Components
     poolComponent: PoolComponent;
+    tradeTokenComponent: TradeTokenComponent;
+    marketComponent: MarketComponent;
+    userComponent: UserComponent;
 
     state: State | null = null;
     tradeTokens: TradeToken[] = [];
@@ -65,14 +71,21 @@ export class BumpinClient {
         const [statePda, _] = BumpinUtils.getBumpinStatePda(this.program);
         this.stateSubscriber = new PollingStateAccountSubscriber(this.program, statePda, this.bulkAccountLoader);
         await this.stateSubscriber.subscribe();
-        let state: State = this.stateSubscriber.state.data;
+        // let state: State = this.stateSubscriber.state.data;
 
         this.poolComponent = new PoolComponent(this.pythClient, this.bulkAccountLoader, this.stateSubscriber, this.program);
         await this.poolComponent.subscribe();
 
+        this.tradeTokenComponent = new TradeTokenComponent(this.bulkAccountLoader, this.stateSubscriber, this.program);
+        await this.tradeTokenComponent.subscribe();
+
+        this.marketComponent = new MarketComponent(this.bulkAccountLoader, this.stateSubscriber, this.program);
+        await this.marketComponent.subscribe();
+
 
         await this.syncInitialize();
         this.isInitialized = true;
+        console.log("BumpinClient initialized");
     }
 
 
@@ -103,11 +116,12 @@ export class BumpinClient {
         return subscriptionMe;
     }
 
-    public async login(autoSubscription: boolean = true): Promise<UserAccount> {
+    public async login(): Promise<UserAccount> {
         const [pda, _] = BumpinUtils.getPdaSync(this.program, [Buffer.from("user"), this.wallet.publicKey.toBuffer()]);
         let me = await this.program.account.user.fetch(pda) as any as UserAccount;
-        if (autoSubscription) {
-            await this.subscriptionMe();
+        if (me) {
+            this.userComponent = new UserComponent(this.wallet.publicKey, this.bulkAccountLoader, this.stateSubscriber, this.program);
+            await this.userComponent.subscribe();
         }
         return me;
     }

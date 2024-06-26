@@ -9,7 +9,7 @@ export interface AccountSubscriber<T> {
 
     unsubscribe(): Promise<void>;
 
-    getUserAccountAndSlot(): DataAndSlot<T>;
+    getAccountAndSlot(): DataAndSlot<T>;
 }
 
 export type BufferAndSlot = {

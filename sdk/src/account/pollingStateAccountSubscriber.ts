@@ -131,7 +131,7 @@ export class PollingStateAccountSubscriber implements AccountSubscriber<State> {
         }
     }
 
-    public getUserAccountAndSlot(): DataAndSlot<State> {
+    public getAccountAndSlot(): DataAndSlot<State> {
         if (!this.doesAccountExist()) {
             throw new Error(
                 'You must call `subscribe` or `fetch` before using this function'

@@ -1,9 +1,9 @@
-import {DataAndSlot} from "./account/types";
-import {State} from "./types";
+import {DataAndSlot} from "../account/types";
+import {State} from "../types";
 import {Program} from "@coral-xyz/anchor";
-import {BumpinTrade} from "./types/bumpin_trade";
-import {PollingStateAccountSubscriber} from "./account/pollingStateAccountSubscriber";
-import {BumpinAccountNotFound, BumpinClientInternalError, BumpinSubscriptionFailed} from "./errors";
+import {BumpinTrade} from "../types/bumpin_trade";
+import {PollingStateAccountSubscriber} from "../account/pollingStateAccountSubscriber";
+import {BumpinAccountNotFound, BumpinClientInternalError, BumpinSubscriptionFailed} from "../errors";
 
 export abstract class Component {
     stateSubscriber: PollingStateAccountSubscriber
@@ -35,17 +35,8 @@ export abstract class Component {
     }
 
     protected async getState(sync: boolean = false): Promise<State> {
-        if (!this.stateSubscriber || !this.stateSubscriber.isSubscribed) {
-            throw new BumpinSubscriptionFailed("State")
-        }
-        if (sync) {
-            await this.stateSubscriber.fetch();
-        }
-        let stateAccount = this.stateSubscriber.state;
-        if (!stateAccount) {
-            throw new BumpinAccountNotFound("State")
-        }
-        return stateAccount.data;
+        let stateWithSlot = await this.getStateWithSlot(sync);
+        return stateWithSlot.data;
     }
 
 
