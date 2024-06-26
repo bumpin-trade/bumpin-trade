@@ -4,6 +4,12 @@ export class BumpinClientNotInitialized extends Error {
     }
 }
 
+export class BumpinClientInternalError extends Error {
+    constructor(msg: string = "") {
+        super("Bumpin client internal error: " + msg);
+    }
+}
+
 export class BumpinAccountNotFound extends Error {
     accountName: string;
 

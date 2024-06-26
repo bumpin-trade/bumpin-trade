@@ -2,7 +2,8 @@ import {Connection, PublicKey} from '@solana/web3.js';
 import * as anchor from "@coral-xyz/anchor";
 import {AnchorProvider, BN, Program, Wallet} from "@coral-xyz/anchor";
 import idlBumpinTrade from "./idl/bumpin_trade.json"
-import {BumpinClientConfig} from "./bumpinClientConfig";
+import idlPyth from "./idl/pyth.json"
+import {BumpinClientConfig, NetType} from "./bumpinClientConfig";
 import {BumpinUtils} from "./utils/utils";
 import {BumpinTrade} from "./types/bumpin_trade";
 import {Market, Pool, State, TradeToken, UserAccount} from "./types";
@@ -10,19 +11,31 @@ import {BumpinAccountNotFound, BumpinSubscriptionFailed} from "./errors";
 import {PollingUserAccountSubscriber} from "./account/pollingUserAccountSubscriber";
 import {BulkAccountLoader} from "./account/bulkAccountLoader";
 import {DataAndSlot} from "./account/types";
+import {PollingStateAccountSubscriber} from "./account/pollingStateAccountSubscriber";
+import {PoolComponent} from "./pool";
+import {Pyth} from "./types/pyth";
+import {PythClient} from "./oracles/pythClient";
 
 
 export class BumpinClient {
+    netType: NetType;
     connection: Connection;
     wallet: Wallet;
     provider: AnchorProvider;
     public program: Program<BumpinTrade>;
+    programPyth: Program<Pyth>;
 
     isInitialized: boolean = false;
     bulkAccountLoader: BulkAccountLoader;
 
-    //subscriptions
+    pythClient: PythClient;
+
+    // Systems subscriptions
+    stateSubscriber: PollingStateAccountSubscriber;
     userAccountSubscriber: PollingUserAccountSubscriber;
+
+    // Components
+    poolComponent: PoolComponent;
 
     state: State | null = null;
     tradeTokens: TradeToken[] = [];
@@ -30,11 +43,17 @@ export class BumpinClient {
     market: Market[] = [];
 
     constructor(config: BumpinClientConfig) {
+        this.netType = config.netType;
         this.connection = new Connection(config.endpoint);
         this.wallet = config.wallet;
         this.provider = new anchor.AnchorProvider(this.connection, this.wallet, anchor.AnchorProvider.defaultOptions());
         this.program = new anchor.Program(JSON.parse(JSON.stringify(idlBumpinTrade)), this.provider);
         this.bulkAccountLoader = new BulkAccountLoader(this.connection, "confirmed", config.pollingFrequency);
+
+        if (this.netType === NetType.LOCALNET) {
+            this.programPyth = new anchor.Program(JSON.parse(JSON.stringify(idlPyth)), this.provider);
+            this.pythClient = new PythClient(this.programPyth.provider.connection);
+        }
     }
 
 
@@ -42,6 +61,16 @@ export class BumpinClient {
         if (this.isInitialized) {
             return;
         }
+
+        const [statePda, _] = BumpinUtils.getBumpinStatePda(this.program);
+        this.stateSubscriber = new PollingStateAccountSubscriber(this.program, statePda, this.bulkAccountLoader);
+        await this.stateSubscriber.subscribe();
+        let state: State = this.stateSubscriber.state.data;
+
+        this.poolComponent = new PoolComponent(this.pythClient, this.bulkAccountLoader, this.stateSubscriber, this.program);
+        await this.poolComponent.subscribe();
+
+
         await this.syncInitialize();
         this.isInitialized = true;
     }

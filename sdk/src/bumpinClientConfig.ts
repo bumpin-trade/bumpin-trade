@@ -1,6 +1,14 @@
 import {Wallet} from "@coral-xyz/anchor";
 
+export enum NetType {
+    MAINNET_BETA = 'mainnet_beta',
+    TESTNET = 'testnet',
+    DEVNET = 'devnet',
+    LOCALNET = 'localnet'
+}
+
 export type BumpinClientConfig = {
+    netType: NetType;
     endpoint: string;
     wallet: Wallet;
     pollingFrequency: number
@@ -9,16 +17,16 @@ export type BumpinClientConfig = {
 export class BumpinClientConfigBuilder {
     private config: BumpinClientConfig;
 
-    private constructor(endpoint: string) {
-        this.config = {endpoint, wallet: undefined, pollingFrequency: 1000};
+    private constructor(netType: NetType, endpoint: string) {
+        this.config = {netType, endpoint, wallet: undefined, pollingFrequency: 1000};
     }
 
     public static mainnet_beta(): BumpinClientConfigBuilder {
-        return new BumpinClientConfigBuilder('https://mainnet.endpoint.com');
+        return new BumpinClientConfigBuilder(NetType.MAINNET_BETA, 'https://mainnet.endpoint.com');
     }
 
     public static localnet(): BumpinClientConfigBuilder {
-        return new BumpinClientConfigBuilder('http://127.0.0.1:8899');
+        return new BumpinClientConfigBuilder(NetType.LOCALNET, 'http://127.0.0.1:8899');
     }
 
     public wallet(wallet: Wallet): BumpinClientConfigBuilder {

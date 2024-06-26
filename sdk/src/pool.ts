@@ -8,18 +8,21 @@ import {BulkAccountLoader} from "./account/bulkAccountLoader";
 import {AnchorProvider, BN, Program, Wallet} from "@coral-xyz/anchor";
 import {BumpinUtils} from "./utils/utils";
 import {BumpinTrade} from "./types/bumpin_trade";
-import {tokenToUsd} from "./utils/cal_utils";
+// import {tokenToUsd} from "./utils/cal_utils";
+import {Component} from "./componet";
+import {PollingStateAccountSubscriber} from "./account/pollingStateAccountSubscriber";
 
-export class PoolComponent {
+export class PoolComponent extends Component{
     oracleClient: OracleClient
-    state: State
     program: Program<BumpinTrade>;
     pools: Map<PublicKey, PollingPoolAccountSubscriber>;
 
-    constructor(oracleClient: OracleClient, bulkAccountLoader: BulkAccountLoader, program: Program<BumpinTrade>) {
+    constructor(oracleClient: OracleClient, bulkAccountLoader: BulkAccountLoader,stateSubscriber: PollingStateAccountSubscriber, program: Program<BumpinTrade>) {
+        super(stateSubscriber,program);
+        let state = super.getStateSync();
         this.oracleClient = oracleClient;
         this.program = program;
-        for (let i = 0; i < this.state!.numberOfPools; i++) {
+        for (let i = 0; i < state.numberOfPools; i++) {
             const [pda, _] = BumpinUtils.getPoolPda(this.program, i);
             let poolAccountSubscriber = new PollingPoolAccountSubscriber(program, pda, bulkAccountLoader);
             this.pools.set(pda, poolAccountSubscriber);
@@ -41,15 +44,15 @@ export class PoolComponent {
     }
 
 
-    public getPoolAvailableLiquidity(poolKey: PublicKey): BN {
-        let pool = this.getPool(poolKey);
-    }
+    // public getPoolAvailableLiquidity(poolKey: PublicKey): BN {
+    //     let pool = this.getPool(poolKey);
+    // }
 
-    public async getPoolUsd(poolKey: PublicKey, tradeTokenMap: Map<PublicKey, TradeToken>): Promise<BN> {
-        let pool = this.getPool(poolKey);
-        let tradeToken = tradeTokenMap.get(pool.poolMint);
-        let oraclePriceData = await this.oracleClient.getOraclePriceData(pool.poolMint);
-        let poolUsd = tokenToUsd(pool.poolBalance.amount.add(pool.poolBalance.unSettleAmount),
-            tradeToken.decimals, oraclePriceData.price);
-    }
+    // public async getPoolUsd(poolKey: PublicKey, tradeTokenMap: Map<PublicKey, TradeToken>): Promise<BN> {
+    //     let pool = this.getPool(poolKey);
+    //     let tradeToken = tradeTokenMap.get(pool.poolMint);
+    //     let oraclePriceData = await this.oracleClient.getOraclePriceData(pool.poolMint);
+    //     let poolUsd = tokenToUsd(pool.poolBalance.amount.add(pool.poolBalance.unSettleAmount),
+    //         tradeToken.decimals, oraclePriceData.price);
+    // }
 }

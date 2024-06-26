@@ -47,7 +47,6 @@ pub fn handle_initialize_state(
     ctx: Context<InitializeState>,
     initialize_state_params: InitializeStateParams,
 ) -> Result<()> {
-    msg!("state: {}", ctx.accounts.state.to_account_info().key());
     let (bump_signer, bump_signer_nonce) =
         Pubkey::find_program_address(&[b"bump_state".as_ref()], ctx.program_id);
     *ctx.accounts.state = State {
