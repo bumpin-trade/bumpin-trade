@@ -84,24 +84,25 @@ pub mod bumpin_trade {
     }
 
     /*-----pool pool------*/
-    pub fn pool_stake<'a, 'b, 'c: 'info, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, PoolStake>,
+    pub fn portfolio_stake<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, PortfolioStake>,
         params: StakeParams,
-        _pool_index: u16,
-        _trade_token_index: u16,
-        _stable_trade_token_index: u16,
     ) -> Result<()> {
-        handle_pool_stake(ctx, params, _pool_index, _trade_token_index, _stable_trade_token_index)
+        handle_portfolio_stake(ctx, params)
+    }
+
+    pub fn wallet_stake<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, WalletStake>,
+        params: StakeParams,
+    ) -> Result<()> {
+        handle_wallet_stake(ctx, params)
     }
 
     pub fn pool_un_stake<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PoolUnStake>,
         params: UnStakeParams,
     ) -> Result<()> {
-        handle_pool_un_stake(
-            ctx,
-            params,
-        )
+        handle_pool_un_stake(ctx, params)
     }
 
     /*-----account------*/
@@ -130,10 +131,7 @@ pub mod bumpin_trade {
         _trade_token_index: u16,
         _index_trade_token_index: u16,
     ) -> Result<()> {
-        handle_place_order(
-            ctx,
-            params
-        )
+        handle_place_order(ctx, params)
     }
 
     pub fn execute_order<'a, 'b, 'c: 'info, 'info>(

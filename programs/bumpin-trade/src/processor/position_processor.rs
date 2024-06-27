@@ -1,11 +1,10 @@
 use std::cell::Ref;
 
-use anchor_lang::{emit, ToAccountInfo};
 use anchor_lang::prelude::*;
 use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
+use anchor_lang::{emit, ToAccountInfo};
 use anchor_spl::token::{Token, TokenAccount};
 
-use crate::{position_mut, validate};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{cal_utils, UpdatePositionLeverageParams, UpdatePositionMarginParams};
 use crate::math::casting::Cast;
@@ -28,6 +27,7 @@ use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::{User, UserTokenUpdateReason};
 use crate::utils::{pda, token};
+use crate::{position_mut, validate};
 
 pub struct PositionProcessor<'a> {
     pub(crate) position: &'a mut UserPosition,
@@ -167,7 +167,6 @@ pub fn decrease_position1<'info>(
         user.delete_position(position_key)?;
     }
 
-
     if is_long {
         fee_processor::collect_long_close_position_fee(
             if is_long { stake_token_pool } else { stable_pool },
@@ -212,7 +211,6 @@ pub fn decrease_position1<'info>(
         },
     )?;
 
-
     //TODO: 适配对应参数
     // settle(
     //     &response,
@@ -249,7 +247,6 @@ pub fn decrease_position1<'info>(
             &pre_position,
         )?;
     }
-
 
     Ok(())
 }
@@ -541,7 +538,7 @@ fn settle_cross<'info>(
             state_account.bump_signer_nonce,
             response.pool_pnl_token.abs().cast::<u128>()?,
         )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
     } else if response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)? > 0i128 {
         token::receive(
             token_program,
@@ -550,7 +547,7 @@ fn settle_cross<'info>(
             bump_signer,
             response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)?.cast::<u128>()?,
         )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
     }
 
     if !response.is_liquidation {
@@ -586,7 +583,7 @@ fn settle_isolate<'info>(
         state_account.bump_signer_nonce,
         response.settle_margin.abs().cast::<u128>()?,
     )
-        .map_err(|_e| BumpErrorCode::TransferFailed)?;
+    .map_err(|_e| BumpErrorCode::TransferFailed)?;
     Ok(())
 }
 
@@ -658,7 +655,7 @@ pub fn execute_reduce_position_margin(
 
     if position.cross_margin
         && position.initial_margin_usd.safe_sub(position.initial_margin_usd_from_portfolio)?
-        < reduce_margin_amount
+            < reduce_margin_amount
     {
         position.sub_initial_margin_usd_from_portfolio(
             reduce_margin_amount
@@ -1142,7 +1139,6 @@ pub fn update_leverage<'info>(
                     BumpErrorCode::AmountNotEnough.into()
                 )?;
 
-
                 let user = &mut user_account
                     .load_mut()
                     .map_err(|_e| BumpErrorCode::CouldNotLoadUserData)?;
@@ -1187,13 +1183,13 @@ pub fn update_leverage<'info>(
                     authority,
                     params.add_margin_amount,
                 )
-                    .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                .map_err(|_e| BumpErrorCode::TransferFailed)?;
             }
         } else {
             position.set_leverage(params.leverage)?;
-            let reduce_margin = position.initial_margin_usd.safe_sub(
-                cal_utils::div_rate_u(position.position_size, position.leverage)?,
-            )?;
+            let reduce_margin = position
+                .initial_margin_usd
+                .safe_sub(cal_utils::div_rate_u(position.position_size, position.leverage)?)?;
             let reduce_margin_amount = execute_reduce_position_margin(
                 &UpdatePositionMarginParams {
                     position_key: *position_key,
@@ -1224,7 +1220,7 @@ pub fn update_leverage<'info>(
                     state.bump_signer_nonce,
                     reduce_margin_amount,
                 )
-                    .map_err(|_e| BumpErrorCode::TransferFailed)?
+                .map_err(|_e| BumpErrorCode::TransferFailed)?
             }
         }
     }

@@ -51,10 +51,7 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
             &ctx.accounts.user,
             &account_maps.trade_token_map,
             &mut account_maps.oracle_map,
-            &StakeParams {
-                request_token_amount: user_stake.user_rewards.realised_rewards_token_amount,
-                portfolio: false,
-            },
+            user_stake.user_rewards.realised_rewards_token_amount,
         )?;
         let token_amount = user_stake.user_rewards.realised_rewards_token_amount;
         user_stake.user_rewards.realised_rewards_token_amount = 0;

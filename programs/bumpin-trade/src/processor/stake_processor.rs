@@ -17,7 +17,7 @@ pub fn stake(
     user_account_loader: &AccountLoader<User>,
     trade_token_map: &TradeTokenMap,
     oracle_map: &mut OracleMap,
-    stake_params: &StakeParams,
+    request_token_amount: u128,
 ) -> BumpResult<u128> {
     let mut pool = &mut pool_account_loader
         .load_mut()
@@ -30,11 +30,7 @@ pub fn stake(
 
     validate!(
         pool.pool_config.mini_stake_amount
-            <= cal_utils::token_to_usd_u(
-                stake_params.request_token_amount,
-                trade_token.decimals,
-                token_price
-            )?,
+            <= cal_utils::token_to_usd_u(request_token_amount, trade_token.decimals, token_price)?,
         BumpErrorCode::StakeToSmall
     )?;
 
@@ -47,7 +43,7 @@ pub fn stake(
 
     update_account_fee_reward(user_account_loader, pool_account_loader)?;
 
-    let stake_fee = fee_processor::collect_stake_fee(&mut pool, stake_params.request_token_amount)?;
-    let base_mint_amount = stake_params.request_token_amount.safe_sub(stake_fee)?;
+    let stake_fee = fee_processor::collect_stake_fee(&mut pool, request_token_amount)?;
+    let base_mint_amount = request_token_amount.safe_sub(stake_fee)?;
     Ok(base_mint_amount)
 }
