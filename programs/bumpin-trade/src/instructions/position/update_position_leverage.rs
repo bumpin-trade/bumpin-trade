@@ -102,10 +102,7 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
         &ctx.program_id,
     )?;
     let position = user.get_user_position_ref(&position_key)?;
-    validate!(
-        position.leverage != params.leverage,
-        BumpErrorCode::LeverageIsNotAllowed.into()
-    )?;
+    validate!(position.leverage != params.leverage, BumpErrorCode::LeverageIsNotAllowed.into())?;
 
     position_processor::update_leverage(
         params,

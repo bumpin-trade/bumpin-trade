@@ -1,8 +1,11 @@
+use std::cell::Ref;
+
+use anchor_lang::{emit, ToAccountInfo};
 use anchor_lang::prelude::*;
 use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
-use anchor_lang::{emit, ToAccountInfo};
 use anchor_spl::token::{Token, TokenAccount};
 
+use crate::{position_mut, validate};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{cal_utils, UpdatePositionLeverageParams, UpdatePositionMarginParams};
 use crate::math::casting::Cast;
@@ -25,7 +28,6 @@ use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::{User, UserTokenUpdateReason};
 use crate::utils::{pda, token};
-use crate::validate;
 
 pub struct PositionProcessor<'a> {
     pub(crate) position: &'a mut UserPosition,
@@ -88,6 +90,167 @@ pub fn update_borrowing_fee(
     position
         .set_open_borrowing_fee_per_token(pool.borrowing_fee.cumulative_borrowing_fee_per_token)?;
     pool.borrowing_fee.update_total_borrowing_fee(0u128, true, realized_borrowing_fee, true)?;
+    Ok(())
+}
+
+pub fn decrease_position1<'info>(
+    params: DecreasePositionParams,
+    user: &mut User,
+    market: &mut Market,
+    stake_token_pool: &mut Pool,
+    stable_pool: &mut Pool,
+    state_account: &Account<'info, State>,
+    user_token_account: Option<&Account<'info, TokenAccount>>,
+    pool_vault_account: &Account<'info, TokenAccount>,
+    trade_token: Ref<TradeToken>,
+    trade_token_vault_account: &Account<'info, TokenAccount>,
+    bump_signer: &AccountInfo<'info>,
+    token_program: &Program<'info, Token>,
+    oracle_map: &mut OracleMap,
+    position_key: &Pubkey,
+) -> BumpResult<()> {
+    let (is_long, position_deletion, pre_position, response) = {
+        let mut position = position_mut!(&mut user.user_positions, position_key)?;
+        let pre_position = position.clone();
+        let position_un_pnl_usd = position.get_position_un_pnl_usd(params.execute_price)?;
+        let margin_mint_token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
+        update_borrowing_fee(
+            position,
+            if position.is_long { stake_token_pool } else { stable_pool },
+            params.execute_price,
+            &trade_token,
+        )?;
+        update_funding_fee(position, market, params.execute_price, &trade_token)?;
+
+        let response = update_decrease_position(
+            params.decrease_size,
+            params.is_liquidation,
+            params.is_cross_margin,
+            position_un_pnl_usd,
+            trade_token.decimals,
+            margin_mint_token_price,
+            market,
+            state_account,
+            &trade_token,
+            position,
+        )?;
+
+        if response.settle_margin < 0i128 && !params.is_liquidation && !position.cross_margin {
+            return Err(BumpErrorCode::AmountNotEnough);
+        }
+        let position_deletion = if params.decrease_size != position.position_size {
+            //TODO:抽一个函数会更好
+            let pre_position = position.clone();
+            position.sub_position_size(params.decrease_size)?;
+            position.sub_initial_margin(response.decrease_margin)?;
+            position.sub_initial_margin_usd(response.decrease_margin_in_usd)?;
+            position.sub_initial_margin_usd_from_portfolio(
+                response.decrease_margin_in_usd_from_portfolio,
+            )?;
+            position.sub_hold_pool_amount(response.un_hold_pool_amount)?;
+            position.add_realized_pnl(response.user_realized_pnl)?;
+            position.sub_realized_borrowing_fee(response.settle_borrowing_fee)?;
+            position.sub_realized_borrowing_fee_usd(response.settle_borrowing_fee_in_usd)?;
+            position.sub_realized_funding_fee(response.settle_funding_fee)?;
+            position.sub_realized_funding_fee_usd(response.settle_funding_fee_in_usd)?;
+            position.sub_close_fee_usd(response.settle_close_fee_in_usd)?;
+            position.set_last_update(cal_utils::current_time())?;
+            emit!(UpdateUserPositionEvent { pre_position, position: position.clone() });
+            false
+        } else {
+            true
+        };
+        (position.is_long, position_deletion, pre_position, response)
+    };
+
+    if position_deletion {
+        user.delete_position(position_key)?;
+    }
+
+
+    if is_long {
+        fee_processor::collect_long_close_position_fee(
+            if is_long { stake_token_pool } else { stable_pool },
+            response.settle_close_fee,
+            params.is_cross_margin,
+        )?;
+    } else {
+        fee_processor::collect_short_close_position_fee(
+            stable_pool,
+            stake_token_pool,
+            state_account,
+            response.settle_close_fee,
+            params.is_cross_margin,
+        )?;
+    }
+    fee_processor::collect_borrowing_fee(
+        if is_long { stake_token_pool } else { stable_pool },
+        response.settle_borrowing_fee,
+        params.is_cross_margin,
+    )?;
+
+    //TODO: 抽出成为单独的方法，而不是这样写
+    // (if position.is_long { stake_token_pool } else { stable_pool }).borrowing_fee.update_total_borrowing_fee(
+    //     response.settle_borrowing_fee,
+    //     true,
+    //     response.settle_borrowing_fee,
+    //     false,
+    // )?;
+    let mut market_processor = MarketProcessor { market };
+    market_processor.update_market_total_funding_fee(
+        response.settle_funding_fee,
+        !pre_position.cross_margin,
+        pre_position.is_long,
+    )?;
+    market_processor.update_oi(
+        false,
+        UpdateOIParams {
+            margin_token: pre_position.margin_mint,
+            size: params.decrease_size,
+            is_long: pre_position.is_long,
+            entry_price: 0u128,
+        },
+    )?;
+
+
+    //TODO: 适配对应参数
+    // settle(
+    //     &response,
+    //     user_account_loader,
+    //     pool_account_loader,
+    //     stable_pool_account_loader,
+    //     state_account,
+    //     user_token_account,
+    //     pool_vault_account,
+    //     trade_token_loader,
+    //     trade_token_vault_account,
+    //     bump_signer,
+    //     token_program,
+    //     &pre_position,
+    // )?;
+
+    //cancel stop order
+    user.cancel_stop_orders(
+        params.order_id,
+        pre_position.symbol,
+        &pre_position.margin_mint,
+        pre_position.cross_margin,
+    )?;
+
+    //add insurance fund
+
+    if params.is_liquidation {
+        add_insurance_fund(
+            market,
+            state_account,
+            &trade_token,
+            &response,
+            if pre_position.is_long { stake_token_pool } else { stable_pool },
+            &pre_position,
+        )?;
+    }
+
+
     Ok(())
 }
 
@@ -967,18 +1130,17 @@ pub fn update_leverage<'info>(
                 position.set_leverage(params.leverage)?;
                 let new_initial_margin_in_usd =
                     cal_utils::div_rate_u(position.position_size, position.leverage)?;
-                let add_margin_in_usd =
-                    if new_initial_margin_in_usd > position.initial_margin_usd {
-                        new_initial_margin_in_usd.safe_sub(position.initial_margin_usd)?
-                    } else {
-                        0u128
-                    };
+                let add_margin_in_usd = if new_initial_margin_in_usd > position.initial_margin_usd {
+                    new_initial_margin_in_usd.safe_sub(position.initial_margin_usd)?
+                } else {
+                    0u128
+                };
                 let cross_available_value =
                     user_processor.get_available_value(oracle_map, trade_token_map)?;
                 validate!(
-                        add_margin_in_usd.cast::<i128>()? > cross_available_value,
-                        BumpErrorCode::AmountNotEnough.into()
-                    )?;
+                    add_margin_in_usd.cast::<i128>()? > cross_available_value,
+                    BumpErrorCode::AmountNotEnough.into()
+                )?;
 
 
                 let user = &mut user_account

@@ -85,3 +85,40 @@ macro_rules! safe_decrement {
         $struct = $struct.checked_sub($value).ok_or_else(math_error!())?
     }};
 }
+#[macro_export]
+macro_rules! position_mut {
+    ($user_positions:expr, $position_key:expr) => {{
+        let mut found = None;
+        for user_position in &mut *$user_positions {
+            if user_position.status == PositionStatus::USING
+                && user_position.position_key == *$position_key
+            {
+                found = Some(user_position);
+                break;
+            }
+        }
+        match found {
+            Some(pos) => Ok(pos),
+            None => Err(crate::errors::BumpErrorCode::CouldNotFindUserPosition),
+        }
+    }};
+}
+
+#[macro_export]
+macro_rules! position {
+    ($user_positions:expr, $position_key:expr) => {{
+        let mut found = None;
+        for user_position in &*($user_positions) {
+            if user_position.status == PositionStatus::USING
+                && user_position.position_key == *$position_key
+            {
+                found = Some(user_position);
+                break;
+            }
+        }
+        match found {
+            Some(pos) => Ok(pos),
+            None => Err(crate::errors::BumpErrorCode::CouldNotFindUserPosition),
+        }
+    }};
+}
