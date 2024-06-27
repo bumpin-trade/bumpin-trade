@@ -3,6 +3,7 @@ use anchor_spl::token::{Token, TokenAccount};
 
 use crate::errors::BumpErrorCode;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
+use crate::processor::position_processor;
 use crate::processor::position_processor::PositionProcessor;
 use crate::processor::user_processor::UserProcessor;
 use crate::state::market::Market;
@@ -93,26 +94,24 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
     let market = ctx.accounts.market.load_mut()?;
     validate!(
         params.leverage <= market.market_trade_config.max_leverage,
-        BumpErrorCode::AmountNotEnough.into()
+        BumpErrorCode::LeverageIsNotAllowed.into()
     )?;
 
-    let user_processor = UserProcessor { user };
     let position_key = pda::generate_position_key(
-        &user_processor.user.user_key,
+        &user.user_key,
         params.symbol,
         params.is_cross_margin,
         &ctx.program_id,
     )?;
-    let position = user_processor.user.find_position_mut_ref_by_key(&position_key)?;
-    let mut position_processor = PositionProcessor { position };
+    let position = user.get_user_position_ref(&position_key)?;
     validate!(
-        position_processor.position.leverage != params.leverage,
-        BumpErrorCode::AmountNotEnough.into()
+        position.leverage != params.leverage,
+        BumpErrorCode::LeverageIsNotAllowed.into()
     )?;
 
-    position_processor.update_leverage(
+    position_processor::update_leverage(
         params,
-        position_key,
+        &position_key,
         &ctx.accounts.user,
         &ctx.accounts.authority,
         &ctx.accounts.pool,

@@ -7,6 +7,7 @@ import {Utils} from "../utils/utils";
 import {ExchangeInitializeParams} from "./initialize_params";
 import BN from "bn.js";
 import {Account} from "@solana/spl-token";
+import {Buffer} from "buffer";
 
 
 export class BumpinPlayer {
@@ -83,22 +84,18 @@ export class BumpinPool {
         await this.utils.initialize_pool(this.program, this.mint.publicKey, this.poolName, this.payer);
     }
 
-    public getPda(): [PublicKey, number] {
-        const stateNumberOfPoolsBytes = new Uint8Array(new Uint16Array([this.stateNumberOfPools]).buffer);
-        const [address, nonce] = PublicKey.findProgramAddressSync(
-            [Buffer.from("pool"), stateNumberOfPoolsBytes],
+    public getPda(index: number): [PublicKey, number] {
+        return PublicKey.findProgramAddressSync(
+            [Buffer.from("pool"), new anchor.BN(index).toArrayLike(Buffer, 'le', 2)],
             this.program.programId
         );
-        return [address, nonce];
     }
 
-    public getVaultPda(): [PublicKey, number] {
-        const stateNumberOfPoolsBytes = new Uint8Array(new Uint16Array([this.stateNumberOfPools]).buffer);
-        const [address, nonce] = PublicKey.findProgramAddressSync(
-            [Buffer.from("pool_vault"), stateNumberOfPoolsBytes],
+    public getVaultPda(index: number): [PublicKey, number] {
+        return PublicKey.findProgramAddressSync(
+            [Buffer.from("pool_vault"), new anchor.BN(index).toArrayLike(Buffer, 'le', 2)],
             this.program.programId
         );
-        return [address, nonce];
     }
 
 }
@@ -129,13 +126,13 @@ export class BumpinMarket {
         await this.utils.initialize_market(this.symbol, this.payer, poolPda, stablePoolPda, this.indexToken.mint.publicKey);
     }
 
-    public getPda(): [PublicKey, number] {
-        const stateNumberOfMarketsBytes = new Uint8Array(new Uint16Array([this.numberOfMarkets]).buffer);
-        const [address, nonce] = PublicKey.findProgramAddressSync(
-            [Buffer.from("market"), stateNumberOfMarketsBytes],
+    public getPda(index: number): [PublicKey, number] {
+         let findProgramAddressSync = PublicKey.findProgramAddressSync(
+            [Buffer.from("market"), new anchor.BN(index).toArrayLike(Buffer, 'le', 2)],
             this.program.programId
         );
-        return [address, nonce];
+        console.log(findProgramAddressSync[0])
+         return findProgramAddressSync;
     }
 
 }
@@ -164,31 +161,25 @@ export class BumpinTradeToken {
 
     public async initializeTradeToken() {
         this.mint = await this.utils.create_mint_account(this.payer, this.payer);
-        await this.utils.initialize_trade_token(this.tradeTokenName,this.mint.publicKey, this.payer, this.oracle, this.discount, this.liquidationFactor);
+        await this.utils.initialize_trade_token(this.tradeTokenName, this.mint.publicKey, this.payer, this.oracle, this.discount, this.liquidationFactor);
     }
 
     public getMint() {
         return this.mint;
     }
 
-    public getPda(): [PublicKey, number] {
-        const stateNumberOfTradeTokensBytes = new Uint8Array(new Uint16Array([this.numberOfTradeTokens]).buffer);
-        const [address, nonce] = PublicKey.findProgramAddressSync(
-            [Buffer.from("trade_token"), stateNumberOfTradeTokensBytes],
+    public getPda(index: number): [PublicKey, number] {
+        return PublicKey.findProgramAddressSync(
+            [Buffer.from("trade_token"), new anchor.BN(index).toArrayLike(Buffer, 'le', 2)],
             this.program.programId
         );
-        return [address, nonce];
     }
 
-    public getVaultPda(): [PublicKey, number] {
-        const stateNumberOfTradeTokensBytes = new Uint8Array(new Uint16Array([this.numberOfTradeTokens]).buffer);
-        const [address, nonce] = PublicKey.findProgramAddressSync(
-            [Buffer.from("trade_token_vault"), stateNumberOfTradeTokensBytes],
+    public getVaultPda(index: number): [PublicKey, number] {
+        return PublicKey.findProgramAddressSync(
+            [Buffer.from("trade_token_vault"), new anchor.BN(index).toArrayLike(Buffer, 'le', 2)],
             this.program.programId
-        );
-        return [address, nonce];
-
-
+        )
     }
 }
 

@@ -334,6 +334,7 @@ pub fn handle_execute_order<'info>(
     let position_key =
         pda::generate_position_key(&user_key, market.symbol, order.cross_margin, program_id)?;
 
+    drop(user);
     //do execute order and change position
     match order.position_side {
         PositionSide::NONE => Err(BumpErrorCode::PositionSideNotSupport),

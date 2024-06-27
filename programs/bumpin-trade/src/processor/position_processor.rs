@@ -930,6 +930,140 @@ pub fn increase_position(
     Ok(())
 }
 
+pub fn update_leverage<'info>(
+    params: UpdatePositionLeverageParams,
+    position_key: &Pubkey,
+    user_account: &AccountLoader<'info, User>,
+    authority: &Signer<'info>,
+    pool: &AccountLoader<'info, Pool>,
+    state: &Account<'info, State>,
+    market: &AccountLoader<'info, Market>,
+    user_token_account: &Account<'info, TokenAccount>,
+    pool_vault: &Account<'info, TokenAccount>,
+    bump_signer: &AccountInfo<'info>,
+    token_program: &Program<'info, Token>,
+    trade_token_map: &TradeTokenMap,
+    oracle_map: &mut OracleMap,
+) -> BumpResult<()> {
+    let mut user = user_account.load_mut().map_err(|_|BumpErrorCode::CouldNotLoadUserData)?;
+    let position = user.get_user_position_mut_ref(position_key)?;
+    let trade_token = trade_token_map.get_trade_token(&position.margin_mint)?;
+    let pool = &mut pool.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
+
+    if position.position_size != 0u128 {
+        if position.leverage > params.leverage {
+            let add_margin_amount;
+            let mut add_initial_margin_from_portfolio = 0u128;
+            if position.cross_margin {
+                let user = &mut user_account
+                    .load_mut()
+                    .map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
+                let available_amount =
+                    user.get_user_token_ref(&trade_token.mint)?.get_token_available_amount()?;
+                let mut user_processor = UserProcessor { user };
+                position.set_leverage(params.leverage)?;
+                let new_initial_margin_in_usd =
+                    cal_utils::div_rate_u(position.position_size, position.leverage)?;
+                let add_margin_in_usd =
+                    if new_initial_margin_in_usd > position.initial_margin_usd {
+                        new_initial_margin_in_usd.safe_sub(position.initial_margin_usd)?
+                    } else {
+                        0u128
+                    };
+                let cross_available_value =
+                    user_processor.get_available_value(oracle_map, trade_token_map)?;
+                validate!(
+                        add_margin_in_usd.cast::<i128>()? > cross_available_value,
+                        BumpErrorCode::AmountNotEnough.into()
+                    )?;
+
+
+                let user = &mut user_account
+                    .load_mut()
+                    .map_err(|_e| BumpErrorCode::CouldNotLoadUserData)?;
+                add_margin_amount = cal_utils::usd_to_token_u(
+                    add_margin_in_usd,
+                    trade_token.decimals,
+                    position.entry_price,
+                )?;
+                add_initial_margin_from_portfolio = cal_utils::token_to_usd_u(
+                    add_margin_amount.min(available_amount),
+                    trade_token.decimals,
+                    position.entry_price,
+                )?;
+                user.use_token(
+                    &trade_token.mint,
+                    add_margin_amount,
+                    user_token_account.to_account_info().key,
+                    false,
+                )?;
+            } else {
+                add_margin_amount = params.add_margin_amount;
+            }
+
+            execute_add_position_margin(
+                &UpdatePositionMarginParams {
+                    position_key:*position_key,
+                    is_add: true,
+                    update_margin_amount: add_margin_amount,
+                    add_initial_margin_from_portfolio,
+                },
+                &trade_token,
+                oracle_map,
+                pool,
+                position,
+            )?;
+            if !params.is_cross_margin {
+                token::receive(
+                    token_program,
+                    user_token_account,
+                    pool_vault,
+                    authority,
+                    params.add_margin_amount,
+                )
+                    .map_err(|_e| BumpErrorCode::TransferFailed)?;
+            }
+        } else {
+            position.set_leverage(params.leverage)?;
+            let reduce_margin = position.initial_margin_usd.safe_sub(
+                cal_utils::div_rate_u(position.position_size,position.leverage)?,
+            )?;
+            let reduce_margin_amount = execute_reduce_position_margin(
+                &UpdatePositionMarginParams {
+                    position_key:*position_key,
+                    is_add: false,
+                    update_margin_amount: reduce_margin,
+                    add_initial_margin_from_portfolio: 0,
+                },
+                false,
+                &trade_token,
+                oracle_map,
+                pool,
+                &*market.load().map_err(|_| BumpErrorCode::CouldNotLoadMarketData)?,
+                state,
+                position,
+            )?;
+            if position.cross_margin {
+                let user = &mut user_account
+                    .load_mut()
+                    .map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
+                user.un_use_token(&position.margin_mint, reduce_margin_amount)?;
+            } else {
+                token::send_from_program_vault(
+                    token_program,
+                    pool_vault,
+                    user_token_account,
+                    bump_signer,
+                    state.bump_signer_nonce,
+                    reduce_margin_amount,
+                )
+                    .map_err(|_e| BumpErrorCode::TransferFailed)?
+            }
+        }
+    }
+    Ok(())
+}
+
 impl PositionProcessor<'_> {
     pub fn update_leverage<'info>(
         &mut self,
