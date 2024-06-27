@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 
 use crate::errors::BumpErrorCode;
-use crate::instructions::StakeParams;
 use crate::processor::optional_accounts::load_maps;
 use crate::processor::pool_processor::PoolProcessor;
 use crate::processor::stake_processor;

@@ -1,7 +1,7 @@
 use anchor_lang::prelude::AccountLoader;
 
 use crate::errors::{BumpErrorCode, BumpResult};
-use crate::instructions::{cal_utils, StakeParams};
+use crate::instructions::{cal_utils};
 use crate::math::safe_math::SafeMath;
 use crate::processor::fee_processor;
 use crate::processor::fee_reward_processor::update_account_fee_reward;

@@ -110,7 +110,7 @@ pub fn decrease_position1<'info>(
     position_key: &Pubkey,
 ) -> BumpResult<()> {
     let (is_long, position_deletion, pre_position, response) = {
-        let mut position = position_mut!(&mut user.user_positions, position_key)?;
+        let position = position_mut!(&mut user.user_positions, position_key)?;
         let pre_position = position.clone();
         let position_un_pnl_usd = position.get_position_un_pnl_usd(params.execute_price)?;
         let margin_mint_token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
