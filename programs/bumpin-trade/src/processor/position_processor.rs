@@ -182,6 +182,7 @@ pub fn decrease_position<'info>(
 
     drop(stake_token_pool);
     drop(stable_pool);
+    drop(user);
     //settle
     settle(
         &response,
@@ -199,6 +200,8 @@ pub fn decrease_position<'info>(
     )?;
 
     //cancel stop order
+    let mut user =
+        user_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
     user.cancel_stop_orders(
         params.order_id,
         pre_position.symbol,

@@ -419,15 +419,14 @@ pub fn handle_execute_order<'info>(
 
         PositionSide::DECREASE => Ok({
             //decrease
-            let mut user = user_account_loader.load_mut()?;
-            let position = user.get_user_position_mut_ref(&position_key)?.clone();
+            let user = user_account_loader.load()?;
+            let position = user.get_user_position_ref(&position_key)?.clone();
             if position.position_size == 0u128 || position.status.eq(&PositionStatus::INIT) {
                 return Err(BumpErrorCode::InvalidParam.into());
             }
             if position.is_long == is_long {
                 return Err(BumpErrorCode::InvalidParam.into());
             }
-            drop(user);
             drop(market);
             drop(pool);
 
