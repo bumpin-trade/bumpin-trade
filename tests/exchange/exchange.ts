@@ -84,9 +84,9 @@ export class BumpinPool {
         await this.utils.initialize_pool(this.program, this.mint.publicKey, this.poolName, this.payer);
     }
 
-    public getPda(index: number): [PublicKey, number] {
+    public getPda(): [PublicKey, number] {
         return PublicKey.findProgramAddressSync(
-            [Buffer.from("pool"), new anchor.BN(index).toArrayLike(Buffer, 'le', 2)],
+            [Buffer.from("pool"), new anchor.BN(this.stateNumberOfPools).toArrayLike(Buffer, 'le', 2)],
             this.program.programId
         );
     }
@@ -126,11 +126,12 @@ export class BumpinMarket {
         await this.utils.initialize_market(this.symbol, this.payer, poolPda, stablePoolPda, this.indexToken.mint.publicKey);
     }
 
-    public getPda(index: number): [PublicKey, number] {
+    public getPda(): [PublicKey, number] {
          let findProgramAddressSync = PublicKey.findProgramAddressSync(
-            [Buffer.from("market"), new anchor.BN(index).toArrayLike(Buffer, 'le', 2)],
+            [Buffer.from("market"), new anchor.BN(this.numberOfMarkets).toArrayLike(Buffer, 'le', 2)],
             this.program.programId
         );
+         console.log(this.program.programId)
         console.log(findProgramAddressSync[0])
          return findProgramAddressSync;
     }
@@ -253,6 +254,7 @@ export class BumpinExchangeMocker {
             let stablePool = this.pools.find(pool => pool.poolName === marketInfo.stablePoolName);
             let market = new BumpinMarket(marketInfo.symbol, this.payer, pool, indexToken, stablePool, i);
             await market.initializeMarket();
+            console.log(await this.program.account.market.fetch(market.getPda()[0]));
             this.markets.set(marketInfo.symbol, market);
         }
 
