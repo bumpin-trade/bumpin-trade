@@ -204,11 +204,17 @@ export class Utils {
                                 param: PlaceOrderParams
     ): Promise<void> {
         await this.program.methods.placeOrder(
-            param
+            param,
+            1,
+            1,
+            1,
+            1,
+            1
         ).accounts({
             user: player.getPda()[0],
             authority: player.user.publicKey,
             marginToken: market.pool.mint.publicKey,
+            state: this.getStatePda()[0],
             pool: market.pool.getPda()[0],
             stablePool: market.stablePool.getPda()[0],
             market: market.getPda()[0],
