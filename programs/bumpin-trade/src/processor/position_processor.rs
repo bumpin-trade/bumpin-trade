@@ -60,8 +60,8 @@ pub fn update_funding_fee(
     position.set_open_funding_fee_amount_per_size(market_funding_fee_per_size)?;
     market_processor.update_market_total_funding_fee(
         realized_funding_fee,
-        true,
         position.is_long,
+        true,
     )?;
     Ok(())
 }
@@ -375,7 +375,7 @@ fn settle_cross<'info>(
             state_account.bump_signer_nonce,
             response.pool_pnl_token.abs().cast::<u128>()?,
         )
-        .map_err(|_e| BumpErrorCode::TransferFailed)?;
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
     } else if response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)? > 0i128 {
         token::receive(
             token_program,
@@ -384,7 +384,7 @@ fn settle_cross<'info>(
             bump_signer,
             response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)?.cast::<u128>()?,
         )
-        .map_err(|_e| BumpErrorCode::TransferFailed)?;
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
     }
 
     if !response.is_liquidation {
@@ -420,7 +420,7 @@ fn settle_isolate<'info>(
         state_account.bump_signer_nonce,
         response.settle_margin.abs().cast::<u128>()?,
     )
-    .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
     Ok(())
 }
 
@@ -492,7 +492,7 @@ pub fn execute_reduce_position_margin(
 
     if position.cross_margin
         && position.initial_margin_usd.safe_sub(position.initial_margin_usd_from_portfolio)?
-            < reduce_margin_amount
+        < reduce_margin_amount
     {
         position.sub_initial_margin_usd_from_portfolio(
             reduce_margin_amount
@@ -945,7 +945,7 @@ pub fn update_leverage<'info>(
     trade_token_map: &TradeTokenMap,
     oracle_map: &mut OracleMap,
 ) -> BumpResult<()> {
-    let mut user = user_account.load_mut().map_err(|_|BumpErrorCode::CouldNotLoadUserData)?;
+    let mut user = user_account.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
     let position = user.get_user_position_mut_ref(position_key)?;
     let trade_token = trade_token_map.get_trade_token(&position.margin_mint)?;
     let pool = &mut pool.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
@@ -1003,7 +1003,7 @@ pub fn update_leverage<'info>(
 
             execute_add_position_margin(
                 &UpdatePositionMarginParams {
-                    position_key:*position_key,
+                    position_key: *position_key,
                     is_add: true,
                     update_margin_amount: add_margin_amount,
                     add_initial_margin_from_portfolio,
@@ -1026,11 +1026,11 @@ pub fn update_leverage<'info>(
         } else {
             position.set_leverage(params.leverage)?;
             let reduce_margin = position.initial_margin_usd.safe_sub(
-                cal_utils::div_rate_u(position.position_size,position.leverage)?,
+                cal_utils::div_rate_u(position.position_size, position.leverage)?,
             )?;
             let reduce_margin_amount = execute_reduce_position_margin(
                 &UpdatePositionMarginParams {
-                    position_key:*position_key,
+                    position_key: *position_key,
                     is_add: false,
                     update_margin_amount: reduce_margin,
                     add_initial_margin_from_portfolio: 0,
@@ -1154,7 +1154,7 @@ impl PositionProcessor<'_> {
                         authority,
                         params.add_margin_amount,
                     )
-                    .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                        .map_err(|_e| BumpErrorCode::TransferFailed)?;
                 }
             } else {
                 self.position.set_leverage(params.leverage)?;
@@ -1190,7 +1190,7 @@ impl PositionProcessor<'_> {
                         state.bump_signer_nonce,
                         reduce_margin_amount,
                     )
-                    .map_err(|_e| BumpErrorCode::TransferFailed)?
+                        .map_err(|_e| BumpErrorCode::TransferFailed)?
                 }
             }
         }

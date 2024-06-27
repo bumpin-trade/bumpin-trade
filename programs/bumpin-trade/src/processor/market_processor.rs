@@ -139,11 +139,11 @@ impl<'a> MarketProcessor<'_> {
             }
         } else {
             if is_add {
-                self.market.funding_fee.short_funding_fee_rate =
-                    cal_utils::add_i128(self.market.funding_fee.short_funding_fee_rate, amount)?;
+                self.market.funding_fee.total_short_funding_fee =
+                    cal_utils::add_i128(self.market.funding_fee.total_short_funding_fee, amount)?;
             } else {
                 self.market.funding_fee.short_funding_fee_rate =
-                    cal_utils::sub_i128(self.market.funding_fee.short_funding_fee_rate, amount)?;
+                    cal_utils::sub_i128(self.market.funding_fee.total_short_funding_fee, amount)?;
             }
         }
 
