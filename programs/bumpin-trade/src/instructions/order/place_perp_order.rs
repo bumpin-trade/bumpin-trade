@@ -27,7 +27,7 @@ use crate::{get_then_update_id, validate};
 
 #[derive(Accounts)]
 #[instruction(
-    _market_index: u16, _pool_index: u16, _stable_pool_index: u16, _trade_token_index: u16, _index_trade_token_index: u16
+    order: PlaceOrderParams
 )]
 pub struct PlaceOrder<'info> {
     #[account(
@@ -46,7 +46,7 @@ pub struct PlaceOrder<'info> {
 
     #[account(
         mut,
-        seeds = [b"market", _market_index.to_le_bytes().as_ref()],
+        seeds = [b"market", order.market_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub market: AccountLoader<'info, Market>,
@@ -58,7 +58,7 @@ pub struct PlaceOrder<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool", _pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool", order.pool_index.to_le_bytes().as_ref()],
         bump,
         constraint = pool.load() ?.pool_key.eq(& market.load() ?.pool_key)
     )]
@@ -66,7 +66,7 @@ pub struct PlaceOrder<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), order.pool_index.to_le_bytes().as_ref()],
         bump,
         token::mint = pool.load() ?.pool_mint,
         token::authority = bump_signer
@@ -75,7 +75,7 @@ pub struct PlaceOrder<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool", _stable_pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool", order.stable_pool_index.to_le_bytes().as_ref()],
         bump,
         constraint = stable_pool.load() ?.pool_key.eq(& market.load() ?.stable_pool_key)
     )]
@@ -83,7 +83,7 @@ pub struct PlaceOrder<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool_vault".as_ref(), _stable_pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), order.stable_pool_index.to_le_bytes().as_ref()],
         bump,
         token::mint = stable_pool.load() ?.pool_mint,
         token::authority = bump_signer
@@ -91,7 +91,7 @@ pub struct PlaceOrder<'info> {
     pub stable_pool_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
-        seeds = [b"trade_token", _trade_token_index.to_le_bytes().as_ref()],
+        seeds = [b"trade_token", order.trade_token_index.to_le_bytes().as_ref()],
         bump,
         constraint = trade_token.load() ?.mint.eq(& user_token_account.mint),
     )]
@@ -99,7 +99,7 @@ pub struct PlaceOrder<'info> {
 
     #[account(
         mut,
-        seeds = [b"trade_token_vault".as_ref(), _trade_token_index.to_le_bytes().as_ref()],
+        seeds = [b"trade_token_vault".as_ref(), order.trade_token_index.to_le_bytes().as_ref()],
         bump,
         token::mint = trade_token.load() ?.mint,
         token::authority = bump_signer,
@@ -108,7 +108,7 @@ pub struct PlaceOrder<'info> {
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
-        seeds = [b"trade_token", _index_trade_token_index.to_le_bytes().as_ref()],
+        seeds = [b"trade_token", order.index_trade_token_index.to_le_bytes().as_ref()],
         bump,
         constraint = index_trade_token.load() ?.mint.eq(& market.load() ?.index_mint),
     )]
@@ -145,16 +145,16 @@ pub struct PlaceOrderParams {
     pub trigger_price: u128,
     pub acceptable_price: u128,
     pub place_time: u128,
+    pub pool_index: u16,
+    pub stable_pool_index: u16,
+    pub market_index: u16,
+    pub trade_token_index: u16,
+    pub index_trade_token_index: u16,
 }
 
 pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
     order: PlaceOrderParams,
-    _pool_index: u16,
-    _stable_pool_index: u16,
-    _market_index: u16,
-    _trade_token_index: u16,
-    _index_trade_token_index: u16,
 ) -> Result<()> {
     let market = ctx.accounts.market.load()?;
     let mut user = ctx.accounts.user.load_mut()?;

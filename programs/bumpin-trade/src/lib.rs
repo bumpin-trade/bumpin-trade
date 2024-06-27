@@ -97,16 +97,10 @@ pub mod bumpin_trade {
     pub fn pool_un_stake<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PoolUnStake>,
         params: UnStakeParams,
-        _pool_index: u16,
-        _trade_token_index: u16,
-        _stable_trade_token_index: u16,
     ) -> Result<()> {
         handle_pool_un_stake(
             ctx,
             params,
-            _pool_index,
-            _trade_token_index,
-            _stable_trade_token_index,
         )
     }
 
@@ -138,23 +132,13 @@ pub mod bumpin_trade {
     ) -> Result<()> {
         handle_place_order(
             ctx,
-            params,
-            _pool_index,
-            _stable_pool_index,
-            _market_index,
-            _trade_token_index,
-            _index_trade_token_index,
+            params
         )
     }
 
     pub fn execute_order<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
         order_id: u128,
-        _pool_index: u16,
-        _stable_pool_index: u16,
-        _market_index: u16,
-        _trade_token_index: u16,
-        _index_trade_token_index: u16,
     ) -> Result<()> {
         let user_account_loader = &ctx.accounts.user;
         let margin_token_account = &ctx.accounts.margin_token;
@@ -210,20 +194,15 @@ pub mod bumpin_trade {
     pub fn add_position_margin<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, AddPositionMargin>,
         params: UpdatePositionMarginParams,
-        _market_index: u16,
-        _pool_index: u16,
-        _trade_token_index: u16,
     ) -> Result<()> {
-        handle_add_position_margin(ctx, params, _market_index, _pool_index, _trade_token_index)
+        handle_add_position_margin(ctx, params)
     }
 
     pub fn update_position_leverage<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, UpdatePositionLeverage>,
         params: UpdatePositionLeverageParams,
-        _market_index: u16,
-        _pool_index: u16,
     ) -> Result<()> {
-        handle_update_position_leverage(ctx, params, _market_index, _pool_index)
+        handle_update_position_leverage(ctx, params)
     }
 
     pub fn liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
