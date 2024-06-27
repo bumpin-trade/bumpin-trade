@@ -207,7 +207,7 @@ impl User {
                 user_position.status.eq(&PositionStatus::USING)
                     && user_position.position_key.eq(&position_key)
             })
-            .ok_or(CouldNotFindUserOrder)
+            .ok_or(CouldNotFindUserPosition)
     }
 
     pub fn force_get_user_position_mut_ref(

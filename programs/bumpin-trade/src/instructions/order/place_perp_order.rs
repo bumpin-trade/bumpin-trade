@@ -1,3 +1,5 @@
+use std::ops::DerefMut;
+
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
@@ -23,7 +25,7 @@ use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::{User, UserTokenUpdateReason};
 use crate::utils::{pda, token};
-use crate::{get_then_update_id, validate};
+use crate::{get_then_update_id, position, validate};
 
 #[derive(Accounts)]
 #[instruction(
@@ -293,12 +295,16 @@ pub fn handle_execute_order<'info>(
     order_id: u128,
     execute_from_remote: bool,
 ) -> Result<()> {
-    let user = user_account_loader.load()?;
+    let mut user = user_account_loader.load_mut()?;
 
     let margin_token = margin_token_account;
     let mut market = market_account_loader.load_mut()?;
     let trade_token = trade_token_loader.load()?;
     let index_trade_token = index_trade_token_loader.load()?;
+    let mut stake_token_pool =
+        pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
+    let mut stable_pool =
+        stable_pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
 
     let order = if execute_from_remote {
         let user_order_index = user.get_user_order_index(order_id)?;
@@ -325,16 +331,18 @@ pub fn handle_execute_order<'info>(
         oracle_map.get_price_data(&trade_token.oracle)?.price,
     )?;
 
-    let base_token_pool = pool_account_loader.load_mut()?;
-    let stable_pool = stable_pool_account_loader.load_mut()?;
-    let mut pool =
-        if order.order_side.eq(&OrderSide::LONG) { base_token_pool } else { stable_pool };
-    pool.update_pool_borrowing_fee_rate()?;
+    let mut base_token_pool = pool_account_loader.load_mut()?;
+    let mut stable_pool = stable_pool_account_loader.load_mut()?;
 
+    if order.order_side.eq(&OrderSide::LONG) {
+        base_token_pool.update_pool_borrowing_fee_rate()?;
+    } else {
+        stable_pool.update_pool_borrowing_fee_rate()?;
+    }
     let position_key =
         pda::generate_position_key(&user_key, market.symbol, order.cross_margin, program_id)?;
 
-    drop(user);
+    // drop(user);
     //do execute order and change position
     match order.position_side {
         PositionSide::NONE => Err(BumpErrorCode::PositionSideNotSupport),
@@ -396,7 +404,7 @@ pub fn handle_execute_order<'info>(
 
             drop(user);
             drop(market);
-            drop(pool);
+            // drop(pool);
             drop(base_token_pool);
             drop(stable_pool);
 
@@ -418,20 +426,9 @@ pub fn handle_execute_order<'info>(
         }),
 
         PositionSide::DECREASE => Ok({
-            //decrease
-            let mut user = user_account_loader.load_mut()?;
-            let position = user.get_user_position_mut_ref(&position_key)?.clone();
-            if position.position_size == 0u128 || position.status.eq(&PositionStatus::INIT) {
-                return Err(BumpErrorCode::InvalidParam.into());
-            }
-            if position.is_long == is_long {
-                return Err(BumpErrorCode::InvalidParam.into());
-            }
-            drop(user);
-            drop(market);
-            drop(pool);
+            let position_side = { position!(&user.user_positions, &position_key)?.is_long };
 
-            position_processor::decrease_position(
+            position_processor::decrease_position1(
                 DecreasePositionParams {
                     order_id,
                     is_liquidation: false,
@@ -440,14 +437,14 @@ pub fn handle_execute_order<'info>(
                     decrease_size: order.order_size,
                     execute_price,
                 },
-                user_account_loader,
-                pool_account_loader,
-                stable_pool_account_loader,
-                market_account_loader,
+                user.deref_mut(),
+                market.deref_mut(),
+                stake_token_pool.deref_mut(),
+                stable_pool.deref_mut(),
                 state_account,
                 Some(user_token_account),
-                if position.is_long { pool_vault_account } else { stable_pool_vault_account },
-                trade_token_loader,
+                if position_side { pool_vault_account } else { stable_pool_vault_account },
+                trade_token,
                 trade_token_vault_account,
                 bump_signer,
                 token_program,
