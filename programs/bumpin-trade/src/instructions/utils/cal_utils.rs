@@ -126,3 +126,7 @@ pub fn format_to_ticker_size(price: u128, ticker_size: u128, up: bool) -> BumpRe
         Ok(price.safe_div(ticker_size)?.safe_add(if up { 0 } else { 1 })?.safe_mul(ticker_size)?)
     };
 }
+
+pub fn get_mm(size: u128, leverage: u128, max_mm_rate: u128) -> BumpResult<u128> {
+    Ok(size.safe_div(leverage.safe_mul(2)?)?.min(size.safe_mul(max_mm_rate)?))
+}

@@ -40,13 +40,11 @@ impl<'a> PoolProcessor<'_> {
         let pool = pool_loader.load().unwrap();
         let trade_token = trade_token_map.get_trade_token(&pool.pool_mint)?;
 
-        let user_token = user
-            .get_user_token_ref(&pool.pool_mint)?
-            .ok_or(BumpErrorCode::CouldNotFindUserToken)?;
+        let user_token = user.get_user_token_ref(&pool.pool_mint)?;
         validate!(user_token.amount > mint_amount, BumpErrorCode::AmountNotEnough)?;
 
+        user.sub_user_token_amount(&pool.pool_mint, mint_amount)?;
         let mut user_processor = UserProcessor { user };
-        user_processor.user.sub_user_token_amount(&pool.pool_mint, mint_amount)?;
         validate!(
             user_processor.get_available_value(oracle_map, trade_token_map)? > 0,
             BumpErrorCode::AmountNotEnough
@@ -65,8 +63,7 @@ impl<'a> PoolProcessor<'_> {
                 market_map,
             )?)?;
         }
-        let user_stake =
-            user.get_user_stake_mut(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
+        let user_stake = user.get_user_stake_mut_ref(&pool.pool_key)?;
         user_stake.add_user_stake(supply_amount)?;
         Ok((supply_amount, user_stake.clone()))
     }
@@ -95,8 +92,7 @@ impl<'a> PoolProcessor<'_> {
                 market_map,
             )?)?;
         }
-        let user_stake =
-            user.get_user_stake_mut(&self.pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
+        let user_stake = user.get_user_stake_mut_ref(&self.pool.pool_key)?;
         user_stake.add_user_stake(supply_amount)?;
         Ok((supply_amount, user_stake.clone()))
     }
@@ -125,8 +121,7 @@ impl<'a> PoolProcessor<'_> {
         let max_un_stake_amount = self.pool.get_current_max_un_stake()?;
         validate!(token_amount < max_un_stake_amount, BumpErrorCode::UnStakeTooLarge)?;
 
-        let user_stake =
-            user.get_user_stake_mut(&self.pool.pool_mint)?.ok_or(BumpErrorCode::StakePaused)?;
+        let user_stake = user.get_user_stake_mut_ref(&self.pool.pool_key)?;
         user_stake.sub_user_stake(un_stake_amount)?;
 
         Ok(token_amount)
@@ -189,13 +184,6 @@ impl<'a> PoolProcessor<'_> {
             }
         }
         Ok(if pool_value <= 0 { 0u128 } else { pool_value })
-    }
-    pub fn update_pool_borrowing_fee_rate(&mut self) -> BumpResult {
-        self.pool.borrowing_fee.update_pool_borrowing_fee(
-            &self.pool.pool_balance,
-            self.pool.pool_config.borrowing_interest_rate,
-        )?;
-        Ok(())
     }
 
     pub fn update_pnl_and_un_hold_pool_amount(

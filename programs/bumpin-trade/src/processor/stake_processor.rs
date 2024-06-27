@@ -5,7 +5,7 @@ use crate::instructions::{cal_utils, StakeParams};
 use crate::math::safe_math::SafeMath;
 use crate::processor::fee_processor;
 use crate::processor::fee_reward_processor::update_account_fee_reward;
-use crate::state::infrastructure::user_stake::{UserStake, UserStakeStatus};
+use crate::state::infrastructure::user_stake::UserStakeStatus;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::trade_token_map::TradeTokenMap;
@@ -38,25 +38,12 @@ pub fn stake(
         BumpErrorCode::StakeToSmall
     )?;
 
-    let user_stake_option = user.get_user_stake_mut(&pool.pool_key)?;
-    //make sure user_stake exist
-    match user_stake_option {
-        None => {
-            //add default user_stake to user
-            let res = &mut UserStake {
-                user_stake_status: UserStakeStatus::USING,
-                pool_key: pool.pool_key,
-                amount: 0,
-                user_rewards: Default::default(),
-                padding: [0; 15],
-            };
-
-            let next_index = user.next_usable_stake_index()?;
-            user.add_user_stake(res, next_index)?;
-            res
-        },
-        Some(user_stake) => user_stake,
-    };
+    //check user stake exist, if not, create new user stake
+    let user_stake = user.force_get_user_stake_mut_ref(&pool.pool_key)?;
+    validate!(
+        user_stake.user_stake_status.eq(&UserStakeStatus::USING),
+        BumpErrorCode::CouldNotFindUserStake
+    )?;
 
     update_account_fee_reward(user_account_loader, pool_account_loader)?;
 

@@ -8,8 +8,8 @@ use crate::math::constants::{RATE_PRECISION, SMALL_RATE_PRECISION};
 use crate::math::safe_math::SafeMath;
 use crate::processor::market_processor::MarketProcessor;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
-use crate::processor::pool_processor::PoolProcessor;
-use crate::processor::position_processor::{DecreasePositionParams, PositionProcessor};
+use crate::processor::position_processor;
+use crate::processor::position_processor::DecreasePositionParams;
 use crate::processor::user_processor::UserProcessor;
 use crate::state::state::State;
 use crate::state::user::User;
@@ -65,17 +65,17 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
 
     let mut user_processor = UserProcessor { user: &mut user };
     user_processor.cancel_all_cross_orders()?;
+    drop(user_processor);
 
-    for user_position in &user_processor.user.user_positions {
+    for user_position in &user.user_positions {
         //only cross margin position support
         if !user_position.cross_margin {
             continue;
         }
 
         let market = market_map.get_ref(&user_position.symbol)?;
-        let pool = &mut pool_key_map.get_mut_ref(&market.pool_key)?;
-        let mut pool_processor = PoolProcessor { pool };
-        pool_processor.update_pool_borrowing_fee_rate()?;
+        let mut pool = pool_key_map.get_mut_ref(&market.pool_key)?;
+        pool.update_pool_borrowing_fee_rate()?;
 
         let market = &mut market_map.get_mut_ref(&user_position.symbol)?;
         let mut market_processor = MarketProcessor { market };
@@ -86,6 +86,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         )?;
     }
 
+    let user_processor = UserProcessor { user: &mut user };
     let (cross_net_value, total_position_mm, total_size) = user_processor
         .get_user_cross_net_value(
             &trade_token_map,
@@ -94,6 +95,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
             &pool_key_map,
             &state,
         )?;
+    drop(user_processor);
 
     let bankruptcy_mr = cal_utils::div_to_precision_i(
         cross_net_value,
@@ -103,20 +105,18 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
     .max(0i128);
 
     if cross_net_value <= 0 || cross_net_value.abs().cast::<u128>()? <= total_position_mm {
-        for user_position in &mut user_processor.user.user_positions {
-            let mut position_processor = PositionProcessor { position: user_position };
+        for user_position in &mut user.user_positions {
             //only cross margin position support
-            if !position_processor.position.cross_margin {
+            if !user_position.cross_margin {
                 continue;
             }
 
-            let market = market_map.get_ref(&position_processor.position.symbol)?;
-            let index_trade_token =
-                trade_token_map.get_trade_token(&position_processor.position.index_mint)?;
+            let market = market_map.get_ref(&user_position.symbol)?;
+            let index_trade_token = trade_token_map.get_trade_token(&user_position.index_mint)?;
 
             let index_price = oracle_map.get_price_data(&index_trade_token.oracle).unwrap().price;
             let bankruptcy_price = cal_utils::format_to_ticker_size(
-                if position_processor.position.is_long {
+                if user_position.is_long {
                     cal_utils::mul_small_rate_u(
                         index_price,
                         SMALL_RATE_PRECISION
@@ -136,49 +136,46 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
                     )?
                 },
                 market.market_trade_config.tick_size,
-                position_processor.position.is_long,
+                user_position.is_long,
             )?;
 
             validate!(bankruptcy_price > 0, BumpErrorCode::PriceIsNotAllowed)?;
             let liquidation_price = cal_utils::format_to_ticker_size(
-                if position_processor.position.is_long {
+                if user_position.is_long {
                     cal_utils::div_rate_u(
                         bankruptcy_price,
-                        RATE_PRECISION
-                            .safe_sub(position_processor.get_position_mm(&market, state)?)?,
+                        RATE_PRECISION.safe_sub(user_position.get_position_mm(&market, state)?)?,
                     )?
                 } else {
                     cal_utils::div_rate_u(
                         bankruptcy_price,
-                        RATE_PRECISION
-                            .safe_add(position_processor.get_position_mm(&market, state)?)?,
+                        RATE_PRECISION.safe_add(user_position.get_position_mm(&market, state)?)?,
                     )?
                 },
                 market.market_trade_config.tick_size,
-                position_processor.position.is_long,
+                user_position.is_long,
             )?;
 
             let pool = pool_key_map.get_ref(&market.pool_key)?;
             let stable_pool = pool_key_map.get_ref(&market.stable_pool_key)?;
-            let trade_token =
-                trade_token_map.get_trade_token(&position_processor.position.margin_mint)?;
+            let trade_token = trade_token_map.get_trade_token(&user_position.margin_mint)?;
 
-            position_processor.decrease_position(
+            position_processor::decrease_position(
                 DecreasePositionParams {
                     order_id: 0,
                     is_liquidation: true,
                     is_cross_margin: true,
-                    margin_token: position_processor.position.margin_mint,
-                    decrease_size: position_processor.position.position_size,
+                    margin_token: user_position.margin_mint,
+                    decrease_size: user_position.position_size,
                     execute_price: liquidation_price,
                 },
                 &ctx.accounts.user,
                 pool_key_map.get_account_loader(&market.pool_key)?,
                 pool_key_map.get_account_loader(&market.stable_pool_key)?,
-                market_map.get_account_loader(&position_processor.position.symbol)?,
+                market_map.get_account_loader(&user_position.symbol)?,
                 &ctx.accounts.state,
                 None,
-                if position_processor.position.is_long {
+                if user_position.is_long {
                     vault_map.get_account(&pda::generate_pool_vault_key(
                         pool.pool_index,
                         ctx.program_id,
@@ -189,15 +186,15 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
                         ctx.program_id,
                     )?)?
                 },
-                trade_token_map.get_account_loader(&position_processor.position.margin_mint)?,
+                trade_token_map.get_account_loader(&user_position.margin_mint)?,
                 vault_map.get_account(&pda::generate_trade_token_vault_key(
                     trade_token.token_index,
                     ctx.program_id,
                 )?)?,
                 &ctx.accounts.bump_signer,
                 &ctx.accounts.token_program,
-                &ctx.program_id,
                 &mut oracle_map,
+                &user_position.user_key,
             )?;
         }
     }

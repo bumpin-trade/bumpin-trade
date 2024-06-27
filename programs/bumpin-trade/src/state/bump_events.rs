@@ -72,14 +72,12 @@ pub struct AddOrDeleteUserOrderEvent {
 
 #[event]
 pub struct UpdateUserPositionEvent {
-    pub user_key: Pubkey,
     pub pre_position: UserPosition,
     pub position: UserPosition,
 }
 
 #[event]
 pub struct AddOrDeleteUserPositionEvent {
-    pub user_key: Pubkey,
     pub position: UserPosition,
     pub is_add: bool,
 }

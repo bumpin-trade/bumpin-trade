@@ -1,6 +1,12 @@
 use crate::errors::BumpResult;
+use crate::instructions::cal_utils;
 use crate::math::casting::Cast;
+use crate::math::constants::RATE_PRECISION;
 use crate::math::safe_math::SafeMath;
+use crate::state::market::Market;
+use crate::state::pool::Pool;
+use crate::state::state::State;
+use crate::state::trade_token::TradeToken;
 use anchor_lang::prelude::*;
 use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
@@ -311,5 +317,90 @@ impl UserPosition {
                 self.initial_margin_usd_from_portfolio.safe_sub(reduce_initial_margin_usd)?;
             Ok(amount)
         }
+    }
+
+    pub fn get_position_un_pnl_usd(&self, index_price: u128) -> BumpResult<i128> {
+        if self.position_size == 0u128 {
+            return Ok(0i128);
+        };
+        if self.is_long {
+            Ok(self
+                .position_size
+                .cast::<i128>()?
+                .safe_mul(index_price.cast::<i128>()?.safe_sub(self.entry_price.cast::<i128>()?)?)?
+                .safe_div(self.entry_price.cast::<i128>()?)?)
+        } else {
+            Ok(self
+                .position_size
+                .cast::<i128>()?
+                .safe_mul(self.entry_price.cast::<i128>()?.safe_sub(index_price.cast::<i128>()?)?)?
+                .safe_div(self.entry_price.cast::<i128>()?)?)
+        }
+    }
+
+    pub fn get_position_mm(&self, market: &Market, state: &State) -> BumpResult<u128> {
+        Ok(cal_utils::get_mm(
+            self.position_size,
+            market.market_trade_config.max_leverage,
+            state.max_maintenance_margin_rate,
+        )?)
+    }
+
+    pub fn get_position_un_pnl_token(
+        &self,
+        trade_token: &TradeToken,
+        mint_token_price: u128,
+        index_price: u128,
+    ) -> BumpResult<i128> {
+        if self.position_size == 0u128 {
+            return Ok(0i128);
+        };
+        let un_pnl_usd = self.get_position_un_pnl_usd(index_price)?;
+        Ok(cal_utils::usd_to_token_i(un_pnl_usd, trade_token.decimals, mint_token_price)?)
+    }
+
+    pub fn get_position_fee(
+        &self,
+        market: &Market,
+        pool: &Pool,
+        margin_mint_price: u128,
+        trade_token_decimals: u16,
+    ) -> BumpResult<i128> {
+        let mut funding_fee_total_usd = self.realized_funding_fee_in_usd;
+        let mut borrowing_fee_total_usd = self.realized_borrowing_fee_in_usd;
+
+        let funding_fee_amount_per_size = if self.is_long {
+            market.funding_fee.long_funding_fee_amount_per_size
+        } else {
+            market.funding_fee.short_funding_fee_amount_per_size
+        };
+        let funding_fee = cal_utils::mul_small_rate_i(
+            self.position_size.cast::<i128>()?,
+            funding_fee_amount_per_size.safe_sub(self.open_funding_fee_amount_per_size)?,
+        )?;
+
+        if self.is_long {
+            let funding_fee_usd =
+                cal_utils::token_to_usd_i(funding_fee, trade_token_decimals, margin_mint_price)?;
+            funding_fee_total_usd = funding_fee_total_usd.safe_add(funding_fee_usd)?;
+        } else {
+            funding_fee_total_usd = funding_fee_total_usd.safe_add(funding_fee)?;
+        }
+
+        let initial_margin_leverage = cal_utils::mul_small_rate_u(
+            self.initial_margin,
+            self.leverage.safe_sub(RATE_PRECISION)?,
+        )?;
+        let borrowing_fee = cal_utils::mul_small_rate_u(
+            pool.borrowing_fee
+                .cumulative_borrowing_fee_per_token
+                .safe_sub(self.open_borrowing_fee_per_token)?,
+            initial_margin_leverage,
+        )?;
+        borrowing_fee_total_usd =
+            borrowing_fee_total_usd.safe_add(borrowing_fee.safe_mul(margin_mint_price)?)?;
+        Ok(funding_fee_total_usd
+            .safe_add(borrowing_fee_total_usd.cast()?)?
+            .safe_add(self.close_fee_in_usd.cast()?)?)
     }
 }

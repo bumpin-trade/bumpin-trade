@@ -100,7 +100,7 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
     let pool = &mut ctx.accounts.pool.load_mut()?;
     let user = &mut ctx.accounts.user.load_mut()?;
 
-    let user_stake = user.get_user_stake_ref(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
+    let user_stake = user.get_user_stake_ref(&pool.pool_key)?;
     validate!(
         user_stake.amount >= un_stake_params.un_stake_token_amount,
         BumpErrorCode::UnStakeTooSmall
@@ -139,7 +139,7 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
             transfer_amount,
         )?;
 
-        user.add_token(
+        user.add_user_token_amount(
             &trade_token.mint,
             rewards_amount.safe_add(transfer_amount)?,
             &UserTokenUpdateReason::TransferFromStake,
@@ -173,7 +173,7 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
 
     pool.sub_amount_and_supply(un_stake_token_amount, un_stake_params.un_stake_token_amount)?;
 
-    let user_stake = user.get_user_stake_mut(&pool.pool_key)?.ok_or(BumpErrorCode::StakePaused)?;
+    let user_stake = user.get_user_stake_mut_ref(&pool.pool_key)?;
 
     let user = &mut ctx.accounts.user.load_mut()?;
     if user_stake.amount <= 0 {

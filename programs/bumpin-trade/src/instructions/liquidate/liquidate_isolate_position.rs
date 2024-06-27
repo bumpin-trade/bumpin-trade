@@ -3,7 +3,7 @@ use anchor_spl::token::{Token, TokenAccount};
 
 use crate::errors::BumpErrorCode;
 use crate::processor::market_processor::MarketProcessor;
-use crate::processor::pool_processor::PoolProcessor;
+use crate::processor::position_processor;
 use crate::processor::position_processor::{DecreasePositionParams, PositionProcessor};
 use crate::state::market::Market;
 use crate::state::oracle_map::OracleMap;
@@ -11,6 +11,7 @@ use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
+use crate::utils::pda::generate_position_key;
 use crate::validate;
 
 #[derive(Accounts)]
@@ -117,7 +118,7 @@ pub fn handle_liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
     _user_authority_key: Pubkey,
 ) -> Result<()> {
     let mut user = ctx.accounts.user.load_mut()?;
-    let user_position = user.find_position_mut_ref_by_key(&position_key)?;
+    let user_position = user.get_user_position_mut_ref(&position_key)?;
 
     validate!(!user_position.cross_margin, BumpErrorCode::OnlyLiquidateIsolatePosition)?;
     let mut market = ctx.accounts.market.load_mut()?;
@@ -132,14 +133,11 @@ pub fn handle_liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
         oracle_map.get_price_data(&trade_token.oracle)?.price,
     )?;
 
-    let mut pool = ctx.accounts.pool.load_mut()?;
-    let mut stable_pool = ctx.accounts.stable_pool.load_mut()?;
-    let mut pool_processor = if user_position.is_long {
-        PoolProcessor { pool: &mut pool }
-    } else {
-        PoolProcessor { pool: &mut stable_pool }
-    };
-    pool_processor.update_pool_borrowing_fee_rate()?;
+    let base_token_pool = ctx.accounts.pool.load_mut()?;
+    let stable_pool = ctx.accounts.stable_pool.load_mut()?;
+    let mut pool = if user_position.is_long { base_token_pool } else { stable_pool };
+
+    pool.update_pool_borrowing_fee_rate()?;
 
     let mut position_processor = PositionProcessor { position: user_position };
     let margin_token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
@@ -156,7 +154,7 @@ pub fn handle_liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
     if (position_processor.position.is_long && index_price.price > liquidation_price)
         || (!position_processor.position.is_long && index_price.price < liquidation_price)
     {
-        position_processor.decrease_position(
+        position_processor::decrease_position(
             DecreasePositionParams {
                 order_id: 0,
                 is_liquidation: true,
@@ -180,8 +178,8 @@ pub fn handle_liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
             &ctx.accounts.trade_token_vault,
             &ctx.accounts.bump_signer,
             &ctx.accounts.token_program,
-            &ctx.program_id,
             &mut oracle_map,
+            &generate_position_key(&user.user_key, market.symbol, false, ctx.program_id)?,
         )?;
     }
     Ok(())

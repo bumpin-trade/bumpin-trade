@@ -192,7 +192,7 @@ pub mod bumpin_trade {
             ctx.program_id,
             &trade_token_map,
             &mut oracle_map,
-            &mut UserOrder::default(),
+            &UserOrder::default(),
             order_id,
             false,
         )

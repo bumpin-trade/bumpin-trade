@@ -2,9 +2,9 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::errors::BumpErrorCode;
-use crate::errors::BumpErrorCode::CouldNotFindUserToken;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
-use crate::processor::position_processor::{DecreasePositionParams, PositionProcessor};
+use crate::processor::position_processor;
+use crate::processor::position_processor::DecreasePositionParams;
 use crate::state::market::Market;
 use crate::state::pool::Pool;
 use crate::state::state::State;
@@ -93,23 +93,20 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
         let position = user_account.find_position_mut_ref_by_key(&param.position_key)?;
 
         let user_account = user_map.get_ref(&param.user_key)?;
-        let user_token =
-            user_account.get_user_token_ref(&position.margin_mint)?.ok_or(CouldNotFindUserToken)?;
+        let user_token = user_account.get_user_token_ref(&position.margin_mint)?;
 
         validate!(
             user_token.user_token_account_key.eq(user_token_account.to_account_info().key),
             BumpErrorCode::InvalidTokenAccount
         )?;
-        let mut position_processor = PositionProcessor { position };
-        let index_trade_token =
-            trade_token_map.get_trade_token(&position_processor.position.index_mint)?;
-        position_processor.decrease_position(
+        let index_trade_token = trade_token_map.get_trade_token(&position.index_mint)?;
+        position_processor::decrease_position(
             DecreasePositionParams {
                 order_id: 0,
                 is_liquidation: false,
-                is_cross_margin: position_processor.position.cross_margin,
-                margin_token: position_processor.position.margin_mint,
-                decrease_size: position_processor.position.position_size,
+                is_cross_margin: position.cross_margin,
+                margin_token: position.margin_mint,
+                decrease_size: position.position_size,
                 execute_price: oracle_map.get_price_data(&index_trade_token.oracle).unwrap().price,
             },
             &user_account_loader,
@@ -118,17 +115,13 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
             market_account_loader,
             state_account,
             Some(user_token_account),
-            if position_processor.position.is_long {
-                pool_vault_account
-            } else {
-                stable_pool_vault_account
-            },
+            if position.is_long { pool_vault_account } else { stable_pool_vault_account },
             trade_token_loader,
             trade_token_vault_account,
             bump_signer_account_info,
             token_program,
-            ctx.program_id,
             &mut oracle_map,
+            &position.position_key,
         )?;
     }
     Ok(())
