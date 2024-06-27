@@ -5,7 +5,6 @@ use crate::instructions::cal_utils;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::processor::fee_processor;
-use crate::processor::market_processor::MarketProcessor;
 use crate::processor::user_processor::UserProcessor;
 use crate::state::infrastructure::user_stake::UserStake;
 use crate::state::market_map::MarketMap;
@@ -57,7 +56,7 @@ impl<'a> PoolProcessor<'_> {
                 trade_token.decimals,
                 oracle_price_data.price,
             )?
-            .safe_div(self.get_pool_net_price(
+            .safe_div(self.pool.get_pool_net_price(
                 trade_token_map,
                 oracle_map,
                 market_map,
@@ -86,7 +85,7 @@ impl<'a> PoolProcessor<'_> {
                 trade_token.decimals,
                 oracle_price_data.price,
             )?
-            .safe_div(self.get_pool_net_price(
+            .safe_div(self.pool.get_pool_net_price(
                 trade_token_map,
                 oracle_map,
                 market_map,
@@ -107,7 +106,7 @@ impl<'a> PoolProcessor<'_> {
         let mut user = user_loader.load_mut().unwrap();
 
         let trade_token = trade_token_map.get_trade_token(&self.pool.pool_mint)?;
-        let pool_value = self.get_pool_usd_value(trade_token_map, oracle_map, market_map)?;
+        let pool_value = self.pool.get_pool_usd_value(trade_token_map, oracle_map, market_map)?;
 
         let un_stake_usd =
             cal_utils::mul_div_u(un_stake_amount, pool_value, self.pool.total_supply)?;
@@ -125,65 +124,6 @@ impl<'a> PoolProcessor<'_> {
         user_stake.sub_user_stake(un_stake_amount)?;
 
         Ok(token_amount)
-    }
-    pub fn get_pool_net_price(
-        &self,
-        trade_token_map: &TradeTokenMap,
-        oracle_map: &mut OracleMap,
-        market_vec: &MarketMap,
-    ) -> BumpResult<u128> {
-        let pool_value = self.get_pool_usd_value(trade_token_map, oracle_map, market_vec)?;
-        let net_price = self.pool.total_supply.safe_div(pool_value.cast()?)?;
-        Ok(net_price)
-    }
-    pub fn get_pool_usd_value(
-        &self,
-        trade_token_map: &TradeTokenMap,
-        oracle_map: &mut OracleMap,
-        market_vec: &MarketMap,
-    ) -> BumpResult<u128> {
-        let trade_token = trade_token_map.get_trade_token(&self.pool.pool_mint)?;
-        let trade_token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
-        let mut pool_value = cal_utils::token_to_usd_u(
-            self.pool.pool_balance.amount.safe_add(self.pool.pool_balance.un_settle_amount)?,
-            trade_token.decimals,
-            trade_token_price,
-        )?;
-        if !self.pool.stable {
-            let markets = market_vec.get_all_market()?;
-            for mut market in markets {
-                if self.pool.pool_key.eq(&market.pool_key) {
-                    let mut market_processor = MarketProcessor { market: &mut market };
-                    let long_market_un_pnl =
-                        market_processor.get_market_un_pnl(true, oracle_map)?;
-                    pool_value = cal_utils::add_u128(pool_value, long_market_un_pnl)?;
-
-                    let short_market_un_pnl =
-                        market_processor.get_market_un_pnl(false, oracle_map)?;
-                    pool_value = cal_utils::add_u128(pool_value, short_market_un_pnl)?;
-                }
-            }
-
-            let stable_amount = self
-                .pool
-                .stable_balance
-                .amount
-                .safe_add(self.pool.stable_balance.un_settle_amount)?
-                .safe_sub(self.pool.stable_balance.loss_amount)?;
-            if stable_amount > 0u128 {
-                let stable_trade_token =
-                    trade_token_map.get_trade_token(&self.pool.stable_balance.pool_mint)?;
-                let stable_trade_token_price =
-                    oracle_map.get_price_data(&stable_trade_token.oracle)?.price;
-                let stable_usd_value = cal_utils::token_to_usd_u(
-                    stable_amount,
-                    stable_trade_token.decimals,
-                    stable_trade_token_price,
-                )?;
-                pool_value = cal_utils::add_u128(pool_value, stable_usd_value)?;
-            }
-        }
-        Ok(if pool_value <= 0 { 0u128 } else { pool_value })
     }
 
     pub fn update_pnl_and_un_hold_pool_amount(
