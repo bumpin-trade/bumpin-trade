@@ -119,7 +119,7 @@ impl User {
     }
 
     pub fn get_user_stake_ref(&self, pool_key: &Pubkey) -> BumpResult<&UserStake> {
-        self.get_user_token_index(pool_key).map(|user_stake| &self.user_stakes[user_stake])
+        self.get_user_stake_index(pool_key).map(|user_stake| &self.user_stakes[user_stake])
     }
 
     pub fn force_get_user_stake_mut_ref(

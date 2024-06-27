@@ -14,7 +14,7 @@ use crate::validate;
 
 #[derive(Accounts)]
 #[instruction(
-    _market_index: u16, _pool_index: u16, _trade_token_index: u16,
+    params: UpdatePositionMarginParams
 )]
 pub struct AddPositionMargin<'info> {
     #[account(
@@ -40,28 +40,28 @@ pub struct AddPositionMargin<'info> {
     pub state: Box<Account<'info, State>>,
 
     #[account(
-        seeds = [b"trade_token", _trade_token_index.to_le_bytes().as_ref()],
+        seeds = [b"trade_token", params.trade_token_index.to_le_bytes().as_ref()],
         bump,
         constraint = trade_token.load() ?.mint.eq(& user_token_account.mint),
     )]
     pub trade_token: AccountLoader<'info, TradeToken>,
 
     #[account(
-        seeds = [b"pool", _pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool", params.pool_index.to_le_bytes().as_ref()],
         bump,
         constraint = pool.load() ?.pool_mint.eq(& user_token_account.mint),
     )]
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
-        seeds = [b"market", _market_index.to_le_bytes().as_ref()],
+        seeds = [b"market", params.market_index.to_le_bytes().as_ref()],
         bump,
         constraint = (market.load() ?.pool_mint.eq(& user_token_account.mint) || market.load() ?.stable_pool_mint.eq(& user_token_account.mint)) && market.load() ?.pool_key.eq(& pool.load() ?.pool_key) || market.load() ?.stable_pool_key.eq(& pool.load() ?.pool_key),
     )]
     pub market: AccountLoader<'info, Market>,
 
     #[account(
-        seeds = [b"pool_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), params.pool_index.to_le_bytes().as_ref()],
         bump,
         token::mint = pool.load() ?.pool_mint,
         token::authority = bump_signer
@@ -75,20 +75,20 @@ pub struct AddPositionMargin<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Eq, PartialEq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Default, Eq, PartialEq)]
 pub struct UpdatePositionMarginParams {
     pub position_key: Pubkey,
     pub is_add: bool,
     pub update_margin_amount: u128,
     pub add_initial_margin_from_portfolio: u128,
+    pub market_index: u16,
+    pub pool_index: u16,
+    pub trade_token_index: u16,
 }
 
 pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, AddPositionMargin>,
     params: UpdatePositionMarginParams,
-    _market_index: u16,
-    _pool_index: u16,
-    _trade_token_index: u16,
 ) -> Result<()> {
     validate!(params.update_margin_amount > 0u128, BumpErrorCode::AmountNotEnough.into())?;
     let mut user = ctx.accounts.user.load_mut()?;

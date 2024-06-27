@@ -2,10 +2,8 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::errors::BumpErrorCode;
-use crate::processor::optional_accounts::{load_maps, AccountMaps};
+use crate::processor::optional_accounts::{AccountMaps, load_maps};
 use crate::processor::position_processor;
-use crate::processor::position_processor::PositionProcessor;
-use crate::processor::user_processor::UserProcessor;
 use crate::state::market::Market;
 use crate::state::pool::Pool;
 use crate::state::state::State;
@@ -15,7 +13,7 @@ use crate::validate;
 
 #[derive(Accounts)]
 #[instruction(
-    _market_index: u16, _pool_index: u16,
+    params: UpdatePositionLeverageParams,
 )]
 pub struct UpdatePositionLeverage<'info> {
     #[account(
@@ -42,21 +40,21 @@ pub struct UpdatePositionLeverage<'info> {
     pub state: Box<Account<'info, State>>,
 
     #[account(
-        seeds = [b"pool", _pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool", params.pool_index.to_le_bytes().as_ref()],
         bump,
         constraint = pool.load() ?.pool_mint.eq(& user_token_account.mint),
     )]
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
-        seeds = [b"market", _market_index.to_le_bytes().as_ref()],
+        seeds = [b"market", params.market_index.to_le_bytes().as_ref()],
         bump,
         constraint = (market.load() ?.pool_mint.eq(& user_token_account.mint) || market.load() ?.pool_key.eq(& user_token_account.mint)) && market.load() ?.pool_key.eq(& pool.load() ?.pool_key) || market.load() ?.stable_pool_key.eq(& pool.load() ?.pool_key),
     )]
     pub market: AccountLoader<'info, Market>,
 
     #[account(
-        seeds = [b"pool_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), params.pool_index.to_le_bytes().as_ref()],
         bump,
         token::mint = pool.load()?.pool_mint,
         token::authority = bump_signer
@@ -77,13 +75,13 @@ pub struct UpdatePositionLeverageParams {
     pub is_cross_margin: bool,
     pub leverage: u128,
     pub add_margin_amount: u128,
+    pub market_index: u16,
+    pub pool_index: u16,
 }
 
 pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, UpdatePositionLeverage>,
     params: UpdatePositionLeverageParams,
-    _market_index: u16,
-    _pool_index: u16,
 ) -> Result<()> {
     let user = &mut ctx.accounts.user.load_mut()?;
 
