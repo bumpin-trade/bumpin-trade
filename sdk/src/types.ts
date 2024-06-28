@@ -152,9 +152,9 @@ export type UserRewards = {
 }
 
 export type UserStake = {
+    stakedShare:BN;
     userStakeStatus: UserStakeStatus;
     poolKey: PublicKey;
-    amount: BN;
     userRewards: UserRewards;
 }
 

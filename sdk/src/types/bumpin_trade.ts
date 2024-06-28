@@ -99,7 +99,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "tradeTokenIndex"
+                "path": "params.trade_token_index"
               }
             ]
           }
@@ -119,7 +119,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "poolIndex"
+                "path": "params.pool_index"
               }
             ]
           }
@@ -141,7 +141,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "marketIndex"
+                "path": "params.market_index"
               }
             ]
           }
@@ -167,7 +167,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "poolIndex"
+                "path": "params.pool_index"
               }
             ]
           }
@@ -188,18 +188,6 @@ export type BumpinTrade = {
               "name": "updatePositionMarginParams"
             }
           }
-        },
-        {
-          "name": "marketIndex",
-          "type": "u16"
-        },
-        {
-          "name": "poolIndex",
-          "type": "u16"
-        },
-        {
-          "name": "tradeTokenIndex",
-          "type": "u16"
         }
       ]
     },
@@ -703,7 +691,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "marketIndex"
+                "path": "order.market_index"
               }
             ]
           }
@@ -727,7 +715,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "poolIndex"
+                "path": "order.pool_index"
               }
             ]
           }
@@ -754,7 +742,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "poolIndex"
+                "path": "order.pool_index"
               }
             ]
           }
@@ -775,7 +763,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "stablePoolIndex"
+                "path": "order.stable_pool_index"
               }
             ]
           }
@@ -802,7 +790,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "stablePoolIndex"
+                "path": "order.stable_pool_index"
               }
             ]
           }
@@ -829,7 +817,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "tradeTokenIndex"
+                "path": "order.trade_token_index"
               }
             ]
           }
@@ -863,7 +851,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "tradeTokenIndex"
+                "path": "order.trade_token_index"
               }
             ]
           }
@@ -890,7 +878,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "indexTradeTokenIndex"
+                "path": "order.index_trade_token_index"
               }
             ]
           }
@@ -911,26 +899,6 @@ export type BumpinTrade = {
         {
           "name": "orderId",
           "type": "u128"
-        },
-        {
-          "name": "poolIndex",
-          "type": "u16"
-        },
-        {
-          "name": "stablePoolIndex",
-          "type": "u16"
-        },
-        {
-          "name": "marketIndex",
-          "type": "u16"
-        },
-        {
-          "name": "tradeTokenIndex",
-          "type": "u16"
-        },
-        {
-          "name": "indexTradeTokenIndex",
-          "type": "u16"
         }
       ]
     },
@@ -1665,7 +1633,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "marketIndex"
+                "path": "order.market_index"
               }
             ]
           }
@@ -1689,7 +1657,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "poolIndex"
+                "path": "order.pool_index"
               }
             ]
           }
@@ -1716,7 +1684,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "poolIndex"
+                "path": "order.pool_index"
               }
             ]
           }
@@ -1737,7 +1705,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "stablePoolIndex"
+                "path": "order.stable_pool_index"
               }
             ]
           }
@@ -1764,7 +1732,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "stablePoolIndex"
+                "path": "order.stable_pool_index"
               }
             ]
           }
@@ -1791,7 +1759,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "tradeTokenIndex"
+                "path": "order.trade_token_index"
               }
             ]
           }
@@ -1825,7 +1793,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "tradeTokenIndex"
+                "path": "order.trade_token_index"
               }
             ]
           }
@@ -1852,7 +1820,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "indexTradeTokenIndex"
+                "path": "order.index_trade_token_index"
               }
             ]
           }
@@ -1901,16 +1869,16 @@ export type BumpinTrade = {
       ]
     },
     {
-      "name": "poolStake",
+      "name": "portfolioStake",
       "discriminator": [
-        147,
-        31,
-        232,
-        49,
+        197,
+        248,
+        167,
+        245,
+        97,
         196,
-        249,
-        208,
-        191
+        252,
+        19
       ],
       "accounts": [
         {
@@ -1973,14 +1941,10 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "poolIndex"
+                "path": "param.pool_index"
               }
             ]
           }
-        },
-        {
-          "name": "userTokenAccount",
-          "writable": true
         },
         {
           "name": "poolMintVault",
@@ -2009,7 +1973,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "poolIndex"
+                "path": "param.pool_index"
               }
             ]
           }
@@ -2043,7 +2007,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "tradeTokenIndex"
+                "path": "param.trade_token_index"
               }
             ]
           }
@@ -2065,32 +2029,20 @@ export type BumpinTrade = {
               "name": "stakeParams"
             }
           }
-        },
-        {
-          "name": "poolIndex",
-          "type": "u16"
-        },
-        {
-          "name": "tradeTokenIndex",
-          "type": "u16"
-        },
-        {
-          "name": "stableTradeTokenIndex",
-          "type": "u16"
         }
       ]
     },
     {
-      "name": "poolUnStake",
+      "name": "portfolioUnStake",
       "discriminator": [
-        206,
-        229,
-        122,
-        214,
-        2,
-        66,
-        133,
-        2
+        38,
+        230,
+        213,
+        92,
+        0,
+        48,
+        190,
+        42
       ],
       "accounts": [
         {
@@ -2153,7 +2105,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "poolIndex"
+                "path": "un_stake_params.pool_index"
               }
             ]
           }
@@ -2185,7 +2137,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "poolIndex"
+                "path": "un_stake_params.pool_index"
               }
             ]
           }
@@ -2219,7 +2171,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "tradeTokenIndex"
+                "path": "un_stake_params.trade_token_index"
               }
             ]
           }
@@ -2247,35 +2199,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "tradeTokenIndex"
-              }
-            ]
-          }
-        },
-        {
-          "name": "stableTradeToken",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "stableTradeTokenIndex"
+                "path": "un_stake_params.trade_token_index"
               }
             ]
           }
@@ -2309,14 +2233,10 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "poolIndex"
+                "path": "un_stake_params.pool_index"
               }
             ]
           }
-        },
-        {
-          "name": "userTokenAccount",
-          "writable": true
         },
         {
           "name": "authority",
@@ -2335,18 +2255,6 @@ export type BumpinTrade = {
               "name": "unStakeParams"
             }
           }
-        },
-        {
-          "name": "poolIndex",
-          "type": "u16"
-        },
-        {
-          "name": "tradeTokenIndex",
-          "type": "u16"
-        },
-        {
-          "name": "stableTradeTokenIndex",
-          "type": "u16"
         }
       ]
     },
@@ -2430,7 +2338,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "poolIndex"
+                "path": "params.pool_index"
               }
             ]
           }
@@ -2452,7 +2360,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "marketIndex"
+                "path": "params.market_index"
               }
             ]
           }
@@ -2478,7 +2386,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "poolIndex"
+                "path": "params.pool_index"
               }
             ]
           }
@@ -2499,14 +2407,336 @@ export type BumpinTrade = {
               "name": "updatePositionLeverageParams"
             }
           }
+        }
+      ]
+    },
+    {
+      "name": "walletStake",
+      "discriminator": [
+        133,
+        206,
+        14,
+        95,
+        182,
+        13,
+        19,
+        134
+      ],
+      "accounts": [
+        {
+          "name": "state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  109,
+                  112,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
         },
         {
-          "name": "marketIndex",
-          "type": "u16"
+          "name": "user",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
         },
         {
-          "name": "poolIndex",
-          "type": "u16"
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "param.pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "userTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "poolMintVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "param.pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "stakeParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "walletUnStake",
+      "discriminator": [
+        233,
+        75,
+        110,
+        151,
+        143,
+        26,
+        47,
+        229
+      ],
+      "accounts": [
+        {
+          "name": "state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  109,
+                  112,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "un_stake_params.pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "poolMintVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "un_stake_params.pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tradeToken",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "un_stake_params.trade_token_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "poolRewardsVault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  115,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "un_stake_params.pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "userTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "unStakeParams"
+            }
+          }
         }
       ]
     },
@@ -2886,216 +3116,221 @@ export type BumpinTrade = {
     },
     {
       "code": 6006,
+      "name": "noMoreUserTokenSpace",
+      "msg": "noMoreUserTokenSpace"
+    },
+    {
+      "code": 6007,
       "name": "noMoreOrderSpace",
       "msg": "noMoreOrderSpace"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "leverageIsNotAllowed",
       "msg": "leverageIsNotAllowed"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "priceIsNotAllowed",
       "msg": "priceIsNotAllowed"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "balanceNotEnough",
       "msg": "balanceNotEnough"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "pythOffline",
       "msg": "pythOffline"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "overflow",
       "msg": "overflow"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "transferFailed",
       "msg": "transferFailed"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "unableToLoadAccountLoader",
       "msg": "Unable to load AccountLoader"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "cantPayUserInitFee",
       "msg": "cantPayUserInitFee"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "couldNotFindUserToken",
       "msg": "couldNotFindUserToken"
     },
     {
-      "code": 6016,
+      "code": 6017,
       "name": "couldNotFindUserOrder",
       "msg": "couldNotFindUserOrder"
     },
     {
-      "code": 6017,
+      "code": 6018,
       "name": "couldNotFindUserPosition",
       "msg": "couldNotFindUserPosition"
     },
     {
-      "code": 6018,
+      "code": 6019,
       "name": "onlyLiquidateIsolatePosition",
       "msg": "onlyLiquidateIsolatePosition"
     },
     {
-      "code": 6019,
+      "code": 6020,
       "name": "onlyIsolatePositionAllowed",
       "msg": "onlyIsolatePositionAllowed"
     },
     {
-      "code": 6020,
+      "code": 6021,
       "name": "couldNotFindUserStake",
       "msg": "couldNotFindUserStake"
     },
     {
-      "code": 6021,
+      "code": 6022,
       "name": "oracleNotFound",
       "msg": "oracleNotFound"
     },
     {
-      "code": 6022,
+      "code": 6023,
       "name": "oraclePriceToOld",
       "msg": "oraclePriceToOld"
     },
     {
-      "code": 6023,
+      "code": 6024,
       "name": "unableToLoadOracle",
       "msg": "Unable To Load Oracles"
     },
     {
-      "code": 6024,
+      "code": 6025,
       "name": "invalidOracle",
       "msg": "invalidOracle"
     },
     {
-      "code": 6025,
+      "code": 6026,
       "name": "bnConversionError",
       "msg": "Conversion to u128/u128 failed with an overflow or underflow"
     },
     {
-      "code": 6026,
+      "code": 6027,
       "name": "mathError",
       "msg": "Math Error"
     },
     {
-      "code": 6027,
+      "code": 6028,
       "name": "castingFailure",
       "msg": "Casting Failure"
     },
     {
-      "code": 6028,
+      "code": 6029,
       "name": "couldNotLoadMarketData",
       "msg": "couldNotLoadMarketData"
     },
     {
-      "code": 6029,
+      "code": 6030,
       "name": "invalidMarketAccount",
       "msg": "invalidMarketAccount"
     },
     {
-      "code": 6030,
+      "code": 6031,
       "name": "marketWrongMutability",
       "msg": "marketWrongMutability"
     },
     {
-      "code": 6031,
+      "code": 6032,
       "name": "failedUnwrap",
       "msg": "Failed Unwrap"
     },
     {
-      "code": 6032,
+      "code": 6033,
       "name": "userNotEnoughValue",
       "msg": "User Not Enough Value"
     },
     {
-      "code": 6033,
+      "code": 6034,
       "name": "amountZero",
       "msg": "amountZero"
     },
     {
-      "code": 6034,
+      "code": 6035,
       "name": "couldNotLoadTradeTokenData",
       "msg": "couldNotLoadTradeTokenData"
     },
     {
-      "code": 6035,
+      "code": 6036,
       "name": "couldNotLoadPoolData",
       "msg": "couldNotLoadPoolData"
     },
     {
-      "code": 6036,
+      "code": 6037,
       "name": "invalidTradeTokenAccount",
       "msg": "invalidTradeTokenAccount"
     },
     {
-      "code": 6037,
+      "code": 6038,
       "name": "invalidTokenAccount",
       "msg": "invalidTokenAccount"
     },
     {
-      "code": 6038,
+      "code": 6039,
       "name": "invalidPoolAccount",
       "msg": "invalidPoolAccount"
     },
     {
-      "code": 6039,
+      "code": 6040,
       "name": "tradeTokenNotFind",
       "msg": "canNotFindTradeToken"
     },
     {
-      "code": 6040,
+      "code": 6041,
       "name": "stakePaused",
       "msg": "stakePaused"
     },
     {
-      "code": 6041,
+      "code": 6042,
       "name": "stakeToSmall",
       "msg": "stakeToSmall"
     },
     {
-      "code": 6042,
+      "code": 6043,
       "name": "unStakeTooSmall",
       "msg": "unStakeTooSmall"
     },
     {
-      "code": 6043,
+      "code": 6044,
       "name": "unStakeTooLarge",
       "msg": "unStakeTooLarge"
     },
     {
-      "code": 6044,
+      "code": 6045,
       "name": "positionSideNotSupport",
       "msg": "positionSideNotSupport"
     },
     {
-      "code": 6045,
+      "code": 6046,
       "name": "rewardsNotFound",
       "msg": "rewardsNotFound"
     },
     {
-      "code": 6046,
+      "code": 6047,
       "name": "userNotFound",
       "msg": "userNotFound"
     },
     {
-      "code": 6047,
+      "code": 6048,
       "name": "couldNotLoadUserData",
       "msg": "couldNotLoadUserData"
     },
     {
-      "code": 6048,
+      "code": 6049,
       "name": "poolSubUnsettleNotEnough",
       "msg": "poolSubUnsettleNotEnough"
     }
@@ -3178,10 +3413,6 @@ export type BumpinTrade = {
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "userKey",
-            "type": "pubkey"
-          },
           {
             "name": "position",
             "type": {
@@ -3728,6 +3959,26 @@ export type BumpinTrade = {
           {
             "name": "placeTime",
             "type": "u128"
+          },
+          {
+            "name": "poolIndex",
+            "type": "u16"
+          },
+          {
+            "name": "stablePoolIndex",
+            "type": "u16"
+          },
+          {
+            "name": "marketIndex",
+            "type": "u16"
+          },
+          {
+            "name": "tradeTokenIndex",
+            "type": "u16"
+          },
+          {
+            "name": "indexTradeTokenIndex",
+            "type": "u16"
           }
         ]
       }
@@ -3830,6 +4081,10 @@ export type BumpinTrade = {
             }
           },
           {
+            "name": "settleFundingFee",
+            "type": "i128"
+          },
+          {
             "name": "stable",
             "type": "bool"
           },
@@ -3872,6 +4127,10 @@ export type BumpinTrade = {
           },
           {
             "name": "unSettleAmount",
+            "type": "u128"
+          },
+          {
+            "name": "settleFundingFeeAmount",
             "type": "u128"
           },
           {
@@ -4142,8 +4401,12 @@ export type BumpinTrade = {
             "type": "u128"
           },
           {
-            "name": "portfolio",
-            "type": "bool"
+            "name": "poolIndex",
+            "type": "u16"
+          },
+          {
+            "name": "tradeTokenIndex",
+            "type": "u16"
           }
         ]
       }
@@ -4316,12 +4579,16 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
-            "name": "unStakeTokenAmount",
+            "name": "share",
             "type": "u128"
           },
           {
-            "name": "portfolio",
-            "type": "bool"
+            "name": "poolIndex",
+            "type": "u16"
+          },
+          {
+            "name": "tradeTokenIndex",
+            "type": "u16"
           }
         ]
       }
@@ -4355,6 +4622,14 @@ export type BumpinTrade = {
           {
             "name": "addMarginAmount",
             "type": "u128"
+          },
+          {
+            "name": "marketIndex",
+            "type": "u16"
+          },
+          {
+            "name": "poolIndex",
+            "type": "u16"
           }
         ]
       }
@@ -4379,6 +4654,18 @@ export type BumpinTrade = {
           {
             "name": "addInitialMarginFromPortfolio",
             "type": "u128"
+          },
+          {
+            "name": "marketIndex",
+            "type": "u16"
+          },
+          {
+            "name": "poolIndex",
+            "type": "u16"
+          },
+          {
+            "name": "tradeTokenIndex",
+            "type": "u16"
           }
         ]
       }
@@ -4388,10 +4675,6 @@ export type BumpinTrade = {
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "userKey",
-            "type": "pubkey"
-          },
           {
             "name": "prePosition",
             "type": {
@@ -4826,7 +5109,7 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
-            "name": "amount",
+            "name": "stakedShare",
             "type": "u128"
           },
           {
@@ -4956,7 +5239,7 @@ export type BumpinTrade = {
             "name": "updateOrigin",
             "type": {
               "defined": {
-                "name": "userTokenUpdateOrigin"
+                "name": "userTokenUpdateReason"
               }
             }
           }
@@ -4978,7 +5261,7 @@ export type BumpinTrade = {
       }
     },
     {
-      "name": "userTokenUpdateOrigin",
+      "name": "userTokenUpdateReason",
       "type": {
         "kind": "enum",
         "variants": [

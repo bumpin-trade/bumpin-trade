@@ -7,7 +7,7 @@ use crate::validate;
 
 #[bumpin_zero_copy_unsafe]
 pub struct UserStake {
-    pub amount: u128,
+    pub staked_share: u128, //old: amount
     pub user_rewards: UserRewards,
     pub pool_key: Pubkey,
     pub user_stake_status: UserStakeStatus,
@@ -22,14 +22,14 @@ pub enum UserStakeStatus {
 }
 
 impl UserStake {
-    pub fn add_user_stake(&mut self, stake_amount: u128) -> BumpResult {
-        self.amount = self.amount.safe_add(stake_amount)?;
+    pub fn add_staked_share(&mut self, stake_amount: u128) -> BumpResult {
+        self.staked_share = self.staked_share.safe_add(stake_amount)?;
         Ok(())
     }
 
-    pub fn sub_user_stake(&mut self, stake_amount: u128) -> BumpResult {
-        validate!(self.amount >= stake_amount, BumpErrorCode::AmountNotEnough)?;
-        self.amount = self.amount.safe_sub(stake_amount)?;
+    pub fn sub_staked_share(&mut self, stake_amount: u128) -> BumpResult {
+        validate!(self.staked_share >= stake_amount, BumpErrorCode::AmountNotEnough)?;
+        self.staked_share = self.staked_share.safe_sub(stake_amount)?;
         Ok(())
     }
 

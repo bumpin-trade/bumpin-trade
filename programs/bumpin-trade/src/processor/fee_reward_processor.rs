@@ -20,7 +20,7 @@ pub fn update_account_fee_reward(
     let fee_reward = stake_pool.fee_reward;
     if user_stake.user_rewards.open_rewards_per_stake_token
         != fee_reward.cumulative_rewards_per_stake_token
-        && user_stake.amount > 0
+        && user_stake.staked_share > 0
         && fee_reward
             .cumulative_rewards_per_stake_token
             .safe_sub(user_stake.user_rewards.open_rewards_per_stake_token)?
@@ -30,7 +30,7 @@ pub fn update_account_fee_reward(
             .fee_reward
             .cumulative_rewards_per_stake_token
             .safe_sub(user_stake.user_rewards.open_rewards_per_stake_token)?
-            .safe_mul_small_rate(user_stake.amount)?;
+            .safe_mul_small_rate(user_stake.staked_share)?;
         user_stake.add_user_rewards(realised_rewards_token_amount)?;
     }
     user_stake.user_rewards.open_rewards_per_stake_token =

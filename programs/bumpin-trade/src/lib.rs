@@ -98,11 +98,18 @@ pub mod bumpin_trade {
         handle_wallet_stake(ctx, params)
     }
 
-    pub fn pool_un_stake<'a, 'b, 'c: 'info, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, PoolUnStake>,
+    pub fn portfolio_un_stake<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, PortfolioUnStake>,
         params: UnStakeParams,
     ) -> Result<()> {
-        handle_pool_un_stake(ctx, params)
+        handle_portfolio_un_stake(ctx, params)
+    }
+
+    pub fn wallet_un_stake<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, WalletUnStake>,
+        params: UnStakeParams,
+    ) -> Result<()> {
+        handle_wallet_un_stake(ctx, params)
     }
 
     /*-----account------*/

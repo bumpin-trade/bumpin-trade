@@ -220,7 +220,7 @@ impl User {
 
     pub fn sub_user_stake(&mut self, pool_key: &Pubkey, stake_amount: u128) -> BumpResult<()> {
         let user_stake = self.get_user_stake_mut_ref(pool_key)?;
-        user_stake.sub_user_stake(stake_amount)?;
+        user_stake.sub_staked_share(stake_amount)?;
         Ok(())
     }
 

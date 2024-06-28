@@ -1,4 +1,5 @@
 import {BN} from "@coral-xyz/anchor";
+import {PublicKey} from "@solana/web3.js";
 
 export class BumpinClientNotInitialized extends Error {
     constructor() {
@@ -16,6 +17,38 @@ export class BumpinUserNotLogin extends Error {
     constructor() {
         super(`User not login`);
 
+    }
+}
+
+export class BumpinTokenNotFound extends Error {
+    mint: PublicKey;
+
+    constructor(mint: PublicKey) {
+        super(`Token not found: ${mint}`);
+        this.mint = mint;
+    }
+
+    public getMint(): PublicKey {
+        return this.mint;
+    }
+}
+
+export class BumpinSupplyInsufficient extends Error {
+    minimalExpected: BN;
+    actualValue: BN;
+
+    constructor(minimalExpected: BN, actualValue: BN) {
+        super(`Supply is insufficient: ${actualValue}  < ${minimalExpected} (expected)`);
+        this.minimalExpected = minimalExpected;
+        this.actualValue = actualValue;
+    }
+
+    public getMinimalExpected(): BN {
+        return this.minimalExpected;
+    }
+
+    public getActualValue(): BN {
+        return this.actualValue;
     }
 }
 

@@ -106,7 +106,6 @@ pub struct StakeParams {
     pub request_token_amount: u128,
     pub pool_index: u16,
     pub trade_token_index: u16,
-    // pub stable_trade_token_index: u16,
 }
 
 pub fn handle_portfolio_stake<'a, 'b, 'c: 'info, 'info>(

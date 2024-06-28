@@ -1,10 +1,11 @@
-import {PublicKey, TransactionMessage, VersionedTransaction} from "@solana/web3.js";
+import {Connection, PublicKey, TransactionMessage, VersionedTransaction} from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {Program, Provider, Wallet} from "@coral-xyz/anchor";
 import {Buffer} from "buffer";
 import {BumpinTrade} from "../types/bumpin_trade";
 import {TradeToken} from "../types";
-import {BumpinAccountNotFound} from "../errors";
+import {BumpinAccountNotFound, BumpinTokenNotFound} from "../errors";
+import {Account, getAccount, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 
 export class BumpinUtils {
     public static capitalize(value: string): string {
@@ -75,6 +76,45 @@ export class BumpinUtils {
         }
         return tradeToken;
     }
+
+    public static async getTokenAccountFromWallet(connection: Connection, walletPublicKey: PublicKey, mintPublicKey: PublicKey): Promise<Account> {
+        const walletPubKey = new PublicKey(walletPublicKey);
+        const mintPubKey = new PublicKey(mintPublicKey);
+        const tokenAccounts = await connection.getTokenAccountsByOwner(walletPubKey, {
+            programId: TOKEN_PROGRAM_ID,
+        });
+
+        for (let accountInfo of tokenAccounts.value) {
+            const accountPubKey = accountInfo.pubkey;
+            const tokenAccount = await getAccount(connection, accountPubKey);
+
+            if (tokenAccount.mint.equals(mintPubKey)) {
+                return tokenAccount;
+            }
+        }
+        throw new BumpinAccountNotFound("TokenAccount: " + mintPublicKey);
+    }
+
+    public static async getTokenBalanceFromWallet(connection: Connection, walletPublicKey: PublicKey, mintPublicKey: PublicKey): Promise<bigint> {
+        const walletPubKey = new PublicKey(walletPublicKey);
+        const mintPubKey = new PublicKey(mintPublicKey);
+        const tokenAccounts = await connection.getTokenAccountsByOwner(walletPubKey, {
+            programId: TOKEN_PROGRAM_ID,
+        });
+
+        for (let accountInfo of tokenAccounts.value) {
+            const accountPubKey = accountInfo.pubkey;
+
+            const tokenAccount = await getAccount(connection, accountPubKey);
+
+            if (tokenAccount.mint.equals(mintPubKey)) {
+
+                return tokenAccount.amount;
+            }
+        }
+        throw new BumpinTokenNotFound(mintPublicKey);
+    }
+
 
     public static async manualCreateAccount(provider: Provider, wallet: Wallet, newAccountPk: anchor.web3.Keypair, space: number, lamports: number, programId: PublicKey) {
         let i = anchor.web3.SystemProgram.createAccount({

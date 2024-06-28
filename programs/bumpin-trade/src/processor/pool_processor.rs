@@ -54,7 +54,7 @@ impl<'a> PoolProcessor<'_> {
             )?)?;
         }
         let user_stake = user.get_user_stake_mut_ref(&pool.pool_key)?;
-        user_stake.add_user_stake(supply_amount)?;
+        user_stake.add_staked_share(supply_amount)?;
         Ok((supply_amount, user_stake.clone()))
     }
     pub fn stake(
@@ -83,7 +83,7 @@ impl<'a> PoolProcessor<'_> {
             )?)?;
         }
         let user_stake = user.get_user_stake_mut_ref(&self.pool.pool_key)?;
-        user_stake.add_user_stake(supply_amount)?;
+        user_stake.add_staked_share(supply_amount)?;
         Ok((supply_amount, user_stake.clone()))
     }
     pub fn un_stake(
@@ -112,7 +112,7 @@ impl<'a> PoolProcessor<'_> {
         validate!(token_amount < max_un_stake_amount, BumpErrorCode::UnStakeTooLarge)?;
 
         let user_stake = user.get_user_stake_mut_ref(&self.pool.pool_key)?;
-        user_stake.sub_user_stake(un_stake_amount)?;
+        user_stake.sub_staked_share(un_stake_amount)?;
 
         Ok(token_amount)
     }
