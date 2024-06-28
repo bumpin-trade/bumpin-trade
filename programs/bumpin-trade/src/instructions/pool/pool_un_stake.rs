@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
-use crate::{utils, validate};
 use crate::can_sign_for_user;
 use crate::errors::BumpErrorCode;
 use crate::instructions::Either;
@@ -16,6 +15,7 @@ use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::{User, UserTokenUpdateReason};
+use crate::{utils, validate};
 
 #[derive(Accounts)]
 #[instruction(un_stake_params: UnStakeParams,)]
@@ -222,10 +222,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
                 true,
             )?;
 
-            pool.sub_amount_and_supply(
-                un_stake_token_amount,
-                un_stake_params.share,
-            )?;
+            pool.sub_amount_and_supply(un_stake_token_amount, un_stake_params.share)?;
 
             let user_stake = user.get_user_stake_mut_ref(&pool.pool_key)?;
 
@@ -240,7 +237,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
                 change_supply_amount: un_stake_token_amount,
                 user_stake: user_stake.clone(),
             });
-        }
+        },
         Either::Right(ctx) => {
             let pool = &mut ctx.accounts.pool.load_mut()?;
             let user = &mut ctx.accounts.user.load_mut()?;
@@ -288,10 +285,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
                 transfer_amount,
             )?;
 
-            pool.sub_amount_and_supply(
-                un_stake_token_amount,
-                un_stake_params.share,
-            )?;
+            pool.sub_amount_and_supply(un_stake_token_amount, un_stake_params.share)?;
 
             let user_stake = user.get_user_stake_mut_ref(&pool.pool_key)?;
 
@@ -306,7 +300,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
                 change_supply_amount: un_stake_token_amount,
                 user_stake: user_stake.clone(),
             });
-        }
+        },
     }
 
     Ok(())

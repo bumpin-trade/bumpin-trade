@@ -5,7 +5,7 @@ use std::ops::DerefMut;
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::processor::market_processor::MarketProcessor;
 use crate::processor::position_processor;
-use crate::processor::position_processor::{DecreasePositionParams};
+use crate::processor::position_processor::DecreasePositionParams;
 use crate::state::market::Market;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;

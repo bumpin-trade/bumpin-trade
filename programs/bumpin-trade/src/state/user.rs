@@ -8,8 +8,7 @@ use crate::instructions::cal_utils;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::state::bump_events::{
-    AddOrDeleteUserOrderEvent, UserHoldUpdateEvent,
-    UserTokenBalanceUpdateEvent,
+    AddOrDeleteUserOrderEvent, UserHoldUpdateEvent, UserTokenBalanceUpdateEvent,
 };
 use crate::state::infrastructure::user_order::{
     OrderSide, OrderStatus, OrderType, PositionSide, UserOrder,
