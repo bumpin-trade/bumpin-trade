@@ -1,5 +1,5 @@
 import {PublicKey} from '@solana/web3.js';
-import {Pool, PositionStatus, State, TradeToken, UserAccount, UserStakeStatus} from "../types";
+import {Pool, PositionStatus, State, TradeToken, UserAccount, UserStakeStatus, UserTokenStatus} from "../types";
 import {BulkAccountLoader} from "../account/bulkAccountLoader";
 import {BN, Program} from "@coral-xyz/anchor";
 import {BumpinUtils} from "../utils/utils";
@@ -44,9 +44,11 @@ export class UserComponent extends Component {
     }
 
 
-    public async portfolioStake(amount: BN, tradeToken: TradeToken, state: State, pool: Pool): Promise<void> {
+    public async portfolioStake(amount: BN, tradeToken: TradeToken, state: State, pool: Pool, sync: boolean = false): Promise<void> {
+        let user = await this.getUser(sync);
+
         await this.checkStakeAmountFulfilRequirements(amount, tradeToken, pool);
-        let availableValue = await this.getUserAvailableValue([tradeToken], amount, pool);
+        let availableValue = await this.getUserAvailableValue(user, [tradeToken], amount, pool);
         if (!availableValue.gt(new BN(0))) {
             throw new BumpinValueInsufficient(amount, availableValue)
         }
@@ -56,13 +58,21 @@ export class UserComponent extends Component {
             tradeTokenIndex: tradeToken.tokenIndex
         };
 
+        let usingTradeTokenPublicKeys = [];
+        for (let token of user.userTokens) {
+            if (token.userTokenStatus === UserTokenStatus.USING) {
+                usingTradeTokenPublicKeys.push(token.tokenMint)
+            }
+        }
+
         await this.program.methods.portfolioStake(
             param
         ).accounts(
             {
                 authority: this.publicKey,
             }
-        ).signers([]).rpc();
+        ).remainingAccounts(usingTradeTokenPublicKeys)
+            .signers([]).rpc();
     }
 
     public async walletStake(amount: BN, tradeToken: TradeToken, wallet: PublicKey, state: State, pool: Pool): Promise<void> {
@@ -117,8 +127,7 @@ export class UserComponent extends Component {
 
     }
 
-    public async getUserAvailableValue(tradeTokens: TradeToken[], amount: BN, pool: Pool, sync: boolean = false) {
-        let user = await this.getUser(sync);
+    public async getUserAvailableValue(user: UserAccount, tradeTokens: TradeToken[], amount: BN, pool: Pool, sync: boolean = false) {
 
         for (let userPosition of user.userPositions) {
             if (userPosition.status === PositionStatus.INIT) {
