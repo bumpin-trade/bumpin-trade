@@ -36,6 +36,7 @@ pub struct PositionProcessor<'a> {
 pub fn update_funding_fee(
     position: &mut UserPosition,
     market: &mut Market,
+    pool: &mut Pool,
     token_price: u128,
     token: &TradeToken,
 ) -> BumpResult<()> {
@@ -60,11 +61,8 @@ pub fn update_funding_fee(
         token_price,
     )?)?;
     position.set_open_funding_fee_amount_per_size(market_funding_fee_per_size)?;
-    market_processor.update_market_total_funding_fee(
-        realized_funding_fee,
-        position.is_long,
-        true,
-    )?;
+    market_processor.update_market_total_funding_fee(realized_funding_fee, position.is_long)?;
+    pool.update_pool_funding_fee(realized_funding_fee, true)?;
     Ok(())
 }
 
@@ -120,7 +118,13 @@ pub fn decrease_position1<'info>(
             params.execute_price,
             &trade_token,
         )?;
-        update_funding_fee(position, market, params.execute_price, &trade_token)?;
+        update_funding_fee(
+            position,
+            market,
+            if position.is_long { stake_token_pool } else { stable_pool },
+            params.execute_price,
+            &trade_token,
+        )?;
 
         let response = update_decrease_position(
             params.decrease_size,
@@ -196,11 +200,8 @@ pub fn decrease_position1<'info>(
     //     false,
     // )?;
     let mut market_processor = MarketProcessor { market };
-    market_processor.update_market_total_funding_fee(
-        response.settle_funding_fee,
-        !pre_position.cross_margin,
-        pre_position.is_long,
-    )?;
+    market_processor
+        .update_market_total_funding_fee(response.settle_funding_fee, pre_position.is_long)?;
     market_processor.update_oi(
         false,
         UpdateOIParams {
@@ -325,18 +326,15 @@ pub fn decrease_position<'info>(
         response.settle_borrowing_fee,
         false,
     )?;
-    market_processor.update_market_total_funding_fee(
-        response.settle_funding_fee,
-        !pre_position.cross_margin,
-        pre_position.is_long,
-    )?;
+    market_processor
+        .update_market_total_funding_fee(response.settle_funding_fee, pre_position.is_long)?;
     market_processor.update_oi(
         false,
         UpdateOIParams {
             margin_token: pre_position.margin_mint,
             size: params.decrease_size,
             is_long: pre_position.is_long,
-            entry_price: 0u128,
+            entry_price: pre_position.entry_price,
         },
     )?;
 
@@ -1046,7 +1044,7 @@ pub fn increase_position(
         let pre_position = position.clone();
         //increase position
         update_borrowing_fee(position, pool, margin_token_price, &trade_token)?;
-        update_funding_fee(position, market, margin_token_price, &trade_token)?;
+        update_funding_fee(position, market, pool, margin_token_price, &trade_token)?;
         position.set_entry_price(cal_utils::compute_avg_entry_price(
             position.position_size,
             position.entry_price,

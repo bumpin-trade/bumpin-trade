@@ -123,6 +123,7 @@ pub fn settle_funding_fee(
                 base_token_pool.add_stable_amount(fee_amount_usd.cast::<u128>()?)?;
             }
         }
+        stable_token_pool.update_pool_funding_fee(fee_amount, false)?;
     } else {
         if fee_amount_usd <= 0i128 {
             //base_token_pool should pay to user, count amount on base_token_pool
@@ -135,6 +136,7 @@ pub fn settle_funding_fee(
                 base_token_pool.add_amount(fee_amount.cast::<u128>()?)?;
             }
         }
+        base_token_pool.update_pool_funding_fee(fee_amount, false)?;
     }
     Ok(())
 }

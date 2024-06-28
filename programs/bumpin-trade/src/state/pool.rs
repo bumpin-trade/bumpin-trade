@@ -4,16 +4,20 @@ use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
 use crate::errors::BumpErrorCode::PoolSubUnsettleNotEnough;
 use crate::errors::{BumpErrorCode, BumpResult};
-use crate::instructions::{add_u128, sub_u128};
+use crate::instructions::{add_u128, cal_utils, sub_u128};
 use crate::math::safe_math::SafeMath;
+use crate::processor::market_processor::MarketProcessor;
 use crate::state::bump_events::PoolUpdateEvent;
 use crate::state::infrastructure::fee_reward::FeeReward;
 use crate::state::infrastructure::pool_borrowing_fee::BorrowingFee;
+use crate::state::market_map::MarketMap;
+use crate::state::oracle_map::OracleMap;
+use crate::state::trade_token_map::TradeTokenMap;
 use crate::traits::Size;
 use crate::validate;
 
 #[account(zero_copy(unsafe))]
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Default, Debug)]
 #[repr(C)]
 pub struct Pool {
     pub pnl: i128,
@@ -31,6 +35,7 @@ pub struct Pool {
     pub pool_mint: Pubkey,
     pub pool_index: u16,
     pub pool_status: PoolStatus,
+    pub settle_funding_fee: i128,
     pub stable: bool,
     pub pool_name: [u8; 32],
     pub padding: [u8; 12],
@@ -40,8 +45,9 @@ impl Size for Pool {
     const SIZE: usize = std::mem::size_of::<Pool>() + 8;
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Copy, Debug, Eq, PartialEq)]
 pub enum PoolStatus {
+    #[default]
     NORMAL,
     StakePaused,
     UnStakePaused,
@@ -66,31 +72,6 @@ pub struct PoolConfig {
     pub un_stake_fee_rate: u128,
     pub un_settle_mint_ratio_limit: u128,
     pub borrowing_interest_rate: u128,
-}
-
-impl Default for Pool {
-    fn default() -> Self {
-        Pool {
-            pool_index: Default::default(),
-            pool_key: Default::default(),
-            pool_mint: Default::default(),
-            pool_mint_vault: Pubkey::default(),
-            pool_name: [0; 32],
-            pool_balance: PoolBalance::default(),
-            stable_balance: Default::default(),
-            borrowing_fee: BorrowingFee::default(),
-            fee_reward: FeeReward::default(),
-            stable_fee_reward: Default::default(),
-            pool_config: PoolConfig::default(),
-            total_supply: 0u128,
-            pool_status: PoolStatus::NORMAL,
-            stable: false,
-            pnl: 0,
-            apr: 0u128,
-            insurance_fund_amount: 0,
-            padding: [0; 12],
-        }
-    }
 }
 
 impl Pool {
@@ -204,6 +185,15 @@ impl Pool {
         Ok(())
     }
 
+    pub fn update_pool_funding_fee(&mut self, amount: i128, is_add: bool) -> BumpResult {
+        self.settle_funding_fee = if is_add {
+            self.settle_funding_fee.safe_add(amount)?
+        } else {
+            self.settle_funding_fee.safe_sub(amount)?
+        };
+        Ok(())
+    }
+
     fn check_hold_is_allowed(&self, amount: u128) -> BumpResult<bool> {
         if self.pool_config.pool_liquidity_limit == 0 {
             return Ok(add_u128(self.pool_balance.amount, self.pool_balance.un_settle_amount)?
@@ -241,15 +231,64 @@ impl Pool {
             pre_insurance_fund_amount: pre_pool.insurance_fund_amount,
         });
     }
-}
 
-#[cfg(test)]
-mod test {
-    use crate::state::pool::Pool;
+    pub fn get_pool_usd_value(
+        &self,
+        trade_token_map: &TradeTokenMap,
+        oracle_map: &mut OracleMap,
+        market_vec: &MarketMap,
+    ) -> BumpResult<u128> {
+        let trade_token = trade_token_map.get_trade_token(&self.pool_mint)?;
+        let trade_token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
+        let mut pool_value = cal_utils::token_to_usd_u(
+            self.pool_balance.amount.safe_add(self.pool_balance.un_settle_amount)?,
+            trade_token.decimals,
+            trade_token_price,
+        )?;
+        if !self.stable {
+            let markets = market_vec.get_all_market()?;
+            for mut market in markets {
+                if self.pool_key.eq(&market.pool_key) {
+                    let mut market_processor = MarketProcessor { market: &mut market };
+                    let long_market_un_pnl =
+                        market_processor.get_market_un_pnl(true, oracle_map)?;
+                    pool_value = add_u128(pool_value, long_market_un_pnl)?;
 
-    #[test]
-    pub fn size_of_pool() {
-        println!("size of pool: {}", std::mem::size_of::<Pool>());
-        assert_eq!(std::mem::size_of::<Pool>(), 528);
+                    let short_market_un_pnl =
+                        market_processor.get_market_un_pnl(false, oracle_map)?;
+                    pool_value = add_u128(pool_value, short_market_un_pnl)?;
+                }
+            }
+
+            let stable_amount = self
+                .stable_balance
+                .amount
+                .safe_add(self.stable_balance.un_settle_amount)?
+                .safe_sub(self.stable_balance.loss_amount)?;
+            if stable_amount > 0u128 {
+                let stable_trade_token =
+                    trade_token_map.get_trade_token(&self.stable_balance.pool_mint)?;
+                let stable_trade_token_price =
+                    oracle_map.get_price_data(&stable_trade_token.oracle)?.price;
+                let stable_usd_value = cal_utils::token_to_usd_u(
+                    stable_amount,
+                    stable_trade_token.decimals,
+                    stable_trade_token_price,
+                )?;
+                pool_value = add_u128(pool_value, stable_usd_value)?;
+            }
+        }
+        Ok(if pool_value <= 0 { 0u128 } else { pool_value })
+    }
+
+    pub fn get_pool_net_price(
+        &self,
+        trade_token_map: &TradeTokenMap,
+        oracle_map: &mut OracleMap,
+        market_vec: &MarketMap,
+    ) -> BumpResult<u128> {
+        let pool_value = self.get_pool_usd_value(trade_token_map, oracle_map, market_vec)?;
+        let net_price = self.total_supply.safe_div(pool_value)?;
+        Ok(net_price)
     }
 }

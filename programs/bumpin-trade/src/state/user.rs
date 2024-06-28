@@ -459,6 +459,7 @@ impl User {
         position_processor::update_funding_fee(
             position,
             market,
+            pool,
             params.execute_price,
             &trade_token,
         )?;

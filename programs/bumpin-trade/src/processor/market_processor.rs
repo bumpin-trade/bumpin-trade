@@ -67,7 +67,8 @@ impl<'a> MarketProcessor<'_> {
         } else {
             self.market.short_open_interest
         };
-        market_position.sub_open_interest(params.size)?;
+
+        market_position.sub_open_interest(params.size, params.entry_price)?;
         Ok(())
     }
     pub fn update_market_funding_fee_rate(&mut self, state: &State, price: u128) -> BumpResult<()> {
@@ -127,26 +128,14 @@ impl<'a> MarketProcessor<'_> {
         &mut self,
         amount: i128,
         is_long: bool,
-        is_add: bool,
     ) -> BumpResult<()> {
         if is_long {
-            if is_add {
-                self.market.funding_fee.total_long_funding_fee =
-                    cal_utils::add_i128(self.market.funding_fee.total_long_funding_fee, amount)?;
-            } else {
-                self.market.funding_fee.total_long_funding_fee =
-                    cal_utils::sub_i128(self.market.funding_fee.total_long_funding_fee, amount)?;
-            }
+            self.market.funding_fee.total_long_funding_fee =
+                cal_utils::add_i128(self.market.funding_fee.total_long_funding_fee, amount)?;
         } else {
-            if is_add {
-                self.market.funding_fee.total_short_funding_fee =
-                    cal_utils::add_i128(self.market.funding_fee.total_short_funding_fee, amount)?;
-            } else {
-                self.market.funding_fee.short_funding_fee_rate =
-                    cal_utils::sub_i128(self.market.funding_fee.total_short_funding_fee, amount)?;
-            }
+            self.market.funding_fee.total_short_funding_fee =
+                cal_utils::add_i128(self.market.funding_fee.total_short_funding_fee, amount)?;
         }
-
         Ok(())
     }
 }

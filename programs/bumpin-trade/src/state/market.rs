@@ -1,5 +1,6 @@
 use crate::errors::BumpResult;
 use crate::instructions::cal_utils;
+use crate::math::safe_math::SafeMath;
 use crate::state::infrastructure::market_funding_fee::MarketFundingFee;
 use crate::traits::Size;
 use anchor_lang::prelude::*;
@@ -58,11 +59,16 @@ impl MarketPosition {
         self.entry_price = price;
         Ok(())
     }
-    pub fn sub_open_interest(&mut self, size: u128) -> BumpResult<()> {
+    pub fn sub_open_interest(&mut self, size: u128, price: u128) -> BumpResult<()> {
         if self.open_interest <= size {
             self.open_interest = 0u128;
             self.entry_price = 0u128;
         } else {
+            self.entry_price = self
+                .open_interest
+                .safe_mul(self.entry_price)?
+                .safe_sub(size.safe_mul(price)?)?
+                .safe_div(self.open_interest.safe_sub(size)?)?;
             self.open_interest = cal_utils::sub_u128(self.open_interest, size)?;
         }
         Ok(())
