@@ -1,10 +1,11 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
+use std::ops::DerefMut;
 
-use crate::errors::BumpErrorCode;
+use crate::errors::{BumpErrorCode, BumpResult};
 use crate::processor::market_processor::MarketProcessor;
 use crate::processor::position_processor;
-use crate::processor::position_processor::{DecreasePositionParams, PositionProcessor};
+use crate::processor::position_processor::{DecreasePositionParams};
 use crate::state::market::Market;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
@@ -118,69 +119,97 @@ pub fn handle_liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
     _user_authority_key: Pubkey,
 ) -> Result<()> {
     let mut user = ctx.accounts.user.load_mut()?;
-    let user_position = user.get_user_position_mut_ref(&position_key)?;
-
-    validate!(!user_position.cross_margin, BumpErrorCode::OnlyLiquidateIsolatePosition)?;
-    let mut market = ctx.accounts.market.load_mut()?;
-
     let remaining_accounts = ctx.remaining_accounts;
-    let mut oracle_map = OracleMap::load(remaining_accounts)?;
-
-    let mut market_processor = MarketProcessor { market: &mut market };
+    let mut market = ctx.accounts.market.load_mut()?;
     let trade_token = ctx.accounts.trade_token.load()?;
-    market_processor.update_market_funding_fee_rate(
+    let mut oracle_map = OracleMap::load(remaining_accounts)?;
+    let mut base_token_pool = ctx.accounts.pool.load_mut()?;
+    let mut stable_pool = ctx.accounts.stable_pool.load_mut()?;
+
+    let (is_long, margin_mint, position_size, liquidation_price) = cal_liquidation_price(
+        &position_key,
+        &user,
+        base_token_pool.deref_mut(),
+        stable_pool.deref_mut(),
         &ctx.accounts.state,
-        oracle_map.get_price_data(&trade_token.oracle)?.price,
+        &trade_token,
+        market.deref_mut(),
+        &mut oracle_map,
     )?;
 
-    let base_token_pool = ctx.accounts.pool.load_mut()?;
-    let stable_pool = ctx.accounts.stable_pool.load_mut()?;
-    let mut pool = if user_position.is_long { base_token_pool } else { stable_pool };
-
-    pool.update_pool_borrowing_fee_rate()?;
-
-    let mut position_processor = PositionProcessor { position: user_position };
-    let margin_token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
-    let liquidation_price = position_processor.get_liquidation_price(
-        &market,
-        &pool,
-        &ctx.accounts.state,
-        margin_token_price,
-        trade_token.decimals,
-    )?;
     let index_trade_token = ctx.accounts.index_trade_token.load()?;
 
     let index_price = oracle_map.get_price_data(&index_trade_token.oracle)?;
-    if (position_processor.position.is_long && index_price.price > liquidation_price)
-        || (!position_processor.position.is_long && index_price.price < liquidation_price)
+    if (is_long && index_price.price > liquidation_price)
+        || (!is_long && index_price.price < liquidation_price)
     {
-        position_processor::decrease_position(
+        let symbol = market.symbol;
+        let user_key = user.user_key;
+        position_processor::decrease_position1(
             DecreasePositionParams {
                 order_id: 0,
                 is_liquidation: true,
                 is_cross_margin: false,
-                margin_token: position_processor.position.margin_mint,
-                decrease_size: position_processor.position.position_size,
+                margin_token: margin_mint,
+                decrease_size: position_size,
                 execute_price: liquidation_price,
             },
-            &ctx.accounts.user,
-            &ctx.accounts.pool,
-            &ctx.accounts.stable_pool,
-            &ctx.accounts.market,
+            &mut user,
+            &mut market,
+            &mut base_token_pool,
+            &mut stable_pool,
             &ctx.accounts.state,
             Some(&ctx.accounts.user_token_account),
-            if position_processor.position.is_long {
+            if is_long {
                 &ctx.accounts.pool_mint_vault
             } else {
                 &ctx.accounts.stable_pool_mint_vault
             },
-            &ctx.accounts.trade_token,
+            trade_token,
             &ctx.accounts.trade_token_vault,
             &ctx.accounts.bump_signer,
             &ctx.accounts.token_program,
             &mut oracle_map,
-            &generate_position_key(&user.user_key, market.symbol, false, ctx.program_id)?,
+            &generate_position_key(&user_key, symbol, false, ctx.program_id)?,
         )?;
     }
     Ok(())
+}
+
+fn cal_liquidation_price(
+    position_key: &Pubkey,
+    user: &User,
+    base_token_pool: &mut Pool,
+    stable_pool: &mut Pool,
+    state: &State,
+    trade_token: &TradeToken,
+    market: &mut Market,
+    oracle_map: &mut OracleMap,
+) -> BumpResult<(bool, Pubkey, u128, u128)> {
+    let user_position = user.get_user_position_ref(position_key)?;
+    let pool = if user_position.is_long { base_token_pool } else { stable_pool };
+
+    validate!(!user_position.cross_margin, BumpErrorCode::OnlyLiquidateIsolatePosition)?;
+    let mut market_processor = MarketProcessor { market };
+    market_processor.update_market_funding_fee_rate(
+        state,
+        oracle_map.get_price_data(&trade_token.oracle)?.price,
+    )?;
+
+    pool.update_pool_borrowing_fee_rate()?;
+
+    let margin_token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
+    let liquidation_price = user_position.get_liquidation_price(
+        &market,
+        &pool,
+        state,
+        margin_token_price,
+        trade_token.decimals,
+    )?;
+    Ok((
+        user_position.is_long,
+        user_position.margin_mint,
+        user_position.position_size,
+        liquidation_price,
+    ))
 }

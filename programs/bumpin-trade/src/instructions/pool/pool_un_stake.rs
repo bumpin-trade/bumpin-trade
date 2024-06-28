@@ -4,6 +4,7 @@ use anchor_spl::token::{Token, TokenAccount};
 use crate::can_sign_for_user;
 use crate::errors::BumpErrorCode;
 use crate::math::safe_math::SafeMath;
+use crate::processor::fee_processor;
 use crate::processor::fee_reward_processor::update_account_fee_reward;
 use crate::processor::optional_accounts::load_maps;
 use crate::processor::pool_processor::PoolProcessor;
@@ -111,7 +112,7 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
 
     validate!(pool.total_supply == 0, BumpErrorCode::UnStakeTooSmall)?;
 
-    let mut pool_processor = PoolProcessor { pool };
+    let pool_processor = PoolProcessor { pool };
 
     let un_stake_token_amount = pool_processor.un_stake(
         &ctx.accounts.user,
@@ -120,8 +121,10 @@ pub fn handle_pool_un_stake<'a, 'b, 'c: 'info, 'info>(
         &mut account_maps.oracle_map,
         &account_maps.market_map,
     )?;
+    drop(pool_processor);
 
-    let un_stake_token_amount_fee = pool_processor.collect_un_stake_fee(un_stake_token_amount)?;
+    let un_stake_token_amount_fee =
+        fee_processor::collect_un_stake_fee(pool, un_stake_token_amount)?;
 
     update_account_fee_reward(&ctx.accounts.user, &ctx.accounts.pool)?;
 

@@ -4,8 +4,6 @@ use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
-use crate::processor::fee_processor;
-use crate::processor::user_processor::UserProcessor;
 use crate::state::infrastructure::user_stake::UserStake;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
@@ -19,12 +17,6 @@ pub struct PoolProcessor<'a> {
 }
 
 impl<'a> PoolProcessor<'_> {
-    pub fn collect_stake_fee(&mut self, amount: u128) -> BumpResult<u128> {
-        Ok(fee_processor::collect_stake_fee(&mut self.pool, amount)?)
-    }
-    pub fn collect_un_stake_fee(&mut self, amount: u128) -> BumpResult<u128> {
-        Ok(fee_processor::collect_un_stake_fee(&mut self.pool, amount)?)
-    }
     pub fn portfolio_to_stake(
         &mut self,
         user_loader: &AccountLoader<User>,
@@ -43,9 +35,8 @@ impl<'a> PoolProcessor<'_> {
         validate!(user_token.amount > mint_amount, BumpErrorCode::AmountNotEnough)?;
 
         user.sub_user_token_amount(&pool.pool_mint, mint_amount)?;
-        let mut user_processor = UserProcessor { user };
         validate!(
-            user_processor.get_available_value(oracle_map, trade_token_map)? > 0,
+            user.get_available_value(oracle_map, trade_token_map)? > 0,
             BumpErrorCode::AmountNotEnough
         )?;
         if self.pool.total_supply > 0 {

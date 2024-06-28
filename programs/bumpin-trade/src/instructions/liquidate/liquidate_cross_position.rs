@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::Token;
+use std::ops::DerefMut;
 
 use crate::errors::BumpErrorCode;
 use crate::instructions::cal_utils;
@@ -67,7 +68,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
     user_processor.cancel_all_cross_orders()?;
     drop(user_processor);
 
-    for user_position in &user.user_positions {
+    for user_position in &user.user_positions.clone() {
         //only cross margin position support
         if !user_position.cross_margin {
             continue;
@@ -86,16 +87,13 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         )?;
     }
 
-    let user_processor = UserProcessor { user: &mut user };
-    let (cross_net_value, total_position_mm, total_size) = user_processor
-        .get_user_cross_net_value(
-            &trade_token_map,
-            &mut oracle_map,
-            &market_map,
-            &pool_key_map,
-            &state,
-        )?;
-    drop(user_processor);
+    let (cross_net_value, total_position_mm, total_size) = user.get_user_cross_net_value(
+        &trade_token_map,
+        &mut oracle_map,
+        &market_map,
+        &pool_key_map,
+        &state,
+    )?;
 
     let bankruptcy_mr = cal_utils::div_to_precision_i(
         cross_net_value,
@@ -105,7 +103,9 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
     .max(0i128);
 
     if cross_net_value <= 0 || cross_net_value.abs().cast::<u128>()? <= total_position_mm {
-        for user_position in &mut user.user_positions {
+        let length = user.user_positions.len();
+        for i in 0..length {
+            let user_position = user.user_positions[i].clone();
             //only cross margin position support
             if !user_position.cross_margin {
                 continue;
@@ -160,7 +160,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
             let stable_pool = pool_key_map.get_ref(&market.stable_pool_key)?;
             let trade_token = trade_token_map.get_trade_token(&user_position.margin_mint)?;
 
-            position_processor::decrease_position(
+            position_processor::decrease_position1(
                 DecreasePositionParams {
                     order_id: 0,
                     is_liquidation: true,
@@ -169,10 +169,10 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
                     decrease_size: user_position.position_size,
                     execute_price: liquidation_price,
                 },
-                &ctx.accounts.user,
-                pool_key_map.get_account_loader(&market.pool_key)?,
-                pool_key_map.get_account_loader(&market.stable_pool_key)?,
-                market_map.get_account_loader(&user_position.symbol)?,
+                &mut user,
+                market_map.get_mut_ref(&user_position.symbol)?.deref_mut(),
+                pool_key_map.get_mut_ref(&market.pool_key)?.deref_mut(),
+                pool_key_map.get_mut_ref(&market.stable_pool_key)?.deref_mut(),
                 &ctx.accounts.state,
                 None,
                 if user_position.is_long {
@@ -186,7 +186,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
                         ctx.program_id,
                     )?)?
                 },
-                trade_token_map.get_account_loader(&user_position.margin_mint)?,
+                trade_token_map.get_trade_token(&user_position.margin_mint)?,
                 vault_map.get_account(&pda::generate_trade_token_vault_key(
                     trade_token.token_index,
                     ctx.program_id,

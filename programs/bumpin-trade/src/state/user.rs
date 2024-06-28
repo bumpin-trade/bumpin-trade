@@ -7,10 +7,8 @@ use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
-use crate::processor::position_processor;
-use crate::processor::position_processor::{DecreasePositionParams, UpdateDecreaseResponse};
 use crate::state::bump_events::{
-    AddOrDeleteUserOrderEvent, UpdateUserPositionEvent, UserHoldUpdateEvent,
+    AddOrDeleteUserOrderEvent, UserHoldUpdateEvent,
     UserTokenBalanceUpdateEvent,
 };
 use crate::state::infrastructure::user_order::{
@@ -19,11 +17,12 @@ use crate::state::infrastructure::user_order::{
 use crate::state::infrastructure::user_position::{PositionStatus, UserPosition};
 use crate::state::infrastructure::user_stake::{UserStake, UserStakeStatus};
 use crate::state::infrastructure::user_token::{UserToken, UserTokenStatus};
-use crate::state::market::Market;
+use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
-use crate::state::pool::Pool;
+use crate::state::pool_map::PoolMap;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
+use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::traits::Size;
 use crate::validate;
 
@@ -422,87 +421,6 @@ impl User {
         self.user_positions[position_index] = UserPosition::default();
         Ok(())
     }
-
-    pub fn decrease_position(
-        &mut self,
-        params: &DecreasePositionParams,
-        pool_account_loader: &AccountLoader<Pool>,
-        stable_pool_account_loader: &AccountLoader<Pool>,
-        market_account_loader: &AccountLoader<Market>,
-        state_account: &Account<State>,
-        trade_token_loader: &AccountLoader<TradeToken>,
-        oracle_map: &mut OracleMap,
-        position_key: &Pubkey,
-    ) -> BumpResult<(bool, UpdateDecreaseResponse, UserPosition)> {
-        let mut delete_position = false;
-        let stake_token_pool =
-            &mut pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
-        let stable_pool = &mut stable_pool_account_loader
-            .load_mut()
-            .map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
-        let position = self.get_user_position_mut_ref(position_key)?;
-        let pool = if position.is_long { stake_token_pool } else { stable_pool };
-
-        let trade_token =
-            trade_token_loader.load().map_err(|_| BumpErrorCode::CouldNotLoadTradeTokenData)?;
-        let market = &mut market_account_loader
-            .load_mut()
-            .map_err(|_| BumpErrorCode::CouldNotLoadMarketData)?;
-        let position_un_pnl_usd = position.get_position_un_pnl_usd(params.execute_price)?;
-        let margin_mint_token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
-        position_processor::update_borrowing_fee(
-            position,
-            pool,
-            params.execute_price,
-            &trade_token,
-        )?;
-        position_processor::update_funding_fee(
-            position,
-            market,
-            pool,
-            params.execute_price,
-            &trade_token,
-        )?;
-        let response = position_processor::update_decrease_position(
-            params.decrease_size,
-            params.is_liquidation,
-            params.is_cross_margin,
-            position_un_pnl_usd,
-            trade_token.decimals,
-            margin_mint_token_price,
-            market,
-            state_account,
-            &trade_token,
-            position,
-        )?;
-
-        if response.settle_margin < 0i128 && !params.is_liquidation && !position.cross_margin {
-            return Err(BumpErrorCode::AmountNotEnough);
-        }
-
-        if params.decrease_size == position.position_size {
-            delete_position = true;
-        } else {
-            let pre_position = position.clone();
-            position.sub_position_size(params.decrease_size)?;
-            position.sub_initial_margin(response.decrease_margin)?;
-            position.sub_initial_margin_usd(response.decrease_margin_in_usd)?;
-            position.sub_initial_margin_usd_from_portfolio(
-                response.decrease_margin_in_usd_from_portfolio,
-            )?;
-            position.sub_hold_pool_amount(response.un_hold_pool_amount)?;
-            position.add_realized_pnl(response.user_realized_pnl)?;
-            position.sub_realized_borrowing_fee(response.settle_borrowing_fee)?;
-            position.sub_realized_borrowing_fee_usd(response.settle_borrowing_fee_in_usd)?;
-            position.sub_realized_funding_fee(response.settle_funding_fee)?;
-            position.sub_realized_funding_fee_usd(response.settle_funding_fee_in_usd)?;
-            position.sub_close_fee_usd(response.settle_close_fee_in_usd)?;
-            position.set_last_update(cal_utils::current_time())?;
-            emit!(UpdateUserPositionEvent { pre_position, position: position.clone() });
-        }
-        Ok((delete_position, response, position.clone()))
-    }
-
     pub fn get_order_leverage(
         &self,
         symbol: [u8; 32],
@@ -744,5 +662,177 @@ impl User {
             update_origin: *user_token_update_origin,
         });
         Ok(())
+    }
+
+    pub fn get_portfolio_net_value(
+        &self,
+        trade_token_map: &TradeTokenMap,
+        oracle_map: &mut OracleMap,
+    ) -> BumpResult<u128> {
+        let total_token_net_value = 0u128;
+        for user_token in &self.user_tokens {
+            if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
+                continue;
+            }
+            let trade_token = trade_token_map.get_trade_token(&user_token.token_mint)?;
+            let oracle_price = oracle_map.get_price_data(&trade_token.oracle)?;
+            total_token_net_value
+                .safe_add(user_token.get_token_net_value(&trade_token, oracle_price)?)?;
+
+            drop(trade_token);
+        }
+        Ok(total_token_net_value)
+    }
+
+    pub fn get_user_cross_net_value(
+        &self,
+        trade_token_map: &TradeTokenMap,
+        mut oracle_map: &mut OracleMap,
+        market_map: &MarketMap,
+        pool_key_map: &PoolMap,
+        state: &State,
+    ) -> BumpResult<(i128, u128, u128)> {
+        let portfolio_net_value =
+            self.get_portfolio_net_value(&trade_token_map, &mut oracle_map)?;
+        let used_value = self.get_total_used_value(&trade_token_map, &mut oracle_map)?;
+        let (total_im_usd, total_un_pnl_usd, total_position_fee, total_position_mm, total_size) =
+            self.get_user_cross_position_value(
+                state,
+                &market_map,
+                &pool_key_map,
+                &trade_token_map,
+                &mut oracle_map,
+            )?;
+
+        let cross_net_value = portfolio_net_value
+            .safe_add(total_im_usd)?
+            .safe_add(self.hold)?
+            .cast::<i128>()?
+            .safe_add(total_un_pnl_usd)?
+            .safe_sub(used_value.cast()?)?
+            .safe_sub(total_position_fee)?;
+        Ok((cross_net_value, total_position_mm, total_size))
+    }
+
+    pub fn get_available_value(
+        &mut self,
+        oracle_map: &mut OracleMap,
+        trade_token_map: &TradeTokenMap,
+    ) -> BumpResult<i128> {
+        let mut total_net_value = 0u128;
+        let mut total_used_value = 0u128;
+        let mut total_borrowing_value = 0u128;
+
+        let mut total_im_from_portfolio_value = 0u128;
+        let mut total_un_pnl_value = 0i128;
+        let mut total_mm_usd_value = 0u128;
+
+        for user_token in &self.user_tokens {
+            if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
+                continue;
+            }
+            let trade_token = trade_token_map.get_trade_token(&user_token.token_mint)?;
+            let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle)?;
+
+            let token_net_value =
+                user_token.get_token_net_value(&trade_token, &oracle_price_data)?;
+            total_net_value = total_net_value.safe_add(token_net_value)?;
+
+            let token_used_value =
+                user_token.get_token_used_value(&trade_token, &oracle_price_data)?;
+            total_used_value = total_used_value.safe_add(token_used_value)?;
+
+            let token_borrowing_value = user_token.get_token_borrowing_value(&oracle_price_data)?;
+            total_borrowing_value = total_borrowing_value.safe_add(token_borrowing_value)?;
+        }
+
+        let positions_count = self.user_positions.len();
+
+        for i in 0..positions_count {
+            let user_position = &self.user_positions[i];
+            if user_position.status.eq(&PositionStatus::INIT) {
+                continue;
+            }
+
+            let index_trade_token = trade_token_map.get_trade_token(&user_position.index_mint)?;
+            let (initial_margin_usd_from_portfolio, position_un_pnl, mm_usd) =
+                user_position.get_position_value(&index_trade_token, oracle_map)?;
+
+            total_im_from_portfolio_value =
+                total_im_from_portfolio_value.safe_add(initial_margin_usd_from_portfolio)?;
+            total_un_pnl_value = total_un_pnl_value.safe_add(position_un_pnl)?;
+            total_mm_usd_value = total_mm_usd_value.safe_add(mm_usd)?;
+        }
+        let available_value = total_net_value
+            .safe_add(total_im_from_portfolio_value)?
+            .safe_add(self.hold.cast()?)?
+            .cast::<i128>()?
+            .safe_sub(total_used_value.cast()?)?
+            .safe_add(if total_un_pnl_value > 0 { 0i128 } else { total_un_pnl_value })?
+            .safe_sub(total_im_from_portfolio_value.cast()?)?
+            .safe_sub(total_borrowing_value.cast()?)?;
+        Ok(available_value)
+    }
+
+    pub fn get_user_cross_position_value(
+        &self,
+        state: &State,
+        market_map: &MarketMap,
+        pool_map: &PoolMap,
+        trade_token_map: &TradeTokenMap,
+        price_map: &mut OracleMap,
+    ) -> BumpResult<(u128, i128, i128, u128, u128)> {
+        let mut total_im_usd = 0u128;
+        let mut total_un_pnl_usd = 0i128;
+        let mut total_position_fee = 0i128;
+        let mut total_position_mm = 0u128;
+        let mut total_size = 0u128;
+
+        for user_position in &self.user_positions {
+            if user_position.status.eq(&PositionStatus::INIT) {
+                continue;
+            }
+            let index_trade_token = trade_token_map.get_trade_token(&user_position.index_mint)?;
+            let trade_token = trade_token_map.get_trade_token(&user_position.margin_mint)?;
+            let index_price = price_map.get_price_data(&index_trade_token.oracle)?.price;
+            let margin_token_price = price_map.get_price_data(&trade_token.oracle)?.price;
+            let market = market_map.get_ref(&user_position.symbol)?;
+            let pool = pool_map.get_ref(&market.pool_key)?;
+            total_im_usd = total_im_usd.safe_add(user_position.initial_margin_usd)?;
+
+            total_un_pnl_usd =
+                total_un_pnl_usd.safe_add(user_position.get_position_un_pnl_usd(index_price)?)?;
+            total_position_fee = total_position_fee.safe_add(user_position.get_position_fee(
+                &market,
+                &pool,
+                margin_token_price,
+                trade_token.decimals,
+            )?)?;
+            total_position_mm =
+                total_position_mm.safe_add(user_position.get_position_mm(&market, state)?)?;
+            total_size = total_size.safe_add(user_position.position_size)?;
+        }
+        Ok((total_im_usd, total_un_pnl_usd, total_position_fee, total_position_mm, total_size))
+    }
+
+    pub fn get_total_used_value(
+        &self,
+        trade_token_map: &TradeTokenMap,
+        oracle_map: &mut OracleMap,
+    ) -> BumpResult<u128> {
+        let mut total_used_value = 0u128;
+        for user_token in &self.user_tokens {
+            if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
+                continue;
+            }
+            let trade_token = trade_token_map.get_trade_token(&user_token.token_mint)?;
+            let oracle_price = oracle_map.get_price_data(&trade_token.oracle)?;
+            total_used_value = total_used_value
+                .safe_add(user_token.get_token_used_value(&trade_token, &oracle_price)?)?;
+        }
+        if self.hold > 0 {
+            total_used_value = total_used_value.safe_add(self.hold)?;
+        }
+        Ok(total_used_value)
     }
 }

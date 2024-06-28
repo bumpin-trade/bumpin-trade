@@ -8,12 +8,10 @@ use anchor_spl::token::{Token, TokenAccount};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{cal_utils, UpdatePositionLeverageParams, UpdatePositionMarginParams};
 use crate::math::casting::Cast;
-use crate::math::constants::RATE_PRECISION;
 use crate::math::safe_math::SafeMath;
 use crate::processor::fee_processor;
 use crate::processor::market_processor::{MarketProcessor, UpdateOIParams};
 use crate::processor::pool_processor::PoolProcessor;
-use crate::processor::user_processor::UserProcessor;
 use crate::state::bump_events::{
     AddOrDecreaseMarginEvent, AddOrDeleteUserPositionEvent, UpdateUserPositionEvent,
 };
@@ -28,10 +26,6 @@ use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::{User, UserTokenUpdateReason};
 use crate::utils::{pda, token};
 use crate::{position_mut, validate};
-
-pub struct PositionProcessor<'a> {
-    pub(crate) position: &'a mut UserPosition,
-}
 
 pub fn update_funding_fee(
     position: &mut UserPosition,
@@ -126,7 +120,7 @@ pub fn decrease_position1<'info>(
             &trade_token,
         )?;
 
-        let response = update_decrease_position(
+        let response = calculate_decrease_position(
             params.decrease_size,
             params.is_liquidation,
             params.is_cross_margin,
@@ -143,25 +137,9 @@ pub fn decrease_position1<'info>(
             return Err(BumpErrorCode::AmountNotEnough);
         }
         let position_deletion = if params.decrease_size != position.position_size {
-            //TODO:抽一个函数会更好
-            let pre_position = position.clone();
-            position.sub_position_size(params.decrease_size)?;
-            position.sub_initial_margin(response.decrease_margin)?;
-            position.sub_initial_margin_usd(response.decrease_margin_in_usd)?;
-            position.sub_initial_margin_usd_from_portfolio(
-                response.decrease_margin_in_usd_from_portfolio,
-            )?;
-            position.sub_hold_pool_amount(response.un_hold_pool_amount)?;
-            position.add_realized_pnl(response.user_realized_pnl)?;
-            position.sub_realized_borrowing_fee(response.settle_borrowing_fee)?;
-            position.sub_realized_borrowing_fee_usd(response.settle_borrowing_fee_in_usd)?;
-            position.sub_realized_funding_fee(response.settle_funding_fee)?;
-            position.sub_realized_funding_fee_usd(response.settle_funding_fee_in_usd)?;
-            position.sub_close_fee_usd(response.settle_close_fee_in_usd)?;
-            position.set_last_update(cal_utils::current_time())?;
-            emit!(UpdateUserPositionEvent { pre_position, position: position.clone() });
             false
         } else {
+            update_decrease_position(position, params.decrease_size, &response)?;
             true
         };
         (position.is_long, position_deletion, pre_position, response)
@@ -171,47 +149,21 @@ pub fn decrease_position1<'info>(
         user.delete_position(position_key)?;
     }
 
-    if is_long {
-        fee_processor::collect_long_close_position_fee(
-            if is_long { stake_token_pool } else { stable_pool },
-            response.settle_close_fee,
-            params.is_cross_margin,
-        )?;
-    } else {
-        fee_processor::collect_short_close_position_fee(
-            stable_pool,
-            stake_token_pool,
-            state_account,
-            response.settle_close_fee,
-            params.is_cross_margin,
-        )?;
-    }
-    fee_processor::collect_borrowing_fee(
-        if is_long { stake_token_pool } else { stable_pool },
+    //collect fee
+    collect_decrease_fee(
+        stake_token_pool,
+        stable_pool,
+        market,
+        state_account,
+        pre_position.cross_margin,
+        response.settle_close_fee,
         response.settle_borrowing_fee,
-        params.is_cross_margin,
+        response.settle_funding_fee,
+        &pre_position.margin_mint,
+        params.decrease_size,
+        is_long,
+        pre_position.entry_price,
     )?;
-
-    //TODO: 抽出成为单独的方法，而不是这样写
-    // (if position.is_long { stake_token_pool } else { stable_pool }).borrowing_fee.update_total_borrowing_fee(
-    //     response.settle_borrowing_fee,
-    //     true,
-    //     response.settle_borrowing_fee,
-    //     false,
-    // )?;
-    let mut market_processor = MarketProcessor { market };
-    market_processor
-        .update_market_total_funding_fee(response.settle_funding_fee, pre_position.is_long)?;
-    market_processor.update_oi(
-        false,
-        UpdateOIParams {
-            margin_token: pre_position.margin_mint,
-            size: params.decrease_size,
-            is_long: pre_position.is_long,
-            entry_price: 0u128,
-        },
-    )?;
-
     //TODO: 适配对应参数
     // settle(
     //     &response,
@@ -252,141 +204,76 @@ pub fn decrease_position1<'info>(
     Ok(())
 }
 
-pub fn decrease_position<'info>(
-    params: DecreasePositionParams,
-    user_account_loader: &AccountLoader<'info, User>,
-    pool_account_loader: &AccountLoader<'info, Pool>,
-    stable_pool_account_loader: &AccountLoader<'info, Pool>,
-    market_account_loader: &AccountLoader<'info, Market>,
-    state_account: &Account<'info, State>,
-    user_token_account: Option<&Account<'info, TokenAccount>>,
-    pool_vault_account: &Account<'info, TokenAccount>,
-    trade_token_loader: &AccountLoader<'info, TradeToken>,
-    trade_token_vault_account: &Account<'info, TokenAccount>,
-    bump_signer: &AccountInfo<'info>,
-    token_program: &Program<'info, Token>,
-    oracle_map: &mut OracleMap,
-    position_key: &Pubkey,
-) -> BumpResult<()> {
-    let mut user =
-        user_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
-    let (delete_position, response, pre_position) = user.decrease_position(
-        &params,
-        pool_account_loader,
-        stable_pool_account_loader,
-        market_account_loader,
-        state_account,
-        trade_token_loader,
-        oracle_map,
-        position_key,
-    )?;
-    if delete_position {
-        user.delete_position(position_key)?;
-    }
-
-    //collect fee
-    let mut stake_token_pool =
-        pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
-    let mut stable_pool =
-        stable_pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
-    let mut pool = if pre_position.is_long { &mut stake_token_pool } else { &mut stable_pool };
-    if pre_position.is_long {
+fn collect_decrease_fee(
+    base_token_pool: &mut Pool,
+    stable_pool: &mut Pool,
+    market: &mut Market,
+    state_account: &Account<State>,
+    is_cross_margin: bool,
+    settle_close_fee: u128,
+    settle_borrowing_fee: u128,
+    settle_funding_fee: i128,
+    margin_token: &Pubkey,
+    decrease_size: u128,
+    is_long: bool,
+    entry_price: u128,
+) -> BumpResult {
+    if is_long {
         fee_processor::collect_long_close_position_fee(
-            &mut pool,
-            response.settle_close_fee,
-            params.is_cross_margin,
+            if is_long { base_token_pool } else { stable_pool },
+            settle_close_fee,
+            is_cross_margin,
         )?;
     } else {
-        let stake_token_pool =
-            &mut pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
-        let stable_pool = &mut stable_pool_account_loader
-            .load_mut()
-            .map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
         fee_processor::collect_short_close_position_fee(
             stable_pool,
-            stake_token_pool,
+            base_token_pool,
             state_account,
-            response.settle_close_fee,
-            params.is_cross_margin,
+            settle_close_fee,
+            is_cross_margin,
         )?;
     }
     fee_processor::collect_borrowing_fee(
-        &mut pool,
-        response.settle_borrowing_fee,
-        params.is_cross_margin,
+        if is_long { base_token_pool } else { stable_pool },
+        settle_borrowing_fee,
+        is_cross_margin,
     )?;
 
-    //update total borrowing fee and funding fee
-    let market =
-        &mut market_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadMarketData)?;
-    let mut market_processor = MarketProcessor { market };
-    pool.borrowing_fee.update_total_borrowing_fee(
-        response.settle_borrowing_fee,
+    if is_long { base_token_pool } else { stable_pool }.borrowing_fee.update_total_borrowing_fee(
+        settle_borrowing_fee,
         true,
-        response.settle_borrowing_fee,
+        settle_borrowing_fee,
         false,
     )?;
-    market_processor
-        .update_market_total_funding_fee(response.settle_funding_fee, pre_position.is_long)?;
+    let mut market_processor = MarketProcessor { market };
+    market_processor.update_market_total_funding_fee(settle_funding_fee, is_long)?;
     market_processor.update_oi(
         false,
-        UpdateOIParams {
-            margin_token: pre_position.margin_mint,
-            size: params.decrease_size,
-            is_long: pre_position.is_long,
-            entry_price: pre_position.entry_price,
-        },
+        UpdateOIParams { margin_token: *margin_token, size: decrease_size, is_long, entry_price },
     )?;
+    Ok(())
+}
 
-    drop(stake_token_pool);
-    drop(stable_pool);
-    drop(user);
-    //settle
-    settle(
-        &response,
-        user_account_loader,
-        pool_account_loader,
-        stable_pool_account_loader,
-        state_account,
-        user_token_account,
-        pool_vault_account,
-        trade_token_loader,
-        trade_token_vault_account,
-        bump_signer,
-        token_program,
-        &pre_position,
-    )?;
-
-    //cancel stop order
-    let mut user =
-        user_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
-    user.cancel_stop_orders(
-        params.order_id,
-        pre_position.symbol,
-        &pre_position.margin_mint,
-        pre_position.cross_margin,
-    )?;
-
-    //add insurance fund
-    let trade_token =
-        trade_token_loader.load().map_err(|_| BumpErrorCode::CouldNotLoadTradeTokenData)?;
-    if params.is_liquidation {
-        let mut stake_token_pool =
-            pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
-        let mut stable_pool = stable_pool_account_loader
-            .load_mut()
-            .map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
-        let mut pool = if pre_position.is_long { &mut stake_token_pool } else { &mut stable_pool };
-        add_insurance_fund(
-            market,
-            state_account,
-            &trade_token,
-            &response,
-            &mut pool,
-            &pre_position,
-        )?;
-    }
-
+fn update_decrease_position(
+    position: &mut UserPosition,
+    decrease_size: u128,
+    response: &UpdateDecreaseResponse,
+) -> BumpResult {
+    let pre_position = position.clone();
+    position.sub_position_size(decrease_size)?;
+    position.sub_initial_margin(response.decrease_margin)?;
+    position.sub_initial_margin_usd(response.decrease_margin_in_usd)?;
+    position
+        .sub_initial_margin_usd_from_portfolio(response.decrease_margin_in_usd_from_portfolio)?;
+    position.sub_hold_pool_amount(response.un_hold_pool_amount)?;
+    position.add_realized_pnl(response.user_realized_pnl)?;
+    position.sub_realized_borrowing_fee(response.settle_borrowing_fee)?;
+    position.sub_realized_borrowing_fee_usd(response.settle_borrowing_fee_in_usd)?;
+    position.sub_realized_funding_fee(response.settle_funding_fee)?;
+    position.sub_realized_funding_fee_usd(response.settle_funding_fee_in_usd)?;
+    position.sub_close_fee_usd(response.settle_close_fee_in_usd)?;
+    position.set_last_update(cal_utils::current_time())?;
+    emit!(UpdateUserPositionEvent { pre_position, position: position.clone() });
     Ok(())
 }
 
@@ -688,7 +575,7 @@ pub fn execute_reduce_position_margin(
     Ok(reduce_margin_amount)
 }
 
-pub fn update_decrease_position(
+pub fn calculate_decrease_position(
     decrease_size: u128,
     is_liquidation: bool,
     is_cross_margin: bool,
@@ -1121,7 +1008,6 @@ pub fn update_leverage<'info>(
                     .map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
                 let available_amount =
                     user.get_user_token_ref(&trade_token.mint)?.get_token_available_amount()?;
-                let mut user_processor = UserProcessor { user };
                 position.set_leverage(params.leverage)?;
                 let new_initial_margin_in_usd =
                     cal_utils::div_rate_u(position.position_size, position.leverage)?;
@@ -1131,7 +1017,7 @@ pub fn update_leverage<'info>(
                     0u128
                 };
                 let cross_available_value =
-                    user_processor.get_available_value(oracle_map, trade_token_map)?;
+                    user.get_available_value(oracle_map, trade_token_map)?;
                 validate!(
                     add_margin_in_usd.cast::<i128>()? > cross_available_value,
                     BumpErrorCode::AmountNotEnough.into()
@@ -1223,150 +1109,6 @@ pub fn update_leverage<'info>(
         }
     }
     Ok(())
-}
-
-impl PositionProcessor<'_> {
-    pub fn get_position_value(
-        &self,
-        index_trade_token: &TradeToken,
-        oracle_map: &mut OracleMap,
-    ) -> BumpResult<(u128, i128, u128)> {
-        if self.position.cross_margin {
-            let index_price_data = oracle_map.get_price_data(&index_trade_token.oracle)?;
-
-            let position_un_pnl = self.get_position_un_pnl_usd(index_price_data.price)?;
-
-            Ok((
-                self.position.initial_margin_usd_from_portfolio,
-                position_un_pnl,
-                self.position.mm_usd,
-            ))
-        } else {
-            Ok((0u128, 0i128, 0u128))
-        }
-    }
-    pub fn get_liquidation_price(
-        &mut self,
-        market: &Market,
-        pool: &Pool,
-        state: &State,
-        margin_token_price: u128,
-        margin_token_decimals: u16,
-    ) -> BumpResult<u128> {
-        let mm_usd = self.get_position_mm(market, state)?;
-        let position_fee_usd =
-            self.get_position_fee(market, pool, margin_token_price, margin_token_decimals)?;
-        let position_value = if self.position.is_long {
-            position_fee_usd.safe_add(
-                self.position
-                    .position_size
-                    .safe_sub(self.position.initial_margin_usd)?
-                    .safe_add(mm_usd)?
-                    .cast()?,
-            )?
-        } else {
-            self.position
-                .position_size
-                .safe_add(self.position.initial_margin_usd)?
-                .safe_sub(mm_usd)?
-                .cast::<i128>()?
-                .safe_sub(position_fee_usd)?
-        };
-        if position_value < 0 {
-            Ok(0)
-        } else {
-            let liquidation_price = position_value
-                .cast::<u128>()?
-                .safe_mul(self.position.entry_price)?
-                .safe_div(self.position.position_size)?;
-            Ok(liquidation_price)
-        }
-    }
-
-    pub fn get_position_mm(&self, market: &Market, state: &State) -> BumpResult<u128> {
-        Ok(self.get_mm(
-            self.position.position_size,
-            market.market_trade_config.max_leverage,
-            state.max_maintenance_margin_rate,
-        )?)
-    }
-    pub fn get_position_fee(
-        &self,
-        market: &Market,
-        pool: &Pool,
-        margin_mint_price: u128,
-        trade_token_decimals: u16,
-    ) -> BumpResult<i128> {
-        let mut funding_fee_total_usd = self.position.realized_funding_fee_in_usd;
-        let mut borrowing_fee_total_usd = self.position.realized_borrowing_fee_in_usd;
-
-        let funding_fee_amount_per_size = if self.position.is_long {
-            market.funding_fee.long_funding_fee_amount_per_size
-        } else {
-            market.funding_fee.short_funding_fee_amount_per_size
-        };
-        let funding_fee = cal_utils::mul_small_rate_i(
-            self.position.position_size.cast::<i128>()?,
-            funding_fee_amount_per_size.safe_sub(self.position.open_funding_fee_amount_per_size)?,
-        )?;
-
-        if self.position.is_long {
-            let funding_fee_usd =
-                cal_utils::token_to_usd_i(funding_fee, trade_token_decimals, margin_mint_price)?;
-            funding_fee_total_usd = funding_fee_total_usd.safe_add(funding_fee_usd)?;
-        } else {
-            funding_fee_total_usd = funding_fee_total_usd.safe_add(funding_fee)?;
-        }
-
-        let initial_margin_leverage = cal_utils::mul_small_rate_u(
-            self.position.initial_margin,
-            self.position.leverage.safe_sub(RATE_PRECISION)?,
-        )?;
-        let borrowing_fee = cal_utils::mul_small_rate_u(
-            pool.borrowing_fee
-                .cumulative_borrowing_fee_per_token
-                .safe_sub(self.position.open_borrowing_fee_per_token)?,
-            initial_margin_leverage,
-        )?;
-        borrowing_fee_total_usd =
-            borrowing_fee_total_usd.safe_add(borrowing_fee.safe_mul(margin_mint_price)?)?;
-        Ok(funding_fee_total_usd
-            .safe_add(borrowing_fee_total_usd.cast()?)?
-            .safe_add(self.position.close_fee_in_usd.cast()?)?)
-    }
-
-    fn get_mm(&self, size: u128, leverage: u128, max_mm_rate: u128) -> BumpResult<u128> {
-        Ok(size.safe_div(leverage.safe_mul(2)?)?.min(size.safe_mul(max_mm_rate)?))
-    }
-    pub fn get_position_un_pnl_usd(&self, index_price: u128) -> BumpResult<i128> {
-        if self.position.position_size == 0u128 {
-            return Ok(0i128);
-        };
-        if self.position.is_long {
-            Ok(self
-                .position
-                .position_size
-                .cast::<i128>()?
-                .safe_mul(
-                    index_price
-                        .cast::<i128>()?
-                        .safe_sub(self.position.entry_price.cast::<i128>()?)?,
-                )?
-                .safe_div(self.position.entry_price.cast::<i128>()?)?)
-        } else {
-            Ok(self
-                .position
-                .position_size
-                .cast::<i128>()?
-                .safe_mul(
-                    self.position
-                        .entry_price
-                        .cast::<i128>()?
-                        .safe_sub(index_price.cast::<i128>()?)?,
-                )?
-                .safe_div(self.position.entry_price.cast::<i128>()?)?)
-        }
-    }
 }
 
 #[derive(Eq, PartialEq, Debug)]

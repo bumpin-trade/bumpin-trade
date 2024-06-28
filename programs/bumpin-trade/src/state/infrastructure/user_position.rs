@@ -4,6 +4,7 @@ use crate::math::casting::Cast;
 use crate::math::constants::RATE_PRECISION;
 use crate::math::safe_math::SafeMath;
 use crate::state::market::Market;
+use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
@@ -402,5 +403,54 @@ impl UserPosition {
         Ok(funding_fee_total_usd
             .safe_add(borrowing_fee_total_usd.cast()?)?
             .safe_add(self.close_fee_in_usd.cast()?)?)
+    }
+
+    pub fn get_position_value(
+        &self,
+        index_trade_token: &TradeToken,
+        oracle_map: &mut OracleMap,
+    ) -> BumpResult<(u128, i128, u128)> {
+        if self.cross_margin {
+            let index_price_data = oracle_map.get_price_data(&index_trade_token.oracle)?;
+
+            let position_un_pnl = self.get_position_un_pnl_usd(index_price_data.price)?;
+
+            Ok((self.initial_margin_usd_from_portfolio, position_un_pnl, self.mm_usd))
+        } else {
+            Ok((0u128, 0i128, 0u128))
+        }
+    }
+
+    pub fn get_liquidation_price(
+        &self,
+        market: &Market,
+        pool: &Pool,
+        state: &State,
+        margin_token_price: u128,
+        margin_token_decimals: u16,
+    ) -> BumpResult<u128> {
+        let mm_usd = self.get_position_mm(market, state)?;
+        let position_fee_usd =
+            self.get_position_fee(market, pool, margin_token_price, margin_token_decimals)?;
+        let position_value = if self.is_long {
+            position_fee_usd.safe_add(
+                self.position_size.safe_sub(self.initial_margin_usd)?.safe_add(mm_usd)?.cast()?,
+            )?
+        } else {
+            self.position_size
+                .safe_add(self.initial_margin_usd)?
+                .safe_sub(mm_usd)?
+                .cast::<i128>()?
+                .safe_sub(position_fee_usd)?
+        };
+        if position_value < 0 {
+            Ok(0)
+        } else {
+            let liquidation_price = position_value
+                .cast::<u128>()?
+                .safe_mul(self.entry_price)?
+                .safe_div(self.position_size)?;
+            Ok(liquidation_price)
+        }
     }
 }

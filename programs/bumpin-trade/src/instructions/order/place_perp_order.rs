@@ -11,7 +11,6 @@ use crate::math::safe_math::SafeMath;
 use crate::processor::market_processor::MarketProcessor;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::position_processor::DecreasePositionParams;
-use crate::processor::user_processor::UserProcessor;
 use crate::processor::{fee_processor, position_processor};
 use crate::state::infrastructure::user_order::{
     OrderSide, OrderStatus, OrderType, PositionSide, StopType, UserOrder,
@@ -537,11 +536,8 @@ fn execute_increase_order_margin(
 ) -> BumpResult<(u128, u128)> {
     let order_margin;
     let order_margin_from_balance;
-
-    let mut user_processor = UserProcessor { user };
-
     if order.cross_margin {
-        let available_value = user_processor.get_available_value(oracle_map, trade_token_map)?;
+        let available_value = user.get_available_value(oracle_map, trade_token_map)?;
         let order_margin_temp;
         if available_value < 0i128 {
             let fix_order_margin_in_usd =

@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
+use std::ops::DerefMut;
 
 use crate::errors::BumpErrorCode;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
@@ -100,7 +101,8 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
             BumpErrorCode::InvalidTokenAccount
         )?;
         let index_trade_token = trade_token_map.get_trade_token(&position.index_mint)?;
-        position_processor::decrease_position(
+        drop(user_account);
+        position_processor::decrease_position1(
             DecreasePositionParams {
                 order_id: 0,
                 is_liquidation: false,
@@ -109,14 +111,14 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
                 decrease_size: position.position_size,
                 execute_price: oracle_map.get_price_data(&index_trade_token.oracle).unwrap().price,
             },
-            &user_account_loader,
-            pool_account_loader,
-            stable_pool_account_loader,
-            market_account_loader,
+            user_account_loader.load_mut()?.deref_mut(),
+            market_account_loader.load_mut()?.deref_mut(),
+            pool_account_loader.load_mut()?.deref_mut(),
+            stable_pool_account_loader.load_mut()?.deref_mut(),
             state_account,
             Some(user_token_account),
             if position.is_long { pool_vault_account } else { stable_pool_vault_account },
-            trade_token_loader,
+            trade_token_loader.load()?,
             trade_token_vault_account,
             bump_signer_account_info,
             token_program,
