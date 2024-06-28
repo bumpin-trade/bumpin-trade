@@ -4,13 +4,13 @@ import {BN} from "@coral-xyz/anchor";
 
 
 export class OracleSource {
-    static readonly PYTH = { pyth: {} };
-    static readonly PYTH_1K = { pyth1K: {} };
-    static readonly PYTH_1M = { pyth1M: {} };
-    static readonly SWITCHBOARD = { switchboard: {} };
-    static readonly QUOTE_ASSET = { quoteAsset: {} };
-    static readonly PYTH_STABLE_COIN = { pythStableCoin: {} };
-    static readonly Prelaunch = { prelaunch: {} };
+    static readonly PYTH = {pyth: {}};
+    static readonly PYTH_1K = {pyth1K: {}};
+    static readonly PYTH_1M = {pyth1M: {}};
+    static readonly SWITCHBOARD = {switchboard: {}};
+    static readonly QUOTE_ASSET = {quoteAsset: {}};
+    static readonly PYTH_STABLE_COIN = {pythStableCoin: {}};
+    static readonly Prelaunch = {prelaunch: {}};
 }
 
 export type State = {
@@ -152,7 +152,7 @@ export type UserRewards = {
 }
 
 export type UserStake = {
-    stakedShare:BN;
+    stakedShare: BN;
     userStakeStatus: UserStakeStatus;
     poolKey: PublicKey;
     userRewards: UserRewards;
@@ -266,4 +266,16 @@ export type UserAccount = {
     userStakes: UserStake[];
     userPositions: UserPosition[];
     userOrders: UserOrder[];
+}
+
+export type TradeTokenBalance = {
+    tokenNetValue: BN;
+    tokenUsedValue: BN;
+    tokenBorrowingValue: BN;
+}
+
+export type PositionBalance = {
+    initialMarginUsdFromPortfolio: BN;
+    positionUnPnl: BN;
+    mmUsd: BN;
 }

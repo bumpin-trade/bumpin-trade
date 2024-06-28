@@ -101,7 +101,10 @@ impl UserToken {
         &self,
         oracle_price_data: &OraclePriceData,
     ) -> BumpResult<u128> {
-        let borrowing_amount = self.amount.safe_sub(self.used_amount)?.safe_sub(self.liability)?;
+        if self.used_amount < self.amount {
+            return Ok(0u128);
+        }
+        let borrowing_amount: i128 = self.used_amount.cast()?.safe_sub(self.amount.cast::<i128>()?)?.safe_sub(self.liability.cast()?)?;
 
         if borrowing_amount > 0 {
             let token_borrowing_value =

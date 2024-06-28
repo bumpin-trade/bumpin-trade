@@ -67,54 +67,6 @@ export class BumpinUtils {
         );
     }
 
-    public static getTradeTokenByMintPublicKey(mint: PublicKey, tradeTokens: TradeToken[]): TradeToken {
-        let tradeToken = tradeTokens.find((tradeToken) => {
-            return tradeToken.mint.equals(mint);
-        });
-        if (tradeToken === undefined) {
-            throw new BumpinAccountNotFound("TradeToken: " + mint);
-        }
-        return tradeToken;
-    }
-
-    public static async getTokenAccountFromWallet(connection: Connection, walletPublicKey: PublicKey, mintPublicKey: PublicKey): Promise<Account> {
-        const walletPubKey = new PublicKey(walletPublicKey);
-        const mintPubKey = new PublicKey(mintPublicKey);
-        const tokenAccounts = await connection.getTokenAccountsByOwner(walletPubKey, {
-            programId: TOKEN_PROGRAM_ID,
-        });
-
-        for (let accountInfo of tokenAccounts.value) {
-            const accountPubKey = accountInfo.pubkey;
-            const tokenAccount = await getAccount(connection, accountPubKey);
-
-            if (tokenAccount.mint.equals(mintPubKey)) {
-                return tokenAccount;
-            }
-        }
-        throw new BumpinAccountNotFound("TokenAccount: " + mintPublicKey);
-    }
-
-    public static async getTokenBalanceFromWallet(connection: Connection, walletPublicKey: PublicKey, mintPublicKey: PublicKey): Promise<bigint> {
-        const walletPubKey = new PublicKey(walletPublicKey);
-        const mintPubKey = new PublicKey(mintPublicKey);
-        const tokenAccounts = await connection.getTokenAccountsByOwner(walletPubKey, {
-            programId: TOKEN_PROGRAM_ID,
-        });
-
-        for (let accountInfo of tokenAccounts.value) {
-            const accountPubKey = accountInfo.pubkey;
-
-            const tokenAccount = await getAccount(connection, accountPubKey);
-
-            if (tokenAccount.mint.equals(mintPubKey)) {
-
-                return tokenAccount.amount;
-            }
-        }
-        throw new BumpinTokenNotFound(mintPublicKey);
-    }
-
 
     public static async manualCreateAccount(provider: Provider, wallet: Wallet, newAccountPk: anchor.web3.Keypair, space: number, lamports: number, programId: PublicKey) {
         let i = anchor.web3.SystemProgram.createAccount({

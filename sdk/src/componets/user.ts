@@ -1,5 +1,5 @@
 import {PublicKey} from '@solana/web3.js';
-import {Pool, State, TradeToken, UserAccount, UserStakeStatus} from "../types";
+import {Pool, PositionStatus, State, TradeToken, UserAccount, UserStakeStatus} from "../types";
 import {BulkAccountLoader} from "../account/bulkAccountLoader";
 import {BN, Program} from "@coral-xyz/anchor";
 import {BumpinUtils} from "../utils/utils";
@@ -17,6 +17,8 @@ import {
 import {DataAndSlot} from "../account/types";
 import {OracleClient} from "../oracles/types";
 import {tokenValueInUsd} from "../utils/cal_utils";
+import {BumpinTokenUtils} from "../utils/token";
+import {BumpinPositionUtils} from "../utils/position";
 
 export class UserComponent extends Component {
     publicKey: PublicKey;
@@ -44,12 +46,29 @@ export class UserComponent extends Component {
 
     public async portfolioStake(amount: BN, tradeToken: TradeToken, state: State, pool: Pool): Promise<void> {
         await this.checkStakeAmountFulfilRequirements(amount, tradeToken, pool);
+        let availableValue = await this.getUserAvailableValue([tradeToken], amount, pool);
+        if (!availableValue.gt(new BN(0))) {
+            throw new BumpinValueInsufficient(amount, availableValue)
+        }
+        let param = {
+            requestTokenAmount: amount,
+            poolIndex: pool.poolIndex,
+            tradeTokenIndex: tradeToken.tokenIndex
+        };
+
+        await this.program.methods.portfolioStake(
+            param
+        ).accounts(
+            {
+                authority: this.publicKey,
+            }
+        ).signers([]).rpc();
     }
 
     public async walletStake(amount: BN, tradeToken: TradeToken, wallet: PublicKey, state: State, pool: Pool): Promise<void> {
         await this.checkStakeAmountFulfilRequirements(amount, tradeToken, pool);
         await this.checkStakeWalletAmountSufficient(amount, wallet, tradeToken);
-        let tokenAccount = await BumpinUtils.getTokenAccountFromWallet(this.program.provider.connection, wallet, tradeToken.mint);
+        let tokenAccount = await BumpinTokenUtils.getTokenAccountFromWallet(this.program.provider.connection, wallet, tradeToken.mint);
         let param = {
             requestTokenAmount: amount,
             poolIndex: pool.poolIndex,
@@ -64,7 +83,6 @@ export class UserComponent extends Component {
             }
         ).signers([]).rpc();
     }
-
 
     public async unStake(portfolio: boolean, share: BN, tradeToken: TradeToken, wallet: PublicKey, state: State, pool: Pool): Promise<void> {
         let userStake = await this.findUsingStake(pool.poolKey, false);
@@ -88,7 +106,7 @@ export class UserComponent extends Component {
                 authority: wallet,
             }).signers([]).rpc();
         } else {
-            let tokenAccount = await BumpinUtils.getTokenAccountFromWallet(this.program.provider.connection, wallet, tradeToken.mint);
+            let tokenAccount = await BumpinTokenUtils.getTokenAccountFromWallet(this.program.provider.connection, wallet, tradeToken.mint);
             await this.program.methods.walletUnStake(
                 param
             ).accounts({
@@ -96,6 +114,35 @@ export class UserComponent extends Component {
                 userTokenAccount: tokenAccount.address,
             }).signers([]).rpc();
         }
+
+    }
+
+    public async getUserAvailableValue(tradeTokens: TradeToken[], amount: BN, pool: Pool, sync: boolean = false) {
+        let user = await this.getUser(sync);
+
+        for (let userPosition of user.userPositions) {
+            if (userPosition.status === PositionStatus.INIT) {
+                continue;
+            }
+            if (userPosition.crossMargin && userPosition.marginMint.equals(pool.poolMint) && amount.gt(new BN(0))) {
+                let reducedAmount = await BumpinPositionUtils.reducePositionPortfolioBalance(userPosition, amount);
+                amount = amount.sub(reducedAmount);
+            }
+            let userToken = BumpinTokenUtils.getUserTokenByMintPublicKey(pool.poolMint, user.userTokens);
+            userToken.amount = userToken.amount.sub(amount)
+        }
+
+        let balanceOfUserTradeTokens = await BumpinTokenUtils.getUserTradeTokenBalance(this.oracleClient, user, tradeTokens);
+        let balanceOfUserPositions = await BumpinPositionUtils.getUserPositionValue(this.oracleClient, user, tradeTokens);
+        return balanceOfUserTradeTokens.tokenNetValue
+            .add(balanceOfUserPositions.initialMarginUsdFromPortfolio)
+            .add(user.hold)
+            .sub(balanceOfUserTradeTokens.tokenUsedValue)
+            .add(
+                balanceOfUserPositions.positionUnPnl.gt(new BN(0)) ? new BN(0) : balanceOfUserPositions.positionUnPnl
+            )
+            .sub(balanceOfUserPositions.initialMarginUsdFromPortfolio)
+            .sub(balanceOfUserTradeTokens.tokenBorrowingValue)
 
     }
 
@@ -117,7 +164,7 @@ export class UserComponent extends Component {
 
 
     async checkStakeWalletAmountSufficient(amount: BN, wallet: PublicKey, tradeToken: TradeToken): Promise<void> {
-        let balance = await BumpinUtils.getTokenBalanceFromWallet(this.program.provider.connection, wallet, tradeToken.mint);
+        let balance = await BumpinTokenUtils.getTokenBalanceFromWallet(this.program.provider.connection, wallet, tradeToken.mint);
         let balanceAmount = new BN(balance.toString());
         if (balanceAmount.lt(amount)) {
             throw new BumpinValueInsufficient(amount, balanceAmount)

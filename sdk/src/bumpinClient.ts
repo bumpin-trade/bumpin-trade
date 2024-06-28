@@ -18,6 +18,7 @@ import {PythClient} from "./oracles/pythClient";
 import {UserComponent} from "./componets/user";
 import {TradeTokenComponent} from "./componets/tradeToken";
 import {MarketComponent} from "./componets/market";
+import {BumpinTokenUtils} from "./utils/token";
 
 
 export class BumpinClient {
@@ -123,7 +124,7 @@ export class BumpinClient {
 
     public async deposit(userTokenAccount: PublicKey, mintPublicKey: PublicKey, amount: BN) {
         const [statePda, _] = BumpinUtils.getBumpinStatePda(this.program);
-        let targetTradeToken = BumpinUtils.getTradeTokenByMintPublicKey(mintPublicKey, await this.getTradeTokens());
+        let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(mintPublicKey, await this.getTradeTokens());
         await this.program.methods.deposit(targetTradeToken.tokenIndex, amount).accounts({
             userTokenAccount,
         }).signers([]).rpc();

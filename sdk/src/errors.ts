@@ -53,7 +53,6 @@ export class BumpinSupplyInsufficient extends Error {
 }
 
 export class BumpinValueInsufficient extends Error {
-
     minimalExpected: BN;
     actualValue: BN;
 
