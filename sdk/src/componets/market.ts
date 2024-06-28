@@ -38,6 +38,22 @@ export class MarketComponent extends Component {
         }
     }
 
+    public async getMarkets(sync: boolean = false): Promise<Market[]> {
+        let markets = await this.getMarketsWithSlot(sync);
+        return markets.map((dataAndSlot) => dataAndSlot.data);
+    }
+
+    public async getMarketsWithSlot(sync: boolean = false): Promise<DataAndSlot<Market>[]> {
+        let marketsWithSlot: DataAndSlot<Market>[] = [];
+        for (let marketAccountSubscriber of this.markets.values()) {
+            if (sync) {
+                await marketAccountSubscriber.fetch();
+            }
+            marketsWithSlot.push(marketAccountSubscriber.getAccountAndSlot());
+        }
+        return marketsWithSlot;
+    }
+
     public async getMarket(marketPublicKey: PublicKey, sync: boolean = false): Promise<Market> {
         let marketWithSlot = await this.getMarketWithSlot(marketPublicKey, sync);
         return marketWithSlot.data;

@@ -41,9 +41,25 @@ export class PoolComponent extends Component {
         }
     }
 
+    public async getPools(sync: boolean = false): Promise<Pool[]> {
+        let pools = await this.getPoolsWithSlot(sync);
+        return pools.map((dataAndSlot) => dataAndSlot.data);
+    }
+
     public async getPool(poolKey: PublicKey, sync: boolean = false): Promise<Pool> {
         let poolWithSlot = await this.getPoolWithSlot(poolKey, sync);
         return poolWithSlot.data;
+    }
+
+    public async getPoolsWithSlot(sync: boolean = false): Promise<DataAndSlot<Pool>[]> {
+        let poolsWithSlot: DataAndSlot<Pool>[] = [];
+        for (let poolAccountSubscriber of this.pools.values()) {
+            if (sync) {
+                await poolAccountSubscriber.fetch();
+            }
+            poolsWithSlot.push(poolAccountSubscriber.getAccountAndSlot());
+        }
+        return poolsWithSlot;
     }
 
     public async getPoolWithSlot(poolKey: PublicKey, sync: boolean = false): Promise<DataAndSlot<Pool>> {

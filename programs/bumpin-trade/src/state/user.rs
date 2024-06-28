@@ -122,7 +122,7 @@ impl User {
         self.get_user_stake_index(pool_key).map(|user_stake| &self.user_stakes[user_stake])
     }
 
-    pub fn force_get_user_stake_mut_ref(
+    pub fn get_or_add_user_stake_ref_mut(
         &mut self,
         pool_key: &Pubkey,
     ) -> BumpResult<&mut UserStake> {

@@ -7,7 +7,7 @@ import {BumpinClientConfig, NetType} from "./bumpinClientConfig";
 import {BumpinUtils} from "./utils/utils";
 import {BumpinTrade} from "./types/bumpin_trade";
 import {Market, Pool, State, TradeToken, UserAccount} from "./types";
-import {BumpinAccountNotFound, BumpinSubscriptionFailed} from "./errors";
+import {BumpinAccountNotFound, BumpinSubscriptionFailed, BumpinUserNotLogin} from "./errors";
 import {PollingUserAccountSubscriber} from "./account/pollingUserAccountSubscriber";
 import {BulkAccountLoader} from "./account/bulkAccountLoader";
 import {DataAndSlot} from "./account/types";
@@ -44,8 +44,6 @@ export class BumpinClient {
     userComponent: UserComponent;
 
     state: State | null = null;
-    tradeTokens: TradeToken[] = [];
-    pools: Pool[] = [];
     market: Market[] = [];
 
     constructor(config: BumpinClientConfig) {
@@ -82,23 +80,10 @@ export class BumpinClient {
         this.marketComponent = new MarketComponent(this.bulkAccountLoader, this.stateSubscriber, this.program);
         await this.marketComponent.subscribe();
 
-
-        await this.syncInitialize();
         this.isInitialized = true;
         console.log("BumpinClient initialized");
     }
 
-
-    public getState(): State | null {
-        return this.state;
-    }
-
-    public async syncInitialize() {
-        this.state = await this.syncState();
-        this.tradeTokens = await this.syncTradeTokens();
-        this.pools = await this.syncPools();
-        this.market = await this.syncMarket();
-    }
 
     public async subscriptionMe(): Promise<PollingUserAccountSubscriber> {
         if (this.userAccountSubscriber) {
@@ -120,77 +105,12 @@ export class BumpinClient {
         const [pda, _] = BumpinUtils.getPdaSync(this.program, [Buffer.from("user"), this.wallet.publicKey.toBuffer()]);
         let me = await this.program.account.user.fetch(pda) as any as UserAccount;
         if (me) {
-            this.userComponent = new UserComponent(this.wallet.publicKey, this.bulkAccountLoader, this.stateSubscriber, this.program);
+            this.userComponent = new UserComponent(this.wallet.publicKey, this.pythClient, this.bulkAccountLoader, this.stateSubscriber, this.program);
             await this.userComponent.subscribe();
         }
         return me;
     }
 
-    public async getUserAccount(sync: boolean = false, withSlot: boolean = false, autoSubscription: boolean = true): Promise<UserAccount | DataAndSlot<UserAccount>> {
-        if (!this.userAccountSubscriber || !this.userAccountSubscriber.isSubscribed) {
-            if (autoSubscription) {
-                await this.subscriptionMe();
-            } else {
-                throw new BumpinAccountNotFound("User")
-            }
-        }
-
-        if (sync) {
-            await this.userAccountSubscriber.fetch();
-        }
-
-        let userAccount = this.userAccountSubscriber.user;
-        if (!userAccount) {
-            throw new BumpinAccountNotFound("User")
-        }
-        if (withSlot) {
-            return userAccount;
-        }
-        return userAccount.data;
-    }
-
-    public async syncMarket(): Promise<Market[]> {
-        if (!this.state) {
-            throw new BumpinAccountNotFound("State")
-        }
-        let markets = [];
-        for (let i = 0; i < this.state!.numberOfMarkets; i++) {
-            const [pda, _] = BumpinUtils.getMarketPda(this.program, i);
-            markets.push(await this.program.account.market.fetch(pda) as any as Market);
-        }
-        return markets;
-    }
-
-    public async syncPools(): Promise<Pool[]> {
-        if (!this.state) {
-            throw new BumpinAccountNotFound("State")
-        }
-        let pools = [];
-        for (let i = 0; i < this.state!.numberOfPools; i++) {
-            const [pda, _] = BumpinUtils.getPoolPda(this.program, i);
-            pools.push(await this.program.account.pool.fetch(pda) as any as Pool);
-        }
-        return pools;
-    }
-
-    public async syncTradeTokens(): Promise<TradeToken[]> {
-        if (!this.state) {
-            throw new BumpinAccountNotFound("State")
-        }
-
-        let tradeTokens = [];
-        for (let i = 0; i < this.state!.numberOfTradeTokens; i++) {
-            const [pda, _] = BumpinUtils.getTradeTokenPda(this.program, i);
-            let tradeToken = (await this.program.account.tradeToken.fetch(pda)) as TradeToken;
-            tradeTokens.push(tradeToken);
-        }
-        return tradeTokens;
-    }
-
-    public async syncState(): Promise<State> {
-        const [statePda, _] = BumpinUtils.getBumpinStatePda(this.program);
-        return await this.program.account.state.fetch(statePda) as any as State;
-    }
 
     public async initializeUser() {
         const [statePda, _] = BumpinUtils.getBumpinStatePda(this.program);
@@ -203,11 +123,83 @@ export class BumpinClient {
 
     public async deposit(userTokenAccount: PublicKey, mintPublicKey: PublicKey, amount: BN) {
         const [statePda, _] = BumpinUtils.getBumpinStatePda(this.program);
-        let targetTradeToken = BumpinUtils.getTradeTokenByMintPublicKey(mintPublicKey, this.tradeTokens);
+        let targetTradeToken = BumpinUtils.getTradeTokenByMintPublicKey(mintPublicKey, await this.getTradeTokens());
         await this.program.methods.deposit(targetTradeToken.tokenIndex, amount).accounts({
             userTokenAccount,
         }).signers([]).rpc();
-
     }
+
+
+    public async getUser(sync: boolean = false): Promise<UserAccount> {
+        if (!this.userComponent) {
+            throw new BumpinUserNotLogin()
+        }
+        return this.userComponent.getUser(sync);
+    }
+
+    public async getState(sync: boolean = false): Promise<State> {
+        if (!this.stateSubscriber || !this.stateSubscriber.isSubscribed) {
+            throw new BumpinSubscriptionFailed("State")
+        }
+
+        if (sync) {
+            await this.stateSubscriber.fetch();
+        }
+
+        let state = this.stateSubscriber.state;
+        if (!state) {
+            throw new BumpinAccountNotFound("State")
+        }
+        return state.data;
+    }
+
+    public async getPools(sync: boolean = false): Promise<Pool[]> {
+        return this.poolComponent.getPools(sync);
+    }
+
+    public async getPoolsWithSlot(sync: boolean = false): Promise<DataAndSlot<Pool>[]> {
+        return this.poolComponent.getPoolsWithSlot(sync);
+    }
+
+    public async getPool(poolKey: PublicKey, sync: boolean = false): Promise<Pool> {
+        return this.poolComponent.getPool(poolKey, sync);
+    }
+
+    public async getPoolWithSlot(poolKey: PublicKey, sync: boolean = false): Promise<DataAndSlot<Pool>> {
+        return this.poolComponent.getPoolWithSlot(poolKey, sync);
+    }
+
+    public async getTradeTokens(sync: boolean = false): Promise<TradeToken[]> {
+        return this.tradeTokenComponent.getTradeTokens(sync);
+    }
+
+    public async getTradeTokensWithSlot(sync: boolean = false): Promise<DataAndSlot<TradeToken>[]> {
+        return this.tradeTokenComponent.getTradeTokensWithSlot(sync);
+    }
+
+    public async getTradeToken(tradeTokenKey: PublicKey, sync: boolean = false): Promise<TradeToken> {
+        return this.tradeTokenComponent.getTradeToken(tradeTokenKey, sync);
+    }
+
+    public async getTradeTokenWithSlot(tradeTokenKey: PublicKey, sync: boolean = false): Promise<DataAndSlot<TradeToken>> {
+        return this.tradeTokenComponent.getTradeTokenWithSlot(tradeTokenKey, sync);
+    }
+
+    public async getMarkets(sync: boolean = false): Promise<Market[]> {
+        return this.marketComponent.getMarkets(sync);
+    }
+
+    public async getMarketsWithSlot(sync: boolean = false): Promise<DataAndSlot<Market>[]> {
+        return this.marketComponent.getMarketsWithSlot(sync);
+    }
+
+    public async getMarket(marketKey: PublicKey, sync: boolean = false): Promise<Market> {
+        return this.marketComponent.getMarket(marketKey, sync);
+    }
+
+    public async getMarketWithSlot(marketKey: PublicKey, sync: boolean = false): Promise<DataAndSlot<Market>> {
+        return this.marketComponent.getMarketWithSlot(marketKey, sync);
+    }
+
 
 }

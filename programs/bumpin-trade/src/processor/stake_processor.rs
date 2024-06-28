@@ -35,7 +35,7 @@ pub fn stake(
     )?;
 
     //check user stake exist, if not, create new user stake
-    let user_stake = user.force_get_user_stake_mut_ref(&pool.pool_key)?;
+    let user_stake = user.get_or_add_user_stake_ref_mut(&pool.pool_key)?;
     validate!(
         user_stake.user_stake_status.eq(&UserStakeStatus::USING),
         BumpErrorCode::CouldNotFindUserStake

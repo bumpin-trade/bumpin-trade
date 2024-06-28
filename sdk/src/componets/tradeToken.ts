@@ -38,9 +38,25 @@ export class TradeTokenComponent extends Component {
         }
     }
 
+    public async getTradeTokens(sync: boolean = false): Promise<TradeToken[]> {
+        let tradeTokens = await this.getTradeTokensWithSlot(sync);
+        return tradeTokens.map((dataAndSlot) => dataAndSlot.data);
+    }
+
     public async getTradeToken(tradeTokenKey: PublicKey, sync: boolean = false): Promise<TradeToken> {
         let poolWithSlot = await this.getTradeTokenWithSlot(tradeTokenKey, sync);
         return poolWithSlot.data;
+    }
+
+    public async getTradeTokensWithSlot(sync: boolean = false): Promise<DataAndSlot<TradeToken>[]> {
+        let tradeTokensWithSlot: DataAndSlot<TradeToken>[] = [];
+        for (let tradeTokenAccountSubscriber of this.tradeTokens.values()) {
+            if (sync) {
+                await tradeTokenAccountSubscriber.fetch();
+            }
+            tradeTokensWithSlot.push(tradeTokenAccountSubscriber.getAccountAndSlot());
+        }
+        return tradeTokensWithSlot;
     }
 
     public async getTradeTokenWithSlot(tradeTokenKey: PublicKey, sync: boolean = false): Promise<DataAndSlot<TradeToken>> {
