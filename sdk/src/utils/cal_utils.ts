@@ -12,22 +12,25 @@ export function usdToToken(usdAmount: BN, tokenPrice: BN, decimals: number): BN 
     return usdAmount.mul(decimals).div(tokenPrice.mul(TEN.pow(10)));
 }
 
-export function mulRate(value: BN, rate: number): BN {
-    return value.mull(rate).div(TEN.pow(FIVE));
-}
-
-export function divRate(value: BN, rate: number): BN {
-    return value.div(rate).mul(TEN.pow(FIVE));
-}
-
-export function mulSmallRate(value: BN, rate: number): BN {
-    return value.mull(rate).div(TEN.pow(18));
-}
-
-export function divSmallRate(value: BN, rate: number): BN {
-    return value.div(rate).mul(TEN.pow(18));
-}
-
 export function divWithDecimals(value1: BN, value2: BN, decimals: number): BN {
     return value1.mul(decimals).div(value2);
 }
+
+BN.prototype.mulRate = function (rate: BN): BN {
+    return this.mul(rate).div(TEN.pow(FIVE));
+}
+
+BN.prototype.divRate = function (rate: BN): BN {
+    return this.div(rate).mul(TEN.pow(FIVE));
+}
+
+BN.prototype.mulSmallRate = function (rate: BN): BN {
+    return this.mull(rate).div(TEN.pow(18));
+}
+
+BN.prototype.divSmallRate = function (rate: BN): BN {
+    return this.div(rate).mul(TEN.pow(18));
+}
+
+
+export {};

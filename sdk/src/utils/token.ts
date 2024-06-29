@@ -4,7 +4,7 @@ import {TradeToken, TradeTokenBalance, UserAccount, UserToken, UserTokenStatus} 
 import {BumpinAccountNotFound, BumpinTokenNotFound} from "../errors";
 import {Account, getAccount, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {OracleClient} from "../oracles/types";
-import {mulRate, tokenToUsd} from "./cal_utils";
+import {tokenToUsd} from "./cal_utils";
 import {FIVE, TEN} from "../constants/numericConstants";
 
 export class BumpinTokenUtils {
@@ -36,8 +36,7 @@ export class BumpinTokenUtils {
         let tokenNetValue = new BN(0);
         if (userToken.amount.gt(userToken.usedAmount)) {
             //18 =  8+5+
-            tokenNetValue = tokenToUsd(userToken.amount.sub(userToken.usedAmount), priceData.price, tradeToken.decimals);
-            tokenNetValue = mulRate(tokenNetValue, tradeToken.discount);
+            tokenNetValue = tokenToUsd(userToken.amount.sub(userToken.usedAmount), priceData.price, tradeToken.decimals).mulRate(tradeToken.discount);
         }
         let tokenUsedValue = userToken.usedAmount.sub(userToken.amount).mul(priceData.price).mul(tradeToken.liquidationFactor.add(new BN(1)));
         let tokenBorrowingValue = new BN(0);
