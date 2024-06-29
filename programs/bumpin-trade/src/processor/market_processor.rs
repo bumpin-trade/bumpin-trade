@@ -92,7 +92,7 @@ impl<'a> MarketProcessor<'_> {
                 .open_interest
                 .cast::<i128>()?
                 .max(short.open_interest.cast::<i128>()?)
-                .safe_mul_rate(funding_rate_per_second)?
+                .safe_mul(funding_rate_per_second)?
                 .safe_mul(fee_durations.cast()?)?;
 
             let mut long_funding_fee_amount_per_size_delta = cal_utils::usd_to_token_i(funding_fee
