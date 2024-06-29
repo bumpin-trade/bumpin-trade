@@ -20,6 +20,19 @@ export class BumpinUserNotLogin extends Error {
     }
 }
 
+export class BumpinPoolNotFound extends Error {
+    mint: PublicKey;
+
+    constructor(mint: PublicKey) {
+        super(`Pool not found: ${mint}`);
+        this.mint = mint;
+    }
+
+    public getMint(): PublicKey {
+        return this.mint;
+    }
+}
+
 export class BumpinTokenNotFound extends Error {
     mint: PublicKey;
 

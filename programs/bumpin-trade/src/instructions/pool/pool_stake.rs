@@ -173,6 +173,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
             let remaining_accounts = ctx.remaining_accounts;
             let mut account_maps = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
 
+
             let base_mint_amount = stake_processor::stake(
                 &ctx.accounts.pool,
                 &ctx.accounts.user,

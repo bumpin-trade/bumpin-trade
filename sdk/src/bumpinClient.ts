@@ -19,6 +19,7 @@ import {UserComponent} from "./componets/user";
 import {TradeTokenComponent} from "./componets/tradeToken";
 import {MarketComponent} from "./componets/market";
 import {BumpinTokenUtils} from "./utils/token";
+import {BumpinPoolUtils} from "./utils/pool";
 
 
 export class BumpinClient {
@@ -120,6 +121,22 @@ export class BumpinClient {
             authority: this.wallet.publicKey,
             payer: this.wallet.publicKey
         }).signers([]).rpc();
+    }
+
+    public async stake(fromPortfolio: boolean, amount: BN, mint: PublicKey, sync: boolean = false) {
+        let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(mint, await this.getTradeTokens());
+        let targetPool = BumpinPoolUtils.getPoolByMintPublicKey(mint, await this.getPools());
+        if (fromPortfolio) {
+            await this.userComponent.portfolioStake(amount, targetTradeToken, targetPool, sync);
+        } else {
+            await this.userComponent.walletStake(amount, targetTradeToken, this.wallet.publicKey, targetPool);
+        }
+    }
+
+    public async unStake(toPortfolio: boolean, share: BN, mint: PublicKey) {
+        let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(mint, await this.getTradeTokens());
+        let targetPool = BumpinPoolUtils.getPoolByMintPublicKey(mint, await this.getPools());
+        await this.userComponent.unStake(toPortfolio, share, targetTradeToken, this.wallet.publicKey, targetPool);
     }
 
     public async deposit(userTokenAccount: PublicKey, mintPublicKey: PublicKey, amount: BN) {
