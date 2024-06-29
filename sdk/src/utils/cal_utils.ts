@@ -12,8 +12,8 @@ export function usdToToken(usdAmount: BN, tokenPrice: BN, decimals: number): BN 
     return usdAmount.mul(decimals).div(tokenPrice.mul(TEN.pow(10)));
 }
 
-export function divWithDecimals(value1: BN, value2: BN, decimals: number): BN {
-    return value1.mul(decimals).div(value2);
+BN.prototype.divWithDecimals = function (value2: BN, decimals: number): BN {
+    return this.mul(decimals).div(value2);
 }
 
 BN.prototype.mulRate = function (rate: BN): BN {
