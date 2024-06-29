@@ -69,9 +69,9 @@ pub mod bumpin_trade {
 
     pub fn initialize_trade_token<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializeTradeToken>,
-        discount: u128,
+        discount: u32,
         mint_name: [u8; 32],
-        liquidation_factor: u128,
+        liquidation_factor: u32,
     ) -> Result<()> {
         handle_initialize_trade_token(ctx, discount, mint_name, liquidation_factor)
     }
@@ -143,7 +143,7 @@ pub mod bumpin_trade {
 
     pub fn execute_order<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
-        order_id: u128,
+        order_id: u64,
     ) -> Result<()> {
         let user_account_loader = &ctx.accounts.user;
         let margin_token_account = &ctx.accounts.margin_token;
@@ -189,7 +189,7 @@ pub mod bumpin_trade {
 
     pub fn cancel_order(
         ctx: Context<CancelOrderCtx>,
-        order_id: u128,
+        order_id: u64,
         _pool_index: u16,
     ) -> Result<()> {
         handle_cancel_order(ctx, order_id, _pool_index)

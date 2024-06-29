@@ -58,7 +58,7 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
     let mut user = ctx.accounts.user.load_mut()?;
     let mut trade_token = ctx.accounts.trade_token.load_mut()?;
     let token_mint = &ctx.accounts.user_token_account.mint;
-    let oracle = &trade_token.oracle;
+    let oracle = &trade_token.oracle_key;
 
     let user_token = user.get_user_token_ref(token_mint)?;
     validate!(user_token.amount > amount, BumpErrorCode::AmountNotEnough)?;

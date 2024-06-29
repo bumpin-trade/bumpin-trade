@@ -64,8 +64,12 @@ impl UserToken {
         oracle_price_data: &OraclePriceData,
     ) -> BumpResult<u128> {
         if self.amount > self.used_amount {
-            let token_net_value = cal_utils::token_to_usd_u(self.amount.safe_sub(self.used_amount)?, trade_token.decimals, oracle_price_data.price)?
-                .safe_mul_rate(trade_token.discount)?;
+            let token_net_value = cal_utils::token_to_usd_u(
+                self.amount.safe_sub(self.used_amount)?,
+                trade_token.decimals,
+                oracle_price_data.price,
+            )?
+            .safe_mul_rate(trade_token.discount as u128)?;
             return Ok(token_net_value);
         }
         Ok(0u128)
@@ -77,8 +81,12 @@ impl UserToken {
         oracle_price_data: &OraclePriceData,
     ) -> BumpResult<u128> {
         if self.amount < self.used_amount {
-            let token_used_value = cal_utils::token_to_usd_u(self.used_amount.safe_sub(self.amount)?, trade_token.decimals, oracle_price_data.price)?
-                .safe_mul_rate(1u128.safe_add(trade_token.liquidation_factor)?)?;
+            let token_used_value = cal_utils::token_to_usd_u(
+                self.used_amount.safe_sub(self.amount)?,
+                trade_token.decimals,
+                oracle_price_data.price,
+            )?
+            .safe_mul_rate(1u32.safe_add(trade_token.liquidation_factor)? as u128)?;
             return Ok(token_used_value);
         }
         Ok(0u128)
@@ -100,12 +108,14 @@ impl UserToken {
             return Ok(0u128);
         }
 
-
         let borrowing_amount = self.used_amount.safe_sub(self.amount)?.safe_sub(self.liability)?;
 
         if borrowing_amount > 0 {
             let token_borrowing_value = cal_utils::token_to_usd_u(
-                borrowing_amount, trade_token.decimals, oracle_price_data.price)?;
+                borrowing_amount,
+                trade_token.decimals,
+                oracle_price_data.price,
+            )?;
             return Ok(token_borrowing_value);
         }
         Ok(0u128)

@@ -24,18 +24,18 @@ pub fn stake(
         .map_err(|_| BumpErrorCode::UnableToLoadAccountLoader)?;
     let user =
         &mut user_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
-    let trade_token = trade_token_map.get_trade_token(&pool.pool_mint)?;
+    let trade_token = trade_token_map.get_trade_token(&pool.mint_key)?;
 
-    let token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
+    let token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
 
     validate!(
-        pool.pool_config.mini_stake_amount
+        pool.pool_config.minimum_stake_amount
             <= cal_utils::token_to_usd_u(request_token_amount, trade_token.decimals, token_price)?,
         BumpErrorCode::StakeToSmall
     )?;
 
     //check user stake exist, if not, create new user stake
-    let user_stake = user.get_or_add_user_stake_ref_mut(&pool.pool_key)?;
+    let user_stake = user.get_or_add_user_stake_ref_mut(&pool.key)?;
     validate!(
         user_stake.user_stake_status.eq(&UserStakeStatus::USING),
         BumpErrorCode::CouldNotFindUserStake

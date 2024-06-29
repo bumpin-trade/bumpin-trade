@@ -99,9 +99,9 @@ pub fn token_to_usd_i(token_amount: i128, decimals: u16, token_price: u128) -> B
         .safe_div(10i128.pow(decimals.cast::<u32>()?))
 }
 
-pub fn current_time() -> u128 {
+pub fn current_time() -> i64 {
     let clock = Clock::get().unwrap();
-    clock.unix_timestamp.to_u128().unwrap()
+    clock.unix_timestamp
 }
 
 pub fn compute_avg_entry_price(
@@ -128,6 +128,8 @@ pub fn format_to_ticker_size(price: u128, ticker_size: u128, up: bool) -> BumpRe
     };
 }
 
-pub fn get_mm(size: u128, leverage: u128, max_mm_rate: u128) -> BumpResult<u128> {
-    Ok(size.safe_div_rate(leverage.safe_mul(2)?)?.min(size.safe_mul_rate(max_mm_rate)?))
+pub fn get_mm(size: u128, leverage: u32, max_mm_rate: u32) -> BumpResult<u128> {
+    Ok(size
+        .safe_div_rate(leverage.safe_mul(2)? as u128)?
+        .min(size.safe_mul_rate(max_mm_rate as u128)?))
 }

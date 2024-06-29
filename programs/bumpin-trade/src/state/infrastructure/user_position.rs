@@ -15,7 +15,7 @@ use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 pub struct UserPosition {
     pub position_size: u128,
     pub entry_price: u128,
-    pub leverage: u128,
+    pub leverage: u32,
     pub initial_margin: u128,
     pub initial_margin_usd: u128,
     pub initial_margin_usd_from_portfolio: u128,
@@ -30,11 +30,11 @@ pub struct UserPosition {
     pub realized_funding_fee_in_usd: i128,
     pub open_funding_fee_amount_per_size: i128,
     pub close_fee_in_usd: u128,
-    pub last_update_time: u128,
+    pub last_update_time: i64,
     pub realized_pnl: i128,
     pub user_key: Pubkey,
-    pub margin_mint: Pubkey,
-    pub index_mint: Pubkey,
+    pub margin_mint_key: Pubkey,
+    pub index_mint_key: Pubkey,
     pub position_key: Pubkey,
     pub symbol: [u8; 32],
     pub is_long: bool,
@@ -76,7 +76,7 @@ impl UserPosition {
         Ok(())
     }
 
-    pub fn set_leverage(&mut self, leverage: u128) -> BumpResult {
+    pub fn set_leverage(&mut self, leverage: u32) -> BumpResult {
         self.leverage = leverage;
         Ok(())
     }
@@ -236,7 +236,7 @@ impl UserPosition {
         Ok(())
     }
 
-    pub fn set_last_update(&mut self, last_update: u128) -> BumpResult {
+    pub fn set_last_update(&mut self, last_update: i64) -> BumpResult {
         self.last_update_time = last_update;
         Ok(())
     }
@@ -252,7 +252,7 @@ impl UserPosition {
     }
 
     pub fn set_index_mint(&mut self, index_mint: Pubkey) -> BumpResult {
-        self.index_mint = index_mint;
+        self.index_mint_key = index_mint;
         Ok(())
     }
 
@@ -262,7 +262,7 @@ impl UserPosition {
     }
 
     pub fn set_margin_mint(&mut self, margin_mint: Pubkey) -> BumpResult {
-        self.margin_mint = margin_mint;
+        self.margin_mint_key = margin_mint;
         Ok(())
     }
 
@@ -343,7 +343,7 @@ impl UserPosition {
         Ok(cal_utils::get_mm(
             self.position_size,
             market.market_trade_config.max_leverage,
-            state.max_maintenance_margin_rate,
+            state.maximum_maintenance_margin_rate,
         )?)
     }
 
@@ -390,7 +390,7 @@ impl UserPosition {
 
         let initial_margin_leverage = cal_utils::mul_small_rate_u(
             self.initial_margin,
-            self.leverage.safe_sub(RATE_PRECISION)?,
+            (self.leverage as u128).safe_sub(RATE_PRECISION)?, //TODO: why sub?
         )?;
         let borrowing_fee = cal_utils::mul_small_rate_u(
             pool.borrowing_fee
@@ -398,8 +398,11 @@ impl UserPosition {
                 .safe_sub(self.open_borrowing_fee_per_token)?,
             initial_margin_leverage,
         )?;
-        borrowing_fee_total_usd =
-            borrowing_fee_total_usd.safe_add(cal_utils::token_to_usd_u(borrowing_fee, trade_token_decimals, margin_mint_price)?)?;
+        borrowing_fee_total_usd = borrowing_fee_total_usd.safe_add(cal_utils::token_to_usd_u(
+            borrowing_fee,
+            trade_token_decimals,
+            margin_mint_price,
+        )?)?;
         Ok(funding_fee_total_usd
             .safe_add(borrowing_fee_total_usd.cast()?)?
             .safe_add(self.close_fee_in_usd.cast()?)?)
@@ -411,7 +414,7 @@ impl UserPosition {
         oracle_map: &mut OracleMap,
     ) -> BumpResult<(u128, i128, u128)> {
         if self.cross_margin {
-            let index_price_data = oracle_map.get_price_data(&index_trade_token.oracle)?;
+            let index_price_data = oracle_map.get_price_data(&index_trade_token.oracle_key)?;
 
             let position_un_pnl = self.get_position_un_pnl_usd(index_price_data.price)?;
 

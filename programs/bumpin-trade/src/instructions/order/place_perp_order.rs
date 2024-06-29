@@ -53,7 +53,7 @@ pub struct PlaceOrder<'info> {
     pub market: AccountLoader<'info, Market>,
 
     #[account(
-        constraint = market.load() ?.pool_mint.eq(& margin_token.key()) || market.load() ?.stable_pool_mint.eq(& margin_token.key())
+        constraint = market.load() ?.pool_mint_key.eq(& margin_token.key()) || market.load() ?.stable_pool_mint_key.eq(& margin_token.key())
     )]
     pub margin_token: Box<Account<'info, Mint>>,
 
@@ -61,7 +61,7 @@ pub struct PlaceOrder<'info> {
         mut,
         seeds = [b"pool", order.pool_index.to_le_bytes().as_ref()],
         bump,
-        constraint = pool.load() ?.pool_key.eq(& market.load() ?.pool_key)
+        constraint = pool.load() ?.key.eq(& market.load() ?.pool_key)
     )]
     pub pool: AccountLoader<'info, Pool>,
 
@@ -69,7 +69,7 @@ pub struct PlaceOrder<'info> {
         mut,
         seeds = [b"pool_vault".as_ref(), order.pool_index.to_le_bytes().as_ref()],
         bump,
-        token::mint = pool.load() ?.pool_mint,
+        token::mint = pool.load() ?.mint_key,
         token::authority = bump_signer
     )]
     pub pool_vault: Box<Account<'info, TokenAccount>>,
@@ -78,7 +78,7 @@ pub struct PlaceOrder<'info> {
         mut,
         seeds = [b"pool", order.stable_pool_index.to_le_bytes().as_ref()],
         bump,
-        constraint = stable_pool.load() ?.pool_key.eq(& market.load() ?.stable_pool_key)
+        constraint = stable_pool.load() ?.key.eq(& market.load() ?.stable_pool_key)
     )]
     pub stable_pool: AccountLoader<'info, Pool>,
 
@@ -86,7 +86,7 @@ pub struct PlaceOrder<'info> {
         mut,
         seeds = [b"pool_vault".as_ref(), order.stable_pool_index.to_le_bytes().as_ref()],
         bump,
-        token::mint = stable_pool.load() ?.pool_mint,
+        token::mint = stable_pool.load() ?.mint_key,
         token::authority = bump_signer
     )]
     pub stable_pool_vault: Box<Account<'info, TokenAccount>>,
@@ -94,7 +94,7 @@ pub struct PlaceOrder<'info> {
     #[account(
         seeds = [b"trade_token", order.trade_token_index.to_le_bytes().as_ref()],
         bump,
-        constraint = trade_token.load() ?.mint.eq(& user_token_account.mint),
+        constraint = trade_token.load() ?.mint_key.eq(& user_token_account.mint),
     )]
     pub trade_token: AccountLoader<'info, TradeToken>,
 
@@ -102,7 +102,7 @@ pub struct PlaceOrder<'info> {
         mut,
         seeds = [b"trade_token_vault".as_ref(), order.trade_token_index.to_le_bytes().as_ref()],
         bump,
-        token::mint = trade_token.load() ?.mint,
+        token::mint = trade_token.load() ?.mint_key,
         token::authority = bump_signer,
         constraint = trade_token_vault.key() == trade_token.load() ?.trade_token_vault
     )]
@@ -111,7 +111,7 @@ pub struct PlaceOrder<'info> {
     #[account(
         seeds = [b"trade_token", order.index_trade_token_index.to_le_bytes().as_ref()],
         bump,
-        constraint = index_trade_token.load() ?.mint.eq(& market.load() ?.index_mint),
+        constraint = index_trade_token.load() ?.mint_key.eq(& market.load() ?.index_mint_key),
     )]
     pub index_trade_token: AccountLoader<'info, TradeToken>,
 
@@ -142,7 +142,7 @@ pub struct PlaceOrderParams {
     pub stop_type: StopType,
     pub size: u128,
     pub order_margin: u128,
-    pub leverage: u128,
+    pub leverage: u32,
     pub trigger_price: u128,
     pub acceptable_price: u128,
     pub place_time: u128,
@@ -166,7 +166,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     let remaining_accounts = ctx.remaining_accounts;
     let AccountMaps { trade_token_map, mut oracle_map, .. } =
         load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
-    let token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
+    let token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
     validate!(
         validate_place_order(
             &order,
@@ -212,13 +212,13 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         order_type: order.order_type,
         stop_type: order.stop_type,
         cross_margin: order.is_cross_margin,
-        margin_mint: token.key(),
+        margin_mint_key: token.key(),
         order_margin: order.order_margin,
         leverage: order.leverage,
         order_size: order.size,
         trigger_price: order.trigger_price,
         acceptable_price: order.acceptable_price,
-        time: cal_utils::current_time(),
+        created_at: cal_utils::current_time(),
         status: OrderStatus::USING,
         padding: [0u8; 10],
     };
@@ -291,7 +291,7 @@ pub fn handle_execute_order<'info>(
     trade_token_map: &TradeTokenMap,
     oracle_map: &mut OracleMap,
     user_order: &UserOrder,
-    order_id: u128,
+    order_id: u64,
     execute_from_remote: bool,
 ) -> Result<()> {
     let user = user_account_loader.load_mut()?;
@@ -311,7 +311,7 @@ pub fn handle_execute_order<'info>(
     } else {
         user_order
     }
-        .clone();
+    .clone();
 
     let user_key = user.user_key;
 
@@ -319,7 +319,7 @@ pub fn handle_execute_order<'info>(
     validate_execute_order(&order, &market)?;
     let is_long = OrderSide::LONG == order.order_side;
     let execute_price = get_execution_price(
-        oracle_map.get_price_data(&index_trade_token.oracle).unwrap().price,
+        oracle_map.get_price_data(&index_trade_token.oracle_key).unwrap().price,
         &order,
     )?;
 
@@ -327,7 +327,8 @@ pub fn handle_execute_order<'info>(
     let mut market_processor = MarketProcessor { market: &mut market };
     market_processor.update_market_funding_fee_rate(
         state_account,
-        oracle_map.get_price_data(&trade_token.oracle)?.price, trade_token.decimals,
+        oracle_map.get_price_data(&trade_token.oracle_key)?.price,
+        trade_token.decimals,
     )?;
 
     let mut base_token_pool = pool_account_loader.load_mut()?;
@@ -348,10 +349,10 @@ pub fn handle_execute_order<'info>(
         PositionSide::INCREASE => Ok({
             let mut user = user_account_loader.load_mut()?;
             let margin_token_price;
-            if market.index_mint.eq(&margin_token.key()) {
+            if market.index_mint_key.eq(&margin_token.key()) {
                 margin_token_price = execute_price;
             } else {
-                margin_token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
+                margin_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
             }
             //calculate real order_margin with validation
             let (order_margin, order_margin_from_balance) = execute_increase_order_margin(
@@ -392,9 +393,9 @@ pub fn handle_execute_order<'info>(
                 let trade_token = &mut trade_token_loader
                     .load_mut()
                     .map_err(|_| BumpErrorCode::CouldNotLoadTradeTokenData)?;
-                user.un_use_token(&order.margin_mint, fee)?;
+                user.un_use_token(&order.margin_mint_key, fee)?;
                 user.sub_token_with_liability(
-                    &order.margin_mint,
+                    &order.margin_mint_key,
                     trade_token,
                     fee,
                     &UserTokenUpdateReason::SettleFee,
@@ -443,7 +444,7 @@ pub fn handle_execute_order<'info>(
                     order_id,
                     is_liquidation: false,
                     is_cross_margin: false,
-                    margin_token: order.margin_mint,
+                    margin_token: order.margin_mint_key,
                     decrease_size: order.order_size,
                     execute_price,
                 },
@@ -495,22 +496,25 @@ fn validate_place_order(
             } else if order.position_side.eq(&PositionSide::INCREASE) {
                 if order.order_margin == 0u128 {
                     Ok(false)
-                } else if order.order_side.eq(&OrderSide::LONG) && !token.eq(&market.pool_mint) {
+                } else if order.order_side.eq(&OrderSide::LONG) && !token.eq(&market.pool_mint_key)
+                {
                     Ok(false)
                 } else if order.order_side.eq(&OrderSide::LONG)
-                    && !market.pool_mint.eq(&pool.pool_mint)
+                    && !market.pool_mint_key.eq(&pool.mint_key)
                 {
                     Ok(false)
-                } else if order.order_side.eq(&OrderSide::SHORT) && !pool.pool_mint.eq(&token) {
+                } else if order.order_side.eq(&OrderSide::SHORT) && !pool.mint_key.eq(&token) {
                     Ok(false)
                 } else if order.order_side.eq(&OrderSide::SHORT)
-                    && !market.stable_pool_mint.eq(&pool.pool_mint)
+                    && !market.stable_pool_mint_key.eq(&pool.mint_key)
                 {
                     Ok(false)
-                } else if order.is_cross_margin && order.order_margin < state.min_order_margin_usd {
+                } else if order.is_cross_margin
+                    && order.order_margin < state.minimum_order_margin_usd
+                {
                     Ok(false)
                 } else if !order.is_cross_margin
-                    && order.order_margin.safe_mul(token_price)? < state.min_order_margin_usd
+                    && order.order_margin.safe_mul(token_price)? < state.minimum_order_margin_usd
                 {
                     Ok(false)
                 } else {
@@ -519,7 +523,7 @@ fn validate_place_order(
             } else {
                 Ok(true)
             }
-        }
+        },
     }
 }
 
@@ -556,7 +560,7 @@ fn execute_increase_order_margin(
         let order_margin_in_usd =
             cal_utils::token_to_usd_u(order.order_margin, decimals, margin_token_price)?;
         validate!(
-            order_margin_in_usd >= state.min_order_margin_usd,
+            order_margin_in_usd >= state.minimum_order_margin_usd,
             BumpErrorCode::AmountNotEnough.into()
         )?;
         order_margin = order.order_margin;
@@ -603,11 +607,13 @@ fn get_execution_price(index_price: u128, order: &UserOrder) -> BumpResult<u128>
 fn validate_execute_order(order: &UserOrder, market: &Market) -> BumpResult<()> {
     // token verify
     if order.position_side.eq(&PositionSide::INCREASE) {
-        if order.order_side.eq(&OrderSide::LONG) && order.margin_mint != market.pool_mint {
+        if order.order_side.eq(&OrderSide::LONG) && order.margin_mint_key != market.pool_mint_key {
             return Err(BumpErrorCode::TokenNotMatch.into());
         }
 
-        if order.order_side.eq(&OrderSide::SHORT) && order.margin_mint != market.stable_pool_mint {
+        if order.order_side.eq(&OrderSide::SHORT)
+            && order.margin_mint_key != market.stable_pool_mint_key
+        {
             return Err(BumpErrorCode::TokenNotMatch.into());
         }
     }

@@ -12,8 +12,9 @@ use crate::state::pool::PoolBalance;
 pub struct BorrowingFee {
     pub total_borrowing_fee: u128,
     pub total_realized_borrowing_fee: u128,
+    // 当前这一刻，我借的每一个币产生的borrowing fee
     pub cumulative_borrowing_fee_per_token: u128,
-    pub last_update: u128,
+    pub last_update: i64,
 }
 
 impl BorrowingFee {
@@ -28,10 +29,11 @@ impl BorrowingFee {
             let time_diff = self.get_pool_borrowing_fee_durations()?;
             let total_amount = pool.amount.safe_add(pool.un_settle_amount)?;
             let utilization = pool.hold_amount.safe_div_small_rate(total_amount)?;
-            self.cumulative_borrowing_fee_per_token =
-                utilization.safe_mul_small_rate(borrowing_interest_rate)?.safe_mul(time_diff)?;
+            self.cumulative_borrowing_fee_per_token = utilization
+                .safe_mul_small_rate(borrowing_interest_rate)?
+                .safe_mul(time_diff as u128)?;
         }
-        self.last_update = Clock::get().unwrap().unix_timestamp.to_u128().unwrap();
+        self.last_update = Clock::get().unwrap().unix_timestamp;
         Ok(())
     }
 
@@ -60,12 +62,12 @@ impl BorrowingFee {
 
         Ok(())
     }
-    pub fn get_pool_borrowing_fee_durations(&self) -> BumpResult<u128> {
-        if self.last_update > 0u128 {
+    pub fn get_pool_borrowing_fee_durations(&self) -> BumpResult<i64> {
+        if self.last_update > 0i64 {
             let clock = Clock::get().unwrap();
-            Ok(clock.unix_timestamp.to_u128().unwrap().safe_sub(self.last_update)?)
+            clock.unix_timestamp.safe_sub(self.last_update)
         } else {
-            Ok(0u128)
+            Ok(0i64)
         }
     }
 }

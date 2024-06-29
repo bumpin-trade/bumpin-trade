@@ -70,7 +70,7 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
         pool.add_amount_and_supply(token_amount, supply_amount)?;
         emit!(StakeOrUnStakeEvent {
             user_key: ctx.accounts.user.load()?.user_key,
-            token_mint: pool.pool_mint,
+            token_mint: pool.mint_key,
             change_supply_amount: supply_amount,
             user_stake,
         });

@@ -24,7 +24,7 @@ pub struct InitializeState<'info> {
 #[derive(AnchorDeserialize, AnchorSerialize, Debug, Clone, Copy)]
 pub struct InitializeStateParams {
     pub min_order_margin_usd: u128, //最小下单头寸 param: InitializeStateParams
-    pub max_maintenance_margin_rate: u128, //最大维持保证金率，类似于用来做adl
+    pub maximum_maintenance_margin_rate: u32, //最大维持保证金率，类似于用来做adl
     pub funding_fee_base_rate: u128, //fundingfee 基础费率
     pub max_funding_base_rate: u128, //最大fundinfee率
     pub trading_fee_staking_rewards_ratio: u128, //stake reward最小单位
@@ -39,8 +39,8 @@ pub struct InitializeStateParams {
     pub redeem_fee_pool_rewards_ratio: u128,
     pub pool_rewards_interval_limit: u128,
     pub init_fee: u64,
-    pub staking_fee_reward_ratio: u128,
-    pub pool_fee_reward_ratio: u128,
+    pub staking_fee_reward_ratio: u32,
+    pub pool_fee_reward_ratio: u32,
 }
 
 pub fn handle_initialize_state(
@@ -54,14 +54,14 @@ pub fn handle_initialize_state(
         bump_signer,
         keeper_signer: Pubkey::default(),
         bump_signer_nonce,
-        number_of_markets: 0,
-        number_of_pools: 0,
-        number_of_trade_tokens: 0,
-        min_order_margin_usd: initialize_state_params.min_order_margin_usd,
-        max_maintenance_margin_rate: initialize_state_params.max_maintenance_margin_rate,
+        market_sequence: 0,
+        pool_sequence: 0,
+        trade_token_sequence: 0,
+        minimum_order_margin_usd: initialize_state_params.min_order_margin_usd,
+        maximum_maintenance_margin_rate: initialize_state_params.maximum_maintenance_margin_rate,
         funding_fee_base_rate: initialize_state_params.funding_fee_base_rate,
-        max_funding_base_rate: initialize_state_params.max_funding_base_rate,
-        min_precision_multiple: initialize_state_params.min_precision_multiple,
+        maximum_funding_base_rate: initialize_state_params.max_funding_base_rate,
+        minimum_precision_multiple: initialize_state_params.min_precision_multiple,
         pool_rewards_interval_limit: initialize_state_params.pool_rewards_interval_limit,
         init_fee: initialize_state_params.init_fee,
         trading_fee_usd_pool_rewards_ratio: 0,

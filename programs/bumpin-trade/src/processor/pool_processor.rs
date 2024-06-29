@@ -29,18 +29,18 @@ impl<'a> PoolProcessor<'_> {
         let mut supply_amount = mint_amount;
         let user = &mut user_loader.load_mut().unwrap();
         let pool = pool_loader.load().unwrap();
-        let trade_token = trade_token_map.get_trade_token(&pool.pool_mint)?;
+        let trade_token = trade_token_map.get_trade_token(&pool.mint_key)?;
 
-        let user_token = user.get_user_token_ref(&pool.pool_mint)?;
+        let user_token = user.get_user_token_ref(&pool.mint_key)?;
         validate!(user_token.amount > mint_amount, BumpErrorCode::AmountNotEnough)?;
 
-        user.sub_user_token_amount(&pool.pool_mint, mint_amount)?;
+        user.sub_user_token_amount(&pool.mint_key, mint_amount)?;
         validate!(
             user.get_available_value(oracle_map, trade_token_map)? > 0,
             BumpErrorCode::AmountNotEnough
         )?;
         if self.pool.total_supply > 0 {
-            let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle)?;
+            let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle_key)?;
 
             supply_amount = cal_utils::token_to_usd_u(
                 mint_amount,
@@ -53,7 +53,7 @@ impl<'a> PoolProcessor<'_> {
                 market_map,
             )?)?;
         }
-        let user_stake = user.get_user_stake_mut_ref(&pool.pool_key)?;
+        let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
         user_stake.add_staked_share(supply_amount)?;
         Ok((supply_amount, user_stake.clone()))
     }
@@ -67,9 +67,9 @@ impl<'a> PoolProcessor<'_> {
     ) -> BumpResult<(u128, UserStake)> {
         let mut supply_amount = mint_amount;
         let mut user = user_loader.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadUserData)?;
-        let trade_token = trade_token_map.get_trade_token(&self.pool.pool_mint)?;
+        let trade_token = trade_token_map.get_trade_token(&self.pool.mint_key)?;
         if self.pool.total_supply > 0 {
-            let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle)?;
+            let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle_key)?;
 
             supply_amount = cal_utils::token_to_usd_u(
                 mint_amount,
@@ -82,7 +82,7 @@ impl<'a> PoolProcessor<'_> {
                 market_map,
             )?)?;
         }
-        let user_stake = user.get_user_stake_mut_ref(&self.pool.pool_key)?;
+        let user_stake = user.get_user_stake_mut_ref(&self.pool.key)?;
         user_stake.add_staked_share(supply_amount)?;
         Ok((supply_amount, user_stake.clone()))
     }
@@ -96,22 +96,22 @@ impl<'a> PoolProcessor<'_> {
     ) -> BumpResult<u128> {
         let mut user = user_loader.load_mut().unwrap();
 
-        let trade_token = trade_token_map.get_trade_token(&self.pool.pool_mint)?;
+        let trade_token = trade_token_map.get_trade_token(&self.pool.mint_key)?;
         let pool_value = self.pool.get_pool_usd_value(trade_token_map, oracle_map, market_map)?;
 
         let un_stake_usd =
             cal_utils::mul_div_u(un_stake_amount, pool_value, self.pool.total_supply)?;
-        let pool_price = oracle_map.get_price_data(&trade_token.oracle)?;
+        let pool_price = oracle_map.get_price_data(&trade_token.oracle_key)?;
         let token_amount = cal_utils::div_u128(un_stake_usd, pool_price.price)?;
         validate!(
-            token_amount > self.pool.pool_config.mini_un_stake_amount,
+            token_amount > self.pool.pool_config.minimum_un_stake_amount,
             BumpErrorCode::UnStakeTooSmall
         )?;
 
         let max_un_stake_amount = self.pool.get_current_max_un_stake()?;
         validate!(token_amount < max_un_stake_amount, BumpErrorCode::UnStakeTooLarge)?;
 
-        let user_stake = user.get_user_stake_mut_ref(&self.pool.pool_key)?;
+        let user_stake = user.get_user_stake_mut_ref(&self.pool.key)?;
         user_stake.sub_staked_share(un_stake_amount)?;
 
         Ok(token_amount)

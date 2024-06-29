@@ -42,21 +42,21 @@ pub struct UpdatePositionLeverage<'info> {
     #[account(
         seeds = [b"pool", params.pool_index.to_le_bytes().as_ref()],
         bump,
-        constraint = pool.load() ?.pool_mint.eq(& user_token_account.mint),
+        constraint = pool.load() ?.mint_key.eq(& user_token_account.mint),
     )]
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
         seeds = [b"market", params.market_index.to_le_bytes().as_ref()],
         bump,
-        constraint = (market.load() ?.pool_mint.eq(& user_token_account.mint) || market.load() ?.pool_key.eq(& user_token_account.mint)) && market.load() ?.pool_key.eq(& pool.load() ?.pool_key) || market.load() ?.stable_pool_key.eq(& pool.load() ?.pool_key),
+        constraint = (market.load() ?.pool_mint_key.eq(& user_token_account.mint) || market.load() ?.pool_key.eq(& user_token_account.mint)) && market.load() ?.pool_key.eq(& pool.load() ?.key) || market.load() ?.stable_pool_key.eq(& pool.load() ?.key),
     )]
     pub market: AccountLoader<'info, Market>,
 
     #[account(
         seeds = [b"pool_vault".as_ref(), params.pool_index.to_le_bytes().as_ref()],
         bump,
-        token::mint = pool.load()?.pool_mint,
+        token::mint = pool.load()?.mint_key,
         token::authority = bump_signer
     )]
     pub pool_mint_vault: Box<Account<'info, TokenAccount>>,
@@ -73,7 +73,7 @@ pub struct UpdatePositionLeverageParams {
     pub symbol: [u8; 32],
     pub is_long: bool,
     pub is_cross_margin: bool,
-    pub leverage: u128,
+    pub leverage: u32,
     pub add_margin_amount: u128,
     pub market_index: u16,
     pub pool_index: u16,

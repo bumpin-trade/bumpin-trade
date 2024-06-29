@@ -29,8 +29,8 @@ use crate::validate;
 #[derive(Default, Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct User {
-    pub next_order_id: u128, //16
-    pub next_liquidation_id: u128,
+    pub next_order_id: u64, //16
+    pub next_liquidation_id: u64,
     pub hold: u128,
     pub user_tokens: [UserToken; 12], //16
     pub user_stakes: [UserStake; 12],
@@ -151,7 +151,7 @@ impl User {
             .ok_or(CouldNotFindUserStake)
     }
 
-    pub fn get_user_order_ref(&self, order_id: u128) -> BumpResult<&UserOrder> {
+    pub fn get_user_order_ref(&self, order_id: u64) -> BumpResult<&UserOrder> {
         self.get_user_order_index(order_id).map(|user_order| &self.user_orders[user_order])
     }
 
@@ -163,7 +163,7 @@ impl User {
         Ok(new_user_order_index)
     }
 
-    pub fn get_user_order_index(&self, order_id: u128) -> BumpResult<usize> {
+    pub fn get_user_order_index(&self, order_id: u64) -> BumpResult<usize> {
         self.user_orders
             .iter()
             .position(|user_order| {
@@ -309,7 +309,7 @@ impl User {
     ) -> BumpResult<bool> {
         for order in &self.user_orders {
             if order.symbol.eq(&symbol)
-                && order.margin_mint.eq(&margin_token)
+                && order.margin_mint_key.eq(&margin_token)
                 && order.cross_margin.eq(&is_cross_margin)
                 && order.position_side.eq(&PositionSide::INCREASE)
                 && order.order_side.eq(&OrderSide::SHORT)
@@ -320,7 +320,7 @@ impl User {
         Ok(false)
     }
 
-    pub fn has_other_order(self, order_id: u128) -> BumpResult<bool> {
+    pub fn has_other_order(self, order_id: u64) -> BumpResult<bool> {
         for order in &self.user_orders {
             if order.order_id == order_id {
                 return Ok(true);
@@ -371,7 +371,7 @@ impl User {
         Ok(())
     }
 
-    pub fn delete_order(&mut self, order_id: u128) -> BumpResult {
+    pub fn delete_order(&mut self, order_id: u64) -> BumpResult {
         let order_index = self.get_user_order_index(order_id)?;
         let user_key = self.user_key;
         let order = self.user_orders[order_index];
@@ -388,7 +388,7 @@ impl User {
 
     pub fn cancel_stop_orders(
         &mut self,
-        order_id: u128,
+        order_id: u64,
         symbol: [u8; 32],
         margin_token: &Pubkey,
         is_cross_margin: bool,
@@ -401,7 +401,7 @@ impl User {
                 continue;
             }
             if user_order.symbol == symbol
-                && user_order.margin_mint.eq(margin_token)
+                && user_order.margin_mint_key.eq(margin_token)
                 && user_order.order_type.eq(&OrderType::STOP)
                 && user_order.cross_margin == is_cross_margin
             {
@@ -425,8 +425,8 @@ impl User {
         symbol: [u8; 32],
         order_side: OrderSide,
         is_cross_margin: bool,
-        leverage: u128,
-    ) -> BumpResult<u128> {
+        leverage: u32,
+    ) -> BumpResult<u32> {
         for order in self.user_orders {
             if order.symbol == symbol
                 && order.order_side.eq(&order_side)
@@ -441,7 +441,7 @@ impl User {
 
     pub fn update_all_orders_leverage(
         &mut self,
-        leverage: u128,
+        leverage: u32,
         symbol: [u8; 32],
         margin_token: &Pubkey,
         is_long: bool,
@@ -454,10 +454,10 @@ impl User {
             let is_long_order = user_order.order_side.eq(&OrderSide::LONG);
             if user_order.cross_margin == is_cross_margin
                 && user_order.symbol == symbol
-                && user_order.margin_mint.eq(margin_token)
+                && user_order.margin_mint_key.eq(margin_token)
                 && ((is_long_order == is_long
-                && user_order.position_side.eq(&PositionSide::INCREASE))
-                || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
+                    && user_order.position_side.eq(&PositionSide::INCREASE))
+                    || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
             {
                 user_order.set_leverage(leverage)
             }
@@ -475,7 +475,7 @@ impl User {
             if position.status.eq(&PositionStatus::INIT) {
                 continue;
             }
-            if position.margin_mint.eq(token_mint) && position.cross_margin {
+            if position.margin_mint_key.eq(token_mint) && position.cross_margin {
                 let change_amount;
 
                 if change_token_amount > 0i128 {
@@ -540,7 +540,7 @@ impl User {
             if user_position.status.eq(&PositionStatus::INIT) {
                 continue;
             }
-            if user_position.cross_margin && user_position.margin_mint.eq(mint) && amount > 0 {
+            if user_position.cross_margin && user_position.margin_mint_key.eq(mint) && amount > 0 {
                 let reduce_amount = user_position.reduce_position_portfolio_balance(amount)?;
                 amount = amount.safe_sub(reduce_amount)?;
             }
@@ -674,7 +674,7 @@ impl User {
                 continue;
             }
             let trade_token = trade_token_map.get_trade_token(&user_token.token_mint)?;
-            let oracle_price = oracle_map.get_price_data(&trade_token.oracle)?;
+            let oracle_price = oracle_map.get_price_data(&trade_token.oracle_key)?;
             total_token_net_value
                 .safe_add(user_token.get_token_net_value(&trade_token, oracle_price)?)?;
 
@@ -731,7 +731,7 @@ impl User {
                 continue;
             }
             let trade_token = trade_token_map.get_trade_token(&user_token.token_mint)?;
-            let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle)?;
+            let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle_key)?;
 
             let token_net_value =
                 user_token.get_token_net_value(&trade_token, &oracle_price_data)?;
@@ -741,7 +741,8 @@ impl User {
                 user_token.get_token_used_value(&trade_token, &oracle_price_data)?;
             total_used_value = total_used_value.safe_add(token_used_value)?;
 
-            let token_borrowing_value = user_token.get_token_borrowing_value(&oracle_price_data, &trade_token)?;
+            let token_borrowing_value =
+                user_token.get_token_borrowing_value(&oracle_price_data, &trade_token)?;
             total_borrowing_value = total_borrowing_value.safe_add(token_borrowing_value)?;
         }
 
@@ -753,7 +754,8 @@ impl User {
                 continue;
             }
 
-            let index_trade_token = trade_token_map.get_trade_token(&user_position.index_mint)?;
+            let index_trade_token =
+                trade_token_map.get_trade_token(&user_position.index_mint_key)?;
             let (initial_margin_usd_from_portfolio, position_un_pnl, mm_usd) =
                 user_position.get_position_value(&index_trade_token, oracle_map)?;
 
@@ -791,10 +793,11 @@ impl User {
             if user_position.status.eq(&PositionStatus::INIT) {
                 continue;
             }
-            let index_trade_token = trade_token_map.get_trade_token(&user_position.index_mint)?;
-            let trade_token = trade_token_map.get_trade_token(&user_position.margin_mint)?;
-            let index_price = price_map.get_price_data(&index_trade_token.oracle)?.price;
-            let margin_token_price = price_map.get_price_data(&trade_token.oracle)?.price;
+            let index_trade_token =
+                trade_token_map.get_trade_token(&user_position.index_mint_key)?;
+            let trade_token = trade_token_map.get_trade_token(&user_position.margin_mint_key)?;
+            let index_price = price_map.get_price_data(&index_trade_token.oracle_key)?.price;
+            let margin_token_price = price_map.get_price_data(&trade_token.oracle_key)?.price;
             let market = market_map.get_ref(&user_position.symbol)?;
             let pool = pool_map.get_ref(&market.pool_key)?;
             total_im_usd = total_im_usd.safe_add(user_position.initial_margin_usd)?;
@@ -825,7 +828,7 @@ impl User {
                 continue;
             }
             let trade_token = trade_token_map.get_trade_token(&user_token.token_mint)?;
-            let oracle_price = oracle_map.get_price_data(&trade_token.oracle)?;
+            let oracle_price = oracle_map.get_price_data(&trade_token.oracle_key)?;
             total_used_value = total_used_value
                 .safe_add(user_token.get_token_used_value(&trade_token, &oracle_price)?)?;
         }

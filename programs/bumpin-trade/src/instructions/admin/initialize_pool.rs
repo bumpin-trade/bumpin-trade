@@ -11,7 +11,7 @@ use crate::traits::Size;
 pub struct InitializePool<'info> {
     #[account(
         init,
-        seeds = [b"pool", state.number_of_pools.to_le_bytes().as_ref()],
+        seeds = [b"pool", state.pool_sequence.to_le_bytes().as_ref()],
         space = Pool::SIZE,
         bump,
         payer = admin
@@ -22,7 +22,7 @@ pub struct InitializePool<'info> {
 
     #[account(
         init,
-        seeds = [b"pool_vault".as_ref(), state.number_of_pools.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), state.pool_sequence.to_le_bytes().as_ref()],
         bump,
         payer = admin,
         token::mint = pool_mint,
@@ -58,11 +58,11 @@ pub fn handle_initialize_pool(ctx: Context<InitializePool>, name: [u8; 32]) -> R
     let mut pool = ctx.accounts.pool.load_init()?;
     let state = &mut ctx.accounts.state;
 
-    pool.pool_key = ctx.accounts.pool.key();
-    pool.pool_mint = ctx.accounts.pool_mint.key();
+    pool.key = ctx.accounts.pool.key();
+    pool.mint_key = ctx.accounts.pool_mint.key();
     pool.pool_mint_vault = ctx.accounts.pool_vault.key();
-    pool.pool_name = name;
+    pool.name = name;
 
-    safe_increment!(state.number_of_pools, 1);
+    safe_increment!(state.pool_sequence, 1);
     Ok(())
 }

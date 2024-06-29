@@ -12,7 +12,7 @@ use crate::state::trade_token::TradeToken;
 pub struct InitializeTradeToken<'info> {
     #[account(
         init,
-        seeds = [b"trade_token", state.number_of_trade_tokens.to_le_bytes().as_ref()],
+        seeds = [b"trade_token", state.trade_token_sequence.to_le_bytes().as_ref()],
         space = std::mem::size_of::< TradeToken > () + 8,
         bump,
         payer = admin
@@ -21,7 +21,7 @@ pub struct InitializeTradeToken<'info> {
     pub trade_token_mint: Box<Account<'info, Mint>>,
     #[account(
         init,
-        seeds = [b"trade_token_vault".as_ref(), state.number_of_trade_tokens.to_le_bytes().as_ref()],
+        seeds = [b"trade_token_vault".as_ref(), state.trade_token_sequence.to_le_bytes().as_ref()],
         bump,
         payer = admin,
         token::mint = trade_token_mint,
@@ -51,17 +51,17 @@ pub struct InitializeTradeToken<'info> {
 
 pub fn handle_initialize_trade_token(
     ctx: Context<InitializeTradeToken>,
-    discount: u128,
+    discount: u32,
     mint_name: [u8; 32],
-    liquidation_factor: u128,
+    liquidation_factor: u32,
 ) -> Result<()> {
     let state = &mut ctx.accounts.state;
     let trade_token = &mut ctx.accounts.trade_token.load_init()?;
     **trade_token = TradeToken {
-        mint: ctx.accounts.trade_token_mint.key(),
+        mint_key: ctx.accounts.trade_token_mint.key(),
         mint_name,
-        oracle: *ctx.accounts.oracle.to_account_info().key,
-        token_index: state.number_of_trade_tokens,
+        oracle_key: *ctx.accounts.oracle.to_account_info().key,
+        index: state.trade_token_sequence,
         discount,
         liquidation_factor,
         decimals: ctx.accounts.trade_token_mint.decimals.cast::<u16>()?,
@@ -70,6 +70,6 @@ pub fn handle_initialize_trade_token(
         trade_token_vault: *ctx.accounts.trade_token_vault.to_account_info().key,
         padding: [0; 12],
     };
-    safe_increment!(state.number_of_trade_tokens, 1);
+    safe_increment!(state.trade_token_sequence, 1);
     Ok(())
 }

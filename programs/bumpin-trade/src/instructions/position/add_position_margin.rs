@@ -42,28 +42,28 @@ pub struct AddPositionMargin<'info> {
     #[account(
         seeds = [b"trade_token", params.trade_token_index.to_le_bytes().as_ref()],
         bump,
-        constraint = trade_token.load() ?.mint.eq(& user_token_account.mint),
+        constraint = trade_token.load() ?.mint_key.eq(& user_token_account.mint),
     )]
     pub trade_token: AccountLoader<'info, TradeToken>,
 
     #[account(
         seeds = [b"pool", params.pool_index.to_le_bytes().as_ref()],
         bump,
-        constraint = pool.load() ?.pool_mint.eq(& user_token_account.mint),
+        constraint = pool.load() ?.mint_key.eq(& user_token_account.mint),
     )]
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
         seeds = [b"market", params.market_index.to_le_bytes().as_ref()],
         bump,
-        constraint = (market.load() ?.pool_mint.eq(& user_token_account.mint) || market.load() ?.stable_pool_mint.eq(& user_token_account.mint)) && market.load() ?.pool_key.eq(& pool.load() ?.pool_key) || market.load() ?.stable_pool_key.eq(& pool.load() ?.pool_key),
+        constraint = (market.load() ?.pool_mint_key.eq(& user_token_account.mint) || market.load() ?.stable_pool_mint_key.eq(& user_token_account.mint)) && market.load() ?.pool_key.eq(& pool.load() ?.key) || market.load() ?.stable_pool_key.eq(& pool.load() ?.key),
     )]
     pub market: AccountLoader<'info, Market>,
 
     #[account(
         seeds = [b"pool_vault".as_ref(), params.pool_index.to_le_bytes().as_ref()],
         bump,
-        token::mint = pool.load() ?.pool_mint,
+        token::mint = pool.load() ?.mint_key,
         token::authority = bump_signer
     )]
     pub pool_mint_vault: Box<Account<'info, TokenAccount>>,
@@ -108,7 +108,10 @@ pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
             params.update_margin_amount,
         )?;
     }
-    validate!(trade_token.mint.eq(&position.margin_mint), BumpErrorCode::AmountNotEnough.into())?;
+    validate!(
+        trade_token.mint_key.eq(&position.margin_mint_key),
+        BumpErrorCode::AmountNotEnough.into()
+    )?;
 
     if params.is_add {
         position_processor::execute_add_position_margin(
@@ -142,7 +145,7 @@ pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
     user.update_all_orders_leverage(
         position.leverage,
         position.symbol,
-        &position.margin_mint,
+        &position.margin_mint_key,
         position.is_long,
         position.cross_margin,
     )?;

@@ -63,14 +63,14 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
             .iter()
             .find(|token_account| {
                 token_account.owner.eq(&ctx.accounts.bump_signer.owner)
-                    && token_account.mint.eq(&pool.pool_mint)
+                    && token_account.mint.eq(&pool.mint_key)
                     && token_account.key().eq(&pool.pool_mint_vault)
             })
             .ok_or(BumpErrorCode::InvalidParam)?;
         let user_token_account = token_account_vec
             .iter()
             .find(|token_account| {
-                token_account.owner.eq(&user.authority) && token_account.mint.eq(&pool.pool_mint)
+                token_account.owner.eq(&user.authority) && token_account.mint.eq(&pool.mint_key)
             })
             .ok_or(BumpErrorCode::InvalidParam)?;
 

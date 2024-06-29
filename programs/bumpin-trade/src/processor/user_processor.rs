@@ -58,7 +58,9 @@ impl<'a> UserProcessor<'a> {
             if user_position.status.eq(&PositionStatus::INIT) {
                 continue;
             }
-            if user_position.cross_margin && user_position.margin_mint.eq(mint) && reduce_amount > 0
+            if user_position.cross_margin
+                && user_position.margin_mint_key.eq(mint)
+                && reduce_amount > 0
             {
                 if add_amount {
                     let change_amount =
@@ -80,7 +82,7 @@ impl<'a> UserProcessor<'a> {
 
     pub fn cancel_stop_orders(
         &mut self,
-        order_id: u128,
+        order_id: u64,
         symbol: [u8; 32],
         margin_token: &Pubkey,
         is_cross_margin: bool,
@@ -93,7 +95,7 @@ impl<'a> UserProcessor<'a> {
                 continue;
             }
             if user_order.symbol == symbol
-                && user_order.margin_mint.eq(margin_token)
+                && user_order.margin_mint_key.eq(margin_token)
                 && user_order.order_type.eq(&OrderType::STOP)
                 && user_order.cross_margin == is_cross_margin
             {

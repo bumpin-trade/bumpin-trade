@@ -40,7 +40,7 @@ pub struct PortfolioStake<'info> {
         mut,
         seeds = [b"pool_mint_vault".as_ref(), param.pool_index.to_le_bytes().as_ref()],
         bump,
-        token::mint = pool.load() ?.pool_mint,
+        token::mint = pool.load() ?.mint_key,
         token::authority = state.bump_signer
     )]
     pub pool_mint_vault: Box<Account<'info, TokenAccount>>,
@@ -49,7 +49,7 @@ pub struct PortfolioStake<'info> {
         mut,
         seeds = [b"trade_token_vault".as_ref(), param.trade_token_index.to_le_bytes().as_ref()],
         bump,
-        token::mint = pool.load() ?.pool_mint,
+        token::mint = pool.load() ?.mint_key,
         token::authority = state.bump_signer
     )]
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
@@ -92,7 +92,7 @@ pub struct WalletStake<'info> {
         mut,
         seeds = [b"pool_mint_vault".as_ref(), param.pool_index.to_le_bytes().as_ref()],
         bump,
-        token::mint = pool.load() ?.pool_mint,
+        token::mint = pool.load() ?.mint_key,
         token::authority = state.bump_signer
     )]
     pub pool_mint_vault: Box<Account<'info, TokenAccount>>,
@@ -162,7 +162,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
             pool.add_amount_and_supply(stake_params.request_token_amount, supply_amount)?;
             emit!(StakeOrUnStakeEvent {
                 user_key: ctx.accounts.user.load()?.user_key,
-                token_mint: ctx.accounts.pool.load()?.pool_mint,
+                token_mint: ctx.accounts.pool.load()?.mint_key,
                 change_supply_amount: supply_amount,
                 user_stake,
             });
@@ -172,7 +172,6 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
 
             let remaining_accounts = ctx.remaining_accounts;
             let mut account_maps = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
-
 
             let base_mint_amount = stake_processor::stake(
                 &ctx.accounts.pool,
@@ -200,7 +199,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
             pool.add_amount_and_supply(stake_params.request_token_amount, supply_amount)?;
             emit!(StakeOrUnStakeEvent {
                 user_key: ctx.accounts.user.load()?.user_key,
-                token_mint: ctx.accounts.pool.load()?.pool_mint,
+                token_mint: ctx.accounts.pool.load()?.mint_key,
                 change_supply_amount: supply_amount,
                 user_stake,
             });

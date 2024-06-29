@@ -14,19 +14,19 @@ pub struct MarketFundingFee {
     pub total_short_funding_fee: i128,
     pub long_funding_fee_rate: i128,
     pub short_funding_fee_rate: i128,
-    pub last_update: u128,
+    pub last_update: i64,
 }
 
 impl MarketFundingFee {
     pub fn update_last_update(&mut self) -> BumpResult {
-        self.last_update = Clock::get().unwrap().unix_timestamp.to_u128().unwrap();
+        self.last_update = Clock::get().unwrap().unix_timestamp;
         Ok(())
     }
     pub fn update_market_funding_fee_rate(
         &mut self,
         short_funding_fee_amount_per_size_delta: i128,
         long_funding_fee_amount_per_size_delta: i128,
-        fee_durations: u128,
+        fee_durations: i64,
     ) -> BumpResult<()> {
         self.short_funding_fee_amount_per_size = short_funding_fee_amount_per_size_delta
             .safe_add(self.short_funding_fee_amount_per_size.cast::<i128>()?)?
@@ -47,12 +47,12 @@ impl MarketFundingFee {
         Ok(())
     }
 
-    pub fn get_market_funding_fee_durations(&self) -> BumpResult<u128> {
-        if self.last_update > 0u128 {
+    pub fn get_market_funding_fee_durations(&self) -> BumpResult<i64> {
+        if self.last_update > 0i64 {
             let clock = Clock::get().unwrap();
-            Ok(clock.unix_timestamp.to_u128().unwrap().safe_sub(self.last_update)?)
+            clock.unix_timestamp.safe_sub(self.last_update)
         } else {
-            Ok(0u128)
+            Ok(0i64)
         }
     }
 }

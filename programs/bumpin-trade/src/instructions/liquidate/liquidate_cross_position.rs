@@ -9,7 +9,7 @@ use crate::math::casting::Cast;
 use crate::math::constants::{RATE_PRECISION, SMALL_RATE_PRECISION};
 use crate::math::safe_math::SafeMath;
 use crate::processor::market_processor::MarketProcessor;
-use crate::processor::optional_accounts::{AccountMaps, load_maps};
+use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::position_processor;
 use crate::processor::position_processor::DecreasePositionParams;
 use crate::processor::user_processor::UserProcessor;
@@ -91,7 +91,8 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         let trade_token = &trade_token_map.get_trade_token(&pos_info.margin_mint)?;
         market_processor.update_market_funding_fee_rate(
             &ctx.accounts.state,
-            oracle_map.get_price_data(&trade_token.oracle).unwrap().price, trade_token.decimals,
+            oracle_map.get_price_data(&trade_token.oracle_key).unwrap().price,
+            trade_token.decimals,
         )?;
     }
 
@@ -108,7 +109,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         total_size.cast::<i128>()?,
         SMALL_RATE_PRECISION.cast::<i128>()?,
     )?
-        .max(0i128);
+    .max(0i128);
 
     if cross_net_value <= 0 || cross_net_value.abs().cast::<u128>()? <= total_position_mm {
         for pos_info in &pos_infos {
@@ -120,7 +121,8 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
             let market = market_map.get_ref(&pos_info.symbol)?;
             let index_trade_token = trade_token_map.get_trade_token(&pos_info.index_mint)?;
 
-            let index_price = oracle_map.get_price_data(&index_trade_token.oracle).unwrap().price;
+            let index_price =
+                oracle_map.get_price_data(&index_trade_token.oracle_key).unwrap().price;
             let bankruptcy_price = cal_utils::format_to_ticker_size(
                 if pos_info.is_long {
                     cal_utils::mul_small_rate_u(
@@ -176,19 +178,17 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
                 &ctx.accounts.state,
                 None,
                 if pos_info.is_long {
-                    vault_map.get_account(&pda::generate_pool_vault_key(
-                        pool.pool_index,
-                        ctx.program_id,
-                    )?)?
+                    vault_map
+                        .get_account(&pda::generate_pool_vault_key(pool.index, ctx.program_id)?)?
                 } else {
                     vault_map.get_account(&pda::generate_pool_vault_key(
-                        stable_pool.pool_index,
+                        stable_pool.index,
                         ctx.program_id,
                     )?)?
                 },
                 trade_token_map.get_trade_token(&pos_info.margin_mint)?,
                 vault_map.get_account(&pda::generate_trade_token_vault_key(
-                    trade_token.token_index,
+                    trade_token.index,
                     ctx.program_id,
                 )?)?,
                 &ctx.accounts.bump_signer,
@@ -211,9 +211,9 @@ fn get_position_info(
     Ok(PosInfos {
         cross_margin: position.cross_margin,
         symbol: position.symbol,
-        index_mint: position.index_mint,
+        index_mint: position.index_mint_key,
         is_long: position.is_long,
-        margin_mint: position.margin_mint,
+        margin_mint: position.margin_mint_key,
         position_size: position.position_size,
         user_key: position.user_key,
         mm: position.get_position_mm(&market, state)?,

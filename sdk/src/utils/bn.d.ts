@@ -1,21 +1,27 @@
-import {AnchorProvider, BN, Program, Wallet} from "@coral-xyz/anchor";
+import {BN} from "@coral-xyz/anchor";
 import {FIVE} from "../constants/numericConstants";
 
 const TEN = new BN(10)
 declare module "@coral-xyz/anchor" {
     interface BN {
         toUsd(tokenPrice: BN, decimals: number): BN;
+
         toToken(tokenPrice: BN, decimals: BN): BN;
+
         divWithDecimals(value2: BN, decimals: number): BN;
+
         mulRate(rate: BN): BN;
+
         divRate(rate: BN): BN;
+
         mulSmallRate(rate: BN): BN;
+
         divSmallRate(rate: BN): BN;
     }
 }
 
 
-BN.prototype.toUsd = function (tokenPrice: BN, decimals: number) :BN{
+BN.prototype.toUsd = function (tokenPrice: BN, decimals: number): BN {
     return this.mul(tokenPrice).mul(TEN.pow(TEN)).div(TEN.pow(new BN(decimals)));
 }
 

@@ -46,7 +46,7 @@ pub struct Deposit<'info> {
 pub fn handle_deposit(ctx: Context<Deposit>, _token_index: u16, amount: u128) -> Result<()> {
     let mut user = ctx.accounts.user.load_mut()?;
     let trade_token = &mut ctx.accounts.trade_token.load_mut()?;
-    let token_mint = &trade_token.mint;
+    let token_mint = &trade_token.mint_key;
 
     token::receive(
         &ctx.accounts.token_program,
@@ -65,12 +65,13 @@ pub fn handle_deposit(ctx: Context<Deposit>, _token_index: u16, amount: u128) ->
 
     user.add_user_token_amount(token_mint, amount, &UserTokenUpdateReason::DEPOSIT)?;
 
-    let repay_amount = user.repay_liability(&trade_token.mint, UserTokenUpdateReason::DEPOSIT)?;
+    let repay_amount =
+        user.repay_liability(&trade_token.mint_key, UserTokenUpdateReason::DEPOSIT)?;
     trade_token.sub_liability(repay_amount)?;
     if amount > repay_amount {
         let left_amount = amount.safe_sub(repay_amount)?;
         let mut user_processor = UserProcessor { user: &mut user };
-        user_processor.update_cross_position_balance(&trade_token.mint, left_amount, true)?
+        user_processor.update_cross_position_balance(&trade_token.mint_key, left_amount, true)?
     }
     emit!(DepositEvent {
         user_key: ctx.accounts.user.to_account_info().key(),

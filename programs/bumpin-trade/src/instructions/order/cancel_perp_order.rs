@@ -40,7 +40,7 @@ pub struct CancelOrderCtx<'info> {
         mut,
         seeds = [b"pool_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
         bump,
-        token::mint = pool.load() ?.pool_mint,
+        token::mint = pool.load() ?.mint_key,
         token::authority = bump_signer
     )]
     pub pool_vault: Box<Account<'info, TokenAccount>>,
@@ -63,7 +63,7 @@ pub struct CancelOrderCtx<'info> {
 
 pub fn handle_cancel_order(
     ctx: Context<CancelOrderCtx>,
-    order_id: u128,
+    order_id: u64,
     _pool_index: u16,
 ) -> Result<()> {
     let user = ctx.accounts.user.load()?;
@@ -74,7 +74,7 @@ pub fn handle_cancel_order(
 
     //validate pool is correct
     validate!(
-        order.margin_mint.eq(&ctx.accounts.pool.load()?.pool_mint),
+        order.margin_mint_key.eq(&ctx.accounts.pool.load()?.mint_key),
         BumpErrorCode::InvalidParam
     )?;
 

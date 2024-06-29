@@ -12,7 +12,7 @@ use crate::traits::Size;
 pub struct InitializeMarket<'info> {
     #[account(
         init,
-        seeds = [b"market", state.number_of_markets.to_le_bytes().as_ref()],
+        seeds = [b"market", state.market_sequence.to_le_bytes().as_ref()],
         space = Market::SIZE,
         bump,
         payer = admin
@@ -52,13 +52,13 @@ pub fn handle_initialize_market(ctx: Context<InitializeMarket>, symbol: [u8; 32]
     let pool = ctx.accounts.pool.load()?;
     let stable_pool = ctx.accounts.stable_pool.load()?;
     let state = &mut ctx.accounts.state;
-    market.market_index = state.number_of_markets;
+    market.index = state.market_sequence;
     market.symbol = symbol;
-    market.pool_key = pool.pool_key;
-    market.pool_mint = pool.pool_mint;
-    market.index_mint = ctx.accounts.index_mint.key();
-    market.stable_pool_mint = stable_pool.pool_mint;
-    market.stable_pool_key = stable_pool.pool_key;
-    safe_increment!(state.number_of_markets, 1);
+    market.pool_key = pool.key;
+    market.pool_mint_key = pool.mint_key;
+    market.index_mint_key = ctx.accounts.index_mint.key();
+    market.stable_pool_mint_key = stable_pool.mint_key;
+    market.stable_pool_key = stable_pool.key;
+    safe_increment!(state.market_sequence, 1);
     Ok(())
 }

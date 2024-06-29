@@ -52,7 +52,7 @@ pub struct LiquidateIsolatePosition<'info> {
         mut,
         seeds = [b"pool", _pool_index.to_le_bytes().as_ref()],
         bump,
-        constraint = pool.load() ?.pool_mint.eq(& market.load() ?.pool_mint)
+        constraint = pool.load() ?.mint_key.eq(& market.load() ?.pool_mint_key)
     )]
     pub pool: AccountLoader<'info, Pool>,
 
@@ -60,7 +60,7 @@ pub struct LiquidateIsolatePosition<'info> {
         mut,
         seeds = [b"pool", _stable_pool_index.to_le_bytes().as_ref()],
         bump,
-        constraint = stable_pool.load() ?.pool_mint.eq(& market.load() ?.stable_pool_mint)
+        constraint = stable_pool.load() ?.mint_key.eq(& market.load() ?.stable_pool_mint_key)
     )]
     pub stable_pool: AccountLoader<'info, Pool>,
 
@@ -139,7 +139,7 @@ pub fn handle_liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
 
     let index_trade_token = ctx.accounts.index_trade_token.load()?;
 
-    let index_price = oracle_map.get_price_data(&index_trade_token.oracle)?;
+    let index_price = oracle_map.get_price_data(&index_trade_token.oracle_key)?;
     if (is_long && index_price.price > liquidation_price)
         || (!is_long && index_price.price < liquidation_price)
     {
@@ -193,12 +193,13 @@ fn cal_liquidation_price(
     let mut market_processor = MarketProcessor { market };
     market_processor.update_market_funding_fee_rate(
         state,
-        oracle_map.get_price_data(&trade_token.oracle)?.price, trade_token.decimals,
+        oracle_map.get_price_data(&trade_token.oracle_key)?.price,
+        trade_token.decimals,
     )?;
 
     pool.update_pool_borrowing_fee_rate()?;
 
-    let margin_token_price = oracle_map.get_price_data(&trade_token.oracle)?.price;
+    let margin_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
     let liquidation_price = user_position.get_liquidation_price(
         &market,
         &pool,
@@ -208,7 +209,7 @@ fn cal_liquidation_price(
     )?;
     Ok((
         user_position.is_long,
-        user_position.margin_mint,
+        user_position.margin_mint_key,
         user_position.position_size,
         liquidation_price,
     ))

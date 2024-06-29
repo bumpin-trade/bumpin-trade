@@ -161,7 +161,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
             let pool = &mut ctx.accounts.pool.load_mut()?;
             let user = &mut ctx.accounts.user.load_mut()?;
 
-            let user_stake = user.get_user_stake_ref(&pool.pool_key)?;
+            let user_stake = user.get_user_stake_ref(&pool.key)?;
             validate!(
                 user_stake.staked_share >= un_stake_params.share,
                 BumpErrorCode::UnStakeTooSmall
@@ -203,28 +203,28 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
             )?;
 
             user.add_user_token_amount(
-                &trade_token.mint,
+                &trade_token.mint_key,
                 rewards_amount.safe_add(transfer_amount)?,
                 &UserTokenUpdateReason::TransferFromStake,
             )?;
             trade_token.add_amount(transfer_amount)?;
 
-            let repay_liability =
-                user.repay_liability(&trade_token.mint, UserTokenUpdateReason::TransferFromStake)?;
+            let repay_liability = user
+                .repay_liability(&trade_token.mint_key, UserTokenUpdateReason::TransferFromStake)?;
             if repay_liability > 0 {
                 trade_token.sub_liability(repay_liability)?;
             }
 
             let mut user_processor = UserProcessor { user };
             user_processor.update_cross_position_balance(
-                &pool.pool_mint,
+                &pool.mint_key,
                 transfer_amount.safe_sub(repay_liability)?,
                 true,
             )?;
 
             pool.sub_amount_and_supply(un_stake_token_amount, un_stake_params.share)?;
 
-            let user_stake = user.get_user_stake_mut_ref(&pool.pool_key)?;
+            let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
 
             let user = &mut ctx.accounts.user.load_mut()?;
             if user_stake.staked_share <= 0 {
@@ -233,7 +233,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
 
             emit!(StakeOrUnStakeEvent {
                 user_key: ctx.accounts.user.load()?.user_key,
-                token_mint: ctx.accounts.pool.load()?.pool_mint,
+                token_mint: ctx.accounts.pool.load()?.mint_key,
                 change_supply_amount: un_stake_token_amount,
                 user_stake: user_stake.clone(),
             });
@@ -242,7 +242,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
             let pool = &mut ctx.accounts.pool.load_mut()?;
             let user = &mut ctx.accounts.user.load_mut()?;
 
-            let user_stake = user.get_user_stake_ref(&pool.pool_key)?;
+            let user_stake = user.get_user_stake_ref(&pool.key)?;
             validate!(
                 user_stake.staked_share >= un_stake_params.share,
                 BumpErrorCode::UnStakeTooSmall
@@ -287,7 +287,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
 
             pool.sub_amount_and_supply(un_stake_token_amount, un_stake_params.share)?;
 
-            let user_stake = user.get_user_stake_mut_ref(&pool.pool_key)?;
+            let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
 
             let user = &mut ctx.accounts.user.load_mut()?;
             if user_stake.staked_share <= 0 {
@@ -296,7 +296,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
 
             emit!(StakeOrUnStakeEvent {
                 user_key: ctx.accounts.user.load()?.user_key,
-                token_mint: ctx.accounts.pool.load()?.pool_mint,
+                token_mint: ctx.accounts.pool.load()?.mint_key,
                 change_supply_amount: un_stake_token_amount,
                 user_stake: user_stake.clone(),
             });

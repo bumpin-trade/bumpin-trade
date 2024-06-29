@@ -18,13 +18,13 @@ use crate::validate;
 pub struct ADL<'info> {
     #[account(
         mut,
-        constraint = pool.load() ?.pool_mint == market.load() ?.pool_mint
+        constraint = pool.load() ?.mint_key == market.load() ?.pool_mint_key
     )]
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
         mut,
-        constraint = stable_pool.load() ?.pool_mint == market.load() ?.stable_pool_mint
+        constraint = stable_pool.load() ?.mint_key == market.load() ?.stable_pool_mint_key
     )]
     pub stable_pool: AccountLoader<'info, Pool>,
 
@@ -34,13 +34,13 @@ pub struct ADL<'info> {
 
     #[account(
         mut,
-        constraint = pool_vault.mint == pool.load() ?.pool_mint
+        constraint = pool_vault.mint == pool.load() ?.mint_key
     )]
     pub pool_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
-        constraint = stable_pool_vault.mint == stable_pool.load() ?.pool_mint
+        constraint = stable_pool_vault.mint == stable_pool.load() ?.mint_key
     )]
     pub stable_pool_vault: Box<Account<'info, TokenAccount>>,
 
@@ -94,22 +94,25 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
         let position = user_account.find_position_mut_ref_by_key(&param.position_key)?;
 
         let user_account = user_map.get_ref(&param.user_key)?;
-        let user_token = user_account.get_user_token_ref(&position.margin_mint)?;
+        let user_token = user_account.get_user_token_ref(&position.margin_mint_key)?;
 
         validate!(
             user_token.user_token_account_key.eq(user_token_account.to_account_info().key),
             BumpErrorCode::InvalidTokenAccount
         )?;
-        let index_trade_token = trade_token_map.get_trade_token(&position.index_mint)?;
+        let index_trade_token = trade_token_map.get_trade_token(&position.index_mint_key)?;
         drop(user_account);
         position_processor::decrease_position1(
             DecreasePositionParams {
                 order_id: 0,
                 is_liquidation: false,
                 is_cross_margin: position.cross_margin,
-                margin_token: position.margin_mint,
+                margin_token: position.margin_mint_key,
                 decrease_size: position.position_size,
-                execute_price: oracle_map.get_price_data(&index_trade_token.oracle).unwrap().price,
+                execute_price: oracle_map
+                    .get_price_data(&index_trade_token.oracle_key)
+                    .unwrap()
+                    .price,
             },
             user_account_loader.load_mut()?.deref_mut(),
             market_account_loader.load_mut()?.deref_mut(),

@@ -15,7 +15,7 @@ pub fn update_account_fee_reward(
     let stake_pool = pool_loader.load().unwrap();
     let user_key = user.user_key;
 
-    let user_stake = user.get_user_stake_mut_ref(&stake_pool.pool_key)?;
+    let user_stake = user.get_user_stake_mut_ref(&stake_pool.key)?;
 
     let fee_reward = stake_pool.fee_reward;
     if user_stake.user_rewards.open_rewards_per_stake_token
@@ -36,6 +36,6 @@ pub fn update_account_fee_reward(
     user_stake.user_rewards.open_rewards_per_stake_token =
         fee_reward.cumulative_rewards_per_stake_token;
     let user_rewards = user_stake.user_rewards.clone();
-    emit!(UserRewardsUpdateEvent { user_key, token_mint: stake_pool.pool_key, user_rewards });
+    emit!(UserRewardsUpdateEvent { user_key, token_mint: stake_pool.key, user_rewards });
     Ok(())
 }
