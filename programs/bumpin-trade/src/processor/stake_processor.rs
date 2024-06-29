@@ -24,7 +24,7 @@ pub fn stake(
         .map_err(|_| BumpErrorCode::UnableToLoadAccountLoader)?;
     let user =
         &mut user_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
-    let trade_token = trade_token_map.get_trade_token(&pool.mint_key)?;
+    let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key)?;
 
     let token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
 

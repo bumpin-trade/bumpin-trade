@@ -298,7 +298,7 @@ pub fn handle_execute_order<'info>(
 
     let margin_token = margin_token_account;
     let mut market = market_account_loader.load_mut()?;
-    let trade_token = trade_token_loader.load()?;
+    let mut trade_token = trade_token_loader.load_mut()?;
     let index_trade_token = index_trade_token_loader.load()?;
     let mut stake_token_pool =
         pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
@@ -439,7 +439,7 @@ pub fn handle_execute_order<'info>(
             // drop(market);
             // drop(pool);
 
-            position_processor::decrease_position1(
+            position_processor::decrease_position(
                 DecreasePositionParams {
                     order_id,
                     is_liquidation: false,
@@ -455,7 +455,7 @@ pub fn handle_execute_order<'info>(
                 state_account,
                 Some(user_token_account),
                 if position_side { pool_vault_account } else { stable_pool_vault_account },
-                trade_token,
+                trade_token.deref_mut(),
                 trade_token_vault_account,
                 bump_signer,
                 token_program,

@@ -39,7 +39,7 @@ pub fn rebalance_pool_unsettle<'a>(
 
         if pool.fee_reward.un_settle_fee_amount > 0 {
             let pool_vault = vault_map.get_account(&pool.pool_mint_vault)?;
-            let trade_token = trade_token_map.get_trade_token(&pool.mint_key)?;
+            let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key)?;
             let trade_token_vault = vault_map.get_account(&trade_token.trade_token_vault)?;
 
             utils::token::receive(
@@ -101,7 +101,7 @@ pub fn rebalance_pool_unsettle<'a>(
 
     for pool in &mut pool_vec {
         if pool.stable {
-            let trade_token = trade_token_map.get_trade_token(&pool.mint_key)?;
+            let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key)?;
             if trade_token.total_liability < pool.balance.un_settle_amount {
                 let transfer_amount = pool.balance.un_settle_amount - trade_token.total_liability;
 
@@ -171,7 +171,7 @@ pub fn rebalance_rewards<'a>(
     for mut pool in pool_vec {
         if pool.fee_reward.un_settle_fee_amount > 0 {
             let stable_pool_vault = vault_map.get_account(&pool.pool_mint_vault)?;
-            let trade_token = trade_token_map.get_trade_token(&pool.mint_key)?;
+            let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key)?;
             let trade_token_vault = vault_map.get_account(&trade_token.trade_token_vault)?;
 
             utils::token::receive(

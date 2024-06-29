@@ -1,10 +1,9 @@
 use anchor_lang::prelude::*;
+
 use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
-use num_traits::ToPrimitive;
 
 use crate::errors::BumpResult;
 use crate::instructions::cal_utils;
-use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::state::pool::PoolBalance;
 

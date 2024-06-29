@@ -5,6 +5,7 @@ use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 use crate::errors::BumpErrorCode::PoolSubUnsettleNotEnough;
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{add_u128, cal_utils, sub_u128};
+use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::processor::market_processor::MarketProcessor;
 use crate::state::bump_events::PoolUpdateEvent;
@@ -237,7 +238,7 @@ impl Pool {
         oracle_map: &mut OracleMap,
         market_vec: &MarketMap,
     ) -> BumpResult<u128> {
-        let trade_token = trade_token_map.get_trade_token(&self.mint_key)?;
+        let trade_token = trade_token_map.get_trade_token_ref(&self.mint_key)?;
         let trade_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
         let mut pool_value = cal_utils::token_to_usd_u(
             self.balance.amount.safe_add(self.balance.un_settle_amount)?,
@@ -265,7 +266,7 @@ impl Pool {
                 .safe_add(self.stable_balance.un_settle_amount)?
                 .safe_sub(self.stable_balance.loss_amount)?;
             if stable_amount > 0u128 {
-                let stable_trade_token = trade_token_map.get_trade_token(&self.stable_key)?;
+                let stable_trade_token = trade_token_map.get_trade_token_ref(&self.stable_key)?;
                 let stable_trade_token_price =
                     oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
                 let stable_usd_value = cal_utils::token_to_usd_u(
@@ -288,5 +289,64 @@ impl Pool {
         let pool_value = self.get_pool_usd_value(trade_token_map, oracle_map, market_vec)?;
         let net_price = self.total_supply.safe_div(pool_value)?;
         Ok(net_price)
+    }
+
+    pub fn update_pnl_and_un_hold_pool_amount(
+        &mut self,
+        amount: u128,
+        token_pnl: i128,
+        add_liability: u128,
+        base_token_pool: Option<&mut Pool>,
+    ) -> BumpResult {
+        self.un_hold_pool(amount)?;
+
+        Ok(match base_token_pool {
+            None => {
+                if token_pnl < 0i128 {
+                    if self.stable {
+                        Err(BumpErrorCode::InvalidParam)?
+                    }
+                    self.sub_amount(token_pnl.abs().cast::<u128>()?)?;
+                } else if add_liability == 0u128 {
+                    self.add_amount(token_pnl.cast::<u128>()?)?
+                } else {
+                    let u_token_pnl = token_pnl.abs().cast::<u128>()?;
+                    self.add_amount(if u_token_pnl > add_liability {
+                        u_token_pnl.safe_sub(add_liability)?
+                    } else {
+                        0u128
+                    })?;
+                    self.add_unsettle(if u_token_pnl > add_liability {
+                        add_liability
+                    } else {
+                        u_token_pnl
+                    })?;
+                }
+            },
+            Some(base_token_pool) => {
+                if token_pnl < 0i128 {
+                    if self.stable {
+                        // need count loss on base_token_pool
+                        self.add_unsettle(token_pnl.abs().cast::<u128>()?)?;
+                        base_token_pool.add_stable_loss_amount(token_pnl.abs().cast::<u128>()?)?;
+                    }
+                    self.sub_amount(token_pnl.abs().cast::<u128>()?)?;
+                } else if add_liability == 0u128 {
+                    self.add_amount(token_pnl.cast::<u128>()?)?
+                } else {
+                    let u_token_pnl = token_pnl.abs().cast::<u128>()?;
+                    self.add_amount(if u_token_pnl > add_liability {
+                        u_token_pnl.safe_sub(add_liability)?
+                    } else {
+                        0u128
+                    })?;
+                    self.add_unsettle(if u_token_pnl > add_liability {
+                        add_liability
+                    } else {
+                        u_token_pnl
+                    })?;
+                }
+            },
+        })
     }
 }

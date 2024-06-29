@@ -121,7 +121,7 @@ pub fn handle_liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
     let mut user = ctx.accounts.user.load_mut()?;
     let remaining_accounts = ctx.remaining_accounts;
     let mut market = ctx.accounts.market.load_mut()?;
-    let trade_token = ctx.accounts.trade_token.load()?;
+    let mut trade_token = ctx.accounts.trade_token.load_mut()?;
     let mut oracle_map = OracleMap::load(remaining_accounts)?;
     let mut base_token_pool = ctx.accounts.pool.load_mut()?;
     let mut stable_pool = ctx.accounts.stable_pool.load_mut()?;
@@ -145,7 +145,7 @@ pub fn handle_liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
     {
         let symbol = market.symbol;
         let user_key = user.user_key;
-        position_processor::decrease_position1(
+        position_processor::decrease_position(
             DecreasePositionParams {
                 order_id: 0,
                 is_liquidation: true,
@@ -165,7 +165,7 @@ pub fn handle_liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
             } else {
                 &ctx.accounts.stable_pool_mint_vault
             },
-            trade_token,
+            trade_token.deref_mut(),
             &ctx.accounts.trade_token_vault,
             &ctx.accounts.bump_signer,
             &ctx.accounts.token_program,

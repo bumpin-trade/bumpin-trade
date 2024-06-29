@@ -88,7 +88,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
 
         let market = &mut market_map.get_mut_ref(&pos_info.symbol)?;
         let mut market_processor = MarketProcessor { market };
-        let trade_token = &trade_token_map.get_trade_token(&pos_info.margin_mint)?;
+        let trade_token = &trade_token_map.get_trade_token_ref(&pos_info.margin_mint)?;
         market_processor.update_market_funding_fee_rate(
             &ctx.accounts.state,
             oracle_map.get_price_data(&trade_token.oracle_key).unwrap().price,
@@ -119,7 +119,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
             }
 
             let market = market_map.get_ref(&pos_info.symbol)?;
-            let index_trade_token = trade_token_map.get_trade_token(&pos_info.index_mint)?;
+            let index_trade_token = trade_token_map.get_trade_token_ref(&pos_info.index_mint)?;
 
             let index_price =
                 oracle_map.get_price_data(&index_trade_token.oracle_key).unwrap().price;
@@ -160,9 +160,9 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
 
             let pool = pool_key_map.get_ref(&market.pool_key)?;
             let stable_pool = pool_key_map.get_ref(&market.stable_pool_key)?;
-            let trade_token = trade_token_map.get_trade_token(&pos_info.margin_mint)?;
+            let trade_token = trade_token_map.get_trade_token_ref(&pos_info.margin_mint)?;
 
-            position_processor::decrease_position1(
+            position_processor::decrease_position(
                 DecreasePositionParams {
                     order_id: 0,
                     is_liquidation: true,
@@ -186,7 +186,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
                         ctx.program_id,
                     )?)?
                 },
-                trade_token_map.get_trade_token(&pos_info.margin_mint)?,
+                trade_token_map.get_trade_token_ref_mut(&pos_info.margin_mint)?.deref_mut(),
                 vault_map.get_account(&pda::generate_trade_token_vault_key(
                     trade_token.index,
                     ctx.program_id,

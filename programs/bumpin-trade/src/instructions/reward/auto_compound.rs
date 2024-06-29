@@ -1,9 +1,8 @@
 use anchor_lang::prelude::*;
 
 use crate::errors::BumpErrorCode;
+use crate::processor::{pool_processor, stake_processor};
 use crate::processor::optional_accounts::load_maps;
-use crate::processor::pool_processor::PoolProcessor;
-use crate::processor::stake_processor;
 use crate::state::bump_events::StakeOrUnStakeEvent;
 use crate::state::state::State;
 use crate::state::user::User;
@@ -58,21 +57,21 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
             pool.fee_reward.cumulative_rewards_per_stake_token;
 
         let account_maps = &mut load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
-        let mut pool_processor = PoolProcessor { pool };
-        let (supply_amount, user_stake) = pool_processor.stake(
-            &ctx.accounts.user,
+        let supply_amount = pool_processor::stake(
+            pool,
             stake_amount,
             &account_maps.trade_token_map,
             &mut account_maps.oracle_map,
             &account_maps.market_map,
         )?;
+        user_stake.add_staked_share(supply_amount)?;
         //todo transfer from collect vault to pool
         pool.add_amount_and_supply(token_amount, supply_amount)?;
         emit!(StakeOrUnStakeEvent {
             user_key: ctx.accounts.user.load()?.user_key,
             token_mint: pool.mint_key,
             change_supply_amount: supply_amount,
-            user_stake,
+            user_stake:user_stake.clone(),
         });
     }
     Ok(())

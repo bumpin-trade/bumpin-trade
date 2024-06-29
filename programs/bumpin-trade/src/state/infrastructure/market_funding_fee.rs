@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
+
 use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
-use num_traits::ToPrimitive;
 
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;

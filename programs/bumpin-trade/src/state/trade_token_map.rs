@@ -1,4 +1,4 @@
-use std::cell::Ref;
+use std::cell::{Ref, RefMut};
 use std::collections::BTreeMap;
 use std::panic::Location;
 
@@ -37,7 +37,7 @@ impl<'a> TradeTokenMap<'a> {
 
     #[track_caller]
     #[inline(always)]
-    pub fn get_trade_token(&self, mint: &Pubkey) -> BumpResult<Ref<TradeToken>> {
+    pub fn get_trade_token_ref(&self, mint: &Pubkey) -> BumpResult<Ref<TradeToken>> {
         let loader = match self.0.get(mint) {
             None => {
                 let caller = Location::caller();
@@ -47,6 +47,28 @@ impl<'a> TradeTokenMap<'a> {
             Some(loader) => loader,
         };
         match loader.load() {
+            Ok(trade_token) => Ok(trade_token),
+            Err(e) => {
+                let caller = Location::caller();
+                msg!("{:?}", e);
+                msg!("Could not load trade_token {} at {}:{}", mint, caller.file(), caller.line());
+                Err(CouldNotLoadTradeTokenData)
+            },
+        }
+    }
+
+    #[track_caller]
+    #[inline(always)]
+    pub fn get_trade_token_ref_mut(&self, mint: &Pubkey) -> BumpResult<RefMut<TradeToken>> {
+        let loader = match self.0.get(mint) {
+            None => {
+                let caller = Location::caller();
+                msg!("Could not find trade_token {} at {}:{}", mint, caller.file(), caller.line());
+                return Err(TradeTokenNotFind);
+            },
+            Some(loader) => loader,
+        };
+        match loader.load_mut() {
             Ok(trade_token) => Ok(trade_token),
             Err(e) => {
                 let caller = Location::caller();

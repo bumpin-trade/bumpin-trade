@@ -1,9 +1,9 @@
+use anchor_lang::prelude::*;
+
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;
 use crate::math::constants::{PRICE_TO_LAMPORT, RATE_PRECISION, SMALL_RATE_PRECISION};
 use crate::math::safe_math::SafeMath;
-use anchor_lang::prelude::*;
-use num_traits::ToPrimitive;
 
 pub fn mul_div_i(a: i128, b: i128, denominator: i128) -> BumpResult<i128> {
     Ok(a.safe_mul(b)?.safe_div(denominator)?)

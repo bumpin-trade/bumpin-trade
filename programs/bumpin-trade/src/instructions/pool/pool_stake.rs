@@ -1,11 +1,13 @@
+use std::ops::DerefMut;
+
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::can_sign_for_user;
+use crate::errors::BumpErrorCode;
 use crate::instructions::Either;
+use crate::processor::{pool_processor, stake_processor};
 use crate::processor::optional_accounts::load_maps;
-use crate::processor::pool_processor::PoolProcessor;
-use crate::processor::stake_processor;
 use crate::state::bump_events::StakeOrUnStakeEvent;
 use crate::state::pool::Pool;
 use crate::state::state::State;
@@ -143,10 +145,9 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 &mut account_maps.oracle_map,
                 stake_params.request_token_amount,
             )?;
-            let mut pool_processor = PoolProcessor { pool };
-            let (supply_amount, user_stake) = pool_processor.portfolio_to_stake(
-                &ctx.accounts.user,
-                &ctx.accounts.pool,
+            let (supply_amount, user_stake) = pool_processor::portfolio_to_stake(
+                ctx.accounts.user.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadUserData)?.deref_mut(),
+                pool,
                 base_mint_amount,
                 &account_maps.trade_token_map,
                 &mut account_maps.oracle_map,
@@ -166,7 +167,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 change_supply_amount: supply_amount,
                 user_stake,
             });
-        },
+        }
         Either::Right(ctx) => {
             let pool = &mut ctx.accounts.pool.load_mut()?;
 
@@ -180,15 +181,18 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 &mut account_maps.oracle_map,
                 stake_params.request_token_amount,
             )?;
-            let mut pool_processor = PoolProcessor { pool };
-            let (supply_amount, user_stake) = pool_processor.stake(
-                &ctx.accounts.user,
+            let mut user = ctx.accounts.user.load_mut()?;
+            let user_key = user.user_key;
+            let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
+
+            let supply_amount = pool_processor::stake(
+                pool,
                 base_mint_amount,
                 &account_maps.trade_token_map,
                 &mut account_maps.oracle_map,
                 &account_maps.market_map,
             )?;
-            drop(pool_processor);
+            user_stake.add_staked_share(supply_amount)?;
             utils::token::receive(
                 &ctx.accounts.token_program,
                 &ctx.accounts.user_token_account,
@@ -198,12 +202,12 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
             )?;
             pool.add_amount_and_supply(stake_params.request_token_amount, supply_amount)?;
             emit!(StakeOrUnStakeEvent {
-                user_key: ctx.accounts.user.load()?.user_key,
-                token_mint: ctx.accounts.pool.load()?.mint_key,
+                user_key,
+                token_mint: pool.mint_key,
                 change_supply_amount: supply_amount,
-                user_stake,
+                user_stake: user_stake.clone(),
             });
-        },
+        }
     };
 
     Ok(())

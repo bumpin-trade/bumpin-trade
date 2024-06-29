@@ -1,5 +1,3 @@
-use std::cell::Ref;
-
 use anchor_lang::prelude::*;
 use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
 use anchor_lang::{emit, ToAccountInfo};
@@ -86,7 +84,7 @@ pub fn update_borrowing_fee(
     Ok(())
 }
 
-pub fn decrease_position1<'info>(
+pub fn decrease_position<'info>(
     params: DecreasePositionParams,
     user: &mut User,
     market: &mut Market,
@@ -95,7 +93,7 @@ pub fn decrease_position1<'info>(
     state_account: &Account<'info, State>,
     user_token_account: Option<&Account<'info, TokenAccount>>,
     pool_vault_account: &Account<'info, TokenAccount>,
-    trade_token: Ref<TradeToken>,
+    trade_token: &mut TradeToken,
     trade_token_vault_account: &Account<'info, TokenAccount>,
     bump_signer: &AccountInfo<'info>,
     token_program: &Program<'info, Token>,
@@ -165,21 +163,20 @@ pub fn decrease_position1<'info>(
         is_long,
         pre_position.entry_price,
     )?;
-    //TODO: 适配对应参数
-    // settle(
-    //     &response,
-    //     user_account_loader,
-    //     pool_account_loader,
-    //     stable_pool_account_loader,
-    //     state_account,
-    //     user_token_account,
-    //     pool_vault_account,
-    //     trade_token_loader,
-    //     trade_token_vault_account,
-    //     bump_signer,
-    //     token_program,
-    //     &pre_position,
-    // )?;
+    settle(
+        &response,
+        user,
+        stake_token_pool,
+        stable_pool,
+        state_account,
+        user_token_account,
+        pool_vault_account,
+        trade_token,
+        trade_token_vault_account,
+        bump_signer,
+        token_program,
+        &pre_position,
+    )?;
 
     //cancel stop order
     user.cancel_stop_orders(
@@ -280,61 +277,42 @@ fn update_decrease_position(
 
 fn settle<'info>(
     response: &UpdateDecreaseResponse,
-    user_account_loader: &AccountLoader<'info, User>,
-    pool_account_loader: &AccountLoader<'info, Pool>,
-    stable_pool_account_loader: &AccountLoader<'info, Pool>,
+    user: &mut User,
+    base_token_pool: &mut Pool,
+    stable_pool: &mut Pool,
     state_account: &Account<'info, State>,
     user_token_account: Option<&Account<'info, TokenAccount>>,
     pool_vault_account: &Account<'info, TokenAccount>,
-    trade_token_account: &AccountLoader<'info, TradeToken>,
+    trade_token: &mut TradeToken,
     trade_token_vault_account: &Account<'info, TokenAccount>,
     bump_signer: &AccountInfo<'info>,
     token_program: &Program<'info, Token>,
     position: &UserPosition,
 ) -> BumpResult<()> {
-    let mut base_token_pool =
-        pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
-    let mut stable_pool =
-        stable_pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
     fee_processor::settle_funding_fee(
-        &mut base_token_pool,
-        &mut stable_pool,
+        base_token_pool,
+        stable_pool,
         response.settle_funding_fee_in_usd,
         response.settle_funding_fee,
         position.is_long,
         position.cross_margin,
     )?;
-    let mut pool = if position.is_long { base_token_pool } else { stable_pool };
-    let mut pool_processor = PoolProcessor { pool: &mut pool };
-
-    let base_token_pool = &mut pool_account_loader.load_mut().unwrap();
+    let mut add_liability = 0u128;
     if position.cross_margin {
-        let add_liability = settle_cross(
+        add_liability = settle_cross(
             response,
-            user_account_loader,
+            user,
             state_account,
             pool_vault_account,
-            trade_token_account,
+            trade_token,
             trade_token_vault_account,
             bump_signer,
             token_program,
             position,
         )?;
-        let mut user =
-            user_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
         let repay_amount = user
             .repay_liability(&position.margin_mint_key, UserTokenUpdateReason::DecreasePosition)?;
-        let mut trade_token = trade_token_account
-            .load_mut()
-            .map_err(|_| BumpErrorCode::CouldNotLoadTradeTokenData)?;
         trade_token.sub_liability(repay_amount)?;
-
-        pool_processor.update_pnl_and_un_hold_pool_amount(
-            response.un_hold_pool_amount,
-            response.pool_pnl_token,
-            add_liability,
-            Some(base_token_pool),
-        )?;
     } else {
         settle_isolate(
             response,
@@ -344,12 +322,19 @@ fn settle<'info>(
             bump_signer,
             token_program,
         )?;
-
-        let base_token_pool = &mut pool_account_loader.load_mut().unwrap();
-        pool_processor.update_pnl_and_un_hold_pool_amount(
+    }
+    if position.is_long {
+        base_token_pool.update_pnl_and_un_hold_pool_amount(
             response.un_hold_pool_amount,
             response.pool_pnl_token,
-            0u128,
+            add_liability,
+            None,
+        )?;
+    } else {
+        stable_pool.update_pnl_and_un_hold_pool_amount(
+            response.un_hold_pool_amount,
+            response.pool_pnl_token,
+            add_liability,
             Some(base_token_pool),
         )?;
     }
@@ -358,25 +343,21 @@ fn settle<'info>(
 
 fn settle_cross<'info>(
     response: &UpdateDecreaseResponse,
-    user_account_loader: &AccountLoader<'info, User>,
+    user: &mut User,
     state_account: &Account<'info, State>,
     pool_vault_account: &Account<'info, TokenAccount>,
-    trade_token_account: &AccountLoader<'info, TradeToken>,
+    trade_token: &mut TradeToken,
     trade_token_vault_account: &Account<'info, TokenAccount>,
     bump_signer: &AccountInfo<'info>,
     token_program: &Program<'info, Token>,
     position: &UserPosition,
 ) -> BumpResult<u128> {
-    let user = &mut user_account_loader.load_mut().unwrap();
-
     let mut add_liability = 0u128;
     //record pay fee
     if response.settle_fee > 0i128 {
         add_liability = user.sub_token_with_liability(
             &position.margin_mint_key,
-            &mut *trade_token_account
-                .load_mut()
-                .map_err(|_e| BumpErrorCode::CouldNotLoadTradeTokenData)?,
+            trade_token,
             response.settle_fee.abs().cast::<u128>()?,
             &UserTokenUpdateReason::SettleFee,
         )?;
@@ -399,20 +380,12 @@ fn settle_cross<'info>(
             &UserTokenUpdateReason::SettlePnl,
         )?;
     } else {
-        add_liability = add_liability.safe_add(
-            user.sub_token_with_liability(
-                &position.margin_mint_key,
-                &mut *trade_token_account
-                    .load_mut()
-                    .map_err(|_e| BumpErrorCode::CouldNotLoadTradeTokenData)?,
-                response
-                    .user_realized_pnl_token
-                    .safe_add(response.settle_fee)?
-                    .abs()
-                    .cast::<u128>()?,
-                &UserTokenUpdateReason::SettlePnl,
-            )?,
-        )?;
+        add_liability = add_liability.safe_add(user.sub_token_with_liability(
+            &position.margin_mint_key,
+            trade_token,
+            response.user_realized_pnl_token.safe_add(response.settle_fee)?.abs().cast::<u128>()?,
+            &UserTokenUpdateReason::SettlePnl,
+        )?)?;
     }
 
     if response.pool_pnl_token < 0i128 {
@@ -782,7 +755,7 @@ pub fn execute_add_position_margin(
     params: &UpdatePositionMarginParams,
     trade_token: &TradeToken,
     oracle_map: &mut OracleMap,
-    mut pool: &mut Pool,
+    pool: &mut Pool,
     position: &mut UserPosition,
 ) -> BumpResult<()> {
     let token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
@@ -826,8 +799,7 @@ pub fn execute_add_position_margin(
 
     let sub_amount = params.update_margin_amount.min(position.hold_pool_amount);
     position.sub_hold_pool_amount(sub_amount)?;
-    let mut pool_processor = PoolProcessor { pool: &mut pool };
-    pool_processor.update_pnl_and_un_hold_pool_amount(sub_amount, 0i128, 0u128, None)?;
+    pool.update_pnl_and_un_hold_pool_amount(sub_amount, 0i128, 0u128, None)?;
 
     add_or_decrease_margin_event.position = position.clone();
     emit!(add_or_decrease_margin_event);
@@ -1004,7 +976,7 @@ pub fn update_leverage<'info>(
 ) -> BumpResult<()> {
     let mut user = user_account.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
     let position = user.get_user_position_mut_ref(position_key)?;
-    let trade_token = trade_token_map.get_trade_token(&position.margin_mint_key)?;
+    let trade_token = trade_token_map.get_trade_token_ref(&position.margin_mint_key)?;
     let pool = &mut pool.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
 
     if position.position_size != 0u128 {
