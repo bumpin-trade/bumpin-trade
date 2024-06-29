@@ -43,7 +43,7 @@ export class UserComponent extends Component {
     }
 
 
-    public async portfolioStake(amount: BN, tradeToken: TradeToken, state: State, pool: Pool, sync: boolean = false): Promise<void> {
+    public async portfolioStake(amount: BN, tradeToken: TradeToken, pool: Pool, sync: boolean = false): Promise<void> {
         let user = await this.getUser(sync);
 
         await this.checkStakeAmountFulfilRequirements(amount, tradeToken, pool);
@@ -57,10 +57,10 @@ export class UserComponent extends Component {
             tradeTokenIndex: tradeToken.tokenIndex
         };
 
-        let usingTradeTokenPublicKeys = [];
+        let remainingAccounts = [];
         for (let token of user.userTokens) {
             if (token.userTokenStatus === UserTokenStatus.USING) {
-                usingTradeTokenPublicKeys.push(token.tokenMint)
+                remainingAccounts.push(token.tokenMint)
             }
         }
 
@@ -70,11 +70,11 @@ export class UserComponent extends Component {
             {
                 authority: this.publicKey,
             }
-        ).remainingAccounts(usingTradeTokenPublicKeys)
+        ).remainingAccounts(remainingAccounts)
             .signers([]).rpc();
     }
 
-    public async walletStake(amount: BN, tradeToken: TradeToken, wallet: PublicKey, state: State, pool: Pool): Promise<void> {
+    public async walletStake(amount: BN, tradeToken: TradeToken, wallet: PublicKey, pool: Pool): Promise<void> {
         await this.checkStakeAmountFulfilRequirements(amount, tradeToken, pool);
         await this.checkStakeWalletAmountSufficient(amount, wallet, tradeToken);
         let tokenAccount = await BumpinTokenUtils.getTokenAccountFromWallet(this.program.provider.connection, wallet, tradeToken.mint);
@@ -93,7 +93,7 @@ export class UserComponent extends Component {
         ).signers([]).rpc();
     }
 
-    public async unStake(portfolio: boolean, share: BN, tradeToken: TradeToken, wallet: PublicKey, state: State, pool: Pool): Promise<void> {
+    public async unStake(portfolio: boolean, share: BN, tradeToken: TradeToken, wallet: PublicKey, pool: Pool): Promise<void> {
         let userStake = await this.findUsingStake(pool.poolKey, false);
         if (share.gt(userStake.stakedShare)) {
             throw new BumpinValueInsufficient(userStake.stakedShare, share)
@@ -126,7 +126,7 @@ export class UserComponent extends Component {
 
     }
 
-    public async getUserAvailableValue(user: UserAccount, tradeTokens: TradeToken[], amount: BN, pool: Pool, sync: boolean = false) {
+    public async getUserAvailableValue(user: UserAccount, tradeTokens: TradeToken[], amount: BN, pool: Pool) {
 
         for (let userPosition of user.userPositions) {
             if (userPosition.status === PositionStatus.INIT) {

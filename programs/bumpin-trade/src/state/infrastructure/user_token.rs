@@ -99,6 +99,8 @@ impl UserToken {
         if self.used_amount < self.amount {
             return Ok(0u128);
         }
+
+
         let borrowing_amount = self.used_amount.safe_sub(self.amount)?.safe_sub(self.liability)?;
 
         if borrowing_amount > 0 {
