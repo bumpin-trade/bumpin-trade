@@ -13,8 +13,8 @@ pub struct State {
     pub number_of_trade_tokens: u16,
     pub min_order_margin_usd: u128,
     pub max_maintenance_margin_rate: u128,
-    pub funding_fee_base_rate: u128,
-    pub max_funding_base_rate: u128,
+    pub funding_fee_base_rate: u128, //10^18
+    pub max_funding_base_rate: u128,//10^18
     pub min_precision_multiple: u128,
     pub pool_rewards_interval_limit: u128,
     pub init_fee: u64,

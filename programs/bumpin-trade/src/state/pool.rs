@@ -71,7 +71,7 @@ pub struct PoolConfig {
     pub stake_fee_rate: u128,
     pub un_stake_fee_rate: u128,
     pub un_settle_mint_ratio_limit: u128,
-    pub borrowing_interest_rate: u128,
+    pub borrowing_interest_rate: u128,//10^18
 }
 
 impl Pool {
