@@ -399,7 +399,7 @@ impl UserPosition {
             initial_margin_leverage,
         )?;
         borrowing_fee_total_usd =
-            borrowing_fee_total_usd.safe_add(borrowing_fee.safe_mul(margin_mint_price)?)?;
+            borrowing_fee_total_usd.safe_add(cal_utils::token_to_usd_u(borrowing_fee, trade_token_decimals, margin_mint_price)?)?;
         Ok(funding_fee_total_usd
             .safe_add(borrowing_fee_total_usd.cast()?)?
             .safe_add(self.close_fee_in_usd.cast()?)?)

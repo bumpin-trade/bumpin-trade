@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
 use crate::errors::BumpResult;
+use crate::instructions::cal_utils;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::state::oracle::OraclePriceData;
@@ -63,11 +64,8 @@ impl UserToken {
         oracle_price_data: &OraclePriceData,
     ) -> BumpResult<u128> {
         if self.amount > self.used_amount {
-            let token_net_value = self
-                .amount
-                .safe_sub(self.used_amount)?
-                .safe_mul(oracle_price_data.price)?
-                .safe_mul(trade_token.discount)?;
+            let token_net_value = cal_utils::token_to_usd_u(self.amount.safe_sub(self.used_amount)?, trade_token.decimals, oracle_price_data.price)?
+                .safe_mul_rate(trade_token.discount)?;
             return Ok(token_net_value);
         }
         Ok(0u128)
@@ -79,12 +77,8 @@ impl UserToken {
         oracle_price_data: &OraclePriceData,
     ) -> BumpResult<u128> {
         if self.amount < self.used_amount {
-            let token_used_value = self
-                .used_amount
-                .cast::<u128>()?
-                .safe_sub(self.amount.cast()?)?
-                .safe_mul(oracle_price_data.price.cast()?)?
-                .safe_mul(1u128.safe_add(trade_token.liquidation_factor.cast()?)?)?;
+            let token_used_value = cal_utils::token_to_usd_u(self.used_amount.safe_sub(self.amount)?, trade_token.decimals, oracle_price_data.price)?
+                .safe_mul_rate(1u128.safe_add(trade_token.liquidation_factor)?)?;
             return Ok(token_used_value);
         }
         Ok(0u128)
@@ -100,15 +94,18 @@ impl UserToken {
     pub fn get_token_borrowing_value(
         &self,
         oracle_price_data: &OraclePriceData,
+        trade_token: &TradeToken,
     ) -> BumpResult<u128> {
         if self.used_amount < self.amount {
             return Ok(0u128);
         }
-        let borrowing_amount: i128 = self.used_amount.cast::<i128>()?.safe_sub(self.amount.cast::<i128>()?)?.safe_sub(self.liability.cast()?)?;
+
+
+        let borrowing_amount = self.used_amount.safe_sub(self.amount)?.safe_sub(self.liability)?;
 
         if borrowing_amount > 0 {
-            let token_borrowing_value =
-                borrowing_amount.cast::<u128>()?.safe_mul(oracle_price_data.price.cast()?)?;
+            let token_borrowing_value = cal_utils::token_to_usd_u(
+                borrowing_amount, trade_token.decimals, oracle_price_data.price)?;
             return Ok(token_borrowing_value);
         }
         Ok(0u128)

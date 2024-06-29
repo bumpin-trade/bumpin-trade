@@ -456,8 +456,8 @@ impl User {
                 && user_order.symbol == symbol
                 && user_order.margin_mint.eq(margin_token)
                 && ((is_long_order == is_long
-                    && user_order.position_side.eq(&PositionSide::INCREASE))
-                    || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
+                && user_order.position_side.eq(&PositionSide::INCREASE))
+                || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
             {
                 user_order.set_leverage(leverage)
             }
@@ -741,7 +741,7 @@ impl User {
                 user_token.get_token_used_value(&trade_token, &oracle_price_data)?;
             total_used_value = total_used_value.safe_add(token_used_value)?;
 
-            let token_borrowing_value = user_token.get_token_borrowing_value(&oracle_price_data)?;
+            let token_borrowing_value = user_token.get_token_borrowing_value(&oracle_price_data, &trade_token)?;
             total_borrowing_value = total_borrowing_value.safe_add(token_borrowing_value)?;
         }
 

@@ -4,6 +4,7 @@ use crate::math::constants::{PRICE_TO_LAMPORT, RATE_PRECISION, SMALL_RATE_PRECIS
 use crate::math::safe_math::SafeMath;
 use anchor_lang::prelude::*;
 use num_traits::ToPrimitive;
+
 pub fn mul_div_i(a: i128, b: i128, denominator: i128) -> BumpResult<i128> {
     Ok(a.safe_mul(b)?.safe_div(denominator)?)
 }
@@ -128,5 +129,5 @@ pub fn format_to_ticker_size(price: u128, ticker_size: u128, up: bool) -> BumpRe
 }
 
 pub fn get_mm(size: u128, leverage: u128, max_mm_rate: u128) -> BumpResult<u128> {
-    Ok(size.safe_div(leverage.safe_mul(2)?)?.min(size.safe_mul(max_mm_rate)?))
+    Ok(size.safe_div_rate(leverage.safe_mul(2)?)?.min(size.safe_mul_rate(max_mm_rate)?))
 }
