@@ -16,7 +16,7 @@ import {
 } from "../errors";
 import {DataAndSlot} from "../account/types";
 import {OracleClient} from "../oracles/types";
-import {tokenValueInUsd} from "../utils/cal_utils";
+import {tokenToUsd} from "../utils/cal_utils";
 import {BumpinTokenUtils} from "../utils/token";
 import {BumpinPositionUtils} from "../utils/position";
 
@@ -157,7 +157,7 @@ export class UserComponent extends Component {
 
     async checkUnStakeFulfilRequirements(amount: BN, tradeToken: TradeToken, pool: Pool): Promise<void> {
         let priceData = await this.oracleClient.getOraclePriceData(tradeToken.mint);
-        let value = tokenValueInUsd(amount, priceData.price, tradeToken.decimals);
+        let value = tokenToUsd(amount, priceData.price, tradeToken.decimals);
         if (value < pool.poolConfig.miniStakeAmount) {
             throw new BumpinValueInsufficient(pool.poolConfig.miniStakeAmount, value)
         }
@@ -165,7 +165,7 @@ export class UserComponent extends Component {
 
     async checkStakeAmountFulfilRequirements(amount: BN, tradeToken: TradeToken, pool: Pool): Promise<void> {
         let priceData = await this.oracleClient.getOraclePriceData(tradeToken.mint);
-        let value = tokenValueInUsd(amount, priceData.price, tradeToken.decimals);
+        let value = tokenToUsd(amount, priceData.price, tradeToken.decimals);
         if (value < pool.poolConfig.miniStakeAmount) {
             throw new BumpinValueInsufficient(pool.poolConfig.miniStakeAmount, value)
         }
