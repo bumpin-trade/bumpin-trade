@@ -25,10 +25,11 @@ impl BorrowingFee {
         if pool.amount == 0 && pool.un_settle_amount == 0 {
             self.cumulative_borrowing_fee_per_token = 0;
         } else {
-            let total_amount = pool.amount.safe_add(pool.un_settle_amount.cast()?)?;
-            let utilization = pool.hold_amount.safe_div(total_amount)?;
+            let time_diff = self.get_pool_borrowing_fee_durations()?;
+            let total_amount = pool.amount.safe_add(pool.un_settle_amount)?;
+            let utilization = pool.hold_amount.safe_div_small_rate(total_amount)?;
             self.cumulative_borrowing_fee_per_token =
-                utilization.safe_mul(borrowing_interest_rate.cast()?)?.cast::<u128>()?;
+                utilization.safe_mul_small_rate(borrowing_interest_rate)?.safe_mul(time_diff)?;
         }
         self.last_update = Clock::get().unwrap().unix_timestamp.to_u128().unwrap();
         Ok(())

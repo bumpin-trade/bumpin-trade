@@ -88,10 +88,10 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
 
         let market = &mut market_map.get_mut_ref(&pos_info.symbol)?;
         let mut market_processor = MarketProcessor { market };
-        let oracle = &trade_token_map.get_trade_token(&pos_info.margin_mint)?.oracle;
+        let trade_token = &trade_token_map.get_trade_token(&pos_info.margin_mint)?;
         market_processor.update_market_funding_fee_rate(
             &ctx.accounts.state,
-            oracle_map.get_price_data(oracle).unwrap().price,
+            oracle_map.get_price_data(&trade_token.oracle).unwrap().price, trade_token.decimals,
         )?;
     }
 
@@ -108,7 +108,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         total_size.cast::<i128>()?,
         SMALL_RATE_PRECISION.cast::<i128>()?,
     )?
-    .max(0i128);
+        .max(0i128);
 
     if cross_net_value <= 0 || cross_net_value.abs().cast::<u128>()? <= total_position_mm {
         for pos_info in &pos_infos {

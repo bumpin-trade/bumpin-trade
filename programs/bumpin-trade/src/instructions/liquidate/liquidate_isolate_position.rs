@@ -193,7 +193,7 @@ fn cal_liquidation_price(
     let mut market_processor = MarketProcessor { market };
     market_processor.update_market_funding_fee_rate(
         state,
-        oracle_map.get_price_data(&trade_token.oracle)?.price,
+        oracle_map.get_price_data(&trade_token.oracle)?.price, trade_token.decimals,
     )?;
 
     pool.update_pool_borrowing_fee_rate()?;

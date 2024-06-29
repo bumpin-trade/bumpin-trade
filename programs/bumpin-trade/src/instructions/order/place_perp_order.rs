@@ -311,7 +311,7 @@ pub fn handle_execute_order<'info>(
     } else {
         user_order
     }
-    .clone();
+        .clone();
 
     let user_key = user.user_key;
 
@@ -327,7 +327,7 @@ pub fn handle_execute_order<'info>(
     let mut market_processor = MarketProcessor { market: &mut market };
     market_processor.update_market_funding_fee_rate(
         state_account,
-        oracle_map.get_price_data(&trade_token.oracle)?.price,
+        oracle_map.get_price_data(&trade_token.oracle)?.price, trade_token.decimals,
     )?;
 
     let mut base_token_pool = pool_account_loader.load_mut()?;
@@ -519,7 +519,7 @@ fn validate_place_order(
             } else {
                 Ok(true)
             }
-        },
+        }
     }
 }
 
