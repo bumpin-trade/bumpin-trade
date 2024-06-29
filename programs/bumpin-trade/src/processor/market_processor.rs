@@ -71,7 +71,7 @@ impl<'a> MarketProcessor<'_> {
         market_position.sub_open_interest(params.size, params.entry_price)?;
         Ok(())
     }
-    pub fn update_market_funding_fee_rate(&mut self, state: &State, price: u128) -> BumpResult<()> {
+    pub fn update_market_funding_fee_rate(&mut self, state: &State, price: u128, decimals: u16) -> BumpResult<()> {
         let long = self.market.long_open_interest;
         let short = self.market.short_open_interest;
 
@@ -92,11 +92,11 @@ impl<'a> MarketProcessor<'_> {
                 .open_interest
                 .cast::<i128>()?
                 .max(short.open_interest.cast::<i128>()?)
-                .safe_mul(funding_rate_per_second)?
+                .safe_mul_rate(funding_rate_per_second)?
                 .safe_mul(fee_durations.cast()?)?;
 
-            let mut long_funding_fee_amount_per_size_delta = funding_fee
-                .safe_div(long.open_interest.cast::<i128>()?.safe_mul(price.cast()?)?)?;
+            let mut long_funding_fee_amount_per_size_delta = cal_utils::usd_to_token_i(funding_fee
+                                                                                           .safe_div(long.open_interest.cast::<i128>()?)?, decimals, price.cast()?)?;
 
             long_funding_fee_amount_per_size_delta = long_funding_fee_amount_per_size_delta.min(
                 state
@@ -106,7 +106,7 @@ impl<'a> MarketProcessor<'_> {
             );
 
             let mut short_funding_fee_amount_per_size_delta = funding_fee
-                .safe_div(short.open_interest.cast::<i128>()?.safe_mul(price.cast()?)?)?
+                .safe_div(short.open_interest.cast::<i128>()?)?
                 .safe_mul(-1i128)?;
 
             short_funding_fee_amount_per_size_delta = short_funding_fee_amount_per_size_delta.min(
