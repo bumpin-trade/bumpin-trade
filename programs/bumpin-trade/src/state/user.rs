@@ -29,10 +29,10 @@ use crate::validate;
 #[derive(Default, Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct User {
-    pub next_order_id: u64, //16
+    pub next_order_id: u64,
     pub next_liquidation_id: u64,
     pub hold: u128,
-    pub user_tokens: [UserToken; 12], //16
+    pub user_tokens: [UserToken; 12],
     pub user_stakes: [UserStake; 12],
     pub user_positions: [UserPosition; 8],
     pub user_orders: [UserOrder; 8],
@@ -93,7 +93,7 @@ impl User {
 
         let new_user_token = UserToken {
             user_token_status: UserTokenStatus::USING,
-            token_mint: *token_mint,
+            token_mint_key: *token_mint,
             user_token_account_key: *user_token_account_key,
             ..UserToken::default()
         };
@@ -106,7 +106,7 @@ impl User {
             .iter()
             .position(|user_token| {
                 user_token.user_token_status.eq(&UserTokenStatus::USING)
-                    && user_token.token_mint.eq(token_mint)
+                    && user_token.token_mint_key.eq(token_mint)
             })
             .ok_or(CouldNotFindUserToken)
     }
@@ -584,16 +584,16 @@ impl User {
     ) -> BumpResult<u128> {
         let user_key = self.user_key;
         let user_token = self.get_user_token_mut_ref(token_mint)?;
-        if user_token.liability > 0 && user_token.amount > 0 {
+        if user_token.liability_amount > 0 && user_token.amount > 0 {
             let pre_user_token = user_token.clone();
 
-            let repay_liability_amount = if user_token.amount >= user_token.liability {
-                user_token.liability
+            let repay_liability_amount = if user_token.amount >= user_token.liability_amount {
+                user_token.liability_amount
             } else {
                 user_token.amount
             };
             user_token.amount = user_token.amount.safe_sub(repay_liability_amount)?;
-            user_token.liability = user_token.liability.safe_sub(repay_liability_amount)?;
+            user_token.liability_amount = user_token.liability_amount.safe_sub(repay_liability_amount)?;
             user_token.used_amount = user_token.used_amount.safe_sub(repay_liability_amount)?;
             emit!(UserTokenBalanceUpdateEvent {
                 user_key,
@@ -623,12 +623,12 @@ impl User {
             user_token.amount = user_token.amount.safe_sub(amount)?;
         } else if user_token.amount > 0u128 {
             liability = amount.safe_sub(user_token.amount)?;
-            user_token.liability = user_token.liability.safe_add(liability)?;
+            user_token.liability_amount = user_token.liability_amount.safe_add(liability)?;
             user_token.used_amount = user_token.used_amount.safe_add(liability)?;
             user_token.amount = 0u128;
             trade_token.add_liability(liability)?;
         } else {
-            user_token.liability = user_token.liability.safe_add(amount)?;
+            user_token.liability_amount = user_token.liability_amount.safe_add(amount)?;
             user_token.used_amount = user_token.used_amount.safe_add(amount)?;
             liability = amount;
             trade_token.add_liability(amount)?;
@@ -673,7 +673,7 @@ impl User {
             if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
                 continue;
             }
-            let trade_token = trade_token_map.get_trade_token_ref(&user_token.token_mint)?;
+            let trade_token = trade_token_map.get_trade_token_ref(&user_token.token_mint_key)?;
             let oracle_price = oracle_map.get_price_data(&trade_token.oracle_key)?;
             total_token_net_value
                 .safe_add(user_token.get_token_net_value(&trade_token, oracle_price)?)?;
@@ -730,7 +730,7 @@ impl User {
             if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
                 continue;
             }
-            let trade_token = trade_token_map.get_trade_token_ref(&user_token.token_mint)?;
+            let trade_token = trade_token_map.get_trade_token_ref(&user_token.token_mint_key)?;
             let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle_key)?;
 
             let token_net_value =
@@ -795,7 +795,8 @@ impl User {
             }
             let index_trade_token =
                 trade_token_map.get_trade_token_ref(&user_position.index_mint_key)?;
-            let trade_token = trade_token_map.get_trade_token_ref(&user_position.margin_mint_key)?;
+            let trade_token =
+                trade_token_map.get_trade_token_ref(&user_position.margin_mint_key)?;
             let index_price = price_map.get_price_data(&index_trade_token.oracle_key)?.price;
             let margin_token_price = price_map.get_price_data(&trade_token.oracle_key)?.price;
             let market = market_map.get_ref(&user_position.symbol)?;
@@ -827,7 +828,7 @@ impl User {
             if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
                 continue;
             }
-            let trade_token = trade_token_map.get_trade_token_ref(&user_token.token_mint)?;
+            let trade_token = trade_token_map.get_trade_token_ref(&user_token.token_mint_key)?;
             let oracle_price = oracle_map.get_price_data(&trade_token.oracle_key)?;
             total_used_value = total_used_value
                 .safe_add(user_token.get_token_used_value(&trade_token, &oracle_price)?)?;

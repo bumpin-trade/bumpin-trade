@@ -302,7 +302,7 @@ pub fn handle_execute_order<'info>(
     let index_trade_token = index_trade_token_loader.load()?;
     let mut stake_token_pool =
         pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
-    let stable_pool =
+    let _stable_pool =
         stable_pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
 
     let order = if execute_from_remote {

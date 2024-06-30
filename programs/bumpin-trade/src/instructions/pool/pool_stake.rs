@@ -6,8 +6,8 @@ use anchor_spl::token::{Token, TokenAccount};
 use crate::can_sign_for_user;
 use crate::errors::BumpErrorCode;
 use crate::instructions::Either;
-use crate::processor::{pool_processor, stake_processor};
 use crate::processor::optional_accounts::load_maps;
+use crate::processor::{pool_processor, stake_processor};
 use crate::state::bump_events::StakeOrUnStakeEvent;
 use crate::state::pool::Pool;
 use crate::state::state::State;
@@ -146,7 +146,11 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 stake_params.request_token_amount,
             )?;
             let (supply_amount, user_stake) = pool_processor::portfolio_to_stake(
-                ctx.accounts.user.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadUserData)?.deref_mut(),
+                ctx.accounts
+                    .user
+                    .load_mut()
+                    .map_err(|_e| BumpErrorCode::CouldNotLoadUserData)?
+                    .deref_mut(),
                 pool,
                 base_mint_amount,
                 &account_maps.trade_token_map,
@@ -167,7 +171,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 change_supply_amount: supply_amount,
                 user_stake,
             });
-        }
+        },
         Either::Right(ctx) => {
             let pool = &mut ctx.accounts.pool.load_mut()?;
 
@@ -207,7 +211,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 change_supply_amount: supply_amount,
                 user_stake: user_stake.clone(),
             });
-        }
+        },
     };
 
     Ok(())

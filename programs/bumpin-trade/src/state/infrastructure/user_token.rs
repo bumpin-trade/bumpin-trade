@@ -12,9 +12,9 @@ use crate::state::trade_token::TradeToken;
 pub struct UserToken {
     pub amount: u128,
     pub used_amount: u128,
-    pub liability: u128,
+    pub liability_amount: u128,
     pub user_token_status: UserTokenStatus,
-    pub token_mint: Pubkey,
+    pub token_mint_key: Pubkey,
     pub user_token_account_key: Pubkey,
     pub padding: [u8; 15],
 }
@@ -27,13 +27,13 @@ pub enum UserTokenStatus {
 }
 
 impl UserToken {
-    pub fn new_using(token_mint: Pubkey, user_token_account_key: Pubkey) -> Self {
+    pub fn new_using(token_mint_key: Pubkey, user_token_account_key: Pubkey) -> Self {
         Self {
             amount: 0,
             used_amount: 0,
-            liability: 0,
+            liability_amount: 0,
             user_token_status: UserTokenStatus::USING,
-            token_mint,
+            token_mint_key,
             user_token_account_key,
             padding: [0; 15],
         }
@@ -107,7 +107,7 @@ impl UserToken {
             return Ok(0u128);
         }
 
-        let borrowing_amount = self.used_amount.safe_sub(self.amount)?.safe_sub(self.liability)?;
+        let borrowing_amount = self.used_amount.safe_sub(self.amount)?.safe_sub(self.liability_amount)?;
 
         if borrowing_amount > 0 {
             let token_borrowing_value = cal_utils::token_to_usd_u(

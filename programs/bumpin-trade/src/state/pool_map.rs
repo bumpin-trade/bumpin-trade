@@ -34,7 +34,7 @@ impl<'a> PoolMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 return Err(TradeTokenNotFind);
-            }
+            },
             Some(loader) => loader,
         };
         match loader.load() {
@@ -44,7 +44,7 @@ impl<'a> PoolMap<'a> {
                 msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 Err(CouldNotLoadTradeTokenData)
-            }
+            },
         }
     }
 
@@ -56,7 +56,7 @@ impl<'a> PoolMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 return Err(TradeTokenNotFind);
-            }
+            },
             Some(loader) => loader,
         };
         match loader.load_mut() {
@@ -66,7 +66,7 @@ impl<'a> PoolMap<'a> {
                 msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 Err(CouldNotLoadTradeTokenData)
-            }
+            },
         }
     }
 
@@ -78,7 +78,7 @@ impl<'a> PoolMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 return Err(TradeTokenNotFind);
-            }
+            },
             Some(loader) => loader,
         };
         Ok(loader)

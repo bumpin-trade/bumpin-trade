@@ -30,7 +30,7 @@ pub struct UserPosition {
     pub realized_funding_fee_in_usd: i128,
     pub open_funding_fee_amount_per_size: i128,
     pub close_fee_in_usd: u128,
-    pub last_update_time: i64,
+    pub updated_at: i64,
     pub realized_pnl: i128,
     pub user_key: Pubkey,
     pub margin_mint_key: Pubkey,
@@ -237,7 +237,7 @@ impl UserPosition {
     }
 
     pub fn set_last_update(&mut self, last_update: i64) -> BumpResult {
-        self.last_update_time = last_update;
+        self.updated_at = last_update;
         Ok(())
     }
 

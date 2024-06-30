@@ -42,7 +42,7 @@ pub fn un_stake(
 }
 
 pub fn stake(
-    pool:&mut Pool,
+    pool: &mut Pool,
     mint_amount: u128,
     trade_token_map: &TradeTokenMap,
     oracle_map: &mut OracleMap,
@@ -53,16 +53,9 @@ pub fn stake(
     if pool.total_supply > 0 {
         let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle_key)?;
 
-        supply_amount = cal_utils::token_to_usd_u(
-            mint_amount,
-            trade_token.decimals,
-            oracle_price_data.price,
-        )?
-            .safe_div(pool.get_pool_net_price(
-                trade_token_map,
-                oracle_map,
-                market_map,
-            )?)?;
+        supply_amount =
+            cal_utils::token_to_usd_u(mint_amount, trade_token.decimals, oracle_price_data.price)?
+                .safe_div(pool.get_pool_net_price(trade_token_map, oracle_map, market_map)?)?;
     }
     Ok(supply_amount)
 }
@@ -83,22 +76,15 @@ pub fn portfolio_to_stake(
 
     user.sub_user_token_amount(&pool.mint_key, mint_amount)?;
     validate!(
-            user.get_available_value(oracle_map, trade_token_map)? > 0,
-            BumpErrorCode::AmountNotEnough
-        )?;
+        user.get_available_value(oracle_map, trade_token_map)? > 0,
+        BumpErrorCode::AmountNotEnough
+    )?;
     if pool.total_supply > 0 {
         let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle_key)?;
 
-        supply_amount = cal_utils::token_to_usd_u(
-            mint_amount,
-            trade_token.decimals,
-            oracle_price_data.price,
-        )?
-            .safe_div(pool.get_pool_net_price(
-                trade_token_map,
-                oracle_map,
-                market_map,
-            )?)?;
+        supply_amount =
+            cal_utils::token_to_usd_u(mint_amount, trade_token.decimals, oracle_price_data.price)?
+                .safe_div(pool.get_pool_net_price(trade_token_map, oracle_map, market_map)?)?;
     }
     let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
     user_stake.add_staked_share(supply_amount)?;

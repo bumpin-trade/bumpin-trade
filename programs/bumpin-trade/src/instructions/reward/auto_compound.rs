@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 
 use crate::errors::BumpErrorCode;
-use crate::processor::{pool_processor, stake_processor};
 use crate::processor::optional_accounts::load_maps;
+use crate::processor::{pool_processor, stake_processor};
 use crate::state::bump_events::StakeOrUnStakeEvent;
 use crate::state::state::State;
 use crate::state::user::User;
@@ -71,7 +71,7 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
             user_key: ctx.accounts.user.load()?.user_key,
             token_mint: pool.mint_key,
             change_supply_amount: supply_amount,
-            user_stake:user_stake.clone(),
+            user_stake: user_stake.clone(),
         });
     }
     Ok(())

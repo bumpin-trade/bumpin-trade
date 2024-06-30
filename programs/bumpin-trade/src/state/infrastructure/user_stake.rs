@@ -44,6 +44,6 @@ impl UserStake {
 pub struct UserRewards {
     pub realised_rewards_token_amount: u128,
     pub open_rewards_per_stake_token: u128,
-    pub token: Pubkey,
+    pub token_key: Pubkey,
     pub padding: [u8; 8],
 }

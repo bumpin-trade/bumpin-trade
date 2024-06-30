@@ -32,10 +32,10 @@ pub fn rebalance_pool_unsettle<'a>(
                     let total_unsettle_amount =
                         un_settle_amount.safe_add(pool.balance.un_settle_amount)?;
                     pool_unsettle_map.insert(pool.mint_key, total_unsettle_amount);
-                }
+                },
                 None => {
                     pool_unsettle_map.insert(pool.mint_key, pool.balance.un_settle_amount);
-                }
+                },
             }
         }
 
@@ -51,9 +51,9 @@ pub fn rebalance_pool_unsettle<'a>(
                 bump_signer,
                 pre_fee_reward.un_settle_fee_amount,
             )
-                .map_err(|_e| {
-                    return BumpErrorCode::InvalidTransfer;
-                })?;
+            .map_err(|_e| {
+                return BumpErrorCode::InvalidTransfer;
+            })?;
 
             pool.fee_reward.sub_un_settle_amount(pre_fee_reward.un_settle_fee_amount)?
         }
@@ -69,7 +69,9 @@ pub fn rebalance_pool_unsettle<'a>(
                         let trade_token_vault =
                             vault_map.get_account(&trade_token.trade_token_vault)?;
                         for pool_loader in &pool_loader_vec {
-                            let mut pool = pool_loader.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadPoolData)?;
+                            let mut pool = pool_loader
+                                .load_mut()
+                                .map_err(|_e| BumpErrorCode::CouldNotLoadPoolData)?;
                             if pool.mint_key.eq(&trade_token.mint_key) && transfer_amount > 0 {
                                 let pool_transfer_amount =
                                     if pool.balance.un_settle_amount > transfer_amount {
@@ -87,9 +89,9 @@ pub fn rebalance_pool_unsettle<'a>(
                                     bump_signer,
                                     pool_transfer_amount,
                                 )
-                                    .map_err(|_e| {
-                                        return BumpErrorCode::InvalidTransfer;
-                                    })?;
+                                .map_err(|_e| {
+                                    return BumpErrorCode::InvalidTransfer;
+                                })?;
 
                                 pool.sub_unsettle(pool_transfer_amount)?;
                                 transfer_amount = transfer_amount.safe_sub(pool_transfer_amount)?;
@@ -97,8 +99,8 @@ pub fn rebalance_pool_unsettle<'a>(
                         }
                     }
                 }
-            }
-            _ => {}
+            },
+            _ => {},
         }
     }
 
@@ -119,9 +121,9 @@ pub fn rebalance_pool_unsettle<'a>(
                     bump_signer,
                     transfer_amount,
                 )
-                    .map_err(|_e| {
-                        return BumpErrorCode::InvalidTransfer;
-                    })?;
+                .map_err(|_e| {
+                    return BumpErrorCode::InvalidTransfer;
+                })?;
 
                 pool.sub_unsettle(transfer_amount)?;
             }
@@ -144,8 +146,7 @@ pub fn rebalance_stable_pool<'a>(
             pool.sub_amount(pre_balance.loss_amount)?;
             pool.sub_loss_amount(pre_balance.loss_amount)?;
 
-            let _transfer_amount =
-                pre_balance.amount.safe_sub(pre_balance.loss_amount)?;
+            let _transfer_amount = pre_balance.amount.safe_sub(pre_balance.loss_amount)?;
             let swap_amount = swap::jup_swap()?;
 
             pool.add_amount(swap_amount)?;
@@ -154,8 +155,7 @@ pub fn rebalance_stable_pool<'a>(
             pool.sub_amount(pre_balance.amount)?;
             pool.sub_loss_amount(pre_balance.amount)?;
 
-            let _transfer_amount =
-                pre_balance.loss_amount.safe_sub(pre_balance.amount)?;
+            let _transfer_amount = pre_balance.loss_amount.safe_sub(pre_balance.amount)?;
             let swap_amount = swap::jup_swap()?;
 
             pool.sub_amount(swap_amount)?;
@@ -189,9 +189,9 @@ pub fn rebalance_rewards<'a>(
                 bump_signer,
                 pre_fee_reward.un_settle_fee_amount,
             )
-                .map_err(|_e| {
-                    return BumpErrorCode::InvalidTransfer;
-                })?;
+            .map_err(|_e| {
+                return BumpErrorCode::InvalidTransfer;
+            })?;
 
             pool.fee_reward.sub_un_settle_amount(pre_fee_reward.un_settle_fee_amount)?;
         }
