@@ -78,7 +78,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
     }
     for pos_info in &pos_infos {
         //only cross margin position support
-        if !pos_info.cross_margin {
+        if !pos_info.is_portfolio_margin {
             continue;
         }
 
@@ -114,7 +114,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
     if cross_net_value <= 0 || cross_net_value.abs().cast::<u128>()? <= total_position_mm {
         for pos_info in &pos_infos {
             //only cross margin position support
-            if !pos_info.cross_margin {
+            if !pos_info.is_portfolio_margin {
                 continue;
             }
 
@@ -166,7 +166,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
                 DecreasePositionParams {
                     order_id: 0,
                     is_liquidation: true,
-                    is_cross_margin: true,
+                    is_portfolio_margin: true,
                     margin_token: pos_info.margin_mint,
                     decrease_size: pos_info.position_size,
                     execute_price: liquidation_price,
@@ -209,7 +209,7 @@ fn get_position_info(
     let market = market_map.get_ref(&position.symbol)?;
 
     Ok(PosInfos {
-        cross_margin: position.cross_margin,
+        is_portfolio_margin: position.is_portfolio_margin,
         symbol: position.symbol,
         index_mint: position.index_mint_key,
         is_long: position.is_long,
@@ -221,7 +221,7 @@ fn get_position_info(
 }
 
 struct PosInfos {
-    pub cross_margin: bool,
+    pub is_portfolio_margin: bool,
     pub symbol: [u8; 32],
     pub index_mint: Pubkey,
     pub is_long: bool,

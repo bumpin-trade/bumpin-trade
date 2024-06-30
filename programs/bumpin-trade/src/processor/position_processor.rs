@@ -122,7 +122,7 @@ pub fn decrease_position<'info>(
         let response = calculate_decrease_position(
             params.decrease_size,
             params.is_liquidation,
-            params.is_cross_margin,
+            params.is_portfolio_margin,
             position_un_pnl_usd,
             trade_token.decimals,
             margin_mint_token_price,
@@ -132,7 +132,8 @@ pub fn decrease_position<'info>(
             position,
         )?;
 
-        if response.settle_margin < 0i128 && !params.is_liquidation && !position.cross_margin {
+        if response.settle_margin < 0i128 && !params.is_liquidation && !position.is_portfolio_margin
+        {
             return Err(BumpErrorCode::AmountNotEnough);
         }
         let position_deletion = if params.decrease_size != position.position_size {
@@ -154,7 +155,7 @@ pub fn decrease_position<'info>(
         stable_pool,
         market,
         state_account,
-        pre_position.cross_margin,
+        pre_position.is_portfolio_margin,
         response.settle_close_fee,
         response.settle_borrowing_fee,
         response.settle_funding_fee,
@@ -183,7 +184,7 @@ pub fn decrease_position<'info>(
         params.order_id,
         pre_position.symbol,
         &pre_position.margin_mint_key,
-        pre_position.cross_margin,
+        pre_position.is_portfolio_margin,
     )?;
 
     //add insurance fund
@@ -207,7 +208,7 @@ fn collect_decrease_fee(
     stable_pool: &mut Pool,
     market: &mut Market,
     state_account: &Account<State>,
-    is_cross_margin: bool,
+    is_portfolio_margin: bool,
     settle_close_fee: u128,
     settle_borrowing_fee: u128,
     settle_funding_fee: i128,
@@ -220,7 +221,7 @@ fn collect_decrease_fee(
         fee_processor::collect_long_close_position_fee(
             if is_long { base_token_pool } else { stable_pool },
             settle_close_fee,
-            is_cross_margin,
+            is_portfolio_margin,
         )?;
     } else {
         fee_processor::collect_short_close_position_fee(
@@ -228,13 +229,13 @@ fn collect_decrease_fee(
             base_token_pool,
             state_account,
             settle_close_fee,
-            is_cross_margin,
+            is_portfolio_margin,
         )?;
     }
     fee_processor::collect_borrowing_fee(
         if is_long { base_token_pool } else { stable_pool },
         settle_borrowing_fee,
-        is_cross_margin,
+        is_portfolio_margin,
     )?;
 
     if is_long { base_token_pool } else { stable_pool }.borrowing_fee.update_total_borrowing_fee(
@@ -295,10 +296,10 @@ fn settle<'info>(
         response.settle_funding_fee_in_usd,
         response.settle_funding_fee,
         position.is_long,
-        position.cross_margin,
+        position.is_portfolio_margin,
     )?;
     let mut add_liability = 0u128;
-    if position.cross_margin {
+    if position.is_portfolio_margin {
         add_liability = settle_cross(
             response,
             user,
@@ -458,7 +459,7 @@ fn add_insurance_fund(
     position: &UserPosition,
 ) -> BumpResult<()> {
     let mut pool_processor = PoolProcessor { pool };
-    if position.cross_margin {
+    if position.is_portfolio_margin {
         pool_processor.add_insurance_fund(cal_utils::usd_to_token_u(
             position.get_position_mm(market, state)?,
             trade_token.decimals,
@@ -503,11 +504,8 @@ pub fn execute_reduce_position_margin(
 ) -> BumpResult<u128> {
     let token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
     let max_reduce_margin_in_usd = position.initial_margin_usd.safe_sub(
-        cal_utils::div_rate_u(
-            position.position_size,
-            market.config.maximum_leverage as u128,
-        )?
-        .max(state.minimum_order_margin_usd),
+        cal_utils::div_rate_u(position.position_size, market.config.maximum_leverage as u128)?
+            .max(state.minimum_order_margin_usd),
     )?;
     validate!(
         max_reduce_margin_in_usd > params.update_margin_amount,
@@ -518,7 +516,7 @@ pub fn execute_reduce_position_margin(
     let reduce_margin_amount =
         cal_utils::usd_to_token_u(params.update_margin_amount, trade_token.decimals, token_price)?;
 
-    if position.cross_margin
+    if position.is_portfolio_margin
         && position.initial_margin_usd.safe_sub(position.initial_margin_usd_from_portfolio)?
             < reduce_margin_amount
     {
@@ -541,7 +539,7 @@ pub fn execute_reduce_position_margin(
             position.initial_margin_usd,
         )? as u32)?; //TODO: Precision loss?
     }
-    if !position.cross_margin {
+    if !position.is_portfolio_margin {
         position.set_initial_margin_usd_from_portfolio(position.initial_margin_usd)?;
     }
     position.add_hold_pool_amount(reduce_margin_amount)?;
@@ -558,7 +556,7 @@ pub fn execute_reduce_position_margin(
 pub fn calculate_decrease_position(
     decrease_size: u128,
     is_liquidation: bool,
-    is_cross_margin: bool,
+    is_portfolio_margin: bool,
     pnl: i128,
     decimals: u16,
     margin_mint_token_price: u128,
@@ -604,7 +602,7 @@ pub fn calculate_decrease_position(
         position.hold_pool_amount.safe_mul(decrease_size)?.safe_div(position.position_size)?;
 
     if position.position_size == decrease_size && is_liquidation {
-        response.settle_margin = if is_cross_margin {
+        response.settle_margin = if is_portfolio_margin {
             //(initial_margin_usd - pos_fee_usd + pnl - mm) * decimals / price
             cal_utils::usd_to_token_i(
                 position
@@ -778,7 +776,7 @@ pub fn execute_add_position_margin(
     };
 
     position.add_initial_margin(params.update_margin_amount)?;
-    if position.cross_margin {
+    if position.is_portfolio_margin {
         position.set_initial_margin_usd(cal_utils::div_rate_u(
             position.position_size,
             position.leverage as u128,
@@ -827,8 +825,12 @@ pub fn increase_position(
     let mut user =
         user_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadTradeTokenData)?;
 
-    let position_key =
-        pda::generate_position_key(&user.key, market.symbol, order.cross_margin, program_id)?;
+    let position_key = pda::generate_position_key(
+        &user.key,
+        market.symbol,
+        order.is_portfolio_margin,
+        program_id,
+    )?;
 
     let position_index = user
         .get_user_position_index(&position_key)
@@ -845,7 +847,7 @@ pub fn increase_position(
         position.set_margin_mint(order.margin_mint_key)?;
         position.set_leverage(order.leverage)?;
         position.set_is_long(order.order_side.eq(&OrderSide::LONG))?;
-        position.set_cross_margin(order.cross_margin)?;
+        position.set_portfolio_margin(order.is_portfolio_margin)?;
         position.set_status(PositionStatus::USING)?;
     }
 
@@ -983,7 +985,7 @@ pub fn update_leverage<'info>(
         if position.leverage > params.leverage {
             let add_margin_amount;
             let mut add_initial_margin_from_portfolio = 0u128;
-            if position.cross_margin {
+            if position.is_portfolio_margin {
                 let user = &mut user_account
                     .load_mut()
                     .map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
@@ -1040,7 +1042,7 @@ pub fn update_leverage<'info>(
                 pool,
                 position,
             )?;
-            if !params.is_cross_margin {
+            if !params.is_portfolio_margin {
                 token::receive(
                     token_program,
                     user_token_account,
@@ -1072,7 +1074,7 @@ pub fn update_leverage<'info>(
                 state,
                 position,
             )?;
-            if position.cross_margin {
+            if position.is_portfolio_margin {
                 let user = &mut user_account
                     .load_mut()
                     .map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
@@ -1103,7 +1105,7 @@ pub struct IncreasePositionParams {
     pub index_token_price: u128,
     pub leverage: u128,
     pub is_long: bool,
-    pub is_cross_margin: bool,
+    pub is_portfolio_margin: bool,
     pub decimals: u16,
 }
 
@@ -1112,7 +1114,7 @@ pub struct IncreasePositionParams {
 pub struct DecreasePositionParams {
     pub order_id: u64,
     pub is_liquidation: bool,
-    pub is_cross_margin: bool,
+    pub is_portfolio_margin: bool,
     pub margin_token: Pubkey,
     pub decrease_size: u128,
     pub execute_price: u128,

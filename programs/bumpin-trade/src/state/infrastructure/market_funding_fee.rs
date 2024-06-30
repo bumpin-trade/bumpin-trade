@@ -15,7 +15,7 @@ pub struct MarketFundingFee {
     pub long_funding_fee_rate: i128,
     pub short_funding_fee_rate: i128,
     pub updated_at: i64,
-    pub padding : [u8; 8],
+    pub padding: [u8; 8],
 }
 
 impl MarketFundingFee {

@@ -107,7 +107,8 @@ impl UserToken {
             return Ok(0u128);
         }
 
-        let borrowing_amount = self.used_amount.safe_sub(self.amount)?.safe_sub(self.liability_amount)?;
+        let borrowing_amount =
+            self.used_amount.safe_sub(self.amount)?.safe_sub(self.liability_amount)?;
 
         if borrowing_amount > 0 {
             let token_borrowing_value = cal_utils::token_to_usd_u(

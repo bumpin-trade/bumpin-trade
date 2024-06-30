@@ -13,7 +13,7 @@ pub struct TradeToken {
     pub mint_key: Pubkey,
     pub oracle_key: Pubkey,
     pub vault_key: Pubkey,
-    pub mint_name: [u8; 32],
+    pub name: [u8; 32],
     pub discount: u32,           // 10^5
     pub liquidation_factor: u32, // 10^5
     pub index: u16,

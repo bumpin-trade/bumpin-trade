@@ -149,7 +149,7 @@ pub fn handle_liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
             DecreasePositionParams {
                 order_id: 0,
                 is_liquidation: true,
-                is_cross_margin: false,
+                is_portfolio_margin: false,
                 margin_token: margin_mint,
                 decrease_size: position_size,
                 execute_price: liquidation_price,
@@ -189,7 +189,7 @@ fn cal_liquidation_price(
     let user_position = user.get_user_position_ref(position_key)?;
     let pool = if user_position.is_long { base_token_pool } else { stable_pool };
 
-    validate!(!user_position.cross_margin, BumpErrorCode::OnlyLiquidateIsolatePosition)?;
+    validate!(!user_position.is_portfolio_margin, BumpErrorCode::OnlyLiquidateIsolatePosition)?;
     let mut market_processor = MarketProcessor { market };
     market_processor.update_market_funding_fee_rate(
         state,

@@ -18,7 +18,7 @@ pub struct UserOrder {
     pub order_type: OrderType,
     pub stop_type: StopType,
     pub status: OrderStatus,
-    pub cross_margin: bool,
+    pub is_portfolio_margin: bool,
     pub padding: [u8; 6],
 }
 

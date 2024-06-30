@@ -72,7 +72,7 @@ pub struct UpdatePositionLeverage<'info> {
 pub struct UpdatePositionLeverageParams {
     pub symbol: [u8; 32],
     pub is_long: bool,
-    pub is_cross_margin: bool,
+    pub is_portfolio_margin: bool,
     pub leverage: u32,
     pub add_margin_amount: u128,
     pub market_index: u16,
@@ -98,7 +98,7 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
     let position_key = pda::generate_position_key(
         &user.key,
         params.symbol,
-        params.is_cross_margin,
+        params.is_portfolio_margin,
         &ctx.program_id,
     )?;
     let position = user.get_user_position_ref(&position_key)?;

@@ -66,8 +66,7 @@ pub fn rebalance_pool_unsettle<'a>(
                     let mut transfer_amount: u128 =
                         total_unsettle_amount.safe_sub(trade_token.total_liability)?;
                     if transfer_amount > 0 {
-                        let trade_token_vault =
-                            vault_map.get_account(&trade_token.vault_key)?;
+                        let trade_token_vault = vault_map.get_account(&trade_token.vault_key)?;
                         for pool_loader in &pool_loader_vec {
                             let mut pool = pool_loader
                                 .load_mut()

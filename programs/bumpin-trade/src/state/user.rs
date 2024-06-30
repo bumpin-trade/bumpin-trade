@@ -34,8 +34,8 @@ pub struct User {
     pub hold: u128,
     pub tokens: [UserToken; 12],
     pub stakes: [UserStake; 12],
-    pub positions: [UserPosition; 8],
-    pub orders: [UserOrder; 8],
+    pub positions: [UserPosition; 12],
+    pub orders: [UserOrder; 12],
     pub key: Pubkey,
     pub authority: Pubkey,
 }
@@ -70,8 +70,7 @@ impl User {
     }
 
     pub fn get_user_token_ref(&self, token_mint: &Pubkey) -> BumpResult<&UserToken> {
-        self.get_user_token_index(token_mint)
-            .map(|user_token_index| &self.tokens[user_token_index])
+        self.get_user_token_index(token_mint).map(|user_token_index| &self.tokens[user_token_index])
     }
 
     pub fn force_get_user_token_mut_ref(
@@ -305,12 +304,12 @@ impl User {
         &self,
         symbol: [u8; 32],
         margin_token: Pubkey,
-        is_cross_margin: bool,
+        is_portfolio_margin: bool,
     ) -> BumpResult<bool> {
         for order in &self.orders {
             if order.symbol.eq(&symbol)
                 && order.margin_mint_key.eq(&margin_token)
-                && order.cross_margin.eq(&is_cross_margin)
+                && order.is_portfolio_margin.eq(&is_portfolio_margin)
                 && order.position_side.eq(&PositionSide::INCREASE)
                 && order.order_side.eq(&OrderSide::SHORT)
             {
@@ -391,7 +390,7 @@ impl User {
         order_id: u64,
         symbol: [u8; 32],
         margin_token: &Pubkey,
-        is_cross_margin: bool,
+        is_portfolio_margin: bool,
     ) -> BumpResult<()> {
         for user_order in self.orders {
             if user_order.status.eq(&OrderStatus::INIT) {
@@ -403,7 +402,7 @@ impl User {
             if user_order.symbol == symbol
                 && user_order.margin_mint_key.eq(margin_token)
                 && user_order.order_type.eq(&OrderType::STOP)
-                && user_order.cross_margin == is_cross_margin
+                && user_order.is_portfolio_margin == is_portfolio_margin
             {
                 self.delete_order(user_order.order_id)?;
             }
@@ -424,14 +423,14 @@ impl User {
         &self,
         symbol: [u8; 32],
         order_side: OrderSide,
-        is_cross_margin: bool,
+        is_portfolio_margin: bool,
         leverage: u32,
     ) -> BumpResult<u32> {
         for order in self.orders {
             if order.symbol == symbol
                 && order.order_side.eq(&order_side)
                 && order.position_side.eq(&PositionSide::DECREASE)
-                && order.cross_margin == is_cross_margin
+                && order.is_portfolio_margin == is_portfolio_margin
             {
                 return Ok(order.leverage);
             }
@@ -445,14 +444,14 @@ impl User {
         symbol: [u8; 32],
         margin_token: &Pubkey,
         is_long: bool,
-        is_cross_margin: bool,
+        is_portfolio_margin: bool,
     ) -> BumpResult {
         for user_order in &mut self.orders {
             if user_order.status.eq(&OrderStatus::INIT) {
                 continue;
             }
             let is_long_order = user_order.order_side.eq(&OrderSide::LONG);
-            if user_order.cross_margin == is_cross_margin
+            if user_order.is_portfolio_margin == is_portfolio_margin
                 && user_order.symbol == symbol
                 && user_order.margin_mint_key.eq(margin_token)
                 && ((is_long_order == is_long
@@ -475,7 +474,7 @@ impl User {
             if position.status.eq(&PositionStatus::INIT) {
                 continue;
             }
-            if position.margin_mint_key.eq(token_mint) && position.cross_margin {
+            if position.margin_mint_key.eq(token_mint) && position.is_portfolio_margin {
                 let change_amount;
 
                 if change_token_amount > 0i128 {
@@ -528,7 +527,7 @@ impl User {
 
     pub fn cancel_user_order(&mut self, user_order_index: usize) -> BumpResult {
         let user_order = self.orders[user_order_index];
-        if user_order.cross_margin {
+        if user_order.is_portfolio_margin {
             self.sub_order_hold_in_usd(user_order.order_margin)?;
         }
         self.orders[user_order_index] = UserOrder::default();
@@ -540,7 +539,10 @@ impl User {
             if user_position.status.eq(&PositionStatus::INIT) {
                 continue;
             }
-            if user_position.cross_margin && user_position.margin_mint_key.eq(mint) && amount > 0 {
+            if user_position.is_portfolio_margin
+                && user_position.margin_mint_key.eq(mint)
+                && amount > 0
+            {
                 let reduce_amount = user_position.reduce_position_portfolio_balance(amount)?;
                 amount = amount.safe_sub(reduce_amount)?;
             }
@@ -593,7 +595,8 @@ impl User {
                 user_token.amount
             };
             user_token.amount = user_token.amount.safe_sub(repay_liability_amount)?;
-            user_token.liability_amount = user_token.liability_amount.safe_sub(repay_liability_amount)?;
+            user_token.liability_amount =
+                user_token.liability_amount.safe_sub(repay_liability_amount)?;
             user_token.used_amount = user_token.used_amount.safe_sub(repay_liability_amount)?;
             emit!(UserTokenBalanceUpdateEvent {
                 user_key,

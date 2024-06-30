@@ -98,7 +98,7 @@ pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
     let position = user.get_user_position_mut_ref(&params.position_key)?;
     let mut pool = ctx.accounts.pool.load_mut()?;
     let market = ctx.accounts.market.load_mut()?;
-    validate!(position.cross_margin, BumpErrorCode::OnlyIsolatePositionAllowed.into())?;
+    validate!(position.is_portfolio_margin, BumpErrorCode::OnlyIsolatePositionAllowed.into())?;
     if params.is_add {
         token::receive(
             &ctx.accounts.token_program,
@@ -147,7 +147,7 @@ pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
         position.symbol,
         &position.margin_mint_key,
         position.is_long,
-        position.cross_margin,
+        position.is_portfolio_margin,
     )?;
     Ok(())
 }

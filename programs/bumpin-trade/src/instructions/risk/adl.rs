@@ -106,7 +106,7 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
             DecreasePositionParams {
                 order_id: 0,
                 is_liquidation: false,
-                is_cross_margin: position.cross_margin,
+                is_portfolio_margin: position.is_portfolio_margin,
                 margin_token: position.margin_mint_key,
                 decrease_size: position.position_size,
                 execute_price: oracle_map

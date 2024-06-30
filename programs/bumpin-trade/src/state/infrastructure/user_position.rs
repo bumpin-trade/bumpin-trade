@@ -38,7 +38,7 @@ pub struct UserPosition {
     pub updated_at: i64,
     pub leverage: u32,
     pub is_long: bool,
-    pub cross_margin: bool,
+    pub is_portfolio_margin: bool,
     pub status: PositionStatus,
     pub padding: [u8; 1],
 }
@@ -271,8 +271,8 @@ impl UserPosition {
         Ok(())
     }
 
-    pub fn set_cross_margin(&mut self, cross_margin: bool) -> BumpResult {
-        self.cross_margin = cross_margin;
+    pub fn set_portfolio_margin(&mut self, is_portfolio_margin: bool) -> BumpResult {
+        self.is_portfolio_margin = is_portfolio_margin;
         Ok(())
     }
 
@@ -413,7 +413,7 @@ impl UserPosition {
         index_trade_token: &TradeToken,
         oracle_map: &mut OracleMap,
     ) -> BumpResult<(u128, i128, u128)> {
-        if self.cross_margin {
+        if self.is_portfolio_margin {
             let index_price_data = oracle_map.get_price_data(&index_trade_token.oracle_key)?;
 
             let position_un_pnl = self.get_position_un_pnl_usd(index_price_data.price)?;

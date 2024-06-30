@@ -58,7 +58,7 @@ impl<'a> UserProcessor<'a> {
             if user_position.status.eq(&PositionStatus::INIT) {
                 continue;
             }
-            if user_position.cross_margin
+            if user_position.is_portfolio_margin
                 && user_position.margin_mint_key.eq(mint)
                 && reduce_amount > 0
             {
@@ -85,7 +85,7 @@ impl<'a> UserProcessor<'a> {
         order_id: u64,
         symbol: [u8; 32],
         margin_token: &Pubkey,
-        is_cross_margin: bool,
+        is_portfolio_margin: bool,
     ) -> BumpResult<()> {
         for user_order in self.user.orders {
             if user_order.status.eq(&OrderStatus::INIT) {
@@ -97,7 +97,7 @@ impl<'a> UserProcessor<'a> {
             if user_order.symbol == symbol
                 && user_order.margin_mint_key.eq(margin_token)
                 && user_order.order_type.eq(&OrderType::STOP)
-                && user_order.cross_margin == is_cross_margin
+                && user_order.is_portfolio_margin == is_portfolio_margin
             {
                 self.user.delete_order(user_order.order_id)?;
             }
@@ -109,7 +109,7 @@ impl<'a> UserProcessor<'a> {
         let user_orders_length = self.user.orders.len();
         for index in 0..user_orders_length {
             let order = self.user.orders[index];
-            if order.status.eq(&OrderStatus::USING) && order.cross_margin {
+            if order.status.eq(&OrderStatus::USING) && order.is_portfolio_margin {
                 self.user.cancel_user_order(index)?;
             }
         }
@@ -126,9 +126,9 @@ impl<'a> UserProcessor<'a> {
         state: &Account<'info, State>,
     ) -> BumpResult<()> {
         self.user.delete_order(order.order_id)?;
-        if order.position_side.eq(&PositionSide::INCREASE) && order.cross_margin {
+        if order.position_side.eq(&PositionSide::INCREASE) && order.is_portfolio_margin {
             self.user.sub_order_hold_in_usd(order.order_margin)?;
-        } else if order.position_side.eq(&PositionSide::INCREASE) && !order.cross_margin {
+        } else if order.position_side.eq(&PositionSide::INCREASE) && !order.is_portfolio_margin {
             token::send_from_program_vault(
                 token_program,
                 pool_vault,

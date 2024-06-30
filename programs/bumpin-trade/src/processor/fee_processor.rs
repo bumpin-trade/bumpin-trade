@@ -13,8 +13,7 @@ pub fn collect_stake_fee(stake_pool: &mut Pool, amount: u128) -> BumpResult<u128
 }
 
 pub fn collect_un_stake_fee(stake_pool: &mut Pool, un_stake_amount: u128) -> BumpResult<u128> {
-    let fee_amount =
-        un_stake_amount.safe_mul_rate(stake_pool.config.un_stake_fee_rate.into())?;
+    let fee_amount = un_stake_amount.safe_mul_rate(stake_pool.config.un_stake_fee_rate.into())?;
     stake_pool.fee_reward.add_fee_amount(fee_amount)?;
     Ok(fee_amount)
 }
@@ -23,11 +22,11 @@ pub fn collect_long_open_position_fee(
     market: &Market,
     pool: &mut Pool,
     margin: u128,
-    cross_margin: bool,
+    is_portfolio_margin: bool,
 ) -> BumpResult<u128> {
     let fee_amount = margin.safe_mul_rate(market.config.open_fee_rate)?;
     pool.fee_reward.add_fee_amount(fee_amount)?;
-    if cross_margin {
+    if is_portfolio_margin {
         pool.fee_reward.add_un_settle_amount(fee_amount)?;
     }
 
@@ -40,7 +39,7 @@ pub fn collect_short_open_position_fee(
     stable_pool: &mut Pool,
     state: &State,
     margin: u128,
-    cross_margin: bool,
+    is_portfolio_margin: bool,
 ) -> BumpResult<u128> {
     let fee_amount = margin.safe_mul_rate(market.config.open_fee_rate)?;
 
@@ -51,7 +50,7 @@ pub fn collect_short_open_position_fee(
     pool.stable_fee_reward.add_fee_amount(pool_rewards_fee)?;
     stable_pool.fee_reward.add_fee_amount(usd_pool_rewards_fee)?;
 
-    if cross_margin {
+    if is_portfolio_margin {
         pool.stable_fee_reward.add_un_settle_amount(pool_rewards_fee)?;
         stable_pool.fee_reward.add_un_settle_amount(usd_pool_rewards_fee)?;
     }
@@ -62,10 +61,10 @@ pub fn collect_short_open_position_fee(
 pub fn collect_long_close_position_fee(
     stake_pool: &mut Pool,
     fee_amount: u128,
-    cross_margin: bool,
+    is_portfolio_margin: bool,
 ) -> BumpResult<u128> {
     stake_pool.fee_reward.add_fee_amount(fee_amount)?;
-    if cross_margin {
+    if is_portfolio_margin {
         stake_pool.fee_reward.add_un_settle_amount(fee_amount)?;
     }
     Ok(fee_amount)
@@ -76,7 +75,7 @@ pub fn collect_short_close_position_fee(
     pool: &mut Pool,
     state: &State,
     close_fee: u128,
-    cross_margin: bool,
+    is_portfolio_margin: bool,
 ) -> BumpResult {
     let usd_pool_rewards_fee =
         close_fee.safe_mul_rate(state.trading_fee_usd_pool_rewards_ratio as u128)?;
@@ -84,7 +83,7 @@ pub fn collect_short_close_position_fee(
 
     stable_pool.fee_reward.add_fee_amount(usd_pool_rewards_fee)?;
     pool.stable_fee_reward.add_fee_amount(left_rewards)?;
-    if cross_margin {
+    if is_portfolio_margin {
         stable_pool.fee_reward.add_un_settle_amount(usd_pool_rewards_fee)?;
         pool.stable_fee_reward.add_un_settle_amount(left_rewards)?;
     }
@@ -95,10 +94,10 @@ pub fn collect_short_close_position_fee(
 pub fn collect_borrowing_fee(
     stake_pool: &mut Pool,
     fee_amount: u128,
-    cross_margin: bool,
+    is_portfolio_margin: bool,
 ) -> BumpResult<u128> {
     stake_pool.fee_reward.add_fee_amount(fee_amount)?;
-    if cross_margin {
+    if is_portfolio_margin {
         stake_pool.fee_reward.add_un_settle_amount(fee_amount)?;
     }
 

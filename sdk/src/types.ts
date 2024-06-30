@@ -245,7 +245,7 @@ export type UserOrder = {
     position_side: PositionSide;
     order_type: OrderType;
     stop_type: StopType;
-    cross_margin: boolean;
+    is_portfolio_margin: boolean;
     margin_mint: PublicKey;
     order_margin: BN;
     leverage: BN;

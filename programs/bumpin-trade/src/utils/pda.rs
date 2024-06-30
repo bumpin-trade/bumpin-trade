@@ -5,12 +5,12 @@ use crate::errors::BumpResult;
 pub fn generate_position_key(
     user: &Pubkey,
     symbol: [u8; 32],
-    is_cross_margin: bool,
+    is_portfolio_margin: bool,
     program_id: &Pubkey,
 ) -> BumpResult<Pubkey> {
-    // Convert is_cross_margin to a byte array
-    let is_cross_margin_bytes: &[u8] = if is_cross_margin { &[1] } else { &[0] };
-    let seeds: &[&[u8]] = &[user.as_ref(), &symbol, is_cross_margin_bytes];
+    // Convert is_portfolio_margin to a byte array
+    let is_portfolio_margin_bytes: &[u8] = if is_portfolio_margin { &[1] } else { &[0] };
+    let seeds: &[&[u8]] = &[user.as_ref(), &symbol, is_portfolio_margin_bytes];
 
     // Find the program address
     let (address, _bump_seed) = Pubkey::find_program_address(seeds, program_id);

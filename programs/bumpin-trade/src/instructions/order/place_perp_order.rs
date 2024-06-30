@@ -134,7 +134,7 @@ pub struct PlaceOrder<'info> {
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Eq, PartialEq)]
 pub struct PlaceOrderParams {
     pub symbol: [u8; 32],
-    pub is_cross_margin: bool,
+    pub is_portfolio_margin: bool,
     pub is_native_token: bool,
     pub order_side: OrderSide,
     pub position_side: PositionSide,
@@ -179,7 +179,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         BumpErrorCode::InvalidParam.into()
     )?;
 
-    if order.position_side == PositionSide::INCREASE && !order.is_cross_margin {
+    if order.position_side == PositionSide::INCREASE && !order.is_portfolio_margin {
         //isolate order, transfer order_margin into pool
         token::receive(
             &ctx.accounts.token_program,
@@ -193,12 +193,12 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
             order.order_margin,
         )?;
     }
-    if order.position_side.eq(&PositionSide::INCREASE) && order.is_cross_margin {
+    if order.position_side.eq(&PositionSide::INCREASE) && order.is_portfolio_margin {
         //hold usd
         user.add_order_hold_in_usd(order.order_margin)?;
     }
 
-    if user.has_other_short_order(order.symbol, token.key(), order.is_cross_margin)? {
+    if user.has_other_short_order(order.symbol, token.key(), order.is_portfolio_margin)? {
         return Err(BumpErrorCode::OnlyOneShortOrderAllowed.into());
     }
 
@@ -211,7 +211,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         position_side: order.position_side,
         order_type: order.order_type,
         stop_type: order.stop_type,
-        cross_margin: order.is_cross_margin,
+        is_portfolio_margin: order.is_portfolio_margin,
         margin_mint_key: token.key(),
         order_margin: order.order_margin,
         leverage: order.leverage,
@@ -339,8 +339,12 @@ pub fn handle_execute_order<'info>(
     } else {
         stable_pool.update_pool_borrowing_fee_rate()?;
     }
-    let position_key =
-        pda::generate_position_key(&user_key, market.symbol, order.cross_margin, program_id)?;
+    let position_key = pda::generate_position_key(
+        &user_key,
+        market.symbol,
+        order.is_portfolio_margin,
+        program_id,
+    )?;
 
     // drop(user);
     //do execute order and change position
@@ -375,7 +379,7 @@ pub fn handle_execute_order<'info>(
                     &market,
                     &mut base_token_pool,
                     order_margin,
-                    order.cross_margin,
+                    order.is_portfolio_margin,
                 )?
             } else {
                 fee_processor::collect_short_open_position_fee(
@@ -384,12 +388,12 @@ pub fn handle_execute_order<'info>(
                     &mut stable_pool,
                     state_account,
                     order_margin,
-                    order.cross_margin,
+                    order.is_portfolio_margin,
                 )?
             };
 
             //record fee in user
-            if order.cross_margin {
+            if order.is_portfolio_margin {
                 let trade_token = &mut trade_token_loader
                     .load_mut()
                     .map_err(|_| BumpErrorCode::CouldNotLoadTradeTokenData)?;
@@ -443,7 +447,7 @@ pub fn handle_execute_order<'info>(
                 DecreasePositionParams {
                     order_id,
                     is_liquidation: false,
-                    is_cross_margin: false,
+                    is_portfolio_margin: false,
                     margin_token: order.margin_mint_key,
                     decrease_size: order.order_size,
                     execute_price,
@@ -509,11 +513,11 @@ fn validate_place_order(
                     && !market.stable_pool_mint_key.eq(&pool.mint_key)
                 {
                     Ok(false)
-                } else if order.is_cross_margin
+                } else if order.is_portfolio_margin
                     && order.order_margin < state.minimum_order_margin_usd
                 {
                     Ok(false)
-                } else if !order.is_cross_margin
+                } else if !order.is_portfolio_margin
                     && order.order_margin.safe_mul(token_price)? < state.minimum_order_margin_usd
                 {
                     Ok(false)
@@ -540,7 +544,7 @@ fn execute_increase_order_margin(
 ) -> BumpResult<(u128, u128)> {
     let order_margin;
     let order_margin_from_balance;
-    if order.cross_margin {
+    if order.is_portfolio_margin {
         let available_value = user.get_available_value(oracle_map, trade_token_map)?;
         let order_margin_temp;
         if available_value < 0i128 {
