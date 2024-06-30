@@ -72,7 +72,7 @@ export type Market = {
     stablePoolKey: PublicKey;
     stablePoolMintKey: PublicKey;
     index: number;
-    symbol: string;
+    symbol: number[];
 }
 
 
@@ -169,12 +169,12 @@ export type UserStake = {
     stakedShare: BN;
     userRewards: UserRewards;
     poolKey: PublicKey;
-    userStakeStatus: UserStakeStatus;
-}
+    userStakeStatus: number;
 
-export enum UserTokenStatus {
-    INIT = 0,
-    USING = 1
+}
+export class UserTokenStatus {
+    static readonly INIT = { init: {} };
+    static readonly USING = { using: {} };
 }
 
 
@@ -214,12 +214,13 @@ export type UserPosition = {
     marginMintKey: PublicKey;
     indexMintKey: PublicKey;
     positionKey: PublicKey;
-    symbol: string;
+    symbol: number[];
     updatedAt: BN;
     leverage: number;
     isLong: boolean;
     isPortfolioMargin: boolean;
-    status: PositionStatus;
+    status: number;
+
 }
 
 export enum OrderSide {
@@ -261,15 +262,14 @@ export type UserOrder = {
     orderId: BN;
     marginMintKey: PublicKey;
     authority: PublicKey;
-    symbol: string;
+    symbol: number[];
     leverage: number;
-    orderSide: OrderSide;
-    positionSide: PositionSide;
-    orderType: OrderType;
-    stopType: StopType;
-    status: OrderStatus;
+    orderSide: number;
+    positionSide: number;
+    orderType: number;
+    stopType: number;
+    status: number;
     isPortfolioMargin: boolean;
-    padding: number[];
 }
 
 

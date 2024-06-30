@@ -4,7 +4,7 @@ import {BulkAccountLoader} from "../account/bulkAccountLoader";
 import {BN, Program} from "@coral-xyz/anchor";
 import {BumpinUtils} from "../utils/utils";
 import {BumpinTrade} from "../types/bumpin_trade";
-import "./utils/cal_utils";
+import {isEqual} from 'lodash';
 import {Component} from "./componet";
 import {PollingStateAccountSubscriber} from "../account/pollingStateAccountSubscriber";
 import {PollingUserAccountSubscriber} from "../account/pollingUserAccountSubscriber";
@@ -59,7 +59,7 @@ export class UserComponent extends Component {
 
         let remainingAccounts = [];
         for (let token of user.tokens) {
-            if (token.userTokenStatus === UserTokenStatus.USING) {
+            if (isEqual(token.userTokenStatus, UserTokenStatus.USING)) {
                 remainingAccounts.push(token.tokenMintKey)
             }
         }

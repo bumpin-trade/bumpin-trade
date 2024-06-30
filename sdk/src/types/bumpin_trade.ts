@@ -4760,7 +4760,7 @@ export type BumpinTrade = {
                     "name": "userToken"
                   }
                 },
-                16
+                12
               ]
             }
           },
@@ -4773,7 +4773,7 @@ export type BumpinTrade = {
                     "name": "userStake"
                   }
                 },
-                16
+                12
               ]
             }
           },
@@ -4786,7 +4786,7 @@ export type BumpinTrade = {
                     "name": "userPosition"
                   }
                 },
-                16
+                10
               ]
             }
           },
@@ -4799,7 +4799,7 @@ export type BumpinTrade = {
                     "name": "userOrder"
                   }
                 },
-                16
+                10
               ]
             }
           },

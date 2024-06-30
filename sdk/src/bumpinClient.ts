@@ -21,7 +21,6 @@ import {MarketComponent} from "./componets/market";
 import {BumpinTokenUtils} from "./utils/token";
 import {BumpinPoolUtils} from "./utils/pool";
 
-
 export class BumpinClient {
     netType: NetType;
     connection: Connection;

@@ -4,7 +4,7 @@ import {TradeToken, TradeTokenBalance, UserAccount, UserToken, UserTokenStatus} 
 import {BumpinAccountNotFound, BumpinTokenNotFound} from "../errors";
 import {Account, getAccount, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {OracleClient} from "../oracles/types";
-import "./cal_utils";
+import {isEqual} from 'lodash';
 
 export class BumpinTokenUtils {
 
@@ -16,7 +16,7 @@ export class BumpinTokenUtils {
         };
 
         for (let userToken of user.tokens) {
-            if (userToken.userTokenStatus === UserTokenStatus.INIT) {
+            if (isEqual(userToken.userTokenStatus, UserTokenStatus.INIT)) {
                 continue;
             }
             let tradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(userToken.tokenMintKey, tradeTokens);

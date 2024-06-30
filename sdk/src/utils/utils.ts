@@ -5,6 +5,11 @@ import {Buffer} from "buffer";
 import {BumpinTrade} from "../types/bumpin_trade";
 
 export class BumpinUtils {
+    public static decodeString(bytes: number[]): string {
+        const buffer = Buffer.from(bytes);
+        return buffer.toString('utf8').trim();
+    }
+
     public static capitalize(value: string): string {
         return value[0].toUpperCase() + value.slice(1);
     }

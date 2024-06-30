@@ -1,9 +1,9 @@
 use anchor_lang::prelude::*;
 
+use crate::errors::{BumpErrorCode, BumpResult};
 use crate::errors::BumpErrorCode::{
     CouldNotFindUserOrder, CouldNotFindUserPosition, CouldNotFindUserStake, CouldNotFindUserToken,
 };
-use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
@@ -32,10 +32,10 @@ pub struct User {
     pub next_order_id: u64,
     pub next_liquidation_id: u64,
     pub hold: u128,
-    pub tokens: [UserToken; 16],
-    pub stakes: [UserStake; 16],
-    pub positions: [UserPosition; 16],
-    pub orders: [UserOrder; 16],
+    pub tokens: [UserToken; 12],
+    pub stakes: [UserStake; 12],
+    pub positions: [UserPosition; 10],
+    pub orders: [UserOrder; 10],
     pub key: Pubkey,
     pub authority: Pubkey,
 }
@@ -455,8 +455,8 @@ impl User {
                 && user_order.symbol == symbol
                 && user_order.margin_mint_key.eq(margin_token)
                 && ((is_long_order == is_long
-                    && user_order.position_side.eq(&PositionSide::INCREASE))
-                    || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
+                && user_order.position_side.eq(&PositionSide::INCREASE))
+                || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
             {
                 user_order.set_leverage(leverage)
             }
