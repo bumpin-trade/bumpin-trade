@@ -21,25 +21,25 @@ use crate::validate;
 #[derive(Eq, PartialEq, Default, Debug)]
 #[repr(C)]
 pub struct Pool {
+    pub name: [u8; 32],
     pub pnl: i128,
     pub apr: u128,
     pub insurance_fund_amount: u128,
     pub total_supply: u128,
+    pub settle_funding_fee: i128,
     pub balance: PoolBalance,
     pub stable_balance: PoolBalance,
     pub borrowing_fee: BorrowingFee,
     pub fee_reward: FeeReward,
     pub stable_fee_reward: FeeReward,
-    pub pool_config: PoolConfig,
-    pub pool_mint_vault: Pubkey,
+    pub config: PoolConfig,
+    pub mint_vault_key: Pubkey,
     pub key: Pubkey,
     pub stable_key: Pubkey,
     pub mint_key: Pubkey,
     pub index: u16,
     pub status: PoolStatus,
-    pub settle_funding_fee: i128,
     pub stable: bool,
-    pub name: [u8; 32],
     pub padding: [u8; 12],
 }
 
@@ -60,7 +60,6 @@ pub struct PoolBalance {
     pub amount: u128,
     pub hold_amount: u128,
     pub un_settle_amount: u128,
-    // 剩下还未跟用户结算的金额，已经计算了，但是还未结算
     pub settle_funding_fee_amount: u128,
     pub loss_amount: u128,
 }
@@ -74,6 +73,7 @@ pub struct PoolConfig {
     pub stake_fee_rate: u32,
     pub un_stake_fee_rate: u32,
     pub un_settle_mint_ratio_limit: u32,
+    pub padding: [u8; 4],
 }
 
 impl Pool {
@@ -181,7 +181,7 @@ impl Pool {
 
     pub fn update_pool_borrowing_fee_rate(&mut self) -> BumpResult {
         self.borrowing_fee
-            .update_pool_borrowing_fee(&self.balance, self.pool_config.borrowing_interest_rate)?;
+            .update_pool_borrowing_fee(&self.balance, self.config.borrowing_interest_rate)?;
         Ok(())
     }
 
@@ -195,14 +195,14 @@ impl Pool {
     }
 
     fn check_hold_is_allowed(&self, amount: u128) -> BumpResult<bool> {
-        if self.pool_config.pool_liquidity_limit == 0 {
+        if self.config.pool_liquidity_limit == 0 {
             return Ok(add_u128(self.balance.amount, self.balance.un_settle_amount)?
                 .safe_sub(self.balance.hold_amount)?
                 >= amount);
         }
         return Ok(add_u128(self.balance.amount, self.balance.un_settle_amount)?
             .safe_sub(self.balance.hold_amount)?
-            .safe_mul(self.pool_config.pool_liquidity_limit)?
+            .safe_mul(self.config.pool_liquidity_limit)?
             >= amount);
     }
 

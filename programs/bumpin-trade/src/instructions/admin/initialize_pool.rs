@@ -60,7 +60,7 @@ pub fn handle_initialize_pool(ctx: Context<InitializePool>, name: [u8; 32]) -> R
 
     pool.key = ctx.accounts.pool.key();
     pool.mint_key = ctx.accounts.pool_mint.key();
-    pool.pool_mint_vault = ctx.accounts.pool_vault.key();
+    pool.mint_vault_key = ctx.accounts.pool_vault.key();
     pool.name = name;
 
     safe_increment!(state.pool_sequence, 1);

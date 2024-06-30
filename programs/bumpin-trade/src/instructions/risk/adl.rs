@@ -47,7 +47,7 @@ pub struct ADL<'info> {
     pub trade_token: AccountLoader<'info, TradeToken>,
 
     #[account(
-        constraint = trade_token_vault.mint == trade_token.load() ?.trade_token_vault
+        constraint = trade_token_vault.mint == trade_token.load() ?.vault_key
     )]
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
 

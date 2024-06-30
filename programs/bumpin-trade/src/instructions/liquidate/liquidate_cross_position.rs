@@ -72,7 +72,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
     drop(user_processor);
 
     let mut pos_infos: Vec<PosInfos> = Vec::new();
-    for position in &user.user_positions {
+    for position in &user.positions {
         let infos = get_position_info(position, &market_map, state)?;
         pos_infos.push(infos)
     }
@@ -143,7 +143,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
                             .cast::<u128>()?,
                     )?
                 },
-                market.market_trade_config.tick_size,
+                market.config.tick_size,
                 pos_info.is_long,
             )?;
 
@@ -154,7 +154,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
                 } else {
                     cal_utils::div_rate_u(bankruptcy_price, RATE_PRECISION.safe_add(pos_info.mm)?)?
                 },
-                market.market_trade_config.tick_size,
+                market.config.tick_size,
                 pos_info.is_long,
             )?;
 

@@ -104,7 +104,7 @@ pub struct PlaceOrder<'info> {
         bump,
         token::mint = trade_token.load() ?.mint_key,
         token::authority = bump_signer,
-        constraint = trade_token_vault.key() == trade_token.load() ?.trade_token_vault
+        constraint = trade_token_vault.key() == trade_token.load() ?.vault_key
     )]
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
 
@@ -220,7 +220,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         acceptable_price: order.acceptable_price,
         created_at: cal_utils::current_time(),
         status: OrderStatus::USING,
-        padding: [0u8; 10],
+        padding: [0u8; 6],
     };
 
     if order.order_type.eq(&OrderType::MARKET) {
@@ -307,13 +307,13 @@ pub fn handle_execute_order<'info>(
 
     let order = if execute_from_remote {
         let user_order_index = user.get_user_order_index(order_id)?;
-        &user.user_orders[user_order_index]
+        &user.orders[user_order_index]
     } else {
         user_order
     }
     .clone();
 
-    let user_key = user.user_key;
+    let user_key = user.key;
 
     //validate order
     validate_execute_order(&order, &market)?;
@@ -426,7 +426,7 @@ pub fn handle_execute_order<'info>(
         }),
 
         PositionSide::DECREASE => Ok({
-            let position_side = { position!(&user.user_positions, &position_key)?.is_long };
+            let position_side = { position!(&user.positions, &position_key)?.is_long };
             //decrease
             let mut user = user_account_loader.load_mut()?;
             let position = user.get_user_position_ref(&position_key)?.clone();
@@ -618,7 +618,7 @@ fn validate_execute_order(order: &UserOrder, market: &Market) -> BumpResult<()> 
         }
     }
 
-    if order.leverage > market.market_trade_config.max_leverage {
+    if order.leverage > market.config.maximum_leverage {
         return Err(BumpErrorCode::LeverageIsNotAllowed.into());
     }
     Ok(())

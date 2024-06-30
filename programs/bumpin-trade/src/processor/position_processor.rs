@@ -101,7 +101,7 @@ pub fn decrease_position<'info>(
     position_key: &Pubkey,
 ) -> BumpResult<()> {
     let (is_long, position_deletion, pre_position, response) = {
-        let position = position_mut!(&mut user.user_positions, position_key)?;
+        let position = position_mut!(&mut user.positions, position_key)?;
         let pre_position = position.clone();
         let position_un_pnl_usd = position.get_position_un_pnl_usd(params.execute_price)?;
         let margin_mint_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
@@ -505,7 +505,7 @@ pub fn execute_reduce_position_margin(
     let max_reduce_margin_in_usd = position.initial_margin_usd.safe_sub(
         cal_utils::div_rate_u(
             position.position_size,
-            market.market_trade_config.max_leverage as u128,
+            market.config.maximum_leverage as u128,
         )?
         .max(state.minimum_order_margin_usd),
     )?;
@@ -579,7 +579,7 @@ pub fn calculate_decrease_position(
         decrease_size,
         trade_token,
         margin_mint_token_price,
-        market.market_trade_config.close_fee_rate,
+        market.config.close_fee_rate,
         position,
     )?;
 
@@ -828,12 +828,12 @@ pub fn increase_position(
         user_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadTradeTokenData)?;
 
     let position_key =
-        pda::generate_position_key(&user.user_key, market.symbol, order.cross_margin, program_id)?;
+        pda::generate_position_key(&user.key, market.symbol, order.cross_margin, program_id)?;
 
     let position_index = user
         .get_user_position_index(&position_key)
         .or_else(|_| user.add_user_position(&position_key))?;
-    let position = &mut user.user_positions[position_index];
+    let position = &mut user.positions[position_index];
 
     let is_long = order.order_side.eq(&OrderSide::LONG);
     if position.leverage != order.leverage {
@@ -890,7 +890,7 @@ pub fn increase_position(
         )?)?;
         position.set_close_fee_in_usd(cal_utils::mul_rate_u(
             increase_size,
-            market.market_trade_config.close_fee_rate,
+            market.config.close_fee_rate,
         )?)?;
         position.set_position_size(increase_size)?;
         position.set_leverage(order.leverage)?;
@@ -918,7 +918,7 @@ pub fn increase_position(
             position.entry_price,
             increase_size,
             margin_token_price,
-            market.market_trade_config.tick_size,
+            market.config.tick_size,
             position.is_long,
         )?)?;
         position.add_initial_margin(increase_margin)?;

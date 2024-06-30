@@ -28,7 +28,7 @@ pub fn un_stake(
     let pool_price = oracle_map.get_price_data(&trade_token.oracle_key)?;
     let token_amount = cal_utils::div_u128(un_stake_usd, pool_price.price)?;
     validate!(
-        token_amount > pool.pool_config.minimum_un_stake_amount,
+        token_amount > pool.config.minimum_un_stake_amount,
         BumpErrorCode::UnStakeTooSmall
     )?;
 

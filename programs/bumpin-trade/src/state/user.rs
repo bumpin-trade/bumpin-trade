@@ -32,11 +32,11 @@ pub struct User {
     pub next_order_id: u64,
     pub next_liquidation_id: u64,
     pub hold: u128,
-    pub user_tokens: [UserToken; 12],
-    pub user_stakes: [UserStake; 12],
-    pub user_positions: [UserPosition; 8],
-    pub user_orders: [UserOrder; 8],
-    pub user_key: Pubkey,
+    pub tokens: [UserToken; 12],
+    pub stakes: [UserStake; 12],
+    pub positions: [UserPosition; 8],
+    pub orders: [UserOrder; 8],
+    pub key: Pubkey,
     pub authority: Pubkey,
 }
 
@@ -66,12 +66,12 @@ impl Size for User {
 impl User {
     pub fn get_user_token_mut_ref(&mut self, token_mint: &Pubkey) -> BumpResult<&mut UserToken> {
         self.get_user_token_index(token_mint)
-            .map(move |user_token_index| &mut self.user_tokens[user_token_index])
+            .map(move |user_token_index| &mut self.tokens[user_token_index])
     }
 
     pub fn get_user_token_ref(&self, token_mint: &Pubkey) -> BumpResult<&UserToken> {
         self.get_user_token_index(token_mint)
-            .map(|user_token_index| &self.user_tokens[user_token_index])
+            .map(|user_token_index| &self.tokens[user_token_index])
     }
 
     pub fn force_get_user_token_mut_ref(
@@ -81,7 +81,7 @@ impl User {
     ) -> BumpResult<&mut UserToken> {
         self.get_user_token_index(token_mint)
             .or_else(|_| self.add_user_token(token_mint, user_token_account_key))
-            .map(move |user_token_index| &mut self.user_tokens[user_token_index])
+            .map(move |user_token_index| &mut self.tokens[user_token_index])
     }
 
     pub fn add_user_token(
@@ -97,12 +97,12 @@ impl User {
             user_token_account_key: *user_token_account_key,
             ..UserToken::default()
         };
-        self.user_tokens[new_user_token_index] = new_user_token;
+        self.tokens[new_user_token_index] = new_user_token;
         Ok(new_user_token_index)
     }
 
     pub fn get_user_token_index(&self, token_mint: &Pubkey) -> BumpResult<usize> {
-        self.user_tokens
+        self.tokens
             .iter()
             .position(|user_token| {
                 user_token.user_token_status.eq(&UserTokenStatus::USING)
@@ -113,11 +113,11 @@ impl User {
 
     pub fn get_user_stake_mut_ref(&mut self, pool_key: &Pubkey) -> BumpResult<&mut UserStake> {
         self.get_user_stake_index(pool_key)
-            .map(move |user_stake_index| &mut self.user_stakes[user_stake_index])
+            .map(move |user_stake_index| &mut self.stakes[user_stake_index])
     }
 
     pub fn get_user_stake_ref(&self, pool_key: &Pubkey) -> BumpResult<&UserStake> {
-        self.get_user_stake_index(pool_key).map(|user_stake| &self.user_stakes[user_stake])
+        self.get_user_stake_index(pool_key).map(|user_stake| &self.stakes[user_stake])
     }
 
     pub fn get_or_add_user_stake_ref_mut(
@@ -126,7 +126,7 @@ impl User {
     ) -> BumpResult<&mut UserStake> {
         self.get_user_stake_index(pool_key)
             .or_else(|_| self.add_user_stake(pool_key))
-            .map(move |user_stake_index| &mut self.user_stakes[user_stake_index])
+            .map(move |user_stake_index| &mut self.stakes[user_stake_index])
     }
 
     pub fn add_user_stake(&mut self, pool_key: &Pubkey) -> BumpResult<usize> {
@@ -137,12 +137,12 @@ impl User {
             user_stake_status: UserStakeStatus::USING,
             ..UserStake::default()
         };
-        self.user_stakes[new_user_stake_index] = new_user_stake;
+        self.stakes[new_user_stake_index] = new_user_stake;
         Ok(new_user_stake_index)
     }
 
     pub fn get_user_stake_index(&self, pool_key: &Pubkey) -> BumpResult<usize> {
-        self.user_stakes
+        self.stakes
             .iter()
             .position(|user_stake| {
                 user_stake.user_stake_status.eq(&UserStakeStatus::USING)
@@ -152,19 +152,19 @@ impl User {
     }
 
     pub fn get_user_order_ref(&self, order_id: u64) -> BumpResult<&UserOrder> {
-        self.get_user_order_index(order_id).map(|user_order| &self.user_orders[user_order])
+        self.get_user_order_index(order_id).map(|user_order| &self.orders[user_order])
     }
 
     pub fn add_user_order(&mut self, user_order: &UserOrder) -> BumpResult<usize> {
         let new_user_order_index = self.next_usable_order_index()?;
 
         let new_user_order = *user_order;
-        self.user_orders[new_user_order_index] = new_user_order;
+        self.orders[new_user_order_index] = new_user_order;
         Ok(new_user_order_index)
     }
 
     pub fn get_user_order_index(&self, order_id: u64) -> BumpResult<usize> {
-        self.user_orders
+        self.orders
             .iter()
             .position(|user_order| {
                 user_order.status.eq(&OrderStatus::USING) && user_order.order_id == order_id
@@ -177,12 +177,12 @@ impl User {
         position_key: &Pubkey,
     ) -> BumpResult<&mut UserPosition> {
         self.get_user_position_index(position_key)
-            .map(move |user_position_index| &mut self.user_positions[user_position_index])
+            .map(move |user_position_index| &mut self.positions[user_position_index])
     }
 
     pub fn get_user_position_ref(&self, position_key: &Pubkey) -> BumpResult<&UserPosition> {
         self.get_user_position_index(position_key)
-            .map(|user_position| &self.user_positions[user_position])
+            .map(|user_position| &self.positions[user_position])
     }
 
     pub fn add_user_position(&mut self, position_key: &Pubkey) -> BumpResult<usize> {
@@ -190,16 +190,16 @@ impl User {
 
         let new_user_position = UserPosition {
             position_key: *position_key,
-            user_key: self.user_key,
+            user_key: self.key,
             status: PositionStatus::USING,
             ..UserPosition::default()
         };
-        self.user_positions[new_user_position_index] = new_user_position;
+        self.positions[new_user_position_index] = new_user_position;
         Ok(new_user_position_index)
     }
 
     pub fn get_user_position_index(&self, position_key: &Pubkey) -> BumpResult<usize> {
-        self.user_positions
+        self.positions
             .iter()
             .position(|user_position| {
                 user_position.status.eq(&PositionStatus::USING)
@@ -214,7 +214,7 @@ impl User {
     ) -> BumpResult<&mut UserPosition> {
         self.get_user_position_index(position_key)
             .or_else(|_| self.add_user_position(position_key))
-            .map(move |user_position_index| &mut self.user_positions[user_position_index])
+            .map(move |user_position_index| &mut self.positions[user_position_index])
     }
 
     pub fn sub_user_stake(&mut self, pool_key: &Pubkey, stake_amount: u128) -> BumpResult<()> {
@@ -228,7 +228,7 @@ impl User {
         let pre_hold = self.hold;
         self.hold = cal_utils::sub_u128(self.hold, amount)?;
         emit!(UserHoldUpdateEvent {
-            user_key: self.user_key,
+            user_key: self.key,
             pre_hold_amount: pre_hold,
             hold_amount: self.hold,
         });
@@ -239,7 +239,7 @@ impl User {
         let pre_hold = self.hold;
         self.hold = self.hold.safe_add(amount)?;
         emit!(UserHoldUpdateEvent {
-            user_key: self.user_key,
+            user_key: self.key,
             pre_hold_amount: pre_hold,
             hold_amount: self.hold,
         });
@@ -287,7 +287,7 @@ impl User {
         position_key: &Pubkey,
     ) -> BumpResult<&mut UserPosition> {
         Ok(self
-            .user_positions
+            .positions
             .iter_mut()
             .find(|user_position| user_position.position_key.eq(position_key))
             .ok_or(CouldNotFindUserPosition)?)
@@ -295,7 +295,7 @@ impl User {
 
     pub fn find_position_ref_by_key(&mut self, position_key: &Pubkey) -> BumpResult<&UserPosition> {
         Ok(self
-            .user_positions
+            .positions
             .iter_mut()
             .find(|user_position| user_position.position_key.eq(position_key))
             .ok_or(CouldNotFindUserPosition)?)
@@ -307,7 +307,7 @@ impl User {
         margin_token: Pubkey,
         is_cross_margin: bool,
     ) -> BumpResult<bool> {
-        for order in &self.user_orders {
+        for order in &self.orders {
             if order.symbol.eq(&symbol)
                 && order.margin_mint_key.eq(&margin_token)
                 && order.cross_margin.eq(&is_cross_margin)
@@ -321,7 +321,7 @@ impl User {
     }
 
     pub fn has_other_order(self, order_id: u64) -> BumpResult<bool> {
-        for order in &self.user_orders {
+        for order in &self.orders {
             if order.order_id == order_id {
                 return Ok(true);
             }
@@ -330,7 +330,7 @@ impl User {
     }
 
     pub fn next_usable_order_index(&self) -> BumpResult<usize> {
-        for (index, order) in self.user_orders.iter().enumerate() {
+        for (index, order) in self.orders.iter().enumerate() {
             if order.status.eq(&OrderStatus::INIT) {
                 return Ok(index);
             }
@@ -339,7 +339,7 @@ impl User {
     }
 
     pub fn next_usable_user_token_index(&self) -> BumpResult<usize> {
-        for (index, user_token) in self.user_tokens.iter().enumerate() {
+        for (index, user_token) in self.tokens.iter().enumerate() {
             if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
                 return Ok(index);
             }
@@ -348,7 +348,7 @@ impl User {
     }
 
     pub fn next_usable_position_index(&self) -> BumpResult<usize> {
-        for (index, position) in self.user_positions.iter().enumerate() {
+        for (index, position) in self.positions.iter().enumerate() {
             if position.status.eq(&PositionStatus::INIT) {
                 return Ok(index);
             }
@@ -357,7 +357,7 @@ impl User {
     }
 
     pub fn next_usable_stake_index(&self) -> BumpResult<usize> {
-        for (index, user_stake) in self.user_stakes.iter().enumerate() {
+        for (index, user_stake) in self.stakes.iter().enumerate() {
             if user_stake.user_stake_status.eq(&UserStakeStatus::INIT) {
                 return Ok(index);
             }
@@ -366,23 +366,23 @@ impl User {
     }
 
     pub fn add_order(&mut self, order: &UserOrder, index: usize) -> BumpResult {
-        self.user_orders[index] = *order;
-        emit!(AddOrDeleteUserOrderEvent { user_key: self.user_key, order: *order, is_add: true });
+        self.orders[index] = *order;
+        emit!(AddOrDeleteUserOrderEvent { user_key: self.key, order: *order, is_add: true });
         Ok(())
     }
 
     pub fn delete_order(&mut self, order_id: u64) -> BumpResult {
         let order_index = self.get_user_order_index(order_id)?;
-        let user_key = self.user_key;
-        let order = self.user_orders[order_index];
-        self.user_orders[order_index] = UserOrder::default();
+        let user_key = self.key;
+        let order = self.orders[order_index];
+        self.orders[order_index] = UserOrder::default();
         emit!(AddOrDeleteUserOrderEvent { user_key, order, is_add: false });
         Ok(())
     }
 
     pub fn delete_user_stake(&mut self, pool_key: &Pubkey) -> BumpResult {
         let order_index = self.get_user_stake_index(pool_key)?;
-        self.user_tokens[order_index] = UserToken::default();
+        self.tokens[order_index] = UserToken::default();
         Ok(())
     }
 
@@ -393,7 +393,7 @@ impl User {
         margin_token: &Pubkey,
         is_cross_margin: bool,
     ) -> BumpResult<()> {
-        for user_order in self.user_orders {
+        for user_order in self.orders {
             if user_order.status.eq(&OrderStatus::INIT) {
                 continue;
             }
@@ -413,11 +413,11 @@ impl User {
 
     pub fn delete_position(&mut self, position_key: &Pubkey) -> BumpResult {
         let position_index = self
-            .user_positions
+            .positions
             .iter()
             .position(|user_position: &UserPosition| user_position.position_key.eq(&position_key))
             .ok_or(CouldNotFindUserPosition)?;
-        self.user_positions[position_index] = UserPosition::default();
+        self.positions[position_index] = UserPosition::default();
         Ok(())
     }
     pub fn get_order_leverage(
@@ -427,7 +427,7 @@ impl User {
         is_cross_margin: bool,
         leverage: u32,
     ) -> BumpResult<u32> {
-        for order in self.user_orders {
+        for order in self.orders {
             if order.symbol == symbol
                 && order.order_side.eq(&order_side)
                 && order.position_side.eq(&PositionSide::DECREASE)
@@ -447,7 +447,7 @@ impl User {
         is_long: bool,
         is_cross_margin: bool,
     ) -> BumpResult {
-        for user_order in &mut self.user_orders {
+        for user_order in &mut self.orders {
             if user_order.status.eq(&OrderStatus::INIT) {
                 continue;
             }
@@ -471,7 +471,7 @@ impl User {
         token_mint: &Pubkey,
     ) -> BumpResult<()> {
         let mut reduce_amount = change_token_amount;
-        for position in &mut self.user_positions {
+        for position in &mut self.positions {
             if position.status.eq(&PositionStatus::INIT) {
                 continue;
             }
@@ -527,16 +527,16 @@ impl User {
     }
 
     pub fn cancel_user_order(&mut self, user_order_index: usize) -> BumpResult {
-        let user_order = self.user_orders[user_order_index];
+        let user_order = self.orders[user_order_index];
         if user_order.cross_margin {
             self.sub_order_hold_in_usd(user_order.order_margin)?;
         }
-        self.user_orders[user_order_index] = UserOrder::default();
+        self.orders[user_order_index] = UserOrder::default();
         Ok(())
     }
 
     pub fn sub_user_token_amount(&mut self, mint: &Pubkey, mut amount: u128) -> BumpResult {
-        for user_position in &mut self.user_positions {
+        for user_position in &mut self.positions {
             if user_position.status.eq(&PositionStatus::INIT) {
                 continue;
             }
@@ -556,7 +556,7 @@ impl User {
         amount: u128,
         user_token_update_origin: &UserTokenUpdateReason,
     ) -> BumpResult {
-        let user_key = self.user_key;
+        let user_key = self.key;
         let user_token = self.get_user_token_mut_ref(token_mint)?;
         validate!(user_token.amount >= amount, BumpErrorCode::AmountNotEnough)?;
         validate!(
@@ -582,7 +582,7 @@ impl User {
         token_mint: &Pubkey,
         by: UserTokenUpdateReason,
     ) -> BumpResult<u128> {
-        let user_key = self.user_key;
+        let user_key = self.key;
         let user_token = self.get_user_token_mut_ref(token_mint)?;
         if user_token.liability_amount > 0 && user_token.amount > 0 {
             let pre_user_token = user_token.clone();
@@ -616,7 +616,7 @@ impl User {
         user_token_update_origin: &UserTokenUpdateReason,
     ) -> BumpResult<u128> {
         let mut liability = 0u128;
-        let user_key = self.user_key;
+        let user_key = self.key;
         let user_token = self.get_user_token_mut_ref(token_mint)?;
         let pre_user_token = user_token.clone();
         if user_token.amount >= amount {
@@ -649,7 +649,7 @@ impl User {
         amount: u128,
         user_token_update_origin: &UserTokenUpdateReason,
     ) -> BumpResult {
-        let user_key = self.user_key;
+        let user_key = self.key;
         let user_token = self.get_user_token_mut_ref(token_mint)?;
         let pre_user_token = user_token.clone();
         user_token.add_amount(amount)?;
@@ -669,7 +669,7 @@ impl User {
         oracle_map: &mut OracleMap,
     ) -> BumpResult<u128> {
         let total_token_net_value = 0u128;
-        for user_token in &self.user_tokens {
+        for user_token in &self.tokens {
             if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
                 continue;
             }
@@ -726,7 +726,7 @@ impl User {
         let mut total_un_pnl_value = 0i128;
         let mut total_mm_usd_value = 0u128;
 
-        for user_token in &self.user_tokens {
+        for user_token in &self.tokens {
             if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
                 continue;
             }
@@ -746,10 +746,10 @@ impl User {
             total_borrowing_value = total_borrowing_value.safe_add(token_borrowing_value)?;
         }
 
-        let positions_count = self.user_positions.len();
+        let positions_count = self.positions.len();
 
         for i in 0..positions_count {
-            let user_position = &self.user_positions[i];
+            let user_position = &self.positions[i];
             if user_position.status.eq(&PositionStatus::INIT) {
                 continue;
             }
@@ -789,7 +789,7 @@ impl User {
         let mut total_position_mm = 0u128;
         let mut total_size = 0u128;
 
-        for user_position in &self.user_positions {
+        for user_position in &self.positions {
             if user_position.status.eq(&PositionStatus::INIT) {
                 continue;
             }
@@ -824,7 +824,7 @@ impl User {
         oracle_map: &mut OracleMap,
     ) -> BumpResult<u128> {
         let mut total_used_value = 0u128;
-        for user_token in &self.user_tokens {
+        for user_token in &self.tokens {
             if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
                 continue;
             }

@@ -13,9 +13,9 @@ pub struct UserToken {
     pub amount: u128,
     pub used_amount: u128,
     pub liability_amount: u128,
-    pub user_token_status: UserTokenStatus,
     pub token_mint_key: Pubkey,
     pub user_token_account_key: Pubkey,
+    pub user_token_status: UserTokenStatus,
     pub padding: [u8; 15],
 }
 

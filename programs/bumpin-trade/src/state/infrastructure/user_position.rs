@@ -15,7 +15,6 @@ use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 pub struct UserPosition {
     pub position_size: u128,
     pub entry_price: u128,
-    pub leverage: u32,
     pub initial_margin: u128,
     pub initial_margin_usd: u128,
     pub initial_margin_usd_from_portfolio: u128,
@@ -30,17 +29,18 @@ pub struct UserPosition {
     pub realized_funding_fee_in_usd: i128,
     pub open_funding_fee_amount_per_size: i128,
     pub close_fee_in_usd: u128,
-    pub updated_at: i64,
     pub realized_pnl: i128,
     pub user_key: Pubkey,
     pub margin_mint_key: Pubkey,
     pub index_mint_key: Pubkey,
     pub position_key: Pubkey,
     pub symbol: [u8; 32],
+    pub updated_at: i64,
+    pub leverage: u32,
     pub is_long: bool,
     pub cross_margin: bool,
     pub status: PositionStatus,
-    pub padding: [u8; 13],
+    pub padding: [u8; 1],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
@@ -342,7 +342,7 @@ impl UserPosition {
     pub fn get_position_mm(&self, market: &Market, state: &State) -> BumpResult<u128> {
         Ok(cal_utils::get_mm(
             self.position_size,
-            market.market_trade_config.max_leverage,
+            market.config.maximum_leverage,
             state.maximum_maintenance_margin_rate,
         )?)
     }

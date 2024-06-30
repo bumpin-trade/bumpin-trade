@@ -36,7 +36,7 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
     validate!(user.authority.eq(&ctx.accounts.authority.owner), BumpErrorCode::UserNotFound)?;
 
     let remaining_accounts = ctx.remaining_accounts;
-    for user_stake in user.user_stakes.iter_mut() {
+    for user_stake in user.stakes.iter_mut() {
         let account_maps = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
         let pool_key_map = &account_maps.pool_map;
         let pool_account_loader = pool_key_map.get_account_loader(&user_stake.pool_key)?;
@@ -68,7 +68,7 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
         //todo transfer from collect vault to pool
         pool.add_amount_and_supply(token_amount, supply_amount)?;
         emit!(StakeOrUnStakeEvent {
-            user_key: ctx.accounts.user.load()?.user_key,
+            user_key: ctx.accounts.user.load()?.key,
             token_mint: pool.mint_key,
             change_supply_amount: supply_amount,
             user_stake: user_stake.clone(),

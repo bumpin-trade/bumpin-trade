@@ -14,12 +14,13 @@ pub struct MarketFundingFee {
     pub total_short_funding_fee: i128,
     pub long_funding_fee_rate: i128,
     pub short_funding_fee_rate: i128,
-    pub last_update: i64,
+    pub updated_at: i64,
+    pub padding : [u8; 8],
 }
 
 impl MarketFundingFee {
     pub fn update_last_update(&mut self) -> BumpResult {
-        self.last_update = Clock::get().unwrap().unix_timestamp;
+        self.updated_at = Clock::get().unwrap().unix_timestamp;
         Ok(())
     }
     pub fn update_market_funding_fee_rate(
@@ -48,9 +49,9 @@ impl MarketFundingFee {
     }
 
     pub fn get_market_funding_fee_durations(&self) -> BumpResult<i64> {
-        if self.last_update > 0i64 {
+        if self.updated_at > 0i64 {
             let clock = Clock::get().unwrap();
-            clock.unix_timestamp.safe_sub(self.last_update)
+            clock.unix_timestamp.safe_sub(self.updated_at)
         } else {
             Ok(0i64)
         }

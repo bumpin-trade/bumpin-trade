@@ -144,7 +144,7 @@ pub fn handle_liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
         || (!is_long && index_price.price < liquidation_price)
     {
         let symbol = market.symbol;
-        let user_key = user.user_key;
+        let user_key = user.key;
         position_processor::decrease_position(
             DecreasePositionParams {
                 order_id: 0,

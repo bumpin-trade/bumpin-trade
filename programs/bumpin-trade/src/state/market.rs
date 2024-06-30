@@ -13,7 +13,7 @@ pub struct Market {
     pub long_open_interest: MarketPosition,
     pub short_open_interest: MarketPosition,
     pub funding_fee: MarketFundingFee,
-    pub market_trade_config: MarketConfig,
+    pub config: MarketConfig,
     pub pool_key: Pubkey,
     pub pool_mint_key: Pubkey,
     pub index_mint_key: Pubkey,
@@ -41,7 +41,7 @@ impl Default for Market {
             long_open_interest: MarketPosition::default(),
             short_open_interest: MarketPosition::default(),
             funding_fee: MarketFundingFee::default(),
-            market_trade_config: MarketConfig::default(),
+            config: MarketConfig::default(),
             padding: [0u8; 14],
         }
     }
@@ -77,12 +77,13 @@ impl MarketPosition {
 
 #[bumpin_zero_copy_unsafe]
 pub struct MarketConfig {
-    pub max_leverage: u32,
     pub tick_size: u128,
     pub open_fee_rate: u128,
     pub close_fee_rate: u128,
-    pub max_long_open_interest_cap: u128,
-    pub max_short_open_interest_cap: u128,
+    pub maximum_long_open_interest_cap: u128,
+    pub maximum_short_open_interest_cap: u128,
     pub long_short_ratio_limit: u128,
     pub long_short_oi_bottom_limit: u128,
+    pub maximum_leverage: u32,
+    pub padding: [u8; 12],
 }

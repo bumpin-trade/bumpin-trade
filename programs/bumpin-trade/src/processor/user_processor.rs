@@ -54,7 +54,7 @@ impl<'a> UserProcessor<'a> {
         add_amount: bool,
     ) -> BumpResult<()> {
         let mut reduce_amount = amount;
-        for user_position in self.user.user_positions.iter_mut() {
+        for user_position in self.user.positions.iter_mut() {
             if user_position.status.eq(&PositionStatus::INIT) {
                 continue;
             }
@@ -87,7 +87,7 @@ impl<'a> UserProcessor<'a> {
         margin_token: &Pubkey,
         is_cross_margin: bool,
     ) -> BumpResult<()> {
-        for user_order in self.user.user_orders {
+        for user_order in self.user.orders {
             if user_order.status.eq(&OrderStatus::INIT) {
                 continue;
             }
@@ -106,9 +106,9 @@ impl<'a> UserProcessor<'a> {
     }
 
     pub fn cancel_all_cross_orders(&mut self) -> BumpResult<()> {
-        let user_orders_length = self.user.user_orders.len();
+        let user_orders_length = self.user.orders.len();
         for index in 0..user_orders_length {
-            let order = self.user.user_orders[index];
+            let order = self.user.orders[index];
             if order.status.eq(&OrderStatus::USING) && order.cross_margin {
                 self.user.cancel_user_order(index)?;
             }

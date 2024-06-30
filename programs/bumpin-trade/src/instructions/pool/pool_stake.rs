@@ -166,7 +166,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
             )?;
             pool.add_amount_and_supply(stake_params.request_token_amount, supply_amount)?;
             emit!(StakeOrUnStakeEvent {
-                user_key: ctx.accounts.user.load()?.user_key,
+                user_key: ctx.accounts.user.load()?.key,
                 token_mint: ctx.accounts.pool.load()?.mint_key,
                 change_supply_amount: supply_amount,
                 user_stake,
@@ -186,7 +186,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 stake_params.request_token_amount,
             )?;
             let mut user = ctx.accounts.user.load_mut()?;
-            let user_key = user.user_key;
+            let user_key = user.key;
             let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
 
             let supply_amount = pool_processor::stake(

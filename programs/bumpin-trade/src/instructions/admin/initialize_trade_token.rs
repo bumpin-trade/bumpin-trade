@@ -67,8 +67,8 @@ pub fn handle_initialize_trade_token(
         decimals: ctx.accounts.trade_token_mint.decimals.cast::<u16>()?,
         total_liability: 0,
         total_amount: 0,
-        trade_token_vault: *ctx.accounts.trade_token_vault.to_account_info().key,
-        padding: [0; 12],
+        vault_key: *ctx.accounts.trade_token_vault.to_account_info().key,
+        padding: [0; 4],
     };
     safe_increment!(state.trade_token_sequence, 1);
     Ok(())

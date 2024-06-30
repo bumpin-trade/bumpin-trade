@@ -7,8 +7,8 @@ use anchor_lang::prelude::*;
 pub struct DaoRewards {
     pub un_claim_amount: u128,
     pub total_rewards_amount: u128,
-    pub pool_index: u16,
     pub dao_rewards_vault: Pubkey,
+    pub pool_index: u16,
     pub padding: [u8; 14],
 }
 

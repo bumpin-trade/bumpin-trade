@@ -13,7 +13,7 @@ pub fn update_account_fee_reward(
 ) -> BumpResult {
     let user = &mut user_loader.load_mut().unwrap();
     let stake_pool = pool_loader.load().unwrap();
-    let user_key = user.user_key;
+    let user_key = user.key;
 
     let user_stake = user.get_user_stake_mut_ref(&stake_pool.key)?;
 

@@ -92,7 +92,7 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
     )?;
 
     emit!(WithdrawEvent {
-        user_key: ctx.accounts.user.load()?.user_key,
+        user_key: ctx.accounts.user.load()?.key,
         token_mint: *token_mint,
         amount,
     });

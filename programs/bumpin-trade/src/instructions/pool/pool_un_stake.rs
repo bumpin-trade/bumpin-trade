@@ -229,7 +229,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
             }
 
             emit!(StakeOrUnStakeEvent {
-                user_key: ctx.accounts.user.load()?.user_key,
+                user_key: ctx.accounts.user.load()?.key,
                 token_mint: ctx.accounts.pool.load()?.mint_key,
                 change_supply_amount: un_stake_token_amount,
                 user_stake: user_stake.clone(),
@@ -290,7 +290,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
             }
 
             emit!(StakeOrUnStakeEvent {
-                user_key: ctx.accounts.user.load()?.user_key,
+                user_key: ctx.accounts.user.load()?.key,
                 token_mint: ctx.accounts.pool.load()?.mint_key,
                 change_supply_amount: un_stake_token_amount,
                 user_stake: user_stake.clone(),

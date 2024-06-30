@@ -52,7 +52,7 @@ impl<'a> MarketProcessor<'_> {
                 market_position.entry_price,
                 params.size,
                 params.entry_price,
-                self.market.market_trade_config.tick_size,
+                self.market.config.tick_size,
                 params.is_long,
             )?;
 

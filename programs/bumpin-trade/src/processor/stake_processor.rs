@@ -29,7 +29,7 @@ pub fn stake(
     let token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
 
     validate!(
-        pool.pool_config.minimum_stake_amount
+        pool.config.minimum_stake_amount
             <= cal_utils::token_to_usd_u(request_token_amount, trade_token.decimals, token_price)?,
         BumpErrorCode::StakeToSmall
     )?;

@@ -91,12 +91,12 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
 
     let market = ctx.accounts.market.load_mut()?;
     validate!(
-        params.leverage <= market.market_trade_config.max_leverage,
+        params.leverage <= market.config.maximum_leverage,
         BumpErrorCode::LeverageIsNotAllowed.into()
     )?;
 
     let position_key = pda::generate_position_key(
-        &user.user_key,
+        &user.key,
         params.symbol,
         params.is_cross_margin,
         &ctx.program_id,
