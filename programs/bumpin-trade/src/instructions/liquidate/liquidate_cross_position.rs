@@ -8,7 +8,6 @@ use crate::instructions::cal_utils;
 use crate::math::casting::Cast;
 use crate::math::constants::{RATE_PRECISION, SMALL_RATE_PRECISION};
 use crate::math::safe_math::SafeMath;
-use crate::processor::market_processor::MarketProcessor;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::position_processor;
 use crate::processor::position_processor::DecreasePositionParams;
@@ -87,9 +86,8 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         pool.update_pool_borrowing_fee_rate()?;
 
         let market = &mut market_map.get_mut_ref(&pos_info.symbol)?;
-        let mut market_processor = MarketProcessor { market };
         let trade_token = &trade_token_map.get_trade_token_ref(&pos_info.margin_mint)?;
-        market_processor.update_market_funding_fee_rate(
+        market.update_market_funding_fee_rate(
             &ctx.accounts.state,
             oracle_map.get_price_data(&trade_token.oracle_key).unwrap().price,
             trade_token.decimals,

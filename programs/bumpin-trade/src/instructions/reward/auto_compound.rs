@@ -63,6 +63,7 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
             &account_maps.trade_token_map,
             &mut account_maps.oracle_map,
             &account_maps.market_map,
+            &ctx.accounts.state,
         )?;
         user_stake.add_staked_share(supply_amount)?;
         //todo transfer from collect vault to pool

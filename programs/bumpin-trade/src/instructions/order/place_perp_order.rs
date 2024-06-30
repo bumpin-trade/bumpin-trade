@@ -8,7 +8,6 @@ use crate::instructions::cal_utils;
 use crate::instructions::constraints::*;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
-use crate::processor::market_processor::MarketProcessor;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::position_processor::DecreasePositionParams;
 use crate::processor::{fee_processor, position_processor};
@@ -323,8 +322,7 @@ pub fn handle_execute_order<'info>(
     )?;
 
     //update funding_fee_rate and borrowing_fee_rate
-    let mut market_processor = MarketProcessor { market: &mut market };
-    market_processor.update_market_funding_fee_rate(
+    market.update_market_funding_fee_rate(
         state_account,
         oracle_map.get_price_data(&trade_token.oracle_key)?.price,
         trade_token.decimals,

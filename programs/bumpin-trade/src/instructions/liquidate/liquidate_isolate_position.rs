@@ -3,7 +3,6 @@ use anchor_spl::token::{Token, TokenAccount};
 use std::ops::DerefMut;
 
 use crate::errors::{BumpErrorCode, BumpResult};
-use crate::processor::market_processor::MarketProcessor;
 use crate::processor::position_processor;
 use crate::processor::position_processor::DecreasePositionParams;
 use crate::state::market::Market;
@@ -190,8 +189,7 @@ fn cal_liquidation_price(
     let pool = if user_position.is_long { base_token_pool } else { stable_pool };
 
     validate!(!user_position.is_portfolio_margin, BumpErrorCode::OnlyLiquidateIsolatePosition)?;
-    let mut market_processor = MarketProcessor { market };
-    market_processor.update_market_funding_fee_rate(
+    market.update_market_funding_fee_rate(
         state,
         oracle_map.get_price_data(&trade_token.oracle_key)?.price,
         trade_token.decimals,

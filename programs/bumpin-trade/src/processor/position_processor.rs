@@ -8,14 +8,12 @@ use crate::instructions::{cal_utils, UpdatePositionLeverageParams, UpdatePositio
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::processor::fee_processor;
-use crate::processor::market_processor::{MarketProcessor, UpdateOIParams};
-use crate::processor::pool_processor::PoolProcessor;
 use crate::state::bump_events::{
     AddOrDecreaseMarginEvent, AddOrDeleteUserPositionEvent, UpdateUserPositionEvent,
 };
 use crate::state::infrastructure::user_order::{OrderSide, UserOrder};
 use crate::state::infrastructure::user_position::{PositionStatus, UserPosition};
-use crate::state::market::Market;
+use crate::state::market::{Market, UpdateOIParams};
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::state::State;
@@ -45,7 +43,6 @@ pub fn update_funding_fee(
             .safe_sub(position.open_funding_fee_amount_per_size.cast::<i128>()?)?,
     )?;
 
-    let mut market_processor = MarketProcessor { market };
     position.add_realized_funding_fee(realized_funding_fee)?;
     position.add_realized_funding_fee_in_usd(cal_utils::token_to_usd_i(
         realized_funding_fee,
@@ -53,7 +50,7 @@ pub fn update_funding_fee(
         token_price,
     )?)?;
     position.set_open_funding_fee_amount_per_size(market_funding_fee_per_size)?;
-    market_processor.update_market_total_funding_fee(realized_funding_fee, position.is_long)?;
+    market.update_market_total_funding_fee(realized_funding_fee, position.is_long)?;
     pool.update_pool_funding_fee(realized_funding_fee, true)?;
     Ok(())
 }
@@ -243,9 +240,8 @@ fn collect_decrease_fee(
         settle_borrowing_fee,
         false,
     )?;
-    let mut market_processor = MarketProcessor { market };
-    market_processor.update_market_total_funding_fee(settle_funding_fee, is_long)?;
-    market_processor.update_oi(
+    market.update_market_total_funding_fee(settle_funding_fee, is_long)?;
+    market.update_oi(
         false,
         UpdateOIParams { margin_token: *margin_token, size: decrease_size, is_long, entry_price },
     )?;
@@ -457,14 +453,12 @@ fn add_insurance_fund(
     pool: &mut Pool,
     position: &UserPosition,
 ) -> BumpResult<()> {
-    let mut pool_processor = PoolProcessor { pool };
     if position.is_portfolio_margin {
-        pool_processor.add_insurance_fund(cal_utils::usd_to_token_u(
+        pool.add_insurance_fund(cal_utils::usd_to_token_u(
             position.get_position_mm(market, state)?,
             trade_token.decimals,
             response.margin_token_price,
-        )?)?;
-        return Ok(());
+        )?)?
     }
 
     let add_funds = if response.settle_fee >= 0i128 {
@@ -486,8 +480,7 @@ fn add_insurance_fund(
             .safe_add(response.settle_fee.abs().cast::<u128>()?)?
             .safe_sub(response.pool_pnl_token.abs().cast::<u128>()?)?
     };
-    pool_processor.add_insurance_fund(add_funds)?;
-    Ok(())
+    pool.add_insurance_fund(add_funds)
 }
 
 pub fn execute_reduce_position_margin(
@@ -924,8 +917,7 @@ pub fn increase_position(
     }
 
     // update market io
-    let mut market_processor = MarketProcessor { market };
-    market_processor.update_oi(
+    market.update_oi(
         true,
         UpdateOIParams {
             margin_token: order.margin_mint_key,

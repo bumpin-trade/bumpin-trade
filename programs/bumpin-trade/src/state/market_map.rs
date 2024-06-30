@@ -1,8 +1,7 @@
-use anchor_lang::prelude::*;
 use std::cell::{Ref, RefMut};
 use std::collections::BTreeMap;
-use std::panic::Location;
 
+use anchor_lang::prelude::*;
 use anchor_lang::Discriminator;
 use arrayref::array_ref;
 
@@ -10,26 +9,19 @@ use crate::errors::BumpErrorCode::{CouldNotLoadTradeTokenData, TradeTokenNotFind
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::state::market::Market;
 use crate::traits::Size;
+use crate::validate;
 
 pub struct MarketMap<'a>(pub BTreeMap<[u8; 32], AccountLoader<'a, Market>>);
 
 impl<'a> MarketMap<'a> {
     #[track_caller]
     #[inline(always)]
-    pub fn get_all_market(&self) -> BumpResult<Vec<Market>> {
+    pub fn get_all_market(&self, size: u16) -> BumpResult<Vec<&AccountLoader<'a, Market>>> {
         let mut markets = Vec::new();
         for market_loader in self.0.values() {
-            let market = market_loader
-                .load()
-                .map_err(|e| {
-                    let caller = Location::caller();
-                    msg!("{:?}", e);
-                    msg!("Could not load market at {}:{}", caller.file(), caller.line());
-                    CouldNotLoadTradeTokenData
-                })?
-                .clone();
-            markets.push(market);
+            markets.push(market_loader);
         }
+        validate!(markets.len() as u16 == size, BumpErrorCode::MarketWrongMutability)?;
         Ok(markets)
     }
 
