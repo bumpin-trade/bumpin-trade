@@ -64,7 +64,6 @@ pub fn update_borrowing_fee(
     token_price: u128,
     token: &TradeToken,
 ) -> BumpResult<()> {
-    pool.borrowing_fee.cumulative_borrowing_fee_per_token;
     let realized_borrowing_fee =
         position.initial_margin.safe_mul(position.leverage as u128)?.safe_mul(
             pool.borrowing_fee
@@ -102,21 +101,21 @@ pub fn decrease_position<'info>(
 ) -> BumpResult<()> {
     let (is_long, position_deletion, pre_position, response) = {
         let position = position_mut!(&mut user.positions, position_key)?;
-        let pre_position = position.clone();
+        let pre_position = *position;
         let position_un_pnl_usd = position.get_position_un_pnl_usd(params.execute_price)?;
         let margin_mint_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
         update_borrowing_fee(
             position,
             if position.is_long { stake_token_pool } else { stable_pool },
             params.execute_price,
-            &trade_token,
+            trade_token,
         )?;
         update_funding_fee(
             position,
             market,
             if position.is_long { stake_token_pool } else { stable_pool },
             params.execute_price,
-            &trade_token,
+            trade_token,
         )?;
 
         let response = calculate_decrease_position(
@@ -193,7 +192,7 @@ pub fn decrease_position<'info>(
         add_insurance_fund(
             market,
             state_account,
-            &trade_token,
+            trade_token,
             &response,
             if pre_position.is_long { stake_token_pool } else { stable_pool },
             &pre_position,
@@ -258,7 +257,7 @@ fn update_decrease_position(
     decrease_size: u128,
     response: &UpdateDecreaseResponse,
 ) -> BumpResult {
-    let pre_position = position.clone();
+    let pre_position = *position;
     position.sub_position_size(decrease_size)?;
     position.sub_initial_margin(response.decrease_margin)?;
     position.sub_initial_margin_usd(response.decrease_margin_in_usd)?;
@@ -272,7 +271,7 @@ fn update_decrease_position(
     position.sub_realized_funding_fee_usd(response.settle_funding_fee_in_usd)?;
     position.sub_close_fee_usd(response.settle_close_fee_in_usd)?;
     position.set_last_update(cal_utils::current_time())?;
-    emit!(UpdateUserPositionEvent { pre_position, position: position.clone() });
+    emit!(UpdateUserPositionEvent { pre_position, position: *position });
     Ok(())
 }
 
@@ -468,9 +467,8 @@ fn add_insurance_fund(
         return Ok(());
     }
 
-    let add_funds;
-    if response.settle_fee >= 0i128 {
-        add_funds = if response.decrease_margin
+    let add_funds = if response.settle_fee >= 0i128 {
+        if response.decrease_margin
             > (response.settle_fee.safe_add(response.pool_pnl_token)?.abs().cast::<u128>()?)
         {
             response.decrease_margin.safe_sub(
@@ -483,11 +481,11 @@ fn add_insurance_fund(
             0u128
         }
     } else {
-        add_funds = response
+        response
             .decrease_margin
             .safe_add(response.settle_fee.abs().cast::<u128>()?)?
             .safe_sub(response.pool_pnl_token.abs().cast::<u128>()?)?
-    }
+    };
     pool_processor.add_insurance_fund(add_funds)?;
     Ok(())
 }
@@ -509,10 +507,10 @@ pub fn execute_reduce_position_margin(
     )?;
     validate!(
         max_reduce_margin_in_usd > params.update_margin_amount,
-        BumpErrorCode::AmountNotEnough.into()
+        BumpErrorCode::AmountNotEnough
     )?;
     let user_key = position.user_key;
-    let pre_position = position.clone();
+    let pre_position = *position;
     let reduce_margin_amount =
         cal_utils::usd_to_token_u(params.update_margin_amount, trade_token.decimals, token_price)?;
 
@@ -544,12 +542,7 @@ pub fn execute_reduce_position_margin(
     }
     position.add_hold_pool_amount(reduce_margin_amount)?;
     pool.hold_pool(reduce_margin_amount)?;
-    emit!(AddOrDecreaseMarginEvent {
-        user_key,
-        position: position.clone(),
-        pre_position,
-        is_add: false,
-    });
+    emit!(AddOrDecreaseMarginEvent { user_key, position: *position, pre_position, is_add: false });
     Ok(reduce_margin_amount)
 }
 
@@ -677,10 +670,10 @@ fn get_pos_fee_in_usd(
     borrowing_fee_in_usd: u128,
     close_fee_in_usd: u128,
 ) -> BumpResult<i128> {
-    Ok(funding_fee_in_usd
+    funding_fee_in_usd
         .safe_add(borrowing_fee_in_usd.cast::<i128>()?)?
         .safe_add(close_fee_in_usd.cast::<i128>()?)?
-        .cast::<i128>()?)
+        .cast::<i128>()
 }
 
 fn cal_decrease_borrowing_fee(
@@ -690,7 +683,7 @@ fn cal_decrease_borrowing_fee(
     if position.position_size == decrease_size {
         return Ok((position.realized_borrowing_fee, position.realized_borrowing_fee_in_usd));
     }
-    return Ok((
+    Ok((
         position
             .realized_borrowing_fee
             .safe_mul(decrease_size)?
@@ -699,7 +692,7 @@ fn cal_decrease_borrowing_fee(
             .realized_borrowing_fee_in_usd
             .safe_mul(decrease_size)?
             .safe_div(position.position_size)?,
-    ));
+    ))
 }
 
 fn cal_decrease_funding_fee(
@@ -709,7 +702,7 @@ fn cal_decrease_funding_fee(
     if position.position_size == decrease_size {
         return Ok((position.realized_funding_fee, position.realized_funding_fee_in_usd));
     }
-    return Ok((
+    Ok((
         position
             .realized_funding_fee
             .safe_mul(decrease_size.cast()?)?
@@ -718,7 +711,7 @@ fn cal_decrease_funding_fee(
             .realized_funding_fee_in_usd
             .safe_mul(decrease_size.cast()?)?
             .safe_div(position.position_size.cast()?)?,
-    ));
+    ))
 }
 
 fn cal_decrease_close_fee(
@@ -741,12 +734,12 @@ fn cal_decrease_close_fee(
         close_fee_in_usd = position.close_fee_in_usd;
     }
 
-    return Ok((
+    Ok((
         cal_utils::usd_to_token_u(close_fee_in_usd, trade_token.decimals, token_price)?
             .safe_mul(decrease_size)?
             .safe_div(position.position_size)?,
         close_fee_in_usd.safe_mul(decrease_size)?.safe_div(position.position_size)?,
-    ));
+    ))
 }
 
 pub fn execute_add_position_margin(
@@ -771,7 +764,7 @@ pub fn execute_add_position_margin(
     let mut add_or_decrease_margin_event = AddOrDecreaseMarginEvent {
         user_key,
         position: Default::default(),
-        pre_position: position.clone(),
+        pre_position: *position,
         is_add: true,
     };
 
@@ -799,17 +792,17 @@ pub fn execute_add_position_margin(
     position.sub_hold_pool_amount(sub_amount)?;
     pool.update_pnl_and_un_hold_pool_amount(sub_amount, 0i128, 0u128, None)?;
 
-    add_or_decrease_margin_event.position = position.clone();
+    add_or_decrease_margin_event.position = *position;
     emit!(add_or_decrease_margin_event);
     Ok(())
 }
 
 pub fn increase_position(
-    user_account_loader: &AccountLoader<User>,
-    pool_account_loader: &AccountLoader<Pool>,
-    stable_pool_account_loader: &AccountLoader<Pool>,
-    market_account_loader: &AccountLoader<Market>,
-    trade_token_loader: &AccountLoader<TradeToken>,
+    user: &mut User,
+    base_token_pool: &mut Pool,
+    stable_pool: &mut Pool,
+    market: &mut Market,
+    trade_token: &TradeToken,
     program_id: &Pubkey,
     order: &UserOrder,
     order_margin: u128,
@@ -818,13 +811,6 @@ pub fn increase_position(
     margin_token_price: u128,
     fee: u128,
 ) -> BumpResult<()> {
-    let trade_token =
-        trade_token_loader.load().map_err(|_| BumpErrorCode::CouldNotLoadTradeTokenData)?;
-    let market =
-        &mut market_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadMarketData)?;
-    let mut user =
-        user_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadTradeTokenData)?;
-
     let position_key = pda::generate_position_key(
         &user.key,
         market.symbol,
@@ -850,12 +836,6 @@ pub fn increase_position(
         position.set_portfolio_margin(order.is_portfolio_margin)?;
         position.set_status(PositionStatus::USING)?;
     }
-
-    let base_token_pool =
-        &mut pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
-    let stable_pool = &mut stable_pool_account_loader
-        .load_mut()
-        .map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
     let pool = if position.is_long { base_token_pool } else { stable_pool };
 
     let increase_margin = cal_utils::sub_u128(order_margin, fee)?;

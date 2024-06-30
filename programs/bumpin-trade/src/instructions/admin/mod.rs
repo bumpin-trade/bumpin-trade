@@ -5,7 +5,6 @@ pub mod initialize_pool_rewards;
 pub mod initialize_state;
 pub mod initialize_trade_token;
 
-#[allow(ambiguous_glob_reexports)]
 pub use initialize_dao_rewards::*;
 pub use initialize_market::*;
 pub use initialize_pool::*;

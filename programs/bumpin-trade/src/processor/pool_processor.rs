@@ -85,7 +85,7 @@ pub fn portfolio_to_stake(
     }
     let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
     user_stake.add_staked_share(supply_amount)?;
-    Ok((supply_amount, user_stake.clone()))
+    Ok((supply_amount, *user_stake))
 }
 
 impl<'a> PoolProcessor<'_> {

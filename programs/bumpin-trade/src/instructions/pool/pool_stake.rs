@@ -209,7 +209,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 user_key,
                 token_mint: pool.mint_key,
                 change_supply_amount: supply_amount,
-                user_stake: user_stake.clone(),
+                user_stake: *user_stake,
             });
         },
     };

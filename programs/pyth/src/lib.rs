@@ -54,7 +54,7 @@ pub mod pyth {
         price_oracle.ema_conf.numer = conf as i64;
         price_oracle.ema_conf.denom = 1;
 
-        price_oracle.agg.price = price as i64;
+        price_oracle.agg.price = price;
         price_oracle.agg.conf = conf;
 
         price_oracle.agg.pub_slot = clock.slot;

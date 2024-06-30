@@ -52,10 +52,10 @@ pub struct InitializePoolRewards<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle_initialize_dao_rewards(
+pub fn handle_initialize_pool_rewards(
     ctx: Context<InitializePoolRewards>,
     pool_index: u16,
-) -> anchor_lang::Result<()> {
+) -> Result<()> {
     let mut dao_rewards = ctx.accounts.pool_rewards.load_init()?;
     dao_rewards.pool_index = pool_index;
     dao_rewards.poo_rewards_vault = ctx.accounts.pool_rewards_vault.mint.key();

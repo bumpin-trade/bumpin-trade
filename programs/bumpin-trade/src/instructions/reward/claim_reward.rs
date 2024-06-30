@@ -47,7 +47,7 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
     let user = &mut ctx.accounts.user.load_mut()?;
     for user_stake in user.stakes.iter_mut() {
         if user_stake.user_stake_status.eq(&UserStakeStatus::INIT)
-            || user_stake.user_rewards.realised_rewards_token_amount <= 0u128
+            || user_stake.user_rewards.realised_rewards_token_amount == 0u128
         {
             continue;
         }
@@ -62,7 +62,7 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
         let pool_rewards_vault = token_account_vec
             .iter()
             .find(|token_account| {
-                token_account.owner.eq(&ctx.accounts.bump_signer.owner)
+                token_account.owner.eq(ctx.accounts.bump_signer.owner)
                     && token_account.mint.eq(&pool.mint_key)
                     && token_account.key().eq(&pool.mint_vault_key)
             })

@@ -99,7 +99,7 @@ macro_rules! position_mut {
         }
         match found {
             Some(pos) => Ok(pos),
-            None => Err(crate::errors::BumpErrorCode::CouldNotFindUserPosition),
+            None => Err($crate::errors::BumpErrorCode::CouldNotFindUserPosition),
         }
     }};
 }
@@ -118,7 +118,7 @@ macro_rules! position {
         }
         match found {
             Some(pos) => Ok(pos),
-            None => Err(crate::errors::BumpErrorCode::CouldNotFindUserPosition),
+            None => Err($crate::errors::BumpErrorCode::CouldNotFindUserPosition),
         }
     }};
 }

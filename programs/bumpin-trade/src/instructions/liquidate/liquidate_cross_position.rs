@@ -101,7 +101,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         &mut oracle_map,
         &market_map,
         &pool_key_map,
-        &state,
+        state,
     )?;
 
     let bankruptcy_mr = cal_utils::div_to_precision_i(

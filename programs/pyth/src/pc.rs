@@ -9,29 +9,19 @@ pub struct AccKey {
     pub val: [u8; 32],
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Default, Clone)]
 pub enum PriceStatus {
     Unknown,
+    #[default]
     Trading,
     Halted,
     Auction,
 }
 
-impl Default for PriceStatus {
-    fn default() -> Self {
-        PriceStatus::Trading
-    }
-}
-
-#[derive(Copy, Clone)]
+#[derive(Copy, Default, Clone)]
 pub enum CorpAction {
+    #[default]
     NoCorpAct,
-}
-
-impl Default for CorpAction {
-    fn default() -> Self {
-        CorpAction::NoCorpAct
-    }
 }
 
 #[derive(Default, Copy, Clone)]
@@ -43,6 +33,7 @@ pub struct PriceInfo {
     pub corp_act: CorpAction,
     pub pub_slot: u64,
 }
+
 #[derive(Default, Copy, Clone)]
 #[repr(C)]
 pub struct PriceComp {
@@ -51,31 +42,20 @@ pub struct PriceComp {
     latest: PriceInfo,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Default, Clone)]
 #[allow(dead_code, clippy::upper_case_acronyms)]
 pub enum PriceType {
     Unknown,
+    #[default]
     Price,
 }
 
-impl Default for PriceType {
-    fn default() -> Self {
-        PriceType::Price
-    }
-}
-
-#[derive(Copy, Clone)]
+#[derive(Copy, Default, Clone)]
 #[repr(C)]
 pub struct Rational {
     pub val: i64,
     pub numer: i64,
     pub denom: i64,
-}
-
-impl Default for Rational {
-    fn default() -> Self {
-        Rational { val: 0, numer: 0, denom: 0 }
-    }
 }
 
 #[derive(Default, Copy, Clone)]

@@ -33,7 +33,7 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
     _stable_trade_token_index: u16,
 ) -> Result<()> {
     let user = &mut ctx.accounts.user.load_mut()?;
-    validate!(user.authority.eq(&ctx.accounts.authority.owner), BumpErrorCode::UserNotFound)?;
+    validate!(user.authority.eq(ctx.accounts.authority.owner), BumpErrorCode::UserNotFound)?;
 
     let remaining_accounts = ctx.remaining_accounts;
     for user_stake in user.stakes.iter_mut() {
@@ -45,7 +45,7 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
 
         let account_maps = &mut load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
         let stake_amount = stake_processor::stake(
-            &pool_account_loader,
+            pool_account_loader,
             &ctx.accounts.user,
             &account_maps.trade_token_map,
             &mut account_maps.oracle_map,
@@ -71,7 +71,7 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
             user_key: ctx.accounts.user.load()?.key,
             token_mint: pool.mint_key,
             change_supply_amount: supply_amount,
-            user_stake: user_stake.clone(),
+            user_stake: *user_stake,
         });
     }
     Ok(())

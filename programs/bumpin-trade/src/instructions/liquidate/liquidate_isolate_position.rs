@@ -201,8 +201,8 @@ fn cal_liquidation_price(
 
     let margin_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
     let liquidation_price = user_position.get_liquidation_price(
-        &market,
-        &pool,
+        market,
+        pool,
         state,
         margin_token_price,
         trade_token.decimals,

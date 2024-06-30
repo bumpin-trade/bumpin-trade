@@ -6,11 +6,11 @@ use crate::math::constants::{PRICE_TO_LAMPORT, RATE_PRECISION, SMALL_RATE_PRECIS
 use crate::math::safe_math::SafeMath;
 
 pub fn mul_div_i(a: i128, b: i128, denominator: i128) -> BumpResult<i128> {
-    Ok(a.safe_mul(b)?.safe_div(denominator)?)
+    a.safe_mul(b)?.safe_div(denominator)
 }
 
 pub fn mul_div_u(a: u128, b: u128, denominator: u128) -> BumpResult<u128> {
-    Ok(a.safe_mul(b)?.safe_div(denominator)?)
+    a.safe_mul(b)?.safe_div(denominator)
 }
 
 pub fn mul_rate_u(value: u128, rate: u128) -> BumpResult<u128> {
@@ -46,27 +46,27 @@ pub fn div_rate_i(value: i128, rate: i128) -> BumpResult<i128> {
 }
 
 pub fn add_u128(x: u128, y: u128) -> BumpResult<u128> {
-    Ok(x.safe_add(y)?)
+    x.safe_add(y)
 }
 
 pub fn sub_u128(x: u128, y: u128) -> BumpResult<u128> {
-    Ok(x.safe_sub(y)?)
+    x.safe_sub(y)
 }
 
 pub fn sub_i128(x: i128, y: i128) -> BumpResult<i128> {
-    Ok(x.safe_sub(y)?)
+    x.safe_sub(y)
 }
 
 pub fn add_i128(x: i128, y: i128) -> BumpResult<i128> {
-    Ok(x.safe_add(y)?)
+    x.safe_add(y)
 }
 
 pub fn mul_u128(x: u128, y: u128) -> BumpResult<u128> {
-    Ok(x.safe_mul(y)?)
+    x.safe_mul(y)
 }
 
 pub fn div_u128(x: u128, y: u128) -> BumpResult<u128> {
-    Ok(x.safe_div(y)?)
+    x.safe_div(y)
 }
 
 pub fn usd_to_token_u(usd_value: u128, decimals: u16, token_price: u128) -> BumpResult<u128> {
@@ -116,16 +116,16 @@ pub fn compute_avg_entry_price(
         .safe_mul(entry_price)?
         .safe_add(increase_amount.safe_mul(token_price)?)?
         .safe_mul(amount.safe_add(increase_amount)?)?;
-    return format_to_ticker_size(origin_entry_price, ticker_size, up);
+    format_to_ticker_size(origin_entry_price, ticker_size, up)
 }
 
 pub fn format_to_ticker_size(price: u128, ticker_size: u128, up: bool) -> BumpResult<u128> {
     let remainder = price % ticker_size;
-    return if remainder == 0u128 {
+    if remainder == 0u128 {
         Ok(price)
     } else {
         Ok(price.safe_div(ticker_size)?.safe_add(if up { 0 } else { 1 })?.safe_mul(ticker_size)?)
-    };
+    }
 }
 
 pub fn get_mm(size: u128, leverage: u32, max_mm_rate: u32) -> BumpResult<u128> {

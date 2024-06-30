@@ -92,17 +92,17 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
     let market = ctx.accounts.market.load_mut()?;
     validate!(
         params.leverage <= market.config.maximum_leverage,
-        BumpErrorCode::LeverageIsNotAllowed.into()
+        BumpErrorCode::LeverageIsNotAllowed
     )?;
 
     let position_key = pda::generate_position_key(
         &user.key,
         params.symbol,
         params.is_portfolio_margin,
-        &ctx.program_id,
+        ctx.program_id,
     )?;
     let position = user.get_user_position_ref(&position_key)?;
-    validate!(position.leverage != params.leverage, BumpErrorCode::LeverageIsNotAllowed.into())?;
+    validate!(position.leverage != params.leverage, BumpErrorCode::LeverageIsNotAllowed)?;
 
     position_processor::update_leverage(
         params,

@@ -224,7 +224,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
             let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
 
             let user = &mut ctx.accounts.user.load_mut()?;
-            if user_stake.staked_share <= 0 {
+            if user_stake.staked_share <= 0u128 {
                 user.delete_user_stake(&user_stake.pool_key)?
             }
 
@@ -285,7 +285,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
             let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
 
             let user = &mut ctx.accounts.user.load_mut()?;
-            if user_stake.staked_share <= 0 {
+            if user_stake.staked_share <= 0u128 {
                 user.delete_user_stake(&user_stake.pool_key)?
             }
 
