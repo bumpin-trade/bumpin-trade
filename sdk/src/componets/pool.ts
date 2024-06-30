@@ -22,7 +22,7 @@ export class PoolComponent extends Component {
         let state = super.getStateSync();
         this.oracleClient = oracleClient;
         this.program = program;
-        for (let i = 0; i < state.numberOfPools; i++) {
+        for (let i = 0; i < state.poolSequence; i++) {
             const [pda, _] = BumpinUtils.getPoolPda(this.program, i);
             let poolAccountSubscriber = new PollingPoolAccountSubscriber(program, pda, bulkAccountLoader);
             this.pools.set(pda, poolAccountSubscriber);

@@ -1,11 +1,8 @@
-import {Connection, PublicKey, TransactionMessage, VersionedTransaction} from "@solana/web3.js";
+import {PublicKey, TransactionMessage, VersionedTransaction} from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {Program, Provider, Wallet} from "@coral-xyz/anchor";
 import {Buffer} from "buffer";
 import {BumpinTrade} from "../types/bumpin_trade";
-import {TradeToken} from "../types";
-import {BumpinAccountNotFound, BumpinTokenNotFound} from "../errors";
-import {Account, getAccount, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 
 export class BumpinUtils {
     public static capitalize(value: string): string {

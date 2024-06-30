@@ -142,7 +142,7 @@ export class BumpinClient {
     public async deposit(userTokenAccount: PublicKey, mintPublicKey: PublicKey, amount: BN) {
         const [statePda, _] = BumpinUtils.getBumpinStatePda(this.program);
         let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(mintPublicKey, await this.getTradeTokens());
-        await this.program.methods.deposit(targetTradeToken.tokenIndex, amount).accounts({
+        await this.program.methods.deposit(targetTradeToken.index, amount).accounts({
             userTokenAccount,
         }).signers([]).rpc();
     }

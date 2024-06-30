@@ -70,7 +70,7 @@ export class BumpinAdmin {
         return oracleKeypair;
     }
 
-    public async initTradeToken(tradeTokenName: string, tradeTokenMint: string, discount: BN, liquidationFactor: BN) {
+    public async initTradeToken(tradeTokenName: string, tradeTokenMint: string, discount: number, liquidationFactor: number) {
         let tradeTokenMintPublicKey = new PublicKey(tradeTokenMint);
         const s = BumpinUtils.string2Padded32Bytes(tradeTokenName);
         let oracleKeypair = await this.DEV_TEST_ONLY__INIT_ORACLE(70000, 1.0, -4);

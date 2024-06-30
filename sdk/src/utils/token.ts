@@ -15,11 +15,11 @@ export class BumpinTokenUtils {
             tokenBorrowingValue: new BN(0)
         };
 
-        for (let userToken of user.userTokens) {
+        for (let userToken of user.tokens) {
             if (userToken.userTokenStatus === UserTokenStatus.INIT) {
                 continue;
             }
-            let tradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(userToken.tokenMint, tradeTokens);
+            let tradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(userToken.tokenMintKey, tradeTokens);
             let tokenBalance = await BumpinTokenUtils.getTradeTokenBalance(oracle, userToken, tradeToken);
             totalBalance.tokenNetValue = totalBalance.tokenNetValue.add(tokenBalance.tokenNetValue);
             totalBalance.tokenUsedValue = totalBalance.tokenUsedValue.add(tokenBalance.tokenUsedValue);
@@ -31,15 +31,15 @@ export class BumpinTokenUtils {
 
 
     public static async getTradeTokenBalance(oracle: OracleClient, userToken: UserToken, tradeToken: TradeToken): Promise<TradeTokenBalance> {
-        let priceData = await oracle.getOraclePriceData(tradeToken.oracle);
+        let priceData = await oracle.getOraclePriceData(tradeToken.oracleKey);
         let tokenNetValue = new BN(0);
         if (userToken.amount.gt(userToken.usedAmount)) {
-            tokenNetValue = userToken.amount.sub(userToken.usedAmount).toUsd(priceData.price, tradeToken.decimals).mulRate(tradeToken.discount);
+            tokenNetValue = userToken.amount.sub(userToken.usedAmount).toUsd(priceData.price, tradeToken.decimals).mulRate(new BN(tradeToken.discount));
         }
-        let tokenUsedValue = userToken.usedAmount.sub(userToken.amount).mul(priceData.price).mul(tradeToken.liquidationFactor.add(new BN(1)));
+        let tokenUsedValue = userToken.usedAmount.sub(userToken.amount).mul(priceData.price).mul(new BN(tradeToken.liquidationFactor).add(new BN(1)));
         let tokenBorrowingValue = new BN(0);
         if (userToken.usedAmount.gt(userToken.amount)) {
-            let tokenBorrowing = userToken.usedAmount.sub(userToken.amount).sub(userToken.liability);
+            let tokenBorrowing = userToken.usedAmount.sub(userToken.amount).sub(userToken.liabilityAmount);
             if (tokenBorrowing.gt(new BN(0))) {
                 tokenBorrowingValue = tokenBorrowing.mul(priceData.price);
             }
@@ -53,7 +53,7 @@ export class BumpinTokenUtils {
 
     public static getUserTokenByMintPublicKey(mint: PublicKey, userTokens: UserToken[]): UserToken {
         let userToken = userTokens.find((userToken) => {
-            return userToken.tokenMint.equals(mint);
+            return userToken.tokenMintKey.equals(mint);
         });
         if (userToken === undefined) {
             throw new BumpinAccountNotFound("UserToken: " + mint);
@@ -63,7 +63,7 @@ export class BumpinTokenUtils {
 
     public static getTradeTokenByMintPublicKey(mint: PublicKey, tradeTokens: TradeToken[]): TradeToken {
         let tradeToken = tradeTokens.find((tradeToken) => {
-            return tradeToken.mint.equals(mint);
+            return tradeToken.mintKey.equals(mint);
         });
         if (tradeToken === undefined) {
             throw new BumpinAccountNotFound("TradeToken: " + mint);

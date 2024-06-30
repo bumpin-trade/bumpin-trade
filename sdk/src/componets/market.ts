@@ -19,7 +19,7 @@ export class MarketComponent extends Component {
         super(stateSubscriber, program);
         let state = super.getStateSync();
         this.program = program;
-        for (let i = 0; i < state.numberOfMarkets; i++) {
+        for (let i = 0; i < state.marketSequence; i++) {
             const [pda, _] = BumpinUtils.getMarketPda(this.program, i);
             let marketAccountSubscriber = new PollingMarketAccountSubscriber(program, pda, bulkAccountLoader);
             this.markets.set(pda, marketAccountSubscriber);

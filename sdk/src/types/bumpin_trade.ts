@@ -431,7 +431,7 @@ export type BumpinTrade = {
       "args": [
         {
           "name": "orderId",
-          "type": "u128"
+          "type": "u64"
         },
         {
           "name": "poolIndex",
@@ -898,7 +898,7 @@ export type BumpinTrade = {
       "args": [
         {
           "name": "orderId",
-          "type": "u128"
+          "type": "u64"
         }
       ]
     },
@@ -1032,7 +1032,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "account",
-                "path": "state.number_of_markets",
+                "path": "state.market_sequence",
                 "account": "state"
               }
             ]
@@ -1131,7 +1131,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "account",
-                "path": "state.number_of_pools",
+                "path": "state.pool_sequence",
                 "account": "state"
               }
             ]
@@ -1162,7 +1162,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "account",
-                "path": "state.number_of_pools",
+                "path": "state.pool_sequence",
                 "account": "state"
               }
             ]
@@ -1328,7 +1328,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "account",
-                "path": "state.number_of_trade_tokens",
+                "path": "state.trade_token_sequence",
                 "account": "state"
               }
             ]
@@ -1366,7 +1366,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "account",
-                "path": "state.number_of_trade_tokens",
+                "path": "state.trade_token_sequence",
                 "account": "state"
               }
             ]
@@ -1425,7 +1425,7 @@ export type BumpinTrade = {
       "args": [
         {
           "name": "discount",
-          "type": "u128"
+          "type": "u32"
         },
         {
           "name": "mintName",
@@ -1438,7 +1438,7 @@ export type BumpinTrade = {
         },
         {
           "name": "liquidationFactor",
-          "type": "u128"
+          "type": "u32"
         }
       ]
     },
@@ -3449,8 +3449,17 @@ export type BumpinTrade = {
             "type": "u128"
           },
           {
-            "name": "lastUpdate",
-            "type": "u128"
+            "name": "updatedAt",
+            "type": "i64"
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
           }
         ]
       }
@@ -3558,8 +3567,8 @@ export type BumpinTrade = {
             "type": "u128"
           },
           {
-            "name": "maxMaintenanceMarginRate",
-            "type": "u128"
+            "name": "maximumMaintenanceMarginRate",
+            "type": "u32"
           },
           {
             "name": "fundingFeeBaseRate",
@@ -3619,11 +3628,11 @@ export type BumpinTrade = {
           },
           {
             "name": "stakingFeeRewardRatio",
-            "type": "u128"
+            "type": "u32"
           },
           {
             "name": "poolFeeRewardRatio",
-            "type": "u128"
+            "type": "u32"
           }
         ]
       }
@@ -3678,7 +3687,7 @@ export type BumpinTrade = {
             }
           },
           {
-            "name": "marketTradeConfig",
+            "name": "config",
             "type": {
               "defined": {
                 "name": "marketConfig"
@@ -3690,11 +3699,11 @@ export type BumpinTrade = {
             "type": "pubkey"
           },
           {
-            "name": "poolMint",
+            "name": "poolMintKey",
             "type": "pubkey"
           },
           {
-            "name": "indexMint",
+            "name": "indexMintKey",
             "type": "pubkey"
           },
           {
@@ -3702,11 +3711,11 @@ export type BumpinTrade = {
             "type": "pubkey"
           },
           {
-            "name": "stablePoolMint",
+            "name": "stablePoolMintKey",
             "type": "pubkey"
           },
           {
-            "name": "marketIndex",
+            "name": "index",
             "type": "u16"
           },
           {
@@ -3739,10 +3748,6 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
-            "name": "maxLeverage",
-            "type": "u128"
-          },
-          {
             "name": "tickSize",
             "type": "u128"
           },
@@ -3755,11 +3760,11 @@ export type BumpinTrade = {
             "type": "u128"
           },
           {
-            "name": "maxLongOpenInterestCap",
+            "name": "maximumLongOpenInterestCap",
             "type": "u128"
           },
           {
-            "name": "maxShortOpenInterestCap",
+            "name": "maximumShortOpenInterestCap",
             "type": "u128"
           },
           {
@@ -3769,6 +3774,19 @@ export type BumpinTrade = {
           {
             "name": "longShortOiBottomLimit",
             "type": "u128"
+          },
+          {
+            "name": "maximumLeverage",
+            "type": "u32"
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                12
+              ]
+            }
           }
         ]
       }
@@ -3806,8 +3824,17 @@ export type BumpinTrade = {
             "type": "i128"
           },
           {
-            "name": "lastUpdate",
-            "type": "u128"
+            "name": "updatedAt",
+            "type": "i64"
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
           }
         ]
       }
@@ -3897,7 +3924,7 @@ export type BumpinTrade = {
             }
           },
           {
-            "name": "isCrossMargin",
+            "name": "isPortfolioMargin",
             "type": "bool"
           },
           {
@@ -3946,7 +3973,7 @@ export type BumpinTrade = {
           },
           {
             "name": "leverage",
-            "type": "u128"
+            "type": "u32"
           },
           {
             "name": "triggerPrice",
@@ -3993,6 +4020,15 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
+            "name": "name",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
             "name": "pnl",
             "type": "i128"
           },
@@ -4009,7 +4045,11 @@ export type BumpinTrade = {
             "type": "u128"
           },
           {
-            "name": "poolBalance",
+            "name": "settleFundingFee",
+            "type": "i128"
+          },
+          {
+            "name": "balance",
             "type": {
               "defined": {
                 "name": "poolBalance"
@@ -4049,7 +4089,7 @@ export type BumpinTrade = {
             }
           },
           {
-            "name": "poolConfig",
+            "name": "config",
             "type": {
               "defined": {
                 "name": "poolConfig"
@@ -4057,23 +4097,27 @@ export type BumpinTrade = {
             }
           },
           {
-            "name": "poolMintVault",
+            "name": "mintVaultKey",
             "type": "pubkey"
           },
           {
-            "name": "poolKey",
+            "name": "key",
             "type": "pubkey"
           },
           {
-            "name": "poolMint",
+            "name": "stableKey",
             "type": "pubkey"
           },
           {
-            "name": "poolIndex",
+            "name": "mintKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "index",
             "type": "u16"
           },
           {
-            "name": "poolStatus",
+            "name": "status",
             "type": {
               "defined": {
                 "name": "poolStatus"
@@ -4081,21 +4125,8 @@ export type BumpinTrade = {
             }
           },
           {
-            "name": "settleFundingFee",
-            "type": "i128"
-          },
-          {
             "name": "stable",
             "type": "bool"
-          },
-          {
-            "name": "poolName",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
           },
           {
             "name": "padding",
@@ -4136,10 +4167,6 @@ export type BumpinTrade = {
           {
             "name": "lossAmount",
             "type": "u128"
-          },
-          {
-            "name": "poolMint",
-            "type": "pubkey"
           }
         ]
       }
@@ -4153,11 +4180,11 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
-            "name": "miniStakeAmount",
+            "name": "minimumStakeAmount",
             "type": "u128"
           },
           {
-            "name": "miniUnStakeAmount",
+            "name": "minimumUnStakeAmount",
             "type": "u128"
           },
           {
@@ -4165,20 +4192,29 @@ export type BumpinTrade = {
             "type": "u128"
           },
           {
-            "name": "stakeFeeRate",
+            "name": "borrowingInterestRate",
             "type": "u128"
+          },
+          {
+            "name": "stakeFeeRate",
+            "type": "u32"
           },
           {
             "name": "unStakeFeeRate",
-            "type": "u128"
+            "type": "u32"
           },
           {
             "name": "unSettleMintRatioLimit",
-            "type": "u128"
+            "type": "u32"
           },
           {
-            "name": "borrowingInterestRate",
-            "type": "u128"
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                4
+              ]
+            }
           }
         ]
       }
@@ -4436,35 +4472,35 @@ export type BumpinTrade = {
             "type": "u8"
           },
           {
-            "name": "numberOfMarkets",
+            "name": "marketSequence",
             "type": "u16"
           },
           {
-            "name": "numberOfPools",
+            "name": "poolSequence",
             "type": "u16"
           },
           {
-            "name": "numberOfTradeTokens",
+            "name": "tradeTokenSequence",
             "type": "u16"
           },
           {
-            "name": "minOrderMarginUsd",
+            "name": "minimumOrderMarginUsd",
             "type": "u128"
           },
           {
-            "name": "maxMaintenanceMarginRate",
-            "type": "u128"
+            "name": "maximumMaintenanceMarginRate",
+            "type": "u32"
           },
           {
             "name": "fundingFeeBaseRate",
             "type": "u128"
           },
           {
-            "name": "maxFundingBaseRate",
+            "name": "maximumFundingBaseRate",
             "type": "u128"
           },
           {
-            "name": "minPrecisionMultiple",
+            "name": "minimumPrecisionMultiple",
             "type": "u128"
           },
           {
@@ -4477,15 +4513,15 @@ export type BumpinTrade = {
           },
           {
             "name": "tradingFeeUsdPoolRewardsRatio",
-            "type": "u128"
+            "type": "u32"
           },
           {
             "name": "stakingFeeRewardRatio",
-            "type": "u128"
+            "type": "u32"
           },
           {
             "name": "poolFeeRewardRatio",
-            "type": "u128"
+            "type": "u32"
           }
         ]
       }
@@ -4517,14 +4553,6 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
-            "name": "discount",
-            "type": "u128"
-          },
-          {
-            "name": "liquidationFactor",
-            "type": "u128"
-          },
-          {
             "name": "totalLiability",
             "type": "u128"
           },
@@ -4533,27 +4561,19 @@ export type BumpinTrade = {
             "type": "u128"
           },
           {
-            "name": "mint",
+            "name": "mintKey",
             "type": "pubkey"
           },
           {
-            "name": "oracle",
+            "name": "oracleKey",
             "type": "pubkey"
           },
           {
-            "name": "tradeTokenVault",
+            "name": "vaultKey",
             "type": "pubkey"
           },
           {
-            "name": "tokenIndex",
-            "type": "u16"
-          },
-          {
-            "name": "decimals",
-            "type": "u16"
-          },
-          {
-            "name": "mintName",
+            "name": "name",
             "type": {
               "array": [
                 "u8",
@@ -4562,11 +4582,27 @@ export type BumpinTrade = {
             }
           },
           {
+            "name": "discount",
+            "type": "u32"
+          },
+          {
+            "name": "liquidationFactor",
+            "type": "u32"
+          },
+          {
+            "name": "index",
+            "type": "u16"
+          },
+          {
+            "name": "decimals",
+            "type": "u16"
+          },
+          {
             "name": "padding",
             "type": {
               "array": [
                 "u8",
-                12
+                4
               ]
             }
           }
@@ -4612,12 +4648,12 @@ export type BumpinTrade = {
             "type": "bool"
           },
           {
-            "name": "isCrossMargin",
+            "name": "isPortfolioMargin",
             "type": "bool"
           },
           {
             "name": "leverage",
-            "type": "u128"
+            "type": "u32"
           },
           {
             "name": "addMarginAmount",
@@ -4705,18 +4741,18 @@ export type BumpinTrade = {
         "fields": [
           {
             "name": "nextOrderId",
-            "type": "u128"
+            "type": "u64"
           },
           {
             "name": "nextLiquidationId",
-            "type": "u128"
+            "type": "u64"
           },
           {
             "name": "hold",
             "type": "u128"
           },
           {
-            "name": "userTokens",
+            "name": "tokens",
             "type": {
               "array": [
                 {
@@ -4724,12 +4760,12 @@ export type BumpinTrade = {
                     "name": "userToken"
                   }
                 },
-                12
+                16
               ]
             }
           },
           {
-            "name": "userStakes",
+            "name": "stakes",
             "type": {
               "array": [
                 {
@@ -4737,12 +4773,12 @@ export type BumpinTrade = {
                     "name": "userStake"
                   }
                 },
-                12
+                16
               ]
             }
           },
           {
-            "name": "userPositions",
+            "name": "positions",
             "type": {
               "array": [
                 {
@@ -4750,12 +4786,12 @@ export type BumpinTrade = {
                     "name": "userPosition"
                   }
                 },
-                8
+                16
               ]
             }
           },
           {
-            "name": "userOrders",
+            "name": "orders",
             "type": {
               "array": [
                 {
@@ -4763,12 +4799,12 @@ export type BumpinTrade = {
                     "name": "userOrder"
                   }
                 },
-                8
+                16
               ]
             }
           },
           {
-            "name": "userKey",
+            "name": "key",
             "type": "pubkey"
           },
           {
@@ -4811,10 +4847,6 @@ export type BumpinTrade = {
             "type": "u128"
           },
           {
-            "name": "leverage",
-            "type": "u128"
-          },
-          {
             "name": "orderSize",
             "type": "u128"
           },
@@ -4827,12 +4859,33 @@ export type BumpinTrade = {
             "type": "u128"
           },
           {
-            "name": "time",
-            "type": "u128"
+            "name": "createdAt",
+            "type": "i64"
           },
           {
             "name": "orderId",
-            "type": "u128"
+            "type": "u64"
+          },
+          {
+            "name": "marginMintKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "symbol",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "leverage",
+            "type": "u32"
           },
           {
             "name": "orderSide",
@@ -4875,24 +4928,7 @@ export type BumpinTrade = {
             }
           },
           {
-            "name": "marginMint",
-            "type": "pubkey"
-          },
-          {
-            "name": "authority",
-            "type": "pubkey"
-          },
-          {
-            "name": "symbol",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
-            "name": "crossMargin",
+            "name": "isPortfolioMargin",
             "type": "bool"
           },
           {
@@ -4900,7 +4936,7 @@ export type BumpinTrade = {
             "type": {
               "array": [
                 "u8",
-                10
+                6
               ]
             }
           }
@@ -4921,10 +4957,6 @@ export type BumpinTrade = {
           },
           {
             "name": "entryPrice",
-            "type": "u128"
-          },
-          {
-            "name": "leverage",
             "type": "u128"
           },
           {
@@ -4984,10 +5016,6 @@ export type BumpinTrade = {
             "type": "u128"
           },
           {
-            "name": "lastUpdateTime",
-            "type": "u128"
-          },
-          {
             "name": "realizedPnl",
             "type": "i128"
           },
@@ -4996,11 +5024,11 @@ export type BumpinTrade = {
             "type": "pubkey"
           },
           {
-            "name": "marginMint",
+            "name": "marginMintKey",
             "type": "pubkey"
           },
           {
-            "name": "indexMint",
+            "name": "indexMintKey",
             "type": "pubkey"
           },
           {
@@ -5017,11 +5045,19 @@ export type BumpinTrade = {
             }
           },
           {
+            "name": "updatedAt",
+            "type": "i64"
+          },
+          {
+            "name": "leverage",
+            "type": "u32"
+          },
+          {
             "name": "isLong",
             "type": "bool"
           },
           {
-            "name": "crossMargin",
+            "name": "isPortfolioMargin",
             "type": "bool"
           },
           {
@@ -5037,7 +5073,7 @@ export type BumpinTrade = {
             "type": {
               "array": [
                 "u8",
-                13
+                1
               ]
             }
           }
@@ -5061,17 +5097,8 @@ export type BumpinTrade = {
             "type": "u128"
           },
           {
-            "name": "token",
+            "name": "tokenKey",
             "type": "pubkey"
-          },
-          {
-            "name": "padding",
-            "type": {
-              "array": [
-                "u8",
-                8
-              ]
-            }
           }
         ]
       }
@@ -5175,8 +5202,16 @@ export type BumpinTrade = {
             "type": "u128"
           },
           {
-            "name": "liability",
+            "name": "liabilityAmount",
             "type": "u128"
+          },
+          {
+            "name": "tokenMintKey",
+            "type": "pubkey"
+          },
+          {
+            "name": "userTokenAccountKey",
+            "type": "pubkey"
           },
           {
             "name": "userTokenStatus",
@@ -5185,14 +5220,6 @@ export type BumpinTrade = {
                 "name": "userTokenStatus"
               }
             }
-          },
-          {
-            "name": "tokenMint",
-            "type": "pubkey"
-          },
-          {
-            "name": "userTokenAccountKey",
-            "type": "pubkey"
           },
           {
             "name": "padding",

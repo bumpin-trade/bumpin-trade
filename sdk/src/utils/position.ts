@@ -23,11 +23,11 @@ export class BumpinPositionUtils {
             mmUsd: new BN(0)
         };
 
-        for (let userPosition of user.userPositions) {
+        for (let userPosition of user.positions) {
             if (userPosition.status === PositionStatus.INIT) {
                 continue;
             }
-            let indexTradeToken =  BumpinTokenUtils.getTradeTokenByMintPublicKey(userPosition.indexMint,tradeTokens);
+            let indexTradeToken =  BumpinTokenUtils.getTradeTokenByMintPublicKey(userPosition.indexMintKey,tradeTokens);
             let unPnlValue = await BumpinPositionUtils.getPositionUnPnlValue(oracle, indexTradeToken, userPosition);
             totalBalance.positionUnPnl = totalBalance.positionUnPnl.add(unPnlValue);
             totalBalance.mmUsd = totalBalance.mmUsd.add(userPosition.mmUsd);
@@ -39,7 +39,7 @@ export class BumpinPositionUtils {
 
 
     public static async getPositionUnPnlValue(oracle: OracleClient, indexTradeToken: TradeToken, position: UserPosition): Promise<BN> {
-        let priceData = await oracle.getOraclePriceData(indexTradeToken.oracle);
+        let priceData = await oracle.getOraclePriceData(indexTradeToken.oracleKey);
         let unPnl = new BN(0);
         if (!position.positionSize.isZero()) {
             if (position.isLong) {

@@ -19,7 +19,7 @@ export class TradeTokenComponent extends Component {
         super(stateSubscriber, program);
         let state = super.getStateSync();
         this.program = program;
-        for (let i = 0; i < state.numberOfTradeTokens; i++) {
+        for (let i = 0; i < state.tradeTokenSequence; i++) {
             const [pda, _] = BumpinUtils.getTradeTokenPda(this.program, i);
             let tradeTokenAccountSubscriber = new PollingTradeTokenAccountSubscriber(program, pda, bulkAccountLoader);
             this.tradeTokens.set(pda, tradeTokenAccountSubscriber);

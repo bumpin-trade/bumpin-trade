@@ -18,19 +18,19 @@ export type State = {
     bumpSigner: PublicKey;
     keeperSigner: PublicKey;
     bumpSignerNonce: number;
-    numberOfMarkets: number;
-    numberOfPools: number;
-    numberOfTradeTokens: number;
-    minOrderMarginUsd: BN;
-    maxMaintenanceMarginRate: BN;
+    marketSequence: number;
+    poolSequence: number;
+    tradeTokenSequence: number;
+    minimumOrderMarginUsd: BN;
+    maximumMaintenanceMarginRate: number;
     fundingFeeBaseRate: BN;
-    maxFundingBaseRate: BN;
-    minPrecisionMultiple: BN;
+    maximumFundingBaseRate: BN;
+    minimumPrecisionMultiple: BN;
     poolRewardsIntervalLimit: BN;
     initFee: BN;
-    tradingFeeUsdPoolRewardsRatio: BN;
-    stakingFeeRewardRatio: BN;
-    poolFeeRewardRatio: BN;
+    tradingFeeUsdPoolRewardsRatio: number;
+    stakingFeeRewardRatio: number;
+    poolFeeRewardRatio: number;
 }
 
 
@@ -40,64 +40,73 @@ export type MarketPosition = {
 }
 
 export type MarketConfig = {
-    maxLeverage: BN;
     tickSize: BN;
     openFeeRate: BN;
     closeFeeRate: BN;
-    maxLongOpenInterestCap: BN;
-    maxShortOpenInterestCap: BN;
+    maximumLongOpenInterestCap: BN;
+    maximumShortOpenInterestCap: BN;
     longShortRatioLimit: BN;
     longShortOiBottomLimit: BN;
+    maximumLeverage: number;
 }
 
+
 export type MarketFundingFee = {
-    lastUpdateTime: BN;
-    fundingFeeRate: BN;
-    fundingFee: BN;
+    longFundingFeeAmountPerSize: BN;
+    shortFundingFeeAmountPerSize: BN;
+    totalLongFundingFee: BN;
+    totalShortFundingFee: BN;
+    longFundingFeeRate: BN;
+    shortFundingFeeRate: BN;
+    updatedAt: BN;
 }
 
 export type Market = {
-    symbol: string;
-    marketIndex: number;
-    poolKey: PublicKey;
-    poolMint: PublicKey;
-    indexMint: PublicKey;
-    stablePoolKey: PublicKey;
-    stablePoolMint: PublicKey;
     longOpenInterest: MarketPosition;
     shortOpenInterest: MarketPosition;
     fundingFee: MarketFundingFee;
-    marketTradeConfig: MarketConfig;
+    config: MarketConfig;
+    poolKey: PublicKey;
+    poolMintKey: PublicKey;
+    indexMintKey: PublicKey;
+    stablePoolKey: PublicKey;
+    stablePoolMintKey: PublicKey;
+    index: number;
+    symbol: string;
 }
 
+
 export type PoolBalance = {
-    poolMint: PublicKey;
     amount: BN;
     holdAmount: BN;
     unSettleAmount: BN;
+    settleFundingFeeAmount: BN;
     lossAmount: BN;
 }
 
+
 export type BorrowingFee = {
-    poolMint: PublicKey;
-    feeRate: BN;
-    lastUpdateTime: BN;
+    totalBorrowingFee: BN;
+    totalRealizedBorrowingFee: BN;
+    cumulativeBorrowingFeePerToken: BN;
+    updatedAt: BN;
 }
 
 export type FeeReward = {
-    poolMint: PublicKey;
-    reward: BN;
-    lastUpdateTime: BN;
+    feeAmount: BN;
+    unSettleFeeAmount: BN;
+    cumulativeRewardsPerStakeToken: BN;
+    lastRewardsPerStakeTokenDeltas: BN[];
 }
 
 export type PoolConfig = {
-    miniStakeAmount: BN;
-    miniUnStakeAmount: BN;
+    minimumStakeAmount: BN;
+    minimumUnStakeAmount: BN;
     poolLiquidityLimit: BN;
-    stakeFeeRate: BN;
-    unStakeFeeRate: BN;
-    unSettleMintRatioLimit: BN;
     borrowingInterestRate: BN;
+    stakeFeeRate: number;
+    unStakeFeeRate: number;
+    unSettleMintRatioLimit: number;
 }
 
 export enum PoolStatus {
@@ -107,36 +116,39 @@ export enum PoolStatus {
 }
 
 export type Pool = {
-    poolKey: PublicKey;
-    poolMint: PublicKey;
-    poolIndex: number;
-    poolMintVault: PublicKey;
-    poolName: string;
-    poolBalance: PoolBalance;
+    name: number[];
+    pnl: BN;
+    apr: BN;
+    insuranceFundAmount: BN;
+    totalSupply: BN;
+    settleFundingFee: BN;
+    balance: PoolBalance;
     stableBalance: PoolBalance;
     borrowingFee: BorrowingFee;
     feeReward: FeeReward;
     stableFeeReward: FeeReward;
-    poolConfig: PoolConfig;
-    totalSupply: BN;
-    poolStatus: PoolStatus;
+    config: PoolConfig;
+    mintVaultKey: PublicKey;
+    key: PublicKey;
+    stableKey: PublicKey;
+    mintKey: PublicKey;
+    index: number;
+    status: PoolStatus;
     stable: boolean;
-    pnl: BN;
-    apr: BN;
-    insuranceFundAmount: BN;
 }
 
+
 export type TradeToken = {
-    mint: PublicKey;
-    mintName: number[];
-    oracle: PublicKey;
-    tokenIndex: number;
-    discount: BN;
-    liquidationFactor: BN;
-    decimals: number;
     totalLiability: BN;
     totalAmount: BN;
-    tradeTokenVault: PublicKey;
+    mintKey: PublicKey;
+    oracleKey: PublicKey;
+    vaultKey: PublicKey;
+    name: number[];
+    discount: number;
+    liquidationFactor: number;
+    index: number;
+    decimals: number;
 }
 
 
@@ -145,17 +157,19 @@ export enum UserStakeStatus {
     USING = 1
 }
 
+
 export type UserRewards = {
-    token: PublicKey;
     realisedRewardsTokenAmount: BN;
     openRewardsPerStakeToken: BN;
+    tokenKey: PublicKey;
 }
+
 
 export type UserStake = {
     stakedShare: BN;
-    userStakeStatus: UserStakeStatus;
-    poolKey: PublicKey;
     userRewards: UserRewards;
+    poolKey: PublicKey;
+    userStakeStatus: UserStakeStatus;
 }
 
 export enum UserTokenStatus {
@@ -163,13 +177,14 @@ export enum UserTokenStatus {
     USING = 1
 }
 
+
 export type UserToken = {
-    userTokenStatus: UserTokenStatus;
-    tokenMint: PublicKey;
-    userTokenAccountKey: PublicKey;
     amount: BN;
     usedAmount: BN;
-    liability: BN;
+    liabilityAmount: BN;
+    tokenMintKey: PublicKey;
+    userTokenAccountKey: PublicKey;
+    userTokenStatus: UserTokenStatus;
 }
 
 export enum PositionStatus {
@@ -178,16 +193,8 @@ export enum PositionStatus {
 }
 
 export type UserPosition = {
-    positionKey: PublicKey;
-    symbol: string;
-    isLong: boolean;
-    crossMargin: boolean;
-    authority: PublicKey;
-    marginMint: PublicKey;
-    indexMint: PublicKey;
     positionSize: BN;
     entryPrice: BN;
-    leverage: BN;
     initialMargin: BN;
     initialMarginUsd: BN;
     initialMarginUsdFromPortfolio: BN;
@@ -202,8 +209,16 @@ export type UserPosition = {
     realizedFundingFeeInUsd: BN;
     openFundingFeeAmountPerSize: BN;
     closeFeeInUsd: BN;
-    lastUpdateTime: BN;
     realizedPnl: BN;
+    userKey: PublicKey;
+    marginMintKey: PublicKey;
+    indexMintKey: PublicKey;
+    positionKey: PublicKey;
+    symbol: string;
+    updatedAt: BN;
+    leverage: number;
+    isLong: boolean;
+    isPortfolioMargin: boolean;
     status: PositionStatus;
 }
 
@@ -238,34 +253,36 @@ export enum StopType {
 }
 
 export type UserOrder = {
+    orderMargin: BN;
+    orderSize: BN;
+    triggerPrice: BN;
+    acceptablePrice: BN;
+    createdAt: BN;
+    orderId: BN;
+    marginMintKey: PublicKey;
     authority: PublicKey;
-    order_id: BN;
     symbol: string;
-    order_side: OrderSide;
-    position_side: PositionSide;
-    order_type: OrderType;
-    stop_type: StopType;
-    is_portfolio_margin: boolean;
-    margin_mint: PublicKey;
-    order_margin: BN;
-    leverage: BN;
-    order_size: BN;
-    trigger_price: BN;
-    acceptable_price: BN;
-    time: BN;
+    leverage: number;
+    orderSide: OrderSide;
+    positionSide: PositionSide;
+    orderType: OrderType;
+    stopType: StopType;
     status: OrderStatus;
+    isPortfolioMargin: boolean;
+    padding: number[];
 }
 
+
 export type UserAccount = {
-    userKey: PublicKey;
-    authority: PublicKey;
     nextOrderId: BN;
     nextLiquidationId: BN;
     hold: BN;
-    userTokens: UserToken[];
-    userStakes: UserStake[];
-    userPositions: UserPosition[];
-    userOrders: UserOrder[];
+    tokens: UserToken[];
+    stakes: UserStake[];
+    positions: UserPosition[];
+    orders: UserOrder[];
+    key: PublicKey;
+    authority: PublicKey;
 }
 
 export type TradeTokenBalance = {
