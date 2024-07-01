@@ -77,7 +77,7 @@ export type StopTypeValue =
  * }
  */
 
-export type PlaceOrderParams =  {
+export type PlaceOrderParams = {
     symbol: number[];
     isCrossMargin: boolean;
     isNativeToken: boolean;
@@ -91,6 +91,11 @@ export type PlaceOrderParams =  {
     triggerPrice: BN;
     acceptablePrice: BN;
     placeTime: BN;
+    poolIndex: number;
+    stablePoolIndex: number,
+    marketIndex: number,
+    tradeTokenIndex: number,
+    indexTradeTokenIndex: number,
 
 
     // constructor(

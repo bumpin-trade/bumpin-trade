@@ -163,6 +163,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     let token = &ctx.accounts.margin_token;
     let trade_token = &ctx.accounts.trade_token.load()?;
     let remaining_accounts = ctx.remaining_accounts;
+    msg!("place_order start....");
     let AccountMaps { trade_token_map, mut oracle_map, .. } =
         load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
     let token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;

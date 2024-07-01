@@ -140,7 +140,7 @@ pub fn rebalance_stable_pool<'a>(
     let pool_vec = pool_map.get_all_pool_loader()?;
     for pool_loader in &pool_vec {
         let mut pool = pool_loader.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadPoolData)?;
-        let pre_balance = pool.stable_balance.clone();
+        let pre_balance = pool.stable_balance;
         if pre_balance.amount >= pre_balance.loss_amount {
             pool.sub_amount(pre_balance.loss_amount)?;
             pool.sub_loss_amount(pre_balance.loss_amount)?;

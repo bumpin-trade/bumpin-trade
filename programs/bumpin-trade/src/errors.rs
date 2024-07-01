@@ -105,6 +105,8 @@ pub enum BumpErrorCode {
     CouldNotLoadUserData,
     #[msg("PoolSubUnsettleNotEnough")]
     PoolSubUnsettleNotEnough,
+    #[msg("TimestampNotFound")]
+    TimestampNotFound,
 }
 #[macro_export]
 macro_rules! print_error {
