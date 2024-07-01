@@ -1941,7 +1941,7 @@
           }
         },
         {
-          "name": "pool_mint_vault",
+          "name": "pool_vault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1952,11 +1952,6 @@
                   111,
                   111,
                   108,
-                  95,
-                  109,
-                  105,
-                  110,
-                  116,
                   95,
                   118,
                   97,
@@ -2109,7 +2104,7 @@
           }
         },
         {
-          "name": "pool_mint_vault",
+          "name": "pool_vault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2120,11 +2115,6 @@
                   111,
                   111,
                   108,
-                  95,
-                  109,
-                  105,
-                  110,
-                  116,
                   95,
                   118,
                   97,
@@ -2491,7 +2481,7 @@
           "writable": true
         },
         {
-          "name": "pool_mint_vault",
+          "name": "pool_vault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2502,11 +2492,6 @@
                   111,
                   111,
                   108,
-                  95,
-                  109,
-                  105,
-                  110,
-                  116,
                   95,
                   118,
                   97,
@@ -2621,7 +2606,7 @@
           }
         },
         {
-          "name": "pool_mint_vault",
+          "name": "pool_vault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2632,11 +2617,6 @@
                   111,
                   111,
                   108,
-                  95,
-                  109,
-                  105,
-                  110,
-                  116,
                   95,
                   118,
                   97,
@@ -4551,16 +4531,16 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "mint_key",
+            "type": "pubkey"
+          },
+          {
             "name": "total_liability",
             "type": "u128"
           },
           {
             "name": "total_amount",
             "type": "u128"
-          },
-          {
-            "name": "mint_key",
-            "type": "pubkey"
           },
           {
             "name": "oracle_key",

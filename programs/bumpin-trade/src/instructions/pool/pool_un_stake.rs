@@ -1,3 +1,5 @@
+use std::ops::DerefMut;
+
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
@@ -184,7 +186,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
             let un_stake_token_amount_fee =
                 fee_processor::collect_un_stake_fee(pool, un_stake_token_amount)?;
 
-            update_account_fee_reward(&ctx.accounts.user, &ctx.accounts.pool)?;
+            update_account_fee_reward(pool.deref_mut(), user.deref_mut())?;
 
             let rewards_amount = user_stake.user_rewards.realised_rewards_token_amount;
             let transfer_amount = un_stake_token_amount
@@ -264,7 +266,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
             let un_stake_token_amount_fee =
                 fee_processor::collect_un_stake_fee(pool, un_stake_token_amount)?;
 
-            update_account_fee_reward(&ctx.accounts.user, &ctx.accounts.pool)?;
+            update_account_fee_reward(pool.deref_mut(), user.deref_mut())?;
 
             let rewards_amount = user_stake.user_rewards.realised_rewards_token_amount;
             let transfer_amount = un_stake_token_amount

@@ -72,14 +72,11 @@ impl<'a> MarketMap<'a> {
 }
 
 impl<'a> MarketMap<'a> {
-    pub fn load(
-        remaining_accounts: &'a [AccountInfo<'a>],
-        admin: &Pubkey,
-    ) -> BumpResult<MarketMap<'a>> {
+    pub fn load(remaining_accounts: &'a [AccountInfo<'a>]) -> BumpResult<MarketMap<'a>> {
         let mut perp_market_map: MarketMap = MarketMap(BTreeMap::new());
         let market_discriminator: [u8; 8] = Market::discriminator();
         for account_info in remaining_accounts {
-            if !account_info.owner.eq(admin) {
+            if !account_info.owner.eq(&crate::id()) {
                 continue;
             }
             let data =

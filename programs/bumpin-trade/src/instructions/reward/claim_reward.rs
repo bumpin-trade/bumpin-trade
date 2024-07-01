@@ -1,6 +1,7 @@
 use crate::errors::BumpErrorCode;
 use anchor_lang::prelude::*;
 use anchor_spl::token::Token;
+use std::ops::DerefMut;
 
 use crate::processor::fee_reward_processor::update_account_fee_reward;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
@@ -45,6 +46,12 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
     let token_account_vec = VaultMap::load_vec(remaining_accounts)?;
 
     let user = &mut ctx.accounts.user.load_mut()?;
+    for user_stake in user.stakes.clone().iter() {
+        let pool_account_loader = pool_map.get_account_loader(&user_stake.pool_key)?;
+        let mut pool = pool_account_loader.load_mut()?;
+        update_account_fee_reward(pool.deref_mut(), user.deref_mut())?;
+    }
+
     for user_stake in user.stakes.iter_mut() {
         if user_stake.user_stake_status.eq(&UserStakeStatus::INIT)
             || user_stake.user_rewards.realised_rewards_token_amount == 0u128
@@ -53,7 +60,6 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
         }
 
         let pool_account_loader = pool_map.get_account_loader(&user_stake.pool_key)?;
-        update_account_fee_reward(&ctx.accounts.user, pool_account_loader)?;
         let pool = pool_account_loader.load()?;
         let user = ctx.accounts.user.load()?;
         //transfer token to user wallet

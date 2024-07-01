@@ -31,7 +31,7 @@ pub struct InitializePool<'info> {
     pub pool_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
-        constraint = state.bump_signer.eq(&bump_signer.key())
+        constraint = state.bump_signer.eq(& bump_signer.key())
     )]
     /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
@@ -59,9 +59,10 @@ pub fn handle_initialize_pool(ctx: Context<InitializePool>, name: [u8; 32]) -> R
     let state = &mut ctx.accounts.state;
 
     pool.key = ctx.accounts.pool.key();
-    pool.mint_key = ctx.accounts.pool_mint.key();
+    pool.mint_key = ctx.accounts.pool_vault.mint;
     pool.mint_vault_key = ctx.accounts.pool_vault.key();
     pool.name = name;
+    pool.index = state.pool_sequence;
 
     safe_increment!(state.pool_sequence, 1);
     Ok(())

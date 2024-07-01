@@ -58,7 +58,7 @@ pub fn handle_initialize_trade_token(
     let state = &mut ctx.accounts.state;
     let trade_token = &mut ctx.accounts.trade_token.load_init()?;
     **trade_token = TradeToken {
-        mint_key: ctx.accounts.trade_token_mint.key(),
+        mint_key: ctx.accounts.trade_token_vault.mint,
         name,
         oracle_key: *ctx.accounts.oracle.to_account_info().key,
         index: state.trade_token_sequence,

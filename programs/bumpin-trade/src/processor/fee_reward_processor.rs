@@ -1,5 +1,4 @@
 use anchor_lang::emit;
-use anchor_lang::prelude::AccountLoader;
 
 use crate::errors::BumpResult;
 use crate::math::safe_math::SafeMath;
@@ -7,12 +6,7 @@ use crate::state::bump_events::UserRewardsUpdateEvent;
 use crate::state::pool::Pool;
 use crate::state::user::User;
 
-pub fn update_account_fee_reward(
-    user_loader: &AccountLoader<User>,
-    pool_loader: &AccountLoader<Pool>,
-) -> BumpResult {
-    let user = &mut user_loader.load_mut().unwrap();
-    let stake_pool = pool_loader.load().unwrap();
+pub fn update_account_fee_reward(stake_pool: &mut Pool, user: &mut User) -> BumpResult {
     let user_key = user.key;
 
     let user_stake = user.get_user_stake_mut_ref(&stake_pool.key)?;

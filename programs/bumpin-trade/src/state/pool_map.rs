@@ -84,14 +84,11 @@ impl<'a> PoolMap<'a> {
         Ok(loader)
     }
 
-    pub fn load(
-        remaining_accounts: &'a [AccountInfo<'a>],
-        admin: &Pubkey,
-    ) -> BumpResult<PoolMap<'a>> {
+    pub fn load(remaining_accounts: &'a [AccountInfo<'a>]) -> BumpResult<PoolMap<'a>> {
         let mut pool_map = PoolMap(BTreeMap::new());
         let pool_discriminator = Pool::discriminator();
         for account_info in remaining_accounts.iter() {
-            if !account_info.owner.eq(admin) {
+            if !account_info.owner.eq(&crate::id()) {
                 continue;
             }
             let data = account_info.try_borrow_data().or(Err(CouldNotLoadPoolData))?;

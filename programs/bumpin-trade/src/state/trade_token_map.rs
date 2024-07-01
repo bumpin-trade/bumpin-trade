@@ -92,14 +92,11 @@ impl<'a> TradeTokenMap<'a> {
         };
         Ok(loader)
     }
-    pub fn load(
-        remaining_accounts: &'a [AccountInfo<'a>],
-        admin: &Pubkey,
-    ) -> BumpResult<TradeTokenMap<'a>> {
+    pub fn load(remaining_accounts: &'a [AccountInfo<'a>]) -> BumpResult<TradeTokenMap<'a>> {
         let mut trade_token_vec: TradeTokenMap = TradeTokenMap(BTreeMap::new());
         let trade_token_discriminator = TradeToken::discriminator();
         for account_info in remaining_accounts.iter() {
-            if !account_info.owner.eq(admin) {
+            if !account_info.owner.eq(&crate::id()) {
                 continue;
             }
             let data = account_info.try_borrow_data().or(Err(CouldNotLoadTradeTokenData))?;

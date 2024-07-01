@@ -61,15 +61,23 @@ export class UserComponent extends Component {
                     isSigner: false,
                 });
                 let target = BumpinTokenUtils.getTradeTokenByMintPublicKey(token.tokenMintKey, allTradeTokens);
-                if (target) {
-                    remainingAccounts.push({
-                        pubkey: target.oracleKey,
-                        isWritable: false,
-                        isSigner: false,
-                    });
-                }
+                remainingAccounts.push({
+                    pubkey: target.oracleKey,
+                    isWritable: false,
+                    isSigner: false,
+                });
+                let pda =  BumpinUtils.getTradeTokenPda(this.program, target.index)[0];
+                console.log('pda', pda.toString());
+                remainingAccounts.push({
+                    pubkey: pda,
+                    isWritable: false,
+                    isSigner: false,
+                });
+
+                console.log('mint', token.tokenMintKey.toString(), 'oracle', target.oracleKey.toString());
             }
         }
+        console.log('remainingAccounts', remainingAccounts.length);
 
         let r = await this.program.methods.portfolioStake(
             pool.index, targetTradeToken.index, amount

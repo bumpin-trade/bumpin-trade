@@ -1947,7 +1947,7 @@ export type BumpinTrade = {
           }
         },
         {
-          "name": "poolMintVault",
+          "name": "poolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1958,11 +1958,6 @@ export type BumpinTrade = {
                   111,
                   111,
                   108,
-                  95,
-                  109,
-                  105,
-                  110,
-                  116,
                   95,
                   118,
                   97,
@@ -2115,7 +2110,7 @@ export type BumpinTrade = {
           }
         },
         {
-          "name": "poolMintVault",
+          "name": "poolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2126,11 +2121,6 @@ export type BumpinTrade = {
                   111,
                   111,
                   108,
-                  95,
-                  109,
-                  105,
-                  110,
-                  116,
                   95,
                   118,
                   97,
@@ -2497,7 +2487,7 @@ export type BumpinTrade = {
           "writable": true
         },
         {
-          "name": "poolMintVault",
+          "name": "poolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2508,11 +2498,6 @@ export type BumpinTrade = {
                   111,
                   111,
                   108,
-                  95,
-                  109,
-                  105,
-                  110,
-                  116,
                   95,
                   118,
                   97,
@@ -2627,7 +2612,7 @@ export type BumpinTrade = {
           }
         },
         {
-          "name": "poolMintVault",
+          "name": "poolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2638,11 +2623,6 @@ export type BumpinTrade = {
                   111,
                   111,
                   108,
-                  95,
-                  109,
-                  105,
-                  110,
-                  116,
                   95,
                   118,
                   97,
@@ -4557,16 +4537,16 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
+            "name": "mintKey",
+            "type": "pubkey"
+          },
+          {
             "name": "totalLiability",
             "type": "u128"
           },
           {
             "name": "totalAmount",
             "type": "u128"
-          },
-          {
-            "name": "mintKey",
-            "type": "pubkey"
           },
           {
             "name": "oracleKey",

@@ -139,13 +139,13 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
     match ctx {
         Either::Left(ctx) => {
             let pool = &mut ctx.accounts.pool.load_mut()?;
-
+            let user = &mut ctx.accounts.user.load_mut()?;
             let remaining_accounts = ctx.remaining_accounts;
-            let mut account_maps = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
+            let mut account_maps = load_maps(remaining_accounts, &ctx.accounts.state.bump_signer)?;
 
             let base_mint_amount = stake_processor::stake(
-                &ctx.accounts.pool,
-                &ctx.accounts.user,
+                pool.deref_mut(),
+                user.deref_mut(),
                 &account_maps.trade_token_map,
                 &mut account_maps.oracle_map,
                 stake_params.request_token_amount,
@@ -180,13 +180,14 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
         },
         Either::Right(ctx) => {
             let pool = &mut ctx.accounts.pool.load_mut()?;
+            let user = &mut ctx.accounts.user.load_mut()?;
 
             let remaining_accounts = ctx.remaining_accounts;
             let mut account_maps = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
 
             let base_mint_amount = stake_processor::stake(
-                &ctx.accounts.pool,
-                &ctx.accounts.user,
+                pool.deref_mut(),
+                user.deref_mut(),
                 &account_maps.trade_token_map,
                 &mut account_maps.oracle_map,
                 stake_params.request_token_amount,

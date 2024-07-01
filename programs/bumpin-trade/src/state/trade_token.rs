@@ -8,9 +8,9 @@ use crate::traits::{MarketIndexOffset, Size};
 #[derive(Eq, PartialEq, Debug, Default)]
 #[repr(C)]
 pub struct TradeToken {
+    pub mint_key: Pubkey,
     pub total_liability: u128,
     pub total_amount: u128,
-    pub mint_key: Pubkey,
     pub oracle_key: Pubkey,
     pub vault_key: Pubkey,
     pub name: [u8; 32],

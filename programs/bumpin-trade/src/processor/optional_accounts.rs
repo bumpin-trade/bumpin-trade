@@ -17,12 +17,12 @@ pub struct AccountMaps<'a> {
 
 pub fn load_maps<'a: 'info, 'info>(
     remaining_accounts: &'info [AccountInfo<'info>],
-    admin: &Pubkey,
+    _admin: &Pubkey,
 ) -> BumpResult<AccountMaps<'info>> {
-    let market_map = MarketMap::load(remaining_accounts, admin)?;
-    let trade_token_map = TradeTokenMap::load(remaining_accounts, admin)?;
+    let market_map = MarketMap::load(remaining_accounts)?;
+    let trade_token_map = TradeTokenMap::load(remaining_accounts)?;
     let oracle_map = OracleMap::load(remaining_accounts)?;
-    let pool_map = PoolMap::load(remaining_accounts, admin)?;
+    let pool_map = PoolMap::load(remaining_accounts)?;
     let vault_map = VaultMap::load(remaining_accounts)?;
 
     Ok(AccountMaps { market_map, trade_token_map, oracle_map, pool_map, vault_map })

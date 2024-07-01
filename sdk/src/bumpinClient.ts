@@ -1,4 +1,4 @@
-import {Connection, PublicKey} from '@solana/web3.js';
+import {ConfirmOptions, Connection, PublicKey} from '@solana/web3.js';
 import * as anchor from "@coral-xyz/anchor";
 import {AnchorProvider, BN, Program, Wallet} from "@coral-xyz/anchor";
 import idlBumpinTrade from "./idl/bumpin_trade.json"
@@ -51,7 +51,14 @@ export class BumpinClient {
         this.netType = config.netType;
         this.connection = new Connection(config.endpoint);
         this.wallet = config.wallet;
-        this.provider = new anchor.AnchorProvider(this.connection, this.wallet, anchor.AnchorProvider.defaultOptions());
+        let opt: ConfirmOptions = {
+            skipPreflight: false,
+            commitment: "root", //default commitment: root
+            preflightCommitment: "root",
+            maxRetries: 0,
+            minContextSlot: null
+        };
+        this.provider = new anchor.AnchorProvider(this.connection, this.wallet, opt);
         this.program = new anchor.Program(JSON.parse(JSON.stringify(idlBumpinTrade)), this.provider);
         this.bulkAccountLoader = new BulkAccountLoader(this.connection, "confirmed", config.pollingFrequency);
 
@@ -126,7 +133,7 @@ export class BumpinClient {
         let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(mint, await this.getTradeTokens());
         let targetPool = BumpinPoolUtils.getPoolByMintPublicKey(mint, await this.getPools());
         if (fromPortfolio) {
-            await this.userComponent.portfolioStake(amount, targetTradeToken,await this.getTradeTokens(), targetPool, sync);
+            await this.userComponent.portfolioStake(amount, targetTradeToken, await this.getTradeTokens(), targetPool, sync);
         } else {
             await this.userComponent.walletStake(amount, targetTradeToken, this.wallet.publicKey, targetPool);
         }

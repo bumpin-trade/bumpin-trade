@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use std::ops::DerefMut;
 
 use crate::errors::BumpErrorCode;
 use crate::processor::optional_accounts::load_maps;
@@ -36,21 +37,31 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
     validate!(user.authority.eq(ctx.accounts.authority.owner), BumpErrorCode::UserNotFound)?;
 
     let remaining_accounts = ctx.remaining_accounts;
-    for user_stake in user.stakes.iter_mut() {
-        let account_maps = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
+    let account_maps = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
+
+    let mut stake_amounts = vec![];
+    for user_stake in user.stakes.clone().iter() {
         let pool_key_map = &account_maps.pool_map;
         let pool_account_loader = pool_key_map.get_account_loader(&user_stake.pool_key)?;
-
         let pool = &mut pool_account_loader.load_mut()?;
-
         let account_maps = &mut load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
         let stake_amount = stake_processor::stake(
-            pool_account_loader,
-            &ctx.accounts.user,
+            pool.deref_mut(),
+            user.deref_mut(),
             &account_maps.trade_token_map,
             &mut account_maps.oracle_map,
             user_stake.user_rewards.realised_rewards_token_amount,
         )?;
+        stake_amounts.push(stake_amount);
+    }
+
+    let mut index = 0;
+    for user_stake in user.stakes.iter_mut() {
+        let pool_key_map = &account_maps.pool_map;
+        let pool_account_loader = pool_key_map.get_account_loader(&user_stake.pool_key)?;
+        let pool = &mut pool_account_loader.load_mut()?;
+        // let account_maps = &mut load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
+
         let token_amount = user_stake.user_rewards.realised_rewards_token_amount;
         user_stake.user_rewards.realised_rewards_token_amount = 0;
         user_stake.user_rewards.open_rewards_per_stake_token =
@@ -59,7 +70,7 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
         let account_maps = &mut load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
         let supply_amount = pool_processor::stake(
             pool,
-            stake_amount,
+            stake_amounts[index],
             &account_maps.trade_token_map,
             &mut account_maps.oracle_map,
             &account_maps.market_map,
@@ -74,6 +85,7 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
             change_supply_amount: supply_amount,
             user_stake: *user_stake,
         });
+        index += 1;
     }
     Ok(())
 }
