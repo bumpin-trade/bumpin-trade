@@ -15,7 +15,7 @@ use crate::state::user::User;
 use crate::utils;
 
 #[derive(Accounts)]
-#[instruction(param: StakeParams)]
+#[instruction(pool_index: u16, trade_token_index: u16, request_token_amount: u128)]
 pub struct PortfolioStake<'info> {
     #[account(
         mut,
@@ -33,23 +33,23 @@ pub struct PortfolioStake<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool".as_ref(), param.pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool".as_ref(), pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
         mut,
-        seeds = [b"pool_mint_vault".as_ref(), param.pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), pool_index.to_le_bytes().as_ref()],
         bump,
         token::mint = pool.load() ?.mint_key,
         token::authority = state.bump_signer
     )]
-    pub pool_mint_vault: Box<Account<'info, TokenAccount>>,
+    pub pool_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
-        seeds = [b"trade_token_vault".as_ref(), param.trade_token_index.to_le_bytes().as_ref()],
+        seeds = [b"trade_token_vault".as_ref(), trade_token_index.to_le_bytes().as_ref()],
         bump,
         token::mint = pool.load() ?.mint_key,
         token::authority = state.bump_signer
@@ -85,19 +85,19 @@ pub struct WalletStake<'info> {
 
     #[account(
         mut,
-        constraint = pool_mint_vault.mint.key().eq(& user_token_account.mint.key()),
+        constraint = pool_vault.mint.key().eq(& user_token_account.mint.key()),
         token::authority = authority
     )]
     pub user_token_account: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
-        seeds = [b"pool_mint_vault".as_ref(), param.pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), param.pool_index.to_le_bytes().as_ref()],
         bump,
         token::mint = pool.load() ?.mint_key,
         token::authority = state.bump_signer
     )]
-    pub pool_mint_vault: Box<Account<'info, TokenAccount>>,
+    pub pool_vault: Box<Account<'info, TokenAccount>>,
 
     pub authority: Signer<'info>,
     pub token_program: Program<'info, Token>,
@@ -112,9 +112,14 @@ pub struct StakeParams {
 
 pub fn handle_portfolio_stake<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, PortfolioStake>,
-    param: StakeParams,
+    pool_index: u16,
+    trade_token_index: u16,
+    request_token_amount: u128,
 ) -> Result<()> {
-    handle_pool_stake0(Either::Left(ctx), param)
+    handle_pool_stake0(
+        Either::Left(ctx),
+        StakeParams { request_token_amount, pool_index, trade_token_index },
+    )
 }
 
 pub fn handle_wallet_stake<'a, 'b, 'c: 'info, 'info>(
@@ -161,7 +166,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
             utils::token::receive(
                 &ctx.accounts.token_program,
                 &ctx.accounts.trade_token_vault,
-                &ctx.accounts.pool_mint_vault,
+                &ctx.accounts.pool_vault,
                 &ctx.accounts.authority,
                 stake_params.request_token_amount,
             )?;
@@ -202,7 +207,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
             utils::token::receive(
                 &ctx.accounts.token_program,
                 &ctx.accounts.user_token_account,
-                &ctx.accounts.pool_mint_vault,
+                &ctx.accounts.pool_vault,
                 &ctx.accounts.authority,
                 stake_params.request_token_amount,
             )?;

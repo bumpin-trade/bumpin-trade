@@ -2,6 +2,7 @@ import {PositionBalance, PositionStatus, TradeToken, UserAccount, UserPosition} 
 import {OracleClient} from "../oracles/types";
 import {BN} from "@coral-xyz/anchor";
 import {BumpinTokenUtils} from "./token";
+import {isEqual} from 'lodash';
 
 export class BumpinPositionUtils {
 
@@ -16,7 +17,7 @@ export class BumpinPositionUtils {
         }
     }
 
-    public static async getUserPositionValue(oracle: OracleClient, user:UserAccount, tradeTokens: TradeToken[]): Promise<PositionBalance> {
+    public static async getUserPositionValue(oracle: OracleClient, user: UserAccount, tradeTokens: TradeToken[]): Promise<PositionBalance> {
         let totalBalance = {
             initialMarginUsdFromPortfolio: new BN(0),
             positionUnPnl: new BN(0),
@@ -24,10 +25,10 @@ export class BumpinPositionUtils {
         };
 
         for (let userPosition of user.positions) {
-            if (userPosition.status === PositionStatus.INIT) {
+            if (isEqual(userPosition.status, PositionStatus.INIT)) {
                 continue;
             }
-            let indexTradeToken =  BumpinTokenUtils.getTradeTokenByMintPublicKey(userPosition.indexMintKey,tradeTokens);
+            let indexTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(userPosition.indexMintKey, tradeTokens);
             let unPnlValue = await BumpinPositionUtils.getPositionUnPnlValue(oracle, indexTradeToken, userPosition);
             totalBalance.positionUnPnl = totalBalance.positionUnPnl.add(unPnlValue);
             totalBalance.mmUsd = totalBalance.mmUsd.add(userPosition.mmUsd);

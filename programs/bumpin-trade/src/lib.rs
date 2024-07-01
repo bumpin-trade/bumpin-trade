@@ -85,9 +85,11 @@ pub mod bumpin_trade {
     /*-----pool pool------*/
     pub fn portfolio_stake<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PortfolioStake>,
-        params: StakeParams,
+        pool_index: u16,
+        trade_token_index: u16,
+        request_token_amount: u128,
     ) -> Result<()> {
-        handle_portfolio_stake(ctx, params)
+        handle_portfolio_stake(ctx, pool_index, trade_token_index, request_token_amount)
     }
 
     pub fn wallet_stake<'a, 'b, 'c: 'info, 'info>(

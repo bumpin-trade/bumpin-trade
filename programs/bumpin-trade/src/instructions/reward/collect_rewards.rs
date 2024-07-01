@@ -24,7 +24,7 @@ pub struct CollectRewards<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool_mint_vault".as_ref(), pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub pool_vault: Box<Account<'info, TokenAccount>>,
@@ -38,7 +38,7 @@ pub struct CollectRewards<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool_mint_vault".as_ref(), stable_pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), stable_pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub stable_pool_vault: Box<Account<'info, TokenAccount>>,

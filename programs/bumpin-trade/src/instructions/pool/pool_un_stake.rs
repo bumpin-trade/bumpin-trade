@@ -42,10 +42,10 @@ pub struct PortfolioUnStake<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool_mint_vault".as_ref(), un_stake_params.pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), un_stake_params.pool_index.to_le_bytes().as_ref()],
         bump,
     )]
-    pub pool_mint_vault: Box<Account<'info, TokenAccount>>,
+    pub pool_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
@@ -97,10 +97,10 @@ pub struct WalletUnStake<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool_mint_vault".as_ref(), un_stake_params.pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), un_stake_params.pool_index.to_le_bytes().as_ref()],
         bump,
     )]
-    pub pool_mint_vault: Box<Account<'info, TokenAccount>>,
+    pub pool_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
@@ -117,7 +117,7 @@ pub struct WalletUnStake<'info> {
 
     #[account(
         mut,
-        constraint = pool_mint_vault.mint.eq(& user_token_account.mint),
+        constraint = pool_vault.mint.eq(& user_token_account.mint),
         token::authority = authority
     )]
     pub user_token_account: Box<Account<'info, TokenAccount>>,
@@ -194,7 +194,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
             let mut trade_token = ctx.accounts.trade_token.load_mut()?;
             utils::token::receive(
                 &ctx.accounts.token_program,
-                &ctx.accounts.pool_mint_vault,
+                &ctx.accounts.pool_vault,
                 &ctx.accounts.trade_token_vault,
                 &ctx.accounts.authority,
                 transfer_amount,
@@ -275,7 +275,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
 
             utils::token::send_from_program_vault(
                 &ctx.accounts.token_program,
-                &ctx.accounts.pool_mint_vault,
+                &ctx.accounts.pool_vault,
                 &ctx.accounts.user_token_account,
                 &ctx.accounts.authority,
                 bump_signer_nonce,

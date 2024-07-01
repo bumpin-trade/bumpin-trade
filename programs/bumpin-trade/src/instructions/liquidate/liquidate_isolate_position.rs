@@ -36,7 +36,7 @@ pub struct LiquidateIsolatePosition<'info> {
     #[account(
         mut,
         constraint = user_token_account.owner.eq(& user.load() ?.authority)
-        && (pool_mint_vault.mint.eq(& user_token_account.mint) || stable_pool_mint_vault.mint.eq(& user_token_account.mint)),
+        && (pool_vault.mint.eq(& user_token_account.mint) || stable_pool_vault.mint.eq(& user_token_account.mint)),
     )]
     pub user_token_account: Account<'info, TokenAccount>,
 
@@ -65,17 +65,17 @@ pub struct LiquidateIsolatePosition<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool_mint_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
         bump,
     )]
-    pub pool_mint_vault: Account<'info, TokenAccount>,
+    pub pool_vault: Account<'info, TokenAccount>,
 
     #[account(
         mut,
-        seeds = [b"pool_mint_vault".as_ref(), _stable_pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), _stable_pool_index.to_le_bytes().as_ref()],
         bump,
     )]
-    pub stable_pool_mint_vault: Account<'info, TokenAccount>,
+    pub stable_pool_vault: Account<'info, TokenAccount>,
 
     #[account(
         mut,
@@ -159,11 +159,7 @@ pub fn handle_liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
             &mut stable_pool,
             &ctx.accounts.state,
             Some(&ctx.accounts.user_token_account),
-            if is_long {
-                &ctx.accounts.pool_mint_vault
-            } else {
-                &ctx.accounts.stable_pool_mint_vault
-            },
+            if is_long { &ctx.accounts.pool_vault } else { &ctx.accounts.stable_pool_vault },
             trade_token.deref_mut(),
             &ctx.accounts.trade_token_vault,
             &ctx.accounts.bump_signer,

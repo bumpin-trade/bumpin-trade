@@ -1941,7 +1941,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "param.pool_index"
+                "path": "poolIndex"
               }
             ]
           }
@@ -1973,7 +1973,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "param.pool_index"
+                "path": "poolIndex"
               }
             ]
           }
@@ -2007,7 +2007,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "param.trade_token_index"
+                "path": "tradeTokenIndex"
               }
             ]
           }
@@ -2023,12 +2023,16 @@ export type BumpinTrade = {
       ],
       "args": [
         {
-          "name": "params",
-          "type": {
-            "defined": {
-              "name": "stakeParams"
-            }
-          }
+          "name": "poolIndex",
+          "type": "u16"
+        },
+        {
+          "name": "tradeTokenIndex",
+          "type": "u16"
+        },
+        {
+          "name": "requestTokenAmount",
+          "type": "u128"
         }
       ]
     },

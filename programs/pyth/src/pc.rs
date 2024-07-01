@@ -44,6 +44,7 @@ pub struct PriceComp {
 
 #[derive(Copy, Default, Clone)]
 #[allow(dead_code, clippy::upper_case_acronyms)]
+#[repr(C)]
 pub enum PriceType {
     Unknown,
     #[default]

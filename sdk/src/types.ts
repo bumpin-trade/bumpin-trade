@@ -109,10 +109,10 @@ export type PoolConfig = {
     unSettleMintRatioLimit: number;
 }
 
-export enum PoolStatus {
-    NORMAL = 0,
-    StakePaused = 1,
-    UnStakePaused = 2
+export class PoolStatus {
+    static readonly NORMAL = {init: {}};
+    static readonly StakePaused = {stakePaused: {}};
+    static readonly UnStakePaused = {unStakePaused: {}};
 }
 
 export type Pool = {
@@ -152,9 +152,9 @@ export type TradeToken = {
 }
 
 
-export enum UserStakeStatus {
-    INIT = 0,
-    USING = 1
+export class UserStakeStatus {
+    static readonly INIT = {init: {}};
+    static readonly USING = {using: {}};
 }
 
 
@@ -169,12 +169,13 @@ export type UserStake = {
     stakedShare: BN;
     userRewards: UserRewards;
     poolKey: PublicKey;
-    userStakeStatus: number;
+    userStakeStatus: UserStakeStatus;
 
 }
+
 export class UserTokenStatus {
-    static readonly INIT = { init: {} };
-    static readonly USING = { using: {} };
+    static readonly INIT = {init: {}};
+    static readonly USING = {using: {}};
 }
 
 
@@ -187,9 +188,9 @@ export type UserToken = {
     userTokenStatus: UserTokenStatus;
 }
 
-export enum PositionStatus {
-    INIT = 0,
-    USING = 1
+export class PositionStatus {
+    static readonly INIT = {init: {}};
+    static readonly USING = {using: {}};
 }
 
 export type UserPosition = {
@@ -219,38 +220,38 @@ export type UserPosition = {
     leverage: number;
     isLong: boolean;
     isPortfolioMargin: boolean;
-    status: number;
+    status: PositionStatus;
 
 }
 
-export enum OrderSide {
-    NONE = 0,
-    LONG = 1,
-    SHORT = 2,
+export class OrderSide {
+    static readonly NONE = {none: {}};
+    static readonly LONG = {long: {}};
+    static readonly SHORT = {short: {}};
 }
 
-export enum OrderStatus {
-    INIT = 0,
-    USING = 1,
+export class OrderStatus {
+    static readonly INIT = {init: {}};
+    static readonly USING = {using: {}};
 }
 
-export enum PositionSide {
-    NONE = 0,
-    INCREASE = 1,
-    DECREASE = 2,
+export class PositionSide {
+    static readonly NONE = {none: {}};
+    static readonly INCREASE = {increase: {}};
+    static readonly DECREASE = {decrease: {}};
 }
 
-export enum OrderType {
-    NONE = 0,
-    MARKET = 1,
-    LIMIT = 2,
-    STOP = 3,
+export class OrderType {
+    static readonly NONE = {none: {}};
+    static readonly MARKET = {market: {}};
+    static readonly LIMIT = {limit: {}};
+    static readonly STOP = {stop: {}};
 }
 
-export enum StopType {
-    NONE = 0,
-    StopLoss = 1,
-    TakeProfit = 2,
+export class StopType {
+    static readonly NONE = {none: {}};
+    static readonly StopLoss = {stopLoss: {}};
+    static readonly TakeProfit = {takeProfit: {}};
 }
 
 export type UserOrder = {
@@ -264,11 +265,11 @@ export type UserOrder = {
     authority: PublicKey;
     symbol: number[];
     leverage: number;
-    orderSide: number;
-    positionSide: number;
-    orderType: number;
-    stopType: number;
-    status: number;
+    orderSide: OrderSide;
+    positionSide: PositionSide;
+    orderType: OrderType;
+    stopType: StopType;
+    status: OrderStatus;
     isPortfolioMargin: boolean;
 }
 

@@ -43,35 +43,43 @@ export class UserComponent extends Component {
     }
 
 
-    public async portfolioStake(amount: BN, tradeToken: TradeToken, pool: Pool, sync: boolean = false): Promise<void> {
+    public async portfolioStake(amount: BN, targetTradeToken: TradeToken, allTradeTokens: TradeToken[], pool: Pool, sync: boolean = false): Promise<void> {
         let user = await this.getUser(sync);
 
-        await this.checkStakeAmountFulfilRequirements(amount, tradeToken, pool);
-        let availableValue = await this.getUserAvailableValue(user, [tradeToken], amount, pool);
+        await this.checkStakeAmountFulfilRequirements(amount, targetTradeToken, pool);
+        let availableValue = await this.getUserAvailableValue(user, allTradeTokens, amount, pool);
         if (!availableValue.gt(new BN(0))) {
             throw new BumpinValueInsufficient(amount, availableValue)
         }
-        let param = {
-            requestTokenAmount: amount,
-            poolIndex: pool.index,
-            tradeTokenIndex: tradeToken.index
-        };
 
         let remainingAccounts = [];
         for (let token of user.tokens) {
             if (isEqual(token.userTokenStatus, UserTokenStatus.USING)) {
-                remainingAccounts.push(token.tokenMintKey)
+                remainingAccounts.push({
+                    pubkey: token.tokenMintKey,
+                    isWritable: false,
+                    isSigner: false,
+                });
+                let target = BumpinTokenUtils.getTradeTokenByMintPublicKey(token.tokenMintKey, allTradeTokens);
+                if (target) {
+                    remainingAccounts.push({
+                        pubkey: target.oracleKey,
+                        isWritable: false,
+                        isSigner: false,
+                    });
+                }
             }
         }
 
-        await this.program.methods.portfolioStake(
-            param
+        let r = await this.program.methods.portfolioStake(
+            pool.index, targetTradeToken.index, amount
         ).accounts(
             {
                 authority: this.publicKey,
             }
         ).remainingAccounts(remainingAccounts)
             .signers([]).rpc();
+        console.log(r)
     }
 
     public async walletStake(amount: BN, tradeToken: TradeToken, wallet: PublicKey, pool: Pool): Promise<void> {
@@ -129,7 +137,7 @@ export class UserComponent extends Component {
     public async getUserAvailableValue(user: UserAccount, tradeTokens: TradeToken[], amount: BN, pool: Pool) {
 
         for (let userPosition of user.positions) {
-            if (userPosition.status === PositionStatus.INIT) {
+            if (isEqual(userPosition.status, PositionStatus.INIT)) {
                 continue;
             }
             if (userPosition.isPortfolioMargin && userPosition.marginMintKey.equals(pool.mintKey) && amount.gt(new BN(0))) {
@@ -163,7 +171,7 @@ export class UserComponent extends Component {
     }
 
     async checkStakeAmountFulfilRequirements(amount: BN, tradeToken: TradeToken, pool: Pool): Promise<void> {
-        let priceData = await this.oracleClient.getOraclePriceData(tradeToken.mintKey);
+        let priceData = await this.oracleClient.getOraclePriceData(tradeToken.oracleKey);
         let value = amount.toUsd(priceData.price, tradeToken.decimals);
         if (value < pool.config.minimumStakeAmount) {
             throw new BumpinValueInsufficient(pool.config.minimumStakeAmount, value)

@@ -1935,7 +1935,7 @@
               },
               {
                 "kind": "arg",
-                "path": "param.pool_index"
+                "path": "pool_index"
               }
             ]
           }
@@ -1967,7 +1967,7 @@
               },
               {
                 "kind": "arg",
-                "path": "param.pool_index"
+                "path": "pool_index"
               }
             ]
           }
@@ -2001,7 +2001,7 @@
               },
               {
                 "kind": "arg",
-                "path": "param.trade_token_index"
+                "path": "trade_token_index"
               }
             ]
           }
@@ -2017,12 +2017,16 @@
       ],
       "args": [
         {
-          "name": "params",
-          "type": {
-            "defined": {
-              "name": "StakeParams"
-            }
-          }
+          "name": "pool_index",
+          "type": "u16"
+        },
+        {
+          "name": "trade_token_index",
+          "type": "u16"
+        },
+        {
+          "name": "request_token_amount",
+          "type": "u128"
         }
       ]
     },

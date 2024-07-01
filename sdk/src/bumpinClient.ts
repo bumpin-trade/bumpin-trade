@@ -126,7 +126,7 @@ export class BumpinClient {
         let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(mint, await this.getTradeTokens());
         let targetPool = BumpinPoolUtils.getPoolByMintPublicKey(mint, await this.getPools());
         if (fromPortfolio) {
-            await this.userComponent.portfolioStake(amount, targetTradeToken, targetPool, sync);
+            await this.userComponent.portfolioStake(amount, targetTradeToken,await this.getTradeTokens(), targetPool, sync);
         } else {
             await this.userComponent.walletStake(amount, targetTradeToken, this.wallet.publicKey, targetPool);
         }
