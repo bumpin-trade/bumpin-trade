@@ -133,11 +133,6 @@ pub mod bumpin_trade {
     pub fn place_order<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
         params: PlaceOrderParams,
-        _pool_index: u16,
-        _stable_pool_index: u16,
-        _market_index: u16,
-        _trade_token_index: u16,
-        _index_trade_token_index: u16,
     ) -> Result<()> {
         handle_place_order(ctx, params)
     }

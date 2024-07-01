@@ -198,33 +198,14 @@ export class Utils {
 
 
     public async placePerpOrder(player: BumpinPlayer,
-                                market: BumpinMarket,
-                                tradeToken: BumpinTradeToken,
                                 oracle: PublicKey,
                                 param: PlaceOrderParams
     ): Promise<void> {
         await this.program.methods.placeOrder(
-            // param,
-            // 0,
-            // 0,
-            // 0,
-            // 0,
             param,
-            0
         ).accounts({
             user: player.getPda()[0],
             authority: player.user.publicKey,
-            // marginToken: market.pool.mint.publicKey,
-            // state: this.getStatePda()[0],
-            // pool: market.pool.getPda()[0],
-            // stablePool: market.stablePool.getPda()[0],
-            // market: market.getPda()[0],
-            // poolVault: market.pool.getVaultPda(0)[0],
-            // stablePoolVault: market.stablePool.getVaultPda(0)[0],
-            // indexTradeToken: tradeToken.getPda(0)[0],
-            // tradeToken: tradeToken.getPda(0)[0],
-            // tradeTokenVault: tradeToken.getVaultPda(0)[0],
-            // userTokenAccount: player.getTradeTokenAccount(tradeToken.tradeTokenName).address,
             bumpSigner: this.getStatePda()[0],
         }).remainingAccounts([{
             pubkey: oracle,

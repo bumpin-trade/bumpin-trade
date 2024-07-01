@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use pyth_sdk_solana::state::SolanaPriceAccount;
 
 use crate::errors::BumpErrorCode::{InvalidOracle, PythOffline};
-use crate::errors::BumpResult;
+use crate::errors::{BumpErrorCode, BumpResult};
 use crate::math::casting::Cast;
 use crate::math::constants::PRICE_PRECISION;
 use crate::math::safe_math::SafeMath;
@@ -24,10 +24,10 @@ pub fn get_oracle_price(price_oracle: &AccountInfo) -> BumpResult<OraclePriceDat
 }
 
 pub fn get_pyth_price(price_oracle: &AccountInfo, multiple: u128) -> BumpResult<OraclePriceData> {
-    let price_feed = SolanaPriceAccount::account_info_to_feed(price_oracle).unwrap();
-    let current_timestamp = Clock::get().unwrap().unix_timestamp;
+    let price_feed = SolanaPriceAccount::account_info_to_feed(price_oracle).map_err(|_e|PythOffline)?;
+    let current_timestamp = Clock::get().map_err(|_e|BumpErrorCode::TimestampNotFound)?.unix_timestamp;
     let price_data =
-        price_feed.get_price_no_older_than(current_timestamp, 10).ok_or(PythOffline).unwrap();
+        price_feed.get_price_no_older_than(current_timestamp, 10).ok_or(PythOffline)?;
 
     let oracle_price = price_data.price;
     let oracle_conf = price_data.conf;
