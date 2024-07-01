@@ -70,6 +70,16 @@ export class BumpinAdmin {
         return oracleKeypair;
     }
 
+    public async setPrice(oraclePublicKey: PublicKey, price: BN) {
+        await this.TEST_PYTH.methods.setPrice(
+            price,
+            new BN(0)
+        ).accounts({
+            price: oraclePublicKey,
+        }).signers([])
+            .rpc();
+    }
+
     public async initTradeToken(tradeTokenName: string, tradeTokenMint: string, discount: number, liquidationFactor: number) {
         let tradeTokenMintPublicKey = new PublicKey(tradeTokenMint);
         const s = BumpinUtils.string2Padded32Bytes(tradeTokenName);

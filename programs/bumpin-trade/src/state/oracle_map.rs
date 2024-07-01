@@ -51,9 +51,7 @@ impl<'a> OracleMap<'a> {
                     pubkey,
                     AccountInfoAndOracleSource { account_info: account_info.clone() },
                 );
-                continue;
             }
-            break;
         }
 
         Ok(OracleMap { oracles, price_data: BTreeMap::new() })

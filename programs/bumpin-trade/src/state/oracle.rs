@@ -27,7 +27,7 @@ pub fn get_pyth_price(price_oracle: &AccountInfo, multiple: u128) -> BumpResult<
     let price_feed = SolanaPriceAccount::account_info_to_feed(price_oracle).unwrap();
     let current_timestamp = Clock::get().unwrap().unix_timestamp;
     let price_data =
-        price_feed.get_price_no_older_than(current_timestamp, 10).ok_or(PythOffline).unwrap();
+        price_feed.get_price_no_older_than(current_timestamp, 120).ok_or(PythOffline).unwrap();
 
     let oracle_price = price_data.price;
     let oracle_conf = price_data.conf;

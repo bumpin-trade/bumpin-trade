@@ -645,6 +645,7 @@ dependencies = [
  "anchor-spl",
  "arrayref",
  "bumpin-trade-attribute",
+ "bytemuck",
  "num-traits",
  "pyth-sdk-solana",
  "uint",

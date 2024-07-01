@@ -4,7 +4,6 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::can_sign_for_user;
-use crate::errors::BumpErrorCode;
 use crate::instructions::Either;
 use crate::processor::optional_accounts::load_maps;
 use crate::processor::{pool_processor, stake_processor};
@@ -23,6 +22,13 @@ pub struct PortfolioStake<'info> {
         bump,
     )]
     pub state: Box<Account<'info, State>>,
+
+    /// CHECK: ?
+    #[account(
+        constraint = state.bump_signer.eq(& bump_signer.key())
+    )]
+    pub bump_signer: AccountInfo<'info>,
+
     #[account(
         mut,
         seeds = [b"user", authority.key.as_ref()],
@@ -151,11 +157,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 stake_params.request_token_amount,
             )?;
             let (supply_amount, user_stake) = pool_processor::portfolio_to_stake(
-                ctx.accounts
-                    .user
-                    .load_mut()
-                    .map_err(|_e| BumpErrorCode::CouldNotLoadUserData)?
-                    .deref_mut(),
+                user,
                 pool,
                 base_mint_amount,
                 &account_maps.trade_token_map,
@@ -163,17 +165,19 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 &account_maps.market_map,
                 &ctx.accounts.state,
             )?;
-            utils::token::receive(
+
+            utils::token::send_from_program_vault(
                 &ctx.accounts.token_program,
                 &ctx.accounts.trade_token_vault,
                 &ctx.accounts.pool_vault,
-                &ctx.accounts.authority,
+                &ctx.accounts.bump_signer,
+                ctx.accounts.state.bump_signer_nonce,
                 stake_params.request_token_amount,
             )?;
             pool.add_amount_and_supply(stake_params.request_token_amount, supply_amount)?;
             emit!(StakeOrUnStakeEvent {
-                user_key: ctx.accounts.user.load()?.key,
-                token_mint: ctx.accounts.pool.load()?.mint_key,
+                user_key: user.key,
+                token_mint: pool.mint_key,
                 change_supply_amount: supply_amount,
                 user_stake,
             });

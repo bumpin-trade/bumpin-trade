@@ -67,27 +67,23 @@ export class UserComponent extends Component {
                     isSigner: false,
                 });
                 let pda =  BumpinUtils.getTradeTokenPda(this.program, target.index)[0];
-                console.log('pda', pda.toString());
                 remainingAccounts.push({
                     pubkey: pda,
                     isWritable: false,
                     isSigner: false,
                 });
-
-                console.log('mint', token.tokenMintKey.toString(), 'oracle', target.oracleKey.toString());
             }
         }
-        console.log('remainingAccounts', remainingAccounts.length);
 
-        let r = await this.program.methods.portfolioStake(
+       await this.program.methods.portfolioStake(
             pool.index, targetTradeToken.index, amount
         ).accounts(
             {
                 authority: this.publicKey,
+                bumpSigner: (await this.getState()).bumpSigner,
             }
         ).remainingAccounts(remainingAccounts)
             .signers([]).rpc();
-        console.log(r)
     }
 
     public async walletStake(amount: BN, tradeToken: TradeToken, wallet: PublicKey, pool: Pool): Promise<void> {

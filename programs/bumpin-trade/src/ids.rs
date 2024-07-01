@@ -3,7 +3,7 @@ pub mod pyth_program {
     #[cfg(feature = "mainnet-beta")]
     declare_id!("FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH");
     #[cfg(not(feature = "mainnet-beta"))]
-    declare_id!("ETiy97w4dwFnyPLXSjRerh9fG4YprQyyTiEj3JBMVuJo");
+    declare_id!("AszCjfpwoxuCy4wiHVo5R4sHFuAzp4bDEgYC1VC5jHT8");
 }
 
 pub mod switchboard_program {
