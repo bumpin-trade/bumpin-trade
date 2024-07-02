@@ -1,9 +1,9 @@
+use crate::state::pool::Pool;
 use crate::state::pool_rewards::PoolRewards;
 use crate::state::state::State;
 use crate::traits::Size;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-use crate::state::pool::Pool;
 
 #[derive(Accounts)]
 #[instruction(_pool_index: u16)]

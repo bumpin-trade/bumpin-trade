@@ -3,7 +3,7 @@ use anchor_spl::token::{Token, TokenAccount};
 
 use crate::instructions::constraints::*;
 use crate::math::safe_math::SafeMath;
-use crate::processor::user_processor::UserProcessor;
+use crate::processor::user_processor;
 use crate::state::bump_events::DepositEvent;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::{User, UserTokenUpdateReason};
@@ -70,8 +70,12 @@ pub fn handle_deposit(ctx: Context<Deposit>, _token_index: u16, amount: u128) ->
     trade_token.sub_liability(repay_amount)?;
     if amount > repay_amount {
         let left_amount = amount.safe_sub(repay_amount)?;
-        let mut user_processor = UserProcessor { user: &mut user };
-        user_processor.update_cross_position_balance(&trade_token.mint_key, left_amount, true)?
+        user_processor::update_cross_position_balance(
+            &mut user,
+            &trade_token.mint_key,
+            left_amount,
+            true,
+        )?
     }
     emit!(DepositEvent {
         user_key: ctx.accounts.user.to_account_info().key(),

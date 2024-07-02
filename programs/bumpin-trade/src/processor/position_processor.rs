@@ -502,8 +502,11 @@ pub fn execute_reduce_position_margin(
     )?;
     let user_key = position.user_key;
     let pre_position = *position;
-    let reduce_margin_amount =
-        cal_utils::usd_to_token_u(params.update_margin_amount, trade_token.decimals, position.entry_price)?;
+    let reduce_margin_amount = cal_utils::usd_to_token_u(
+        params.update_margin_amount,
+        trade_token.decimals,
+        position.entry_price,
+    )?;
 
     if position.is_portfolio_margin
         && position.initial_margin_usd.safe_sub(position.initial_margin_usd_from_portfolio)?

@@ -3,7 +3,6 @@ use anchor_spl::token::{Token, TokenAccount};
 
 use crate::errors::BumpErrorCode;
 use crate::instructions::constraints::*;
-use crate::processor::user_processor::UserProcessor;
 use crate::state::infrastructure::user_order::OrderStatus;
 use crate::state::pool::Pool;
 use crate::state::state::State;
@@ -78,9 +77,9 @@ pub fn handle_cancel_order(
         BumpErrorCode::InvalidParam
     )?;
 
-    let mut user = ctx.accounts.user.load_mut().unwrap();
-    let mut user_processor = UserProcessor { user: &mut user };
-    user_processor.cancel_order(
+    let mut user =
+        ctx.accounts.user.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadUserData)?;
+    user.cancel_order(
         order,
         &ctx.accounts.token_program,
         &ctx.accounts.pool_vault,

@@ -9,8 +9,7 @@ use crate::instructions::Either;
 use crate::math::safe_math::SafeMath;
 use crate::processor::fee_reward_processor::update_account_fee_reward;
 use crate::processor::optional_accounts::load_maps;
-use crate::processor::user_processor::UserProcessor;
-use crate::processor::{fee_processor, pool_processor};
+use crate::processor::{fee_processor, pool_processor, user_processor};
 use crate::state::bump_events::StakeOrUnStakeEvent;
 use crate::state::pool::Pool;
 use crate::state::state::State;
@@ -214,8 +213,8 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
                 trade_token.sub_liability(repay_liability)?;
             }
 
-            let mut user_processor = UserProcessor { user };
-            user_processor.update_cross_position_balance(
+            user_processor::update_cross_position_balance(
+                user,
                 &pool.mint_key,
                 transfer_amount.safe_sub(repay_liability)?,
                 true,

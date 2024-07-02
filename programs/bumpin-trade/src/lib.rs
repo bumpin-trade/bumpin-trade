@@ -160,8 +160,7 @@ pub mod bumpin_trade {
         let bump_signer_account_info = &ctx.accounts.bump_signer;
         let token_program = &ctx.accounts.token_program;
         let remaining_accounts = ctx.remaining_accounts;
-        let AccountMaps { trade_token_map, mut oracle_map, .. } =
-            load_maps(remaining_accounts)?;
+        let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts)?;
 
         handle_execute_order(
             user_account_loader,
@@ -212,8 +211,29 @@ pub mod bumpin_trade {
 
     pub fn liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, LiquidateCrossPosition<'c>>,
+        user_authority_key: Pubkey,
     ) -> Result<()> {
-        handle_liquidate_cross_position(ctx)
+        handle_liquidate_cross_position(ctx, user_authority_key)
+    }
+
+    pub fn liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, LiquidateIsolatePosition>,
+        position_key: Pubkey,
+        market_index: u16,
+        pool_index: u16,
+        stable_pool_index: u16,
+        index_trade_token_index: u16,
+        user_authority_key: Pubkey,
+    ) -> Result<()> {
+        handle_liquidate_isolate_position(
+            ctx,
+            position_key,
+            market_index,
+            pool_index,
+            stable_pool_index,
+            index_trade_token_index,
+            user_authority_key,
+        )
     }
 
     /*-----adl------*/

@@ -11,7 +11,6 @@ use crate::math::safe_math::SafeMath;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::position_processor;
 use crate::processor::position_processor::DecreasePositionParams;
-use crate::processor::user_processor::UserProcessor;
 use crate::state::infrastructure::user_position::UserPosition;
 use crate::state::market_map::MarketMap;
 use crate::state::state::State;
@@ -51,6 +50,7 @@ pub struct LiquidateCrossPosition<'info> {
 
 pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, LiquidateCrossPosition<'c>>,
+    _user_authority_key: Pubkey,
 ) -> Result<()> {
     let mut user = ctx.accounts.user.load_mut()?;
     let state = &ctx.accounts.state;
@@ -66,9 +66,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         ..
     } = load_maps(remaining_accounts)?;
 
-    let mut user_processor = UserProcessor { user: &mut user };
-    user_processor.cancel_all_cross_orders()?;
-    drop(user_processor);
+    user.cancel_all_cross_orders()?;
 
     let mut pos_infos: Vec<PosInfos> = Vec::new();
     for position in &user.positions {
@@ -109,7 +107,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
     )?
     .max(0i128);
 
-    if cross_net_value <= 0 || cross_net_value.abs().cast::<u128>()? <= total_position_mm {
+    if cross_net_value <= 0i128 || cross_net_value.abs().cast::<u128>()? <= total_position_mm {
         for pos_info in &pos_infos {
             //only cross margin position support
             if !pos_info.is_portfolio_margin {
