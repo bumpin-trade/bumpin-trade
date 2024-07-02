@@ -84,16 +84,15 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
 
     for param in params {
         let user_account_loader = user_map.get_account_loader(&param.user_key)?;
-        let user_account = &mut user_map.get_mut_ref(&param.user_key)?;
+        let user_account = user_account_loader.load_mut()?;
 
         let user_token_account = vault_vec
             .iter()
             .find(|user_token_account| user_token_account.owner.eq(&user_account.authority))
             .ok_or(BumpErrorCode::CouldNotLoadUserData)?;
 
-        let position = user_account.find_position_mut_ref_by_key(&param.position_key)?;
+        let position = user_account.get_user_position_ref(&param.position_key)?;
 
-        let user_account = user_map.get_ref(&param.user_key)?;
         let user_token = user_account.get_user_token_ref(&position.margin_mint_key)?;
 
         validate!(
@@ -101,7 +100,6 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
             BumpErrorCode::InvalidTokenAccount
         )?;
         let index_trade_token = trade_token_map.get_trade_token_ref(&position.index_mint_key)?;
-        drop(user_account);
         position_processor::decrease_position(
             DecreasePositionParams {
                 order_id: 0,

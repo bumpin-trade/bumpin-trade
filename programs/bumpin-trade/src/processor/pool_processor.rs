@@ -5,7 +5,6 @@ use crate::state::infrastructure::user_stake::UserStake;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
-use crate::state::state::State;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 use crate::validate;
@@ -17,10 +16,9 @@ pub fn un_stake(
     trade_token_map: &TradeTokenMap,
     oracle_map: &mut OracleMap,
     market_map: &MarketMap,
-    state: &State,
 ) -> BumpResult<u128> {
     let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key)?;
-    let pool_value = pool.get_pool_usd_value(trade_token_map, oracle_map, market_map, state)?;
+    let pool_value = pool.get_pool_usd_value(trade_token_map, oracle_map, market_map)?;
 
     let un_stake_usd = cal_utils::mul_div_u(un_stake_amount, pool_value, pool.total_supply)?;
     let pool_price = oracle_map.get_price_data(&trade_token.oracle_key)?;
@@ -42,7 +40,6 @@ pub fn stake(
     trade_token_map: &TradeTokenMap,
     oracle_map: &mut OracleMap,
     market_map: &MarketMap,
-    state: &State,
 ) -> BumpResult<u128> {
     let mut supply_amount = mint_amount;
     let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key)?;
@@ -55,7 +52,6 @@ pub fn stake(
                     trade_token_map,
                     oracle_map,
                     market_map,
-                    state,
                 )?)?;
     }
     Ok(supply_amount)
@@ -68,7 +64,6 @@ pub fn portfolio_to_stake(
     trade_token_map: &TradeTokenMap,
     oracle_map: &mut OracleMap,
     market_map: &MarketMap,
-    state: &State,
 ) -> BumpResult<(u128, UserStake)> {
     let mut supply_amount = mint_amount;
     let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key)?;
@@ -90,7 +85,6 @@ pub fn portfolio_to_stake(
                     trade_token_map,
                     oracle_map,
                     market_map,
-                    state,
                 )?)?;
     }
     let user_stake = user.get_user_stake_mut_ref(&pool.key)?;

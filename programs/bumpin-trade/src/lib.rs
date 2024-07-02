@@ -77,9 +77,11 @@ pub mod bumpin_trade {
 
     pub fn initialize_market<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializeMarket>,
+        pool_index: u16,
+        stable_pool_index: u16,
         symbol: [u8; 32],
     ) -> Result<()> {
-        handle_initialize_market(ctx, symbol)
+        handle_initialize_market(ctx, symbol, pool_index, stable_pool_index)
     }
 
     /*-----pool pool------*/
@@ -181,7 +183,7 @@ pub mod bumpin_trade {
             &mut oracle_map,
             &UserOrder::default(),
             order_id,
-            false,
+            true,
         )
     }
 

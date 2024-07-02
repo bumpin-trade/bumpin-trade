@@ -169,7 +169,6 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 &account_maps.trade_token_map,
                 &mut account_maps.oracle_map,
                 &account_maps.market_map,
-                &ctx.accounts.state,
             )?;
 
             utils::token::send_from_program_vault(
@@ -211,7 +210,6 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 &account_maps.trade_token_map,
                 &mut account_maps.oracle_map,
                 &account_maps.market_map,
-                &ctx.accounts.state,
             )?;
             user_stake.add_staked_share(supply_amount)?;
             utils::token::receive(
