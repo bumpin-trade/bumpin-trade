@@ -84,7 +84,7 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
 
     for param in params {
         let user_account_loader = user_map.get_account_loader(&param.user_key)?;
-        let user_account = user_account_loader.load_mut()?;
+        let mut user_account = user_account_loader.load_mut()?;
 
         let user_token_account = vault_vec
             .iter()
@@ -92,39 +92,44 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
             .ok_or(BumpErrorCode::CouldNotLoadUserData)?;
 
         let position = user_account.get_user_position_ref(&param.position_key)?;
-
-        let user_token = user_account.get_user_token_ref(&position.margin_mint_key)?;
+        let is_portfolio_margin = position.is_portfolio_margin;
+        let margin_token = position.margin_mint_key;
+        let decrease_size = position.position_size;
+        let index_mint_key = position.index_mint_key;
+        let position_key = position.position_key;
+        let is_long = position.is_long;
+        let user_token = user_account.get_user_token_ref(&margin_token)?;
 
         validate!(
             user_token.user_token_account_key.eq(user_token_account.to_account_info().key),
             BumpErrorCode::InvalidTokenAccount
         )?;
-        let index_trade_token = trade_token_map.get_trade_token_ref(&position.index_mint_key)?;
+        let index_trade_token = trade_token_map.get_trade_token_ref(&index_mint_key)?;
         position_processor::decrease_position(
             DecreasePositionParams {
                 order_id: 0,
                 is_liquidation: false,
-                is_portfolio_margin: position.is_portfolio_margin,
-                margin_token: position.margin_mint_key,
-                decrease_size: position.position_size,
+                is_portfolio_margin,
+                margin_token,
+                decrease_size,
                 execute_price: oracle_map
                     .get_price_data(&index_trade_token.oracle_key)
-                    .unwrap()
+                    .map_err(|_e|BumpErrorCode::OracleNotFound)?
                     .price,
             },
-            user_account_loader.load_mut()?.deref_mut(),
+            &mut user_account,
             market_account_loader.load_mut()?.deref_mut(),
             pool_account_loader.load_mut()?.deref_mut(),
             stable_pool_account_loader.load_mut()?.deref_mut(),
             state_account,
             Some(user_token_account),
-            if position.is_long { pool_vault_account } else { stable_pool_vault_account },
+            if is_long { pool_vault_account } else { stable_pool_vault_account },
             trade_token_loader.load_mut()?.deref_mut(),
             trade_token_vault_account,
             bump_signer_account_info,
             token_program,
             &mut oracle_map,
-            &position.position_key,
+            &position_key,
         )?;
     }
     Ok(())
