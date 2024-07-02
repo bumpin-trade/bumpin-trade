@@ -1,5 +1,5 @@
 {
-  "address": "GQr9zmRBLcNiwiGQkTswWdFeDtdY7aK8qB5SAk4DppRm",
+  "address": "Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR",
   "metadata": {
     "name": "bumpin_trade",
     "version": "0.1.0",
@@ -199,32 +199,207 @@
       ],
       "accounts": [
         {
+          "name": "state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  109,
+                  112,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_market_index"
+              }
+            ]
+          }
+        },
+        {
           "name": "pool",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
         },
         {
           "name": "stable_pool",
-          "writable": true
-        },
-        {
-          "name": "market"
-        },
-        {
-          "name": "state"
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_stable_pool_index"
+              }
+            ]
+          }
         },
         {
           "name": "pool_vault",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
         },
         {
           "name": "stable_pool_vault",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_stable_pool_index"
+              }
+            ]
+          }
         },
         {
-          "name": "trade_token"
+          "name": "trade_token",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_trade_token_index"
+              }
+            ]
+          }
         },
         {
-          "name": "trade_token_vault"
+          "name": "trade_token_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_trade_token_index"
+              }
+            ]
+          }
         },
         {
           "name": "bump_signer"
@@ -235,6 +410,22 @@
         }
       ],
       "args": [
+        {
+          "name": "pool_index",
+          "type": "u16"
+        },
+        {
+          "name": "stable_pool_index",
+          "type": "u16"
+        },
+        {
+          "name": "market_index",
+          "type": "u16"
+        },
+        {
+          "name": "trade_token_index",
+          "type": "u16"
+        },
         {
           "name": "params",
           "type": {
@@ -312,12 +503,7 @@
           }
         }
       ],
-      "args": [
-        {
-          "name": "_stable_trade_token_index",
-          "type": "u16"
-        }
-      ]
+      "args": []
     },
     {
       "name": "cancel_order",
@@ -1033,10 +1219,46 @@
           }
         },
         {
-          "name": "pool"
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
         },
         {
-          "name": "stable_pool"
+          "name": "stable_pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_stable_pool_index"
+              }
+            ]
+          }
         },
         {
           "name": "index_mint"
@@ -1085,6 +1307,14 @@
         }
       ],
       "args": [
+        {
+          "name": "pool_index",
+          "type": "u16"
+        },
+        {
+          "name": "stable_pool_index",
+          "type": "u16"
+        },
         {
           "name": "symbol",
           "type": {
@@ -3633,6 +3863,15 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "symbol",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
             "name": "long_open_interest",
             "type": {
               "defined": {
@@ -3685,24 +3924,23 @@
             "type": "pubkey"
           },
           {
-            "name": "index",
-            "type": "u16"
+            "name": "market_status",
+            "type": {
+              "defined": {
+                "name": "MarketStatus"
+              }
+            }
           },
           {
-            "name": "symbol",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
+            "name": "index",
+            "type": "u16"
           },
           {
             "name": "padding",
             "type": {
               "array": [
                 "u8",
-                14
+                13
               ]
             }
           }
@@ -3829,6 +4067,23 @@
       }
     },
     {
+      "name": "MarketStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "NORMAL"
+          },
+          {
+            "name": "ReduceOnly"
+          },
+          {
+            "name": "Pause"
+          }
+        ]
+      }
+    },
+    {
       "name": "OrderSide",
       "type": {
         "kind": "enum",
@@ -3894,6 +4149,50 @@
             }
           },
           {
+            "name": "size",
+            "type": "u128"
+          },
+          {
+            "name": "order_margin",
+            "type": "u128"
+          },
+          {
+            "name": "leverage",
+            "type": "u32"
+          },
+          {
+            "name": "trigger_price",
+            "type": "u128"
+          },
+          {
+            "name": "acceptable_price",
+            "type": "u128"
+          },
+          {
+            "name": "place_time",
+            "type": "i64"
+          },
+          {
+            "name": "pool_index",
+            "type": "u16"
+          },
+          {
+            "name": "stable_pool_index",
+            "type": "u16"
+          },
+          {
+            "name": "market_index",
+            "type": "u16"
+          },
+          {
+            "name": "trade_token_index",
+            "type": "u16"
+          },
+          {
+            "name": "index_trade_token_index",
+            "type": "u16"
+          },
+          {
             "name": "is_portfolio_margin",
             "type": "bool"
           },
@@ -3932,50 +4231,6 @@
                 "name": "StopType"
               }
             }
-          },
-          {
-            "name": "size",
-            "type": "u128"
-          },
-          {
-            "name": "order_margin",
-            "type": "u128"
-          },
-          {
-            "name": "leverage",
-            "type": "u32"
-          },
-          {
-            "name": "trigger_price",
-            "type": "u128"
-          },
-          {
-            "name": "acceptable_price",
-            "type": "u128"
-          },
-          {
-            "name": "place_time",
-            "type": "u128"
-          },
-          {
-            "name": "pool_index",
-            "type": "u16"
-          },
-          {
-            "name": "stable_pool_index",
-            "type": "u16"
-          },
-          {
-            "name": "market_index",
-            "type": "u16"
-          },
-          {
-            "name": "trade_token_index",
-            "type": "u16"
-          },
-          {
-            "name": "index_trade_token_index",
-            "type": "u16"
           }
         ]
       }
@@ -4099,11 +4354,15 @@
             "type": "bool"
           },
           {
+            "name": "market_number",
+            "type": "u16"
+          },
+          {
             "name": "padding",
             "type": {
               "array": [
                 "u8",
-                12
+                10
               ]
             }
           }

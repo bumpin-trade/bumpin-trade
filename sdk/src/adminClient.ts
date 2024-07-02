@@ -97,13 +97,11 @@ export class BumpinAdmin {
     }
 
 
-    public async initMarket(poolName: string, pool: anchor.web3.PublicKey, stablePool: anchor.web3.PublicKey, indexMint: anchor.web3.PublicKey) {
+    public async initMarket(poolName: string, poolIndex: number, stablePoolIndex: number, indexMint: anchor.web3.PublicKey) {
         const [pda, _] = BumpinUtils.getBumpinStatePda(this.program);
         await this.program.methods.initializeMarket(
-            BumpinUtils.string2Padded32Bytes(poolName)
+            poolIndex, stablePoolIndex, BumpinUtils.string2Padded32Bytes(poolName)
         ).accounts({
-            pool,
-            stablePool,
             indexMint,
             bumpSigner: pda,
         }).signers([]).rpc();
