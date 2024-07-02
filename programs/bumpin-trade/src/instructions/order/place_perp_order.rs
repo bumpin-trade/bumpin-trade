@@ -3,17 +3,16 @@ use std::ops::DerefMut;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
+use crate::{get_then_update_id, position, validate};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::instructions::constraints::*;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
-use crate::processor::optional_accounts::{load_maps, AccountMaps};
-use crate::processor::position_processor::DecreasePositionParams;
 use crate::processor::{fee_processor, position_processor};
-use crate::state::infrastructure::user_order::{
-    OrderSide, OrderStatus, OrderType, PositionSide, StopType, UserOrder,
-};
+use crate::processor::optional_accounts::{AccountMaps, load_maps};
+use crate::processor::position_processor::DecreasePositionParams;
+use crate::state::infrastructure::user_order::{OrderSide, OrderStatus, OrderType, PositionSide, StopType, UserOrder};
 use crate::state::infrastructure::user_position::PositionStatus;
 use crate::state::market::Market;
 use crate::state::oracle_map::OracleMap;
@@ -23,7 +22,6 @@ use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::{User, UserTokenUpdateReason};
 use crate::utils::{pda, token};
-use crate::{get_then_update_id, position, validate};
 
 #[derive(Accounts)]
 #[instruction(
@@ -133,29 +131,32 @@ pub struct PlaceOrder<'info> {
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Eq, PartialEq)]
 pub struct PlaceOrderParams {
     pub symbol: [u8; 32],
+    pub size: u128,
+    pub order_margin: u128,
+    pub leverage: u32,
+    pub trigger_price: u128,
+    pub acceptable_price: u128,
+    pub place_time: i64,
+    pub pool_index: u16,
+    pub stable_pool_index: u16,
+    pub market_index: u16,
+    pub trade_token_index: u16,
+    pub index_trade_token_index: u16,
     pub is_portfolio_margin: bool,
     pub is_native_token: bool,
     pub order_side: OrderSide,
     pub position_side: PositionSide,
     pub order_type: OrderType,
     pub stop_type: StopType,
-    pub size: u128,
-    pub order_margin: u128,
-    pub leverage: u32,
-    pub trigger_price: u128,
-    pub acceptable_price: u128,
-    pub place_time: u128,
-    pub pool_index: u16,
-    pub stable_pool_index: u16,
-    pub market_index: u16,
-    pub trade_token_index: u16,
-    pub index_trade_token_index: u16,
 }
 
 pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
     order: PlaceOrderParams,
 ) -> Result<()> {
+    msg!("All Params: symbol: {:?}, is_portfolio_margin: {:?}, is_native_token: {:?}, order_side: {:?}, position_side: {:?}, order_type: {:?}, stop_type: {:?}, size: {:?}, order_margin: {:?}, leverage: {:?}, trigger_price: {:?}, acceptable_price: {:?}, place_time: {:?}, pool_index: {:?}, stable_pool_index: {:?}, market_index: {:?}, trade_token_index: {:?}, index_trade_token_index: {:?}",
+        order.symbol, order.is_portfolio_margin, order.is_native_token, order.order_side, order.position_side, order.order_type, order.stop_type, order.size, order.order_margin, order.leverage, order.trigger_price, order.acceptable_price, order.place_time, order.pool_index, order.stable_pool_index, order.market_index, order.trade_token_index, order.index_trade_token_index);
+
     let market = ctx.accounts.market.load()?;
     let mut user = ctx.accounts.user.load_mut()?;
     let pool = ctx.accounts.pool.load()?;
@@ -414,7 +415,7 @@ pub fn handle_execute_order<'info>(
                 )?;
                 Ok(())
             }
-        },
+        }
 
         PositionSide::DECREASE => {
             {
@@ -454,7 +455,7 @@ pub fn handle_execute_order<'info>(
                 )?;
                 Ok(())
             }
-        },
+        }
     }?;
     //delete order
     user.delete_order(order_id)?;
@@ -514,7 +515,7 @@ fn validate_place_order(
             } else {
                 Ok(true)
             }
-        },
+        }
     }
 }
 
@@ -586,7 +587,7 @@ fn get_execution_price(index_price: u128, order: &UserOrder) -> BumpResult<u128>
     if order.order_type.eq(&OrderType::STOP)
         && order.stop_type.eq(&StopType::StopLoss)
         && ((long && order.trigger_price <= index_price)
-            || (!long && order.trigger_price >= index_price))
+        || (!long && order.trigger_price >= index_price))
     {
         return Ok(index_price);
     }

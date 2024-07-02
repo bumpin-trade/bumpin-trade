@@ -254,6 +254,31 @@ export class StopType {
     static readonly TakeProfit = {takeProfit: {}};
 }
 
+export type OrderSideValue =
+    | typeof OrderSide.NONE
+    | typeof OrderSide.LONG
+    | typeof OrderSide.SHORT;
+
+export type OrderStatusValue =
+    | typeof OrderStatus.INIT
+    | typeof OrderStatus.USING;
+
+export type PositionSideValue =
+    | typeof PositionSide.NONE
+    | typeof PositionSide.INCREASE
+    | typeof PositionSide.DECREASE;
+
+export type OrderTypeValue =
+    | typeof OrderType.NONE
+    | typeof OrderType.MARKET
+    | typeof OrderType.LIMIT
+    | typeof OrderType.STOP;
+
+export type StopTypeValue =
+    | typeof StopType.NONE
+    | typeof StopType.StopLoss
+    | typeof StopType.TakeProfit;
+
 export type UserOrder = {
     orderMargin: BN;
     orderSize: BN;
@@ -296,4 +321,39 @@ export type PositionBalance = {
     initialMarginUsdFromPortfolio: BN;
     positionUnPnl: BN;
     mmUsd: BN;
+}
+
+export type PlaceOrderParams = {
+    isPortfolioMargin: boolean;
+    isNativeToken: boolean;
+    orderSide: OrderSideValue;
+    positionSide: PositionSideValue;
+    orderType: OrderTypeValue;
+    stopType: StopTypeValue;
+    size: BN;
+    orderMargin: BN;
+    leverage: number;
+    triggerPrice: BN;
+    acceptablePrice: BN;
+}
+
+export type InnerPlaceOrderParams = {
+    symbol: number[];
+    isPortfolioMargin: boolean;
+    isNativeToken: boolean;
+    orderSide: OrderSideValue;
+    positionSide: PositionSideValue;
+    orderType: OrderTypeValue;
+    stopType: StopTypeValue;
+    size: BN;
+    orderMargin: BN;
+    leverage: number;
+    triggerPrice: BN;
+    acceptablePrice: BN;
+    placeTime: BN;
+    poolIndex: number;
+    stablePoolIndex: number;
+    marketIndex: number;
+    tradeTokenIndex: number;
+    indexTradeTokenIndex: number;
 }

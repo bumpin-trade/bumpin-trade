@@ -6,7 +6,7 @@ import idlPyth from "./idl/pyth.json"
 import {BumpinClientConfig, NetType} from "./bumpinClientConfig";
 import {BumpinUtils} from "./utils/utils";
 import {BumpinTrade} from "./types/bumpin_trade";
-import {Market, Pool, State, TradeToken, UserAccount} from "./types";
+import {Market, PlaceOrderParams, Pool, State, TradeToken, UserAccount} from "./types";
 import {BumpinAccountNotFound, BumpinSubscriptionFailed, BumpinUserNotLogin} from "./errors";
 import {PollingUserAccountSubscriber} from "./account/pollingUserAccountSubscriber";
 import {BulkAccountLoader} from "./account/bulkAccountLoader";
@@ -20,6 +20,7 @@ import {TradeTokenComponent} from "./componets/tradeToken";
 import {MarketComponent} from "./componets/market";
 import {BumpinTokenUtils} from "./utils/token";
 import {BumpinPoolUtils} from "./utils/pool";
+
 
 export class BumpinClient {
     netType: NetType;
@@ -151,6 +152,11 @@ export class BumpinClient {
         await this.program.methods.deposit(targetTradeToken.index, amount).accounts({
             userTokenAccount,
         }).signers([]).rpc();
+    }
+
+    public async placePerpOrder(symbol: string, marketIndex: number, param: PlaceOrderParams, sync: boolean = false) {
+        await this.userComponent.placePerpOrder(symbol, marketIndex, param, this.wallet.publicKey
+            , await this.poolComponent.getPools(sync), await this.marketComponent.getMarkets(sync), await this.tradeTokenComponent.getTradeTokens(sync));
     }
 
 
