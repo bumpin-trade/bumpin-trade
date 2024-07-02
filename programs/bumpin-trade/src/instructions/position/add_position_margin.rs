@@ -4,7 +4,6 @@ use anchor_spl::token::{Token, TokenAccount};
 use crate::errors::BumpErrorCode;
 use crate::processor::position_processor;
 use crate::state::market::Market;
-use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
@@ -93,8 +92,6 @@ pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
     validate!(params.update_margin_amount > 0u128, BumpErrorCode::AmountNotEnough)?;
     let mut user = ctx.accounts.user.load_mut()?;
     let trade_token = ctx.accounts.trade_token.load_mut()?;
-    let remaining_accounts = ctx.remaining_accounts;
-    let mut oracle_map = OracleMap::load(remaining_accounts)?;
     let position = user.get_user_position_mut_ref(&params.position_key)?;
     let mut pool = ctx.accounts.pool.load_mut()?;
     let market = ctx.accounts.market.load_mut()?;
@@ -114,7 +111,6 @@ pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
         position_processor::execute_add_position_margin(
             &params,
             &trade_token,
-            &mut oracle_map,
             &mut pool,
             position,
         )?;
@@ -123,7 +119,6 @@ pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
             &params,
             true,
             &trade_token,
-            &mut oracle_map,
             &mut pool,
             &market,
             &ctx.accounts.state,

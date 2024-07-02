@@ -114,7 +114,7 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
     let remaining_accounts = ctx.remaining_accounts;
 
     let AccountMaps { mut oracle_map, trade_token_map, .. } =
-        load_maps(remaining_accounts, &state_account.admin)?;
+        load_maps(remaining_accounts)?;
     let user_map = UserMap::load(remaining_accounts, ctx.program_id)?;
     let vault_vec = VaultMap::load_vec(remaining_accounts)?;
 

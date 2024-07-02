@@ -64,7 +64,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         pool_map: pool_key_map,
         vault_map,
         ..
-    } = load_maps(remaining_accounts, &state.admin)?;
+    } = load_maps(remaining_accounts)?;
 
     let mut user_processor = UserProcessor { user: &mut user };
     user_processor.cancel_all_cross_orders()?;

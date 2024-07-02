@@ -161,7 +161,7 @@ pub mod bumpin_trade {
         let token_program = &ctx.accounts.token_program;
         let remaining_accounts = ctx.remaining_accounts;
         let AccountMaps { trade_token_map, mut oracle_map, .. } =
-            load_maps(remaining_accounts, &state_account.admin)?;
+            load_maps(remaining_accounts)?;
 
         handle_execute_order(
             user_account_loader,

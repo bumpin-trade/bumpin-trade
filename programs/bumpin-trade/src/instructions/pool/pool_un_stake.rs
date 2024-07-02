@@ -169,7 +169,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
             )?;
 
             let remaining_accounts = ctx.remaining_accounts;
-            let mut account_maps = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
+            let mut account_maps = load_maps(remaining_accounts)?;
 
             validate!(pool.total_supply != 0, BumpErrorCode::UnStakeTooSmall)?;
 
@@ -248,7 +248,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
             )?;
 
             let remaining_accounts = ctx.remaining_accounts;
-            let mut account_maps = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
+            let mut account_maps = load_maps(remaining_accounts)?;
 
             validate!(pool.total_supply != 0, BumpErrorCode::UnStakeTooSmall)?;
 

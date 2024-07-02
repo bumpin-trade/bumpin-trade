@@ -153,7 +153,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
             let pool = &mut ctx.accounts.pool.load_mut()?;
             let user = &mut ctx.accounts.user.load_mut()?;
             let remaining_accounts = ctx.remaining_accounts;
-            let mut account_maps = load_maps(remaining_accounts, &ctx.accounts.state.bump_signer)?;
+            let mut account_maps = load_maps(remaining_accounts)?;
 
             let base_mint_amount = stake_processor::stake(
                 pool.deref_mut(),
@@ -192,7 +192,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
             let user = &mut ctx.accounts.user.load_mut()?;
 
             let remaining_accounts = ctx.remaining_accounts;
-            let mut account_maps = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
+            let mut account_maps = load_maps(remaining_accounts)?;
 
             let base_mint_amount = stake_processor::stake(
                 pool.deref_mut(),
