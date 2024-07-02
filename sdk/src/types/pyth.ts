@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/pyth.json`.
  */
 export type Pyth = {
-  "address": "AszCjfpwoxuCy4wiHVo5R4sHFuAzp4bDEgYC1VC5jHT8",
+  "address": "AN5hvpoMvbkg9eyX2N1fepU8DZQowzr1R6XfBWNJN4jy",
   "metadata": {
     "name": "pyth",
     "version": "0.1.0",
