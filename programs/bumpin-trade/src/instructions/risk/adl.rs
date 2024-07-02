@@ -15,39 +15,71 @@ use crate::state::vault_map::VaultMap;
 use crate::validate;
 
 #[derive(Accounts)]
+#[instruction(
+    _pool_index: u16, _stable_pool_index: u16, _market_index: u16, _trade_token_index: u16
+)]
 pub struct ADL<'info> {
+
     #[account(
         mut,
-        constraint = pool.load() ?.mint_key == market.load() ?.pool_mint_key
+        seeds = [b"bump_state".as_ref()],
+        bump,
+    )]
+    pub state: Box<Account<'info, State>>,
+
+    #[account(
+        mut,
+        seeds = [b"market", _market_index.to_le_bytes().as_ref()],
+        bump,
+    )]
+    pub market: AccountLoader<'info, Market>,
+
+    #[account(
+        mut,
+        seeds = [b"pool".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        bump,
+        constraint = pool.load() ?.key.eq(& market.load() ?.pool_key),
     )]
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
         mut,
-        constraint = stable_pool.load() ?.mint_key == market.load() ?.stable_pool_mint_key
+        seeds = [b"pool".as_ref(), _stable_pool_index.to_le_bytes().as_ref()],
+        bump,
+        constraint = stable_pool.load() ?.key.eq(& market.load() ?.stable_pool_key),
     )]
     pub stable_pool: AccountLoader<'info, Pool>,
 
-    pub market: AccountLoader<'info, Market>,
-
-    pub state: Box<Account<'info, State>>,
-
     #[account(
         mut,
-        constraint = pool_vault.mint == pool.load() ?.mint_key
+        seeds = [b"pool_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        bump,
+        token::mint = pool.load() ?.mint_key,
+        token::authority = state.bump_signer
     )]
     pub pool_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
-        constraint = stable_pool_vault.mint == stable_pool.load() ?.mint_key
+        seeds = [b"pool_vault".as_ref(), _stable_pool_index.to_le_bytes().as_ref()],
+        bump,
+        token::mint = stable_pool.load() ?.mint_key,
+        token::authority = state.bump_signer
     )]
     pub stable_pool_vault: Box<Account<'info, TokenAccount>>,
 
+    #[account(
+        seeds = [b"trade_token", _trade_token_index.to_le_bytes().as_ref()],
+        bump,
+    )]
     pub trade_token: AccountLoader<'info, TradeToken>,
 
     #[account(
-        constraint = trade_token_vault.mint == trade_token.load() ?.vault_key
+        mut,
+        seeds = [b"trade_token_vault".as_ref(), _trade_token_index.to_le_bytes().as_ref()],
+        bump,
+        token::mint = trade_token.load() ?.mint_key,
+        token::authority = state.bump_signer
     )]
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
 
@@ -62,6 +94,10 @@ pub struct ADL<'info> {
 
 pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, ADL<'info>>,
+    _pool_index: u16,
+    _stable_pool_index: u16,
+    _market_index: u16,
+    _trade_token_index: u16,
     params: [ADLParams; 10],
 ) -> Result<()> {
     let pool_account_loader = &ctx.accounts.pool;
@@ -114,7 +150,7 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
                 decrease_size,
                 execute_price: oracle_map
                     .get_price_data(&index_trade_token.oracle_key)
-                    .map_err(|_e|BumpErrorCode::OracleNotFound)?
+                    .map_err(|_e| BumpErrorCode::OracleNotFound)?
                     .price,
             },
             &mut user_account,

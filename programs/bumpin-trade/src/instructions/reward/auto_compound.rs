@@ -10,7 +10,6 @@ use crate::state::user::User;
 use crate::validate;
 
 #[derive(Accounts)]
-#[instruction(_stable_trade_token_index: u16,)]
 pub struct AutoCompoundRewards<'info> {
     #[account(
         mut,
@@ -31,7 +30,6 @@ pub struct AutoCompoundRewards<'info> {
 
 pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, AutoCompoundRewards<'c>>,
-    _stable_trade_token_index: u16,
 ) -> Result<()> {
     let user = &mut ctx.accounts.user.load_mut()?;
     validate!(user.authority.eq(ctx.accounts.authority.owner), BumpErrorCode::UserNotFound)?;

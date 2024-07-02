@@ -219,9 +219,13 @@ pub mod bumpin_trade {
     /*-----adl------*/
     pub fn adl<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ADL<'info>>,
+        pool_index: u16,
+        stable_pool_index: u16,
+        market_index: u16,
+        trade_token_index: u16,
         params: [ADLParams; 10],
     ) -> Result<()> {
-        handle_adl(ctx, params)
+        handle_adl(ctx, pool_index, stable_pool_index, market_index, trade_token_index, params)
     }
 
     /*-----reward------*/
@@ -233,9 +237,8 @@ pub mod bumpin_trade {
 
     pub fn auto_compound<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, AutoCompoundRewards<'c>>,
-        _stable_trade_token_index: u16,
     ) -> Result<()> {
-        handle_auto_compound(ctx, _stable_trade_token_index)
+        handle_auto_compound(ctx)
     }
 }
 
