@@ -1,5 +1,15 @@
 import {PublicKey} from '@solana/web3.js';
-import {Pool, PositionStatus, TradeToken, UserAccount, UserStakeStatus, UserTokenStatus} from "../types";
+import {
+    InnerPlaceOrderParams,
+    Market,
+    PlaceOrderParams,
+    Pool,
+    PositionStatus,
+    TradeToken,
+    UserAccount,
+    UserStakeStatus,
+    UserTokenStatus
+} from "../types";
 import {BulkAccountLoader} from "../account/bulkAccountLoader";
 import {BN, Program} from "@coral-xyz/anchor";
 import {BumpinUtils} from "../utils/utils";
@@ -18,6 +28,7 @@ import {DataAndSlot} from "../account/types";
 import {OracleClient} from "../oracles/types";
 import {BumpinTokenUtils} from "../utils/token";
 import {BumpinPositionUtils} from "../utils/position";
+import {BumpinPoolUtils} from "../utils/pool";
 
 export class UserComponent extends Component {
     publicKey: PublicKey;
@@ -66,7 +77,7 @@ export class UserComponent extends Component {
                     isWritable: false,
                     isSigner: false,
                 });
-                let pda =  BumpinUtils.getTradeTokenPda(this.program, target.index)[0];
+                let pda = BumpinUtils.getTradeTokenPda(this.program, target.index)[0];
                 remainingAccounts.push({
                     pubkey: pda,
                     isWritable: false,
@@ -75,7 +86,7 @@ export class UserComponent extends Component {
             }
         }
 
-       await this.program.methods.portfolioStake(
+        await this.program.methods.portfolioStake(
             pool.index, targetTradeToken.index, amount
         ).accounts(
             {
@@ -103,7 +114,7 @@ export class UserComponent extends Component {
             isWritable: false,
             isSigner: false,
         });
-        let pda =  BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0];
+        let pda = BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0];
         remainingAccounts.push({
             pubkey: pda,
             isWritable: false,
@@ -152,6 +163,32 @@ export class UserComponent extends Component {
         }
 
     }
+
+
+    public async placePerpOrder(symbol: string, marketIndex: number, param: PlaceOrderParams, wallet: PublicKey, pools: Pool[], markets: Market[], tradeTokens: TradeToken[]) {
+        let pool = BumpinPoolUtils.getPoolByMintPublicKey(markets[marketIndex].poolMintKey, pools);
+        let stablePool = BumpinPoolUtils.getPoolByMintPublicKey(markets[marketIndex].stablePoolMintKey, pools);
+        // let indexPool = BumpinPoolUtils.getPoolByMintPublicKey(markets[marketIndex].indexMintKey, pools);
+        let tradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(markets[marketIndex].poolMintKey, tradeTokens);
+        let indexTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(markets[marketIndex].indexMintKey, tradeTokens);
+        let orderParam: InnerPlaceOrderParams = {
+            ...param,
+            symbol: BumpinUtils.string2Padded32Bytes(symbol),
+            placeTime: new BN(Date.now()),
+            marketIndex: marketIndex,
+            poolIndex: pool.index,
+            stablePoolIndex: stablePool.index,
+            tradeTokenIndex: tradeToken.index,
+            indexTradeTokenIndex: indexTradeToken.index,
+        };
+        await this.program.methods.placeOrder(
+            orderParam
+        ).accounts({
+            marginToken: pool.mintKey,
+            authority: wallet,
+        }).signers([]).rpc();
+    }
+
 
     public async getUserAvailableValue(user: UserAccount, tradeTokens: TradeToken[], amount: BN, pool: Pool) {
 
