@@ -57,9 +57,9 @@ export class UserComponent extends Component {
     public async portfolioStake(amount: BN, targetTradeToken: TradeToken, allTradeTokens: TradeToken[], pool: Pool, sync: boolean = false): Promise<void> {
         let user = await this.getUser(sync);
 
-        await this.checkStakeAmountFulfilRequirements(amount, targetTradeToken, pool);
-        let availableValue = await this.getUserAvailableValue(user, allTradeTokens, amount, pool);
-        if (!availableValue.gt(new BN(0))) {
+        let stake_value = await this.checkStakeAmountFulfilRequirements(amount, targetTradeToken, pool);
+        let availableValue = await this.getUserAvailableValue(user, allTradeTokens);
+        if (!availableValue.gt(stake_value)) {
             throw new BumpinValueInsufficient(amount, availableValue)
         }
 
@@ -190,19 +190,7 @@ export class UserComponent extends Component {
     }
 
 
-    public async getUserAvailableValue(user: UserAccount, tradeTokens: TradeToken[], amount: BN, pool: Pool) {
-
-        for (let userPosition of user.positions) {
-            if (isEqual(userPosition.status, PositionStatus.INIT)) {
-                continue;
-            }
-            if (userPosition.isPortfolioMargin && userPosition.marginMintKey.equals(pool.mintKey) && amount.gt(new BN(0))) {
-                let reducedAmount = await BumpinPositionUtils.reducePositionPortfolioBalance(userPosition, amount);
-                amount = amount.sub(reducedAmount);
-            }
-            let userToken = BumpinTokenUtils.getUserTokenByMintPublicKey(pool.mintKey, user.tokens);
-            userToken.amount = userToken.amount.sub(amount)
-        }
+    public async getUserAvailableValue(user: UserAccount, tradeTokens: TradeToken[]) {
 
         let balanceOfUserTradeTokens = await BumpinTokenUtils.getUserTradeTokenBalance(this.oracleClient, user, tradeTokens);
         let balanceOfUserPositions = await BumpinPositionUtils.getUserPositionValue(this.oracleClient, user, tradeTokens);
@@ -226,12 +214,13 @@ export class UserComponent extends Component {
         }
     }
 
-    async checkStakeAmountFulfilRequirements(amount: BN, tradeToken: TradeToken, pool: Pool): Promise<void> {
+    async checkStakeAmountFulfilRequirements(amount: BN, tradeToken: TradeToken, pool: Pool): Promise<BN> {
         let priceData = await this.oracleClient.getOraclePriceData(tradeToken.oracleKey);
         let value = amount.toUsd(priceData.price, tradeToken.decimals);
         if (value < pool.config.minimumStakeAmount) {
             throw new BumpinValueInsufficient(pool.config.minimumStakeAmount, value)
         }
+        return value;
     }
 
 
