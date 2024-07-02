@@ -86,8 +86,7 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
     let user = &mut ctx.accounts.user.load_mut()?;
 
     let remaining_accounts = ctx.remaining_accounts;
-    let AccountMaps { trade_token_map, mut oracle_map, .. } =
-        load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
+    let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts)?;
 
     let market = ctx.accounts.market.load_mut()?;
     validate!(

@@ -35,14 +35,14 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
     validate!(user.authority.eq(ctx.accounts.authority.owner), BumpErrorCode::UserNotFound)?;
 
     let remaining_accounts = ctx.remaining_accounts;
-    let account_maps = load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
+    let account_maps = load_maps(remaining_accounts)?;
 
     let mut stake_amounts = vec![];
     for user_stake in user.stakes.clone().iter() {
         let pool_key_map = &account_maps.pool_map;
         let pool_account_loader = pool_key_map.get_account_loader(&user_stake.pool_key)?;
         let pool = &mut pool_account_loader.load_mut()?;
-        let account_maps = &mut load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
+        let account_maps = &mut load_maps(remaining_accounts)?;
         let stake_amount = stake_processor::stake(
             pool.deref_mut(),
             user.deref_mut(),
@@ -65,7 +65,7 @@ pub fn handle_auto_compound<'a, 'b, 'c: 'info, 'info>(
         user_stake.user_rewards.open_rewards_per_stake_token =
             pool.fee_reward.cumulative_rewards_per_stake_token;
 
-        let account_maps = &mut load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
+        let account_maps = &mut load_maps(remaining_accounts)?;
         let supply_amount = pool_processor::stake(
             pool,
             stake_amounts[index],

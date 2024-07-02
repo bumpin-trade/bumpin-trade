@@ -1,5 +1,3 @@
-use anchor_lang::prelude::*;
-
 use crate::errors::BumpErrorCode::{
     CouldNotFindUserOrder, CouldNotFindUserPosition, CouldNotFindUserStake, CouldNotFindUserToken,
 };
@@ -23,7 +21,10 @@ use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::traits::Size;
+use crate::utils::token;
 use crate::validate;
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Token, TokenAccount};
 
 #[account(zero_copy(unsafe))]
 #[derive(Default, Eq, PartialEq, Debug)]
@@ -821,5 +822,42 @@ impl User {
             total_used_value = total_used_value.safe_add(self.hold)?;
         }
         Ok(total_used_value)
+    }
+
+    pub fn cancel_all_cross_orders(&mut self) -> BumpResult<()> {
+        let user_orders_length = self.orders.len();
+        for index in 0..user_orders_length {
+            let order = self.orders[index];
+            if order.status.eq(&OrderStatus::USING) && order.is_portfolio_margin {
+                self.cancel_user_order(index)?;
+            }
+        }
+        Ok(())
+    }
+
+    pub fn cancel_order<'info>(
+        &mut self,
+        order: &UserOrder,
+        token_program: &Program<'info, Token>,
+        pool_vault: &Account<'info, TokenAccount>,
+        user_token_account: &Account<'info, TokenAccount>,
+        bump_signer: &AccountInfo<'info>,
+        state: &Account<'info, State>,
+    ) -> BumpResult<()> {
+        self.delete_order(order.order_id)?;
+        if order.position_side.eq(&PositionSide::INCREASE) && order.is_portfolio_margin {
+            self.sub_order_hold_in_usd(order.order_margin)?;
+        } else if order.position_side.eq(&PositionSide::INCREASE) && !order.is_portfolio_margin {
+            token::send_from_program_vault(
+                token_program,
+                pool_vault,
+                user_token_account,
+                bump_signer,
+                state.bump_signer_nonce,
+                order.order_margin,
+            )
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        }
+        Ok(())
     }
 }

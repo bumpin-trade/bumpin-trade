@@ -317,7 +317,7 @@ impl Pool {
                         u_token_pnl
                     })?;
                 }
-            }
+            },
             Some(base_token_pool) => {
                 if token_pnl < 0i128 {
                     if self.stable {
@@ -341,7 +341,7 @@ impl Pool {
                         u_token_pnl
                     })?;
                 }
-            }
+            },
         })
     }
 }

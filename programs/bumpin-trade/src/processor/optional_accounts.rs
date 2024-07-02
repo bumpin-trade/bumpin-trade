@@ -17,7 +17,6 @@ pub struct AccountMaps<'a> {
 
 pub fn load_maps<'a: 'info, 'info>(
     remaining_accounts: &'info [AccountInfo<'info>],
-    _admin: &Pubkey,
 ) -> BumpResult<AccountMaps<'info>> {
     let market_map = MarketMap::load(remaining_accounts)?;
     let trade_token_map = TradeTokenMap::load(remaining_accounts)?;

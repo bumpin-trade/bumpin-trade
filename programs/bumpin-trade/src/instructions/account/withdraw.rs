@@ -4,7 +4,7 @@ use anchor_spl::token::{Token, TokenAccount};
 use crate::errors::BumpErrorCode;
 use crate::instructions::constraints::*;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
-use crate::processor::user_processor::UserProcessor;
+use crate::processor::user_processor;
 use crate::state::bump_events::WithdrawEvent;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
@@ -65,12 +65,10 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
 
     let remaining_accounts = ctx.remaining_accounts;
 
-    let AccountMaps { trade_token_map, mut oracle_map, .. } =
-        load_maps(remaining_accounts, &ctx.accounts.state.admin)?;
+    let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts)?;
 
-    let mut user_processor = UserProcessor { user: &mut user };
-
-    user_processor.withdraw(
+    user_processor::withdraw(
+        &mut user,
         amount,
         oracle,
         &trade_token,

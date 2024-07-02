@@ -487,13 +487,11 @@ pub fn execute_reduce_position_margin(
     params: &UpdatePositionMarginParams,
     need_update_leverage: bool,
     trade_token: &TradeToken,
-    oracle_map: &mut OracleMap,
     pool: &mut Pool,
     market: &Market,
     state: &State,
     position: &mut UserPosition,
 ) -> BumpResult<u128> {
-    let token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
     let max_reduce_margin_in_usd = position.initial_margin_usd.safe_sub(
         cal_utils::div_rate_u(position.position_size, market.config.maximum_leverage as u128)?
             .max(state.minimum_order_margin_usd),
@@ -504,8 +502,11 @@ pub fn execute_reduce_position_margin(
     )?;
     let user_key = position.user_key;
     let pre_position = *position;
-    let reduce_margin_amount =
-        cal_utils::usd_to_token_u(params.update_margin_amount, trade_token.decimals, token_price)?;
+    let reduce_margin_amount = cal_utils::usd_to_token_u(
+        params.update_margin_amount,
+        trade_token.decimals,
+        position.entry_price,
+    )?;
 
     if position.is_portfolio_margin
         && position.initial_margin_usd.safe_sub(position.initial_margin_usd_from_portfolio)?
@@ -738,18 +739,16 @@ fn cal_decrease_close_fee(
 pub fn execute_add_position_margin(
     params: &UpdatePositionMarginParams,
     trade_token: &TradeToken,
-    oracle_map: &mut OracleMap,
     pool: &mut Pool,
     position: &mut UserPosition,
 ) -> BumpResult<()> {
-    let token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
     let user_key = position.user_key;
     validate!(
         params.update_margin_amount
             < cal_utils::usd_to_token_u(
                 position.position_size.safe_sub(position.initial_margin_usd)?,
                 trade_token.decimals,
-                token_price
+                position.entry_price
             )?,
         BumpErrorCode::AmountNotEnough
     )?;
@@ -772,7 +771,7 @@ pub fn execute_add_position_margin(
         position.add_initial_margin_usd(cal_utils::token_to_usd_u(
             params.update_margin_amount,
             trade_token.decimals,
-            token_price,
+            position.entry_price,
         )?)?;
         position.set_leverage(cal_utils::div_rate_u(
             position.position_size,
@@ -1010,7 +1009,6 @@ pub fn update_leverage<'info>(
                     ..UpdatePositionMarginParams::default()
                 },
                 &trade_token,
-                oracle_map,
                 pool,
                 position,
             )?;
@@ -1040,7 +1038,6 @@ pub fn update_leverage<'info>(
                 },
                 false,
                 &trade_token,
-                oracle_map,
                 pool,
                 &*market.load().map_err(|_| BumpErrorCode::CouldNotLoadMarketData)?,
                 state,

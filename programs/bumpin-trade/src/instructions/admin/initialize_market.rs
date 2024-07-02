@@ -1,6 +1,6 @@
-use std::ops::DerefMut;
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
+use std::ops::DerefMut;
 
 use crate::math_error;
 use crate::safe_increment;
@@ -69,7 +69,7 @@ pub fn handle_initialize_market(
 ) -> Result<()> {
     let mut market = ctx.accounts.market.load_init()?;
     let mut pool = ctx.accounts.pool.load_mut()?;
-    let mut stable_pool =  ctx.accounts.stable_pool.load_mut()?;
+    let mut stable_pool = ctx.accounts.stable_pool.load_mut()?;
     let state = &mut ctx.accounts.state;
     market.index = state.market_sequence;
     market.symbol = symbol;
