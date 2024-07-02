@@ -3,38 +3,48 @@ use crate::state::state::State;
 use crate::traits::Size;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-// use solana_program::rent::Rent;
+use crate::state::pool::Pool;
 
 #[derive(Accounts)]
-#[instruction(pool_index: u16)]
+#[instruction(_pool_index: u16)]
 pub struct InitializePoolRewards<'info> {
+    #[account(
+        mut,
+        seeds = [b"bump_state".as_ref()],
+        bump,
+        has_one = admin,
+    )]
+    pub state: Account<'info, State>,
+
+    #[account(
+        seeds = [b"pool".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        bump,
+    )]
+    pub pool: AccountLoader<'info, Pool>,
+
+    #[account(
+        constraint = pool_mint.key().eq(& pool.load() ?.mint_key)
+    )]
     pub pool_mint: Box<Account<'info, Mint>>,
 
     #[account(
         init,
-        seeds = [b"pool_rewards".as_ref(), pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_rewards".as_ref(), _pool_index.to_le_bytes().as_ref()],
         space = PoolRewards::SIZE,
         bump,
-        payer = admin
+        payer = admin,
     )]
     pub pool_rewards: AccountLoader<'info, PoolRewards>,
 
     #[account(
         init,
-        seeds = [b"pool_rewards_vault".as_ref(), pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_rewards_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
         bump,
         payer = admin,
         token::mint = pool_mint,
         token::authority = bump_signer
     )]
     pub pool_rewards_vault: Box<Account<'info, TokenAccount>>,
-
-    #[account(
-        seeds = [b"bump_state".as_ref()],
-        bump,
-        has_one = bump_signer
-    )]
-    pub state: Box<Account<'info, State>>,
 
     #[account(mut)]
     pub admin: Signer<'info>,
@@ -54,10 +64,11 @@ pub struct InitializePoolRewards<'info> {
 
 pub fn handle_initialize_pool_rewards(
     ctx: Context<InitializePoolRewards>,
-    pool_index: u16,
+    _pool_index: u16,
 ) -> Result<()> {
     let mut dao_rewards = ctx.accounts.pool_rewards.load_init()?;
-    dao_rewards.pool_index = pool_index;
-    dao_rewards.poo_rewards_vault = ctx.accounts.pool_rewards_vault.mint.key();
+    let pool = ctx.accounts.pool.load()?;
+    dao_rewards.pool_index = pool.index;
+    dao_rewards.pool_rewards_vault = ctx.accounts.pool_rewards_vault.to_account_info().key();
     Ok(())
 }

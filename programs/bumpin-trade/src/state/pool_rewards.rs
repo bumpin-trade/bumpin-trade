@@ -8,7 +8,7 @@ use crate::traits::Size;
 pub struct PoolRewards {
     pub un_claim_amount: u128,
     pub total_rewards_amount: u128,
-    pub poo_rewards_vault: Pubkey,
+    pub pool_rewards_vault: Pubkey,
     pub pool_index: u16,
     pub padding: [u8; 14],
 }
