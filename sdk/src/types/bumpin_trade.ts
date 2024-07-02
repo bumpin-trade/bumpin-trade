@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/bumpin_trade.json`.
  */
 export type BumpinTrade = {
-  "address": "5SSkXsEKQepHHAewytPVwdej4epN1nxgLVM84L4KXgy7",
+  "address": "3vxLXJqLqF3JG5TCbYycbKWRBbCJQLxQmBGCkyqEEefL",
   "metadata": {
     "name": "bumpinTrade",
     "version": "0.1.0",
@@ -1845,26 +1845,6 @@ export type BumpinTrade = {
               "name": "placeOrderParams"
             }
           }
-        },
-        {
-          "name": "poolIndex",
-          "type": "u16"
-        },
-        {
-          "name": "stablePoolIndex",
-          "type": "u16"
-        },
-        {
-          "name": "marketIndex",
-          "type": "u16"
-        },
-        {
-          "name": "tradeTokenIndex",
-          "type": "u16"
-        },
-        {
-          "name": "indexTradeTokenIndex",
-          "type": "u16"
         }
       ]
     },
@@ -2480,7 +2460,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "param.pool_index"
+                "path": "poolIndex"
               }
             ]
           }
@@ -2511,7 +2491,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "param.pool_index"
+                "path": "poolIndex"
               }
             ]
           }
@@ -2527,12 +2507,16 @@ export type BumpinTrade = {
       ],
       "args": [
         {
-          "name": "params",
-          "type": {
-            "defined": {
-              "name": "stakeParams"
-            }
-          }
+          "name": "poolIndex",
+          "type": "u16"
+        },
+        {
+          "name": "tradeTokenIndex",
+          "type": "u16"
+        },
+        {
+          "name": "requestTokenAmount",
+          "type": "u128"
         }
       ]
     },
@@ -3320,6 +3304,11 @@ export type BumpinTrade = {
       "code": 6049,
       "name": "poolSubUnsettleNotEnough",
       "msg": "poolSubUnsettleNotEnough"
+    },
+    {
+      "code": 6050,
+      "name": "timestampNotFound",
+      "msg": "timestampNotFound"
     }
   ],
   "types": [
@@ -4410,26 +4399,6 @@ export type BumpinTrade = {
                 "name": "userStake"
               }
             }
-          }
-        ]
-      }
-    },
-    {
-      "name": "stakeParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "requestTokenAmount",
-            "type": "u128"
-          },
-          {
-            "name": "poolIndex",
-            "type": "u16"
-          },
-          {
-            "name": "tradeTokenIndex",
-            "type": "u16"
           }
         ]
       }

@@ -86,23 +86,38 @@ export class UserComponent extends Component {
             .signers([]).rpc();
     }
 
-    public async walletStake(amount: BN, tradeToken: TradeToken, wallet: PublicKey, pool: Pool): Promise<void> {
+    public async walletStake(amount: BN, tradeToken: TradeToken, allTradeTokens: TradeToken[], wallet: PublicKey, pool: Pool, sync: boolean = false): Promise<void> {
+        let user = await this.getUser(sync);
         await this.checkStakeAmountFulfilRequirements(amount, tradeToken, pool);
         await this.checkStakeWalletAmountSufficient(amount, wallet, tradeToken);
         let tokenAccount = await BumpinTokenUtils.getTokenAccountFromWallet(this.program.provider.connection, wallet, tradeToken.mintKey);
-        let param = {
-            requestTokenAmount: amount,
-            poolIndex: pool.index,
-            tradeTokenIndex: tradeToken.index
-        };
+
+        let remainingAccounts = [];
+        remainingAccounts.push({
+            pubkey: tradeToken.mintKey,
+            isWritable: false,
+            isSigner: false,
+        });
+        remainingAccounts.push({
+            pubkey: tradeToken.oracleKey,
+            isWritable: false,
+            isSigner: false,
+        });
+        let pda =  BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0];
+        remainingAccounts.push({
+            pubkey: pda,
+            isWritable: false,
+            isSigner: false,
+        });
+
         await this.program.methods.walletStake(
-            param
+            pool.index, tradeToken.index, amount
         ).accounts(
             {
                 authority: wallet,
                 userTokenAccount: tokenAccount.address,
             }
-        ).signers([]).rpc();
+        ).remainingAccounts(remainingAccounts).signers([]).rpc();
     }
 
     public async unStake(portfolio: boolean, share: BN, tradeToken: TradeToken, wallet: PublicKey, pool: Pool): Promise<void> {

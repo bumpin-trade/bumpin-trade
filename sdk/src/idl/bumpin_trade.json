@@ -1839,26 +1839,6 @@
               "name": "PlaceOrderParams"
             }
           }
-        },
-        {
-          "name": "_pool_index",
-          "type": "u16"
-        },
-        {
-          "name": "_stable_pool_index",
-          "type": "u16"
-        },
-        {
-          "name": "_market_index",
-          "type": "u16"
-        },
-        {
-          "name": "_trade_token_index",
-          "type": "u16"
-        },
-        {
-          "name": "_index_trade_token_index",
-          "type": "u16"
         }
       ]
     },
@@ -2474,7 +2454,7 @@
               },
               {
                 "kind": "arg",
-                "path": "param.pool_index"
+                "path": "pool_index"
               }
             ]
           }
@@ -2505,7 +2485,7 @@
               },
               {
                 "kind": "arg",
-                "path": "param.pool_index"
+                "path": "pool_index"
               }
             ]
           }
@@ -2521,12 +2501,16 @@
       ],
       "args": [
         {
-          "name": "params",
-          "type": {
-            "defined": {
-              "name": "StakeParams"
-            }
-          }
+          "name": "pool_index",
+          "type": "u16"
+        },
+        {
+          "name": "trade_token_index",
+          "type": "u16"
+        },
+        {
+          "name": "request_token_amount",
+          "type": "u128"
         }
       ]
     },
@@ -3314,6 +3298,11 @@
       "code": 6049,
       "name": "PoolSubUnsettleNotEnough",
       "msg": "PoolSubUnsettleNotEnough"
+    },
+    {
+      "code": 6050,
+      "name": "TimestampNotFound",
+      "msg": "TimestampNotFound"
     }
   ],
   "types": [
@@ -4404,26 +4393,6 @@
                 "name": "UserStake"
               }
             }
-          }
-        ]
-      }
-    },
-    {
-      "name": "StakeParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "request_token_amount",
-            "type": "u128"
-          },
-          {
-            "name": "pool_index",
-            "type": "u16"
-          },
-          {
-            "name": "trade_token_index",
-            "type": "u16"
           }
         ]
       }

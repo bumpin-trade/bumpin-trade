@@ -94,9 +94,11 @@ pub mod bumpin_trade {
 
     pub fn wallet_stake<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, WalletStake>,
-        params: StakeParams,
+        pool_index: u16,
+        trade_token_index: u16,
+        request_token_amount: u128,
     ) -> Result<()> {
-        handle_wallet_stake(ctx, params)
+        handle_wallet_stake(ctx, pool_index, trade_token_index, request_token_amount)
     }
 
     pub fn portfolio_un_stake<'a, 'b, 'c: 'info, 'info>(

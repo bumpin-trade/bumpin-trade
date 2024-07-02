@@ -14,7 +14,7 @@ use crate::state::user::User;
 use crate::utils;
 
 #[derive(Accounts)]
-#[instruction(pool_index: u16, trade_token_index: u16, request_token_amount: u128)]
+#[instruction(pool_index: u16, trade_token_index: u16)]
 pub struct PortfolioStake<'info> {
     #[account(
         mut,
@@ -66,7 +66,7 @@ pub struct PortfolioStake<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(param: StakeParams)]
+#[instruction(pool_index: u16)]
 pub struct WalletStake<'info> {
     #[account(
         mut,
@@ -74,6 +74,7 @@ pub struct WalletStake<'info> {
         bump,
     )]
     pub state: Box<Account<'info, State>>,
+
     #[account(
         mut,
         seeds = [b"user", authority.key.as_ref()],
@@ -84,7 +85,7 @@ pub struct WalletStake<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool".as_ref(), param.pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool".as_ref(), pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub pool: AccountLoader<'info, Pool>,
@@ -98,7 +99,7 @@ pub struct WalletStake<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool_vault".as_ref(), param.pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), pool_index.to_le_bytes().as_ref()],
         bump,
         token::mint = pool.load() ?.mint_key,
         token::authority = state.bump_signer
@@ -130,9 +131,14 @@ pub fn handle_portfolio_stake<'a, 'b, 'c: 'info, 'info>(
 
 pub fn handle_wallet_stake<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, WalletStake>,
-    param: StakeParams,
+    pool_index: u16,
+    trade_token_index: u16,
+    request_token_amount: u128,
 ) -> Result<()> {
-    handle_pool_stake0(Either::Right(ctx), param)
+    handle_pool_stake0(
+        Either::Right(ctx),
+        StakeParams { request_token_amount, pool_index, trade_token_index },
+    )
 }
 
 fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
@@ -196,7 +202,6 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 &mut account_maps.oracle_map,
                 stake_params.request_token_amount,
             )?;
-            let mut user = ctx.accounts.user.load_mut()?;
             let user_key = user.key;
             let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
 

@@ -135,7 +135,7 @@ export class BumpinClient {
         if (fromPortfolio) {
             await this.userComponent.portfolioStake(amount, targetTradeToken, await this.getTradeTokens(), targetPool, sync);
         } else {
-            await this.userComponent.walletStake(amount, targetTradeToken, this.wallet.publicKey, targetPool);
+            await this.userComponent.walletStake(amount, targetTradeToken, await this.getTradeTokens(), this.wallet.publicKey, targetPool, sync);
         }
     }
 

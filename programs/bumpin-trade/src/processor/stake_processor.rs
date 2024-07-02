@@ -17,7 +17,7 @@ pub fn stake(
     oracle_map: &mut OracleMap,
     request_token_amount: u128,
 ) -> BumpResult<u128> {
-    let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key)?;
+    let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key).unwrap();
 
     let token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
 
