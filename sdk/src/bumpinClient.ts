@@ -63,7 +63,7 @@ export class BumpinClient {
         this.program = new anchor.Program(JSON.parse(JSON.stringify(idlBumpinTrade)), this.provider);
         this.bulkAccountLoader = new BulkAccountLoader(this.connection, "confirmed", config.pollingFrequency);
 
-        if (this.netType === NetType.LOCALNET) {
+        if (this.netType === NetType.LOCALNET || this.netType === NetType.CUSTOM) {
             this.programPyth = new anchor.Program(JSON.parse(JSON.stringify(idlPyth)), this.provider);
             this.pythClient = new PythClient(this.programPyth.provider.connection);
         }

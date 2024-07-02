@@ -4,7 +4,8 @@ export enum NetType {
     MAINNET_BETA = 'mainnet_beta',
     TESTNET = 'testnet',
     DEVNET = 'devnet',
-    LOCALNET = 'localnet'
+    LOCALNET = 'localnet',
+    CUSTOM = 'custom'
 }
 
 export type BumpinClientConfig = {
@@ -27,6 +28,10 @@ export class BumpinClientConfigBuilder {
 
     public static localnet(): BumpinClientConfigBuilder {
         return new BumpinClientConfigBuilder(NetType.LOCALNET, 'http://127.0.0.1:8899');
+    }
+
+    public static customNet(endpoint: string): BumpinClientConfigBuilder {
+        return new BumpinClientConfigBuilder(NetType.CUSTOM, endpoint);
     }
 
     public wallet(wallet: Wallet): BumpinClientConfigBuilder {

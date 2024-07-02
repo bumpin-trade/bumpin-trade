@@ -20,6 +20,10 @@ export class BumpinAdminConfigBuilder {
         return new BumpinAdminConfigBuilder('http://127.0.0.1:8899');
     }
 
+    public static customNet(endpoint: string): BumpinAdminConfigBuilder {
+        return new BumpinAdminConfigBuilder(endpoint);
+    }
+
     public wallet(wallet: Wallet): BumpinAdminConfigBuilder {
         this.config.wallet = wallet;
         return this;
