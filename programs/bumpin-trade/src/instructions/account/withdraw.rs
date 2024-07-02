@@ -79,7 +79,6 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
         &trade_token_map,
     )?;
     trade_token.sub_amount(amount)?;
-    drop(user_processor);
 
     let bump_signer_nonce = ctx.accounts.state.bump_signer_nonce;
     utils::token::send_from_program_vault(

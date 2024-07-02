@@ -180,7 +180,6 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
                 &account_maps.trade_token_map,
                 &mut account_maps.oracle_map,
                 &account_maps.market_map,
-                &ctx.accounts.state,
             )?;
 
             let un_stake_token_amount_fee =
@@ -260,7 +259,6 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
                 &account_maps.trade_token_map,
                 &mut account_maps.oracle_map,
                 &account_maps.market_map,
-                &ctx.accounts.state,
             )?;
 
             let un_stake_token_amount_fee =

@@ -281,25 +281,6 @@ impl User {
         Ok(())
     }
 
-    pub fn find_position_mut_ref_by_key(
-        &mut self,
-        position_key: &Pubkey,
-    ) -> BumpResult<&mut UserPosition> {
-        Ok(self
-            .positions
-            .iter_mut()
-            .find(|user_position| user_position.position_key.eq(position_key))
-            .ok_or(CouldNotFindUserPosition)?)
-    }
-
-    pub fn find_position_ref_by_key(&mut self, position_key: &Pubkey) -> BumpResult<&UserPosition> {
-        Ok(self
-            .positions
-            .iter_mut()
-            .find(|user_position| user_position.position_key.eq(position_key))
-            .ok_or(CouldNotFindUserPosition)?)
-    }
-
     pub fn has_other_short_order(
         &self,
         symbol: [u8; 32],

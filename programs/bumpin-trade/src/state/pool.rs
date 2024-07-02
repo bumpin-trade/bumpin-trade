@@ -12,7 +12,6 @@ use crate::state::infrastructure::fee_reward::FeeReward;
 use crate::state::infrastructure::pool_borrowing_fee::BorrowingFee;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
-use crate::state::state::State;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::traits::Size;
 use crate::validate;
@@ -40,7 +39,8 @@ pub struct Pool {
     pub index: u16,
     pub status: PoolStatus,
     pub stable: bool,
-    pub padding: [u8; 12],
+    pub market_number: u16,
+    pub padding: [u8; 10],
 }
 
 impl Size for Pool {
@@ -235,7 +235,6 @@ impl Pool {
         trade_token_map: &TradeTokenMap,
         oracle_map: &mut OracleMap,
         market_vec: &MarketMap,
-        state: &State,
     ) -> BumpResult<u128> {
         let trade_token = trade_token_map.get_trade_token_ref(&self.mint_key)?;
         let trade_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
@@ -245,17 +244,16 @@ impl Pool {
             trade_token_price,
         )?;
         if !self.stable {
-            let markets = market_vec.get_all_market(state.market_sequence)?;
+            let markets = market_vec.get_all_market(self.market_number)?;
             for market_loader in markets {
                 let market =
                     market_loader.load().map_err(|_e| BumpErrorCode::CouldNotLoadMarketData)?;
-                if self.key.eq(&market.pool_key) {
-                    let long_market_un_pnl = market.get_market_un_pnl(true, oracle_map)?;
-                    pool_value = add_i128(pool_value, long_market_un_pnl)?;
+                validate!(self.key.eq(&market.pool_key), BumpErrorCode::MarketWrongMutability)?;
+                let long_market_un_pnl = market.get_market_un_pnl(true, oracle_map)?;
+                pool_value = add_i128(pool_value, long_market_un_pnl)?;
 
-                    let short_market_un_pnl = market.get_market_un_pnl(false, oracle_map)?;
-                    pool_value = add_i128(pool_value, short_market_un_pnl)?;
-                }
+                let short_market_un_pnl = market.get_market_un_pnl(false, oracle_map)?;
+                pool_value = add_i128(pool_value, short_market_un_pnl)?;
             }
 
             let stable_amount = self
@@ -283,9 +281,8 @@ impl Pool {
         trade_token_map: &TradeTokenMap,
         oracle_map: &mut OracleMap,
         market_vec: &MarketMap,
-        state: &State,
     ) -> BumpResult<u128> {
-        let pool_value = self.get_pool_usd_value(trade_token_map, oracle_map, market_vec, state)?;
+        let pool_value = self.get_pool_usd_value(trade_token_map, oracle_map, market_vec)?;
         self.total_supply.safe_div(pool_value)
     }
 
@@ -320,7 +317,7 @@ impl Pool {
                         u_token_pnl
                     })?;
                 }
-            },
+            }
             Some(base_token_pool) => {
                 if token_pnl < 0i128 {
                     if self.stable {
@@ -344,7 +341,7 @@ impl Pool {
                         u_token_pnl
                     })?;
                 }
-            },
+            }
         })
     }
 }

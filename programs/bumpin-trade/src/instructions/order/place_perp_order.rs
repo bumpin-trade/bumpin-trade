@@ -295,7 +295,7 @@ pub fn handle_execute_order<'info>(
     order_id: u64,
     execute_from_remote: bool,
 ) -> Result<()> {
-    let user = user_account_loader.load_mut()?;
+    let mut user = user_account_loader.load_mut()?;
 
     let margin_token = margin_token_account;
     let mut market = market_account_loader.load_mut()?;
@@ -457,7 +457,6 @@ pub fn handle_execute_order<'info>(
             }
         }
     }?;
-    let mut user = user_account_loader.load_mut()?;
     //delete order
     user.delete_order(order_id)?;
     Ok(())
