@@ -107,7 +107,8 @@ pub fn rebalance_pool_unsettle<'a>(
         if pool.stable {
             let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key)?;
             if trade_token.total_liability < pool.balance.un_settle_amount {
-                let transfer_amount = pool.balance.un_settle_amount.safe_sub(trade_token.total_liability)?;
+                let transfer_amount =
+                    pool.balance.un_settle_amount.safe_sub(trade_token.total_liability)?;
 
                 let pool_vault = vault_map.get_account(&pool.mint_vault_key)?;
                 let trade_token_vault = vault_map.get_account(&trade_token.vault_key)?;

@@ -1,7 +1,7 @@
 use std::ops::DerefMut;
 
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
+use anchor_spl::token::{Token, TokenAccount};
 
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
@@ -52,11 +52,6 @@ pub struct PlaceOrder<'info> {
         bump,
     )]
     pub market: AccountLoader<'info, Market>,
-
-    #[account(
-        constraint = market.load() ?.pool_mint_key.eq(& margin_token.key()) || market.load() ?.stable_pool_mint_key.eq(& margin_token.key())
-    )]
-    pub margin_token: Box<Account<'info, Mint>>,
 
     #[account(
         mut,
@@ -165,7 +160,11 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     let mut user = ctx.accounts.user.load_mut()?;
     let pool = ctx.accounts.pool.load()?;
     let stable_pool = ctx.accounts.stable_pool.load()?;
-    let token = &ctx.accounts.margin_token;
+    let margin_token = if order.order_side.eq(&OrderSide::LONG) {
+        &market.pool_mint_key
+    } else {
+        &market.stable_pool_mint_key
+    };
     let trade_token = &ctx.accounts.trade_token.load()?;
     let remaining_accounts = ctx.remaining_accounts;
     msg!("place_order start....");
@@ -174,7 +173,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     validate!(
         validate_place_order(
             &order,
-            &token.key(),
+            margin_token,
             &market,
             if order.order_side.eq(&OrderSide::LONG) { &pool } else { &stable_pool },
             &ctx.accounts.state,
@@ -202,7 +201,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         user.add_order_hold_in_usd(order.order_margin)?;
     }
 
-    if user.has_other_short_order(order.symbol, token.key(), order.is_portfolio_margin)? {
+    if user.has_other_short_order(order.symbol, margin_token.key(), order.is_portfolio_margin)? {
         return Err(BumpErrorCode::OnlyOneShortOrderAllowed.into());
     }
 
@@ -216,7 +215,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         order_type: order.order_type,
         stop_type: order.stop_type,
         is_portfolio_margin: order.is_portfolio_margin,
-        margin_mint_key: token.key(),
+        margin_mint_key: margin_token.key(),
         order_margin: order.order_margin,
         leverage: order.leverage,
         order_size: order.size,
@@ -231,7 +230,6 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         drop(user);
         //execute order
         let user_account_loader = &ctx.accounts.user;
-        let margin_token_account = &ctx.accounts.margin_token;
         let pool_account_loader = &ctx.accounts.pool;
         let stable_pool_account_loader = &ctx.accounts.stable_pool;
         let market_account_loader = &ctx.accounts.market;
@@ -247,7 +245,6 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
 
         return handle_execute_order(
             user_account_loader,
-            margin_token_account,
             pool_account_loader,
             stable_pool_account_loader,
             market_account_loader,
@@ -278,7 +275,6 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
 
 pub fn handle_execute_order<'info>(
     user_account_loader: &AccountLoader<'info, User>,
-    margin_token_account: &Account<'info, Mint>,
     pool_account_loader: &AccountLoader<'info, Pool>,
     stable_pool_account_loader: &AccountLoader<'info, Pool>,
     market_account_loader: &AccountLoader<'info, Market>,
@@ -300,7 +296,6 @@ pub fn handle_execute_order<'info>(
 ) -> Result<()> {
     let mut user = user_account_loader.load_mut()?;
 
-    let margin_token = margin_token_account;
     let mut market = market_account_loader.load_mut()?;
     let mut trade_token = trade_token_loader.load_mut()?;
     let index_trade_token = index_trade_token_loader.load()?;
@@ -350,8 +345,13 @@ pub fn handle_execute_order<'info>(
         PositionSide::NONE => Err(BumpErrorCode::PositionSideNotSupport),
         PositionSide::INCREASE => {
             {
+                let margin_token = if order.order_side.eq(&OrderSide::LONG) {
+                    &market.pool_mint_key
+                } else {
+                    &market.stable_pool_mint_key
+                };
                 let mut user = user_account_loader.load_mut()?;
-                let margin_token_price = if market.index_mint_key.eq(&margin_token.key()) {
+                let margin_token_price = if market.index_mint_key.eq(margin_token) {
                     execute_price
                 } else {
                     oracle_map.get_price_data(&trade_token.oracle_key)?.price
@@ -360,7 +360,7 @@ pub fn handle_execute_order<'info>(
                 let (order_margin, order_margin_from_balance) = execute_increase_order_margin(
                     user_token_account.to_account_info().key,
                     order,
-                    &margin_token.key(),
+                    margin_token,
                     trade_token.decimals,
                     &mut user,
                     margin_token_price,

@@ -1,7 +1,7 @@
-use anchor_lang::prelude::*;
 use crate::errors::BumpErrorCode;
 use crate::state::state::State;
 use crate::state::user::{User, UserStatus};
+use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 #[instruction(
@@ -23,11 +23,15 @@ pub struct UpdateUserStatus<'info> {
     pub user: AccountLoader<'info, User>,
 
     pub keeper_signer: Signer<'info>,
-
 }
 
-pub fn handle_update_user_status(ctx: Context<UpdateUserStatus>, user_status: UserStatus, _user_authority_key: Pubkey) -> Result<()> {
-    let mut user = ctx.accounts.user.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadUserData)?;
+pub fn handle_update_user_status(
+    ctx: Context<UpdateUserStatus>,
+    user_status: UserStatus,
+    _user_authority_key: Pubkey,
+) -> Result<()> {
+    let mut user =
+        ctx.accounts.user.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadUserData)?;
     user.user_status = user_status;
     Ok(())
 }

@@ -6,9 +6,9 @@ use instructions::*;
 
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::state::infrastructure::user_order::UserOrder;
+use crate::state::user::UserStatus;
 use crate::state::vault_map::VaultMap;
 use crate::traits::Size;
-use crate::state::user::UserStatus;
 
 pub mod errors;
 pub mod ids;
@@ -147,7 +147,6 @@ pub mod bumpin_trade {
         order_id: u64,
     ) -> Result<()> {
         let user_account_loader = &ctx.accounts.user;
-        let margin_token_account = &ctx.accounts.margin_token;
         let pool_account_loader = &ctx.accounts.pool;
         let stable_pool_account_loader = &ctx.accounts.stable_pool;
         let market_account_loader = &ctx.accounts.market;
@@ -165,7 +164,6 @@ pub mod bumpin_trade {
 
         handle_execute_order(
             user_account_loader,
-            margin_token_account,
             pool_account_loader,
             stable_pool_account_loader,
             market_account_loader,
@@ -230,7 +228,11 @@ pub mod bumpin_trade {
         )
     }
 
-    pub fn update_user_status(ctx: Context<UpdateUserStatus>, user_status: UserStatus, user_authority_key: Pubkey) -> Result<()> {
+    pub fn update_user_status(
+        ctx: Context<UpdateUserStatus>,
+        user_status: UserStatus,
+        user_authority_key: Pubkey,
+    ) -> Result<()> {
         handle_update_user_status(ctx, user_status, user_authority_key)
     }
 
