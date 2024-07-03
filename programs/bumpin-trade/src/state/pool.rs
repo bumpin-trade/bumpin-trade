@@ -41,6 +41,7 @@ pub struct Pool {
     pub stable: bool,
     pub market_number: u16,
     pub padding: [u8; 10],
+    pub reserve_padding: [u8; 32],
 }
 
 impl Size for Pool {

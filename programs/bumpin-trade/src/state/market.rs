@@ -26,6 +26,7 @@ pub struct Market {
     pub market_status: MarketStatus,
     pub index: u16,
     pub padding: [u8; 13],
+    pub reserve_padding: [u8; 32],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Copy, Debug, Eq, PartialEq)]
