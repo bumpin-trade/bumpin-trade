@@ -29,7 +29,7 @@ pub fn get_pyth_price(price_oracle: &AccountInfo, multiple: u128) -> BumpResult<
     let current_timestamp =
         Clock::get().map_err(|_e| BumpErrorCode::TimestampNotFound)?.unix_timestamp;
     let price_data =
-        price_feed.get_price_no_older_than(current_timestamp, 10).ok_or(PythOffline)?;
+        price_feed.get_price_no_older_than(current_timestamp, 180).ok_or(PythOffline)?;
     let oracle_price = price_data.price;
     let oracle_conf = price_data.conf;
 

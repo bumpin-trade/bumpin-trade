@@ -71,8 +71,23 @@ export class BumpinTokenUtils {
         return tradeToken;
     }
 
+    public static async getTokenAccountFromWalletAndKey(connection: Connection, walletPublicKey: PublicKey, tokenAccountKey: PublicKey): Promise<Account> {
+        const walletPubKey = new PublicKey(walletPublicKey);
+        const tokenAccounts = await connection.getTokenAccountsByOwner(walletPubKey, {
+            programId: TOKEN_PROGRAM_ID,
+        });
 
-    public static async getTokenAccountFromWallet(connection: Connection, walletPublicKey: PublicKey, mintPublicKey: PublicKey): Promise<Account> {
+        for (let accountInfo of tokenAccounts.value) {
+            const accountPubKey = accountInfo.pubkey;
+            if (accountPubKey.equals(tokenAccountKey)) {
+                return await getAccount(connection, accountPubKey);
+            }
+        }
+        throw new BumpinAccountNotFound("TokenAccount: " + tokenAccountKey);
+    }
+
+
+    public static async getTokenAccountFromWalletAndMintKey(connection: Connection, walletPublicKey: PublicKey, mintPublicKey: PublicKey): Promise<Account> {
         const walletPubKey = new PublicKey(walletPublicKey);
         const mintPubKey = new PublicKey(mintPublicKey);
         const tokenAccounts = await connection.getTokenAccountsByOwner(walletPubKey, {

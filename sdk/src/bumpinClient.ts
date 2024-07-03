@@ -155,10 +155,10 @@ export class BumpinClient {
         }).signers([]).rpc();
     }
 
-    public async placePerpOrder(marketIndex: number, param: PlaceOrderParams, sync: boolean = false) {
+    public async placePerpOrder(marketIndex: number, param: PlaceOrderParams, userTokenAccount: anchor.web3.PublicKey, sync: boolean = false) {
         let market = BumpinMarketUtils.getMarketByIndex(marketIndex, await this.getMarkets(sync));
         await this.userComponent.placePerpOrder(market.symbol, marketIndex, param, this.wallet.publicKey
-            , await this.poolComponent.getPools(sync), await this.marketComponent.getMarkets(), await this.tradeTokenComponent.getTradeTokens(sync));
+            , await this.poolComponent.getPools(sync), await this.marketComponent.getMarkets(), await this.tradeTokenComponent.getTradeTokens(sync), userTokenAccount);
     }
 
 

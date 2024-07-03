@@ -4,13 +4,13 @@ import {
     Market,
     PlaceOrderParams,
     Pool,
-    PositionStatus,
     TradeToken,
     UserAccount,
     UserStakeStatus,
     UserTokenStatus
 } from "../types";
 import {BulkAccountLoader} from "../account/bulkAccountLoader";
+import * as anchor from "@coral-xyz/anchor";
 import {BN, Program} from "@coral-xyz/anchor";
 import {BumpinUtils} from "../utils/utils";
 import {BumpinTrade} from "../types/bumpin_trade";
@@ -101,7 +101,7 @@ export class UserComponent extends Component {
         let user = await this.getUser(sync);
         await this.checkStakeAmountFulfilRequirements(amount, tradeToken, pool);
         await this.checkStakeWalletAmountSufficient(amount, wallet, tradeToken);
-        let tokenAccount = await BumpinTokenUtils.getTokenAccountFromWallet(this.program.provider.connection, wallet, tradeToken.mintKey);
+        let tokenAccount = await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(this.program.provider.connection, wallet, tradeToken.mintKey);
 
         let remainingAccounts = [];
         remainingAccounts.push({
@@ -153,7 +153,7 @@ export class UserComponent extends Component {
                 authority: wallet,
             }).signers([]).rpc();
         } else {
-            let tokenAccount = await BumpinTokenUtils.getTokenAccountFromWallet(this.program.provider.connection, wallet, tradeToken.mintKey);
+            let tokenAccount = await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(this.program.provider.connection, wallet, tradeToken.mintKey);
             await this.program.methods.walletUnStake(
                 param
             ).accounts({
@@ -165,13 +165,13 @@ export class UserComponent extends Component {
     }
 
 
-    public async placePerpOrder(symbol: number[], marketIndex: number, param: PlaceOrderParams, wallet: PublicKey, pools: Pool[], markets: Market[], tradeTokens: TradeToken[]) {
+    public async placePerpOrder(symbol: number[], marketIndex: number, param: PlaceOrderParams, wallet: PublicKey, pools: Pool[], markets: Market[], tradeTokens: TradeToken[], userTokenAccount: anchor.web3.PublicKey) {
         let pool = BumpinPoolUtils.getPoolByMintPublicKey(markets[marketIndex].poolMintKey, pools);
         let stablePool = BumpinPoolUtils.getPoolByMintPublicKey(markets[marketIndex].stablePoolMintKey, pools);
         // let indexPool = BumpinPoolUtils.getPoolByMintPublicKey(markets[marketIndex].indexMintKey, pools);
         let tradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(markets[marketIndex].poolMintKey, tradeTokens);
         let indexTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(markets[marketIndex].indexMintKey, tradeTokens);
-        let orderParam: InnerPlaceOrderParams = {
+        let order: InnerPlaceOrderParams = {
             ...param,
             symbol,
             placeTime: new BN(Date.now()),
@@ -182,12 +182,17 @@ export class UserComponent extends Component {
             indexTradeTokenIndex: indexTradeToken.index,
         };
         await this.program.methods.placeOrder(
-            orderParam
+            order,
         ).accounts({
+            userTokenAccount: userTokenAccount,
             authority: wallet,
+            bumpSigner: (await this.getState()).bumpSigner,
         }).signers([]).rpc();
     }
 
+    async placePerpOrderValidation(){
+
+    }
 
     public async getUserAvailableValue(user: UserAccount, tradeTokens: TradeToken[]) {
 

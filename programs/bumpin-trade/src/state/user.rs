@@ -1,7 +1,10 @@
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Token, TokenAccount};
+
+use crate::errors::{BumpErrorCode, BumpResult};
 use crate::errors::BumpErrorCode::{
     CouldNotFindUserOrder, CouldNotFindUserPosition, CouldNotFindUserStake, CouldNotFindUserToken,
 };
-use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
@@ -23,25 +26,42 @@ use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::traits::Size;
 use crate::utils::token;
 use crate::validate;
-use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
 
 #[account(zero_copy(unsafe))]
-#[derive(Default, Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct User {
     pub next_order_id: u64,
     pub next_liquidation_id: u64,
     pub hold: u128,
-    pub tokens: [UserToken; 12],
-    pub stakes: [UserStake; 12],
+    pub tokens: [UserToken; 10],
+    pub stakes: [UserStake; 10],
     pub positions: [UserPosition; 10],
     pub orders: [UserOrder; 10],
     pub key: Pubkey,
     pub authority: Pubkey,
     pub user_status: UserStatus,
     pub padding: [u8; 15],
-    pub reserve_padding: [u8; 32],
+    pub reserve_padding: [u8; 496],
+}
+
+impl Default for User {
+    fn default() -> Self {
+        Self {
+            next_order_id: 0,
+            next_liquidation_id: 0,
+            hold: 0,
+            tokens: [UserToken::default(); 10],
+            stakes: [UserStake::default(); 10],
+            positions: [UserPosition::default(); 10],
+            orders: [UserOrder::default(); 10],
+            key: Pubkey::default(),
+            authority: Pubkey::default(),
+            user_status: UserStatus::NORMAL,
+            padding: [0u8; 15],
+            reserve_padding: [0u8; 496],
+        }
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]

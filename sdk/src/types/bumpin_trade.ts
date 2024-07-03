@@ -2323,7 +2323,7 @@ export type BumpinTrade = {
       ],
       "args": [
         {
-          "name": "params",
+          "name": "order",
           "type": {
             "defined": {
               "name": "placeOrderParams"
@@ -4263,6 +4263,10 @@ export type BumpinTrade = {
             "type": "pubkey"
           },
           {
+            "name": "index",
+            "type": "u16"
+          },
+          {
             "name": "marketStatus",
             "type": {
               "defined": {
@@ -4271,15 +4275,20 @@ export type BumpinTrade = {
             }
           },
           {
-            "name": "index",
-            "type": "u16"
-          },
-          {
             "name": "padding",
             "type": {
               "array": [
                 "u8",
                 13
+              ]
+            }
+          },
+          {
+            "name": "reservePadding",
+            "type": {
+              "array": [
+                "u8",
+                32
               ]
             }
           }
@@ -4704,6 +4713,15 @@ export type BumpinTrade = {
                 10
               ]
             }
+          },
+          {
+            "name": "reservePadding",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           }
         ]
       }
@@ -5070,6 +5088,15 @@ export type BumpinTrade = {
           {
             "name": "poolFeeRewardRatio",
             "type": "u32"
+          },
+          {
+            "name": "reservePadding",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           }
         ]
       }
@@ -5151,6 +5178,15 @@ export type BumpinTrade = {
               "array": [
                 "u8",
                 4
+              ]
+            }
+          },
+          {
+            "name": "reservePadding",
+            "type": {
+              "array": [
+                "u8",
+                32
               ]
             }
           }
@@ -5308,7 +5344,7 @@ export type BumpinTrade = {
                     "name": "userToken"
                   }
                 },
-                12
+                10
               ]
             }
           },
@@ -5321,7 +5357,7 @@ export type BumpinTrade = {
                     "name": "userStake"
                   }
                 },
-                12
+                10
               ]
             }
           },
@@ -5373,6 +5409,15 @@ export type BumpinTrade = {
               "array": [
                 "u8",
                 15
+              ]
+            }
+          },
+          {
+            "name": "reservePadding",
+            "type": {
+              "array": [
+                "u8",
+                496
               ]
             }
           }
@@ -5502,6 +5547,15 @@ export type BumpinTrade = {
               "array": [
                 "u8",
                 6
+              ]
+            }
+          },
+          {
+            "name": "reservePadding",
+            "type": {
+              "array": [
+                "u8",
+                16
               ]
             }
           }
@@ -5641,6 +5695,15 @@ export type BumpinTrade = {
                 1
               ]
             }
+          },
+          {
+            "name": "reservePadding",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
           }
         ]
       }
@@ -5732,6 +5795,15 @@ export type BumpinTrade = {
                 15
               ]
             }
+          },
+          {
+            "name": "reservePadding",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
           }
         ]
       }
@@ -5809,6 +5881,15 @@ export type BumpinTrade = {
               "array": [
                 "u8",
                 15
+              ]
+            }
+          },
+          {
+            "name": "reservePadding",
+            "type": {
+              "array": [
+                "u8",
+                16
               ]
             }
           }

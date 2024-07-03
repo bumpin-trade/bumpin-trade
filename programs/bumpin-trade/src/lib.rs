@@ -137,9 +137,9 @@ pub mod bumpin_trade {
     /*-----order------*/
     pub fn place_order<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
-        params: PlaceOrderParams,
+        order: PlaceOrderParams,
     ) -> Result<()> {
-        handle_place_order(ctx, params)
+        handle_place_order(ctx, order)
     }
 
     pub fn execute_order<'a, 'b, 'c: 'info, 'info>(

@@ -2317,7 +2317,7 @@
       ],
       "args": [
         {
-          "name": "params",
+          "name": "order",
           "type": {
             "defined": {
               "name": "PlaceOrderParams"
@@ -4257,6 +4257,10 @@
             "type": "pubkey"
           },
           {
+            "name": "index",
+            "type": "u16"
+          },
+          {
             "name": "market_status",
             "type": {
               "defined": {
@@ -4265,15 +4269,20 @@
             }
           },
           {
-            "name": "index",
-            "type": "u16"
-          },
-          {
             "name": "padding",
             "type": {
               "array": [
                 "u8",
                 13
+              ]
+            }
+          },
+          {
+            "name": "reserve_padding",
+            "type": {
+              "array": [
+                "u8",
+                32
               ]
             }
           }
@@ -4698,6 +4707,15 @@
                 10
               ]
             }
+          },
+          {
+            "name": "reserve_padding",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           }
         ]
       }
@@ -5064,6 +5082,15 @@
           {
             "name": "pool_fee_reward_ratio",
             "type": "u32"
+          },
+          {
+            "name": "reserve_padding",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           }
         ]
       }
@@ -5145,6 +5172,15 @@
               "array": [
                 "u8",
                 4
+              ]
+            }
+          },
+          {
+            "name": "reserve_padding",
+            "type": {
+              "array": [
+                "u8",
+                32
               ]
             }
           }
@@ -5302,7 +5338,7 @@
                     "name": "UserToken"
                   }
                 },
-                12
+                10
               ]
             }
           },
@@ -5315,7 +5351,7 @@
                     "name": "UserStake"
                   }
                 },
-                12
+                10
               ]
             }
           },
@@ -5367,6 +5403,15 @@
               "array": [
                 "u8",
                 15
+              ]
+            }
+          },
+          {
+            "name": "reserve_padding",
+            "type": {
+              "array": [
+                "u8",
+                496
               ]
             }
           }
@@ -5496,6 +5541,15 @@
               "array": [
                 "u8",
                 6
+              ]
+            }
+          },
+          {
+            "name": "reserve_padding",
+            "type": {
+              "array": [
+                "u8",
+                16
               ]
             }
           }
@@ -5635,6 +5689,15 @@
                 1
               ]
             }
+          },
+          {
+            "name": "reserve_padding",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
           }
         ]
       }
@@ -5726,6 +5789,15 @@
                 15
               ]
             }
+          },
+          {
+            "name": "reserve_padding",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
           }
         ]
       }
@@ -5803,6 +5875,15 @@
               "array": [
                 "u8",
                 15
+              ]
+            }
+          },
+          {
+            "name": "reserve_padding",
+            "type": {
+              "array": [
+                "u8",
+                16
               ]
             }
           }
