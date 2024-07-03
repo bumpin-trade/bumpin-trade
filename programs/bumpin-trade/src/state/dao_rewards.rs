@@ -10,6 +10,7 @@ pub struct DaoRewards {
     pub dao_rewards_vault: Pubkey,
     pub pool_index: u16,
     pub padding: [u8; 14],
+    pub reserve_padding: [u8; 32],
 }
 
 impl Size for DaoRewards {

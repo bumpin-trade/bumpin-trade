@@ -11,6 +11,7 @@ pub struct PoolRewards {
     pub pool_rewards_vault: Pubkey,
     pub pool_index: u16,
     pub padding: [u8; 14],
+    pub reserve_padding: [u8; 32],
 }
 
 impl Size for PoolRewards {
