@@ -7,7 +7,6 @@ use crate::errors::BumpErrorCode;
 use crate::instructions::constraints::*;
 use crate::instructions::Either;
 use crate::math::safe_math::SafeMath;
-use crate::processor::fee_reward_processor::update_account_fee_reward;
 use crate::processor::optional_accounts::load_maps;
 use crate::processor::{fee_processor, pool_processor, user_processor};
 use crate::state::bump_events::StakeOrUnStakeEvent;
@@ -16,6 +15,7 @@ use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::{User, UserTokenUpdateReason};
 use crate::{utils, validate};
+use crate::state::user;
 
 #[derive(Accounts)]
 #[instruction(un_stake_params: UnStakeParams,)]
@@ -30,7 +30,7 @@ pub struct PortfolioUnStake<'info> {
         mut,
         seeds = [b"user", authority.key().as_ref()],
         bump,
-        constraint = can_sign_for_user(& user, & authority) ? && is_normal(&user) ?,
+        constraint = can_sign_for_user(& user, & authority) ? && is_normal(& user) ?,
     )]
     pub user: AccountLoader<'info, User>,
 
@@ -184,7 +184,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
             let un_stake_token_amount_fee =
                 fee_processor::collect_un_stake_fee(pool, un_stake_token_amount)?;
 
-            update_account_fee_reward(pool.deref_mut(), user.deref_mut())?;
+            user_processor::update_account_fee_reward(pool.deref_mut(), user.deref_mut())?;
 
             let rewards_amount = user_stake.user_rewards.realised_rewards_token_amount;
             let transfer_amount = un_stake_token_amount
@@ -235,7 +235,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
                 change_supply_amount: un_stake_token_amount,
                 user_stake: user_stake.clone(),
             });
-        },
+        }
         Either::Right(ctx) => {
             let pool = &mut ctx.accounts.pool.load_mut()?;
             let user = &mut ctx.accounts.user.load_mut()?;
@@ -263,7 +263,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
             let un_stake_token_amount_fee =
                 fee_processor::collect_un_stake_fee(pool, un_stake_token_amount)?;
 
-            update_account_fee_reward(pool.deref_mut(), user.deref_mut())?;
+            user_processor::update_account_fee_reward(pool.deref_mut(), user.deref_mut())?;
 
             let rewards_amount = user_stake.user_rewards.realised_rewards_token_amount;
             let transfer_amount = un_stake_token_amount
@@ -296,7 +296,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
                 change_supply_amount: un_stake_token_amount,
                 user_stake: user_stake.clone(),
             });
-        },
+        }
     }
 
     Ok(())

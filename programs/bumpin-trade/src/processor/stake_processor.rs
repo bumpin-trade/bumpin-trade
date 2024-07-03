@@ -1,8 +1,7 @@
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::math::safe_math::SafeMath;
-use crate::processor::fee_processor;
-use crate::processor::fee_reward_processor::update_account_fee_reward;
+use crate::processor::{fee_processor, user_processor};
 use crate::state::infrastructure::user_stake::UserStakeStatus;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
@@ -34,7 +33,7 @@ pub fn stake(
         BumpErrorCode::CouldNotFindUserStake
     )?;
 
-    update_account_fee_reward(pool, user)?;
+    user_processor::update_account_fee_reward(pool, user)?;
 
     let stake_fee = fee_processor::collect_stake_fee(pool, request_token_amount)?;
     let base_mint_amount = request_token_amount.safe_sub(stake_fee)?;

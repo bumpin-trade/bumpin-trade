@@ -1,6 +1,5 @@
 use crate::errors::BumpErrorCode;
 use crate::instructions::constraints::*;
-use crate::processor::fee_reward_processor::update_account_fee_reward;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::state::infrastructure::user_stake::UserStakeStatus;
 use crate::state::state::State;
@@ -10,6 +9,7 @@ use crate::utils;
 use anchor_lang::prelude::*;
 use anchor_spl::token::Token;
 use std::ops::DerefMut;
+use crate::processor::user_processor;
 
 #[derive(Accounts)]
 pub struct ClaimRewards<'info> {
@@ -24,7 +24,7 @@ pub struct ClaimRewards<'info> {
         mut,
         seeds = [b"user", authority.key().as_ref()],
         bump,
-        constraint = can_sign_for_user(& user, & authority) ? && is_normal(&user) ?,
+        constraint = can_sign_for_user(& user, & authority) ? && is_normal(& user) ?,
     )]
     pub user: AccountLoader<'info, User>,
 
@@ -50,7 +50,7 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
     for user_stake in user.stakes.clone().iter() {
         let pool_account_loader = pool_map.get_account_loader(&user_stake.pool_key)?;
         let mut pool = pool_account_loader.load_mut()?;
-        update_account_fee_reward(pool.deref_mut(), user.deref_mut())?;
+        user_processor::update_account_fee_reward(pool.deref_mut(), user.deref_mut())?;
     }
 
     for user_stake in user.stakes.iter_mut() {
