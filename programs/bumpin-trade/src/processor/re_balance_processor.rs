@@ -25,7 +25,6 @@ pub fn rebalance_pool_unsettle<'a>(
     let mut pool_unsettle_map = BTreeMap::<Pubkey, u128>::new();
     for pool_loader in &pool_loader_vec {
         let mut pool = pool_loader.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadPoolData)?;
-        let pre_fee_reward = pool.fee_reward;
         if !pool.stable {
             match pool_unsettle_map.get_mut(&pool.mint_key) {
                 Some(un_settle_amount) => {
@@ -38,7 +37,7 @@ pub fn rebalance_pool_unsettle<'a>(
                 },
             }
         }
-
+        let pre_fee_reward = pool.fee_reward;
         if pre_fee_reward.un_settle_fee_amount > 0 {
             let pool_vault = vault_map.get_account(&pool.mint_vault_key)?;
             let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key)?;
@@ -108,15 +107,15 @@ pub fn rebalance_pool_unsettle<'a>(
         if pool.stable {
             let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key)?;
             if trade_token.total_liability < pool.balance.un_settle_amount {
-                let transfer_amount = pool.balance.un_settle_amount - trade_token.total_liability;
+                let transfer_amount = pool.balance.un_settle_amount.safe_sub(trade_token.total_liability)?;
 
-                let stable_pool_vault = vault_map.get_account(&pool.mint_vault_key)?;
+                let pool_vault = vault_map.get_account(&pool.mint_vault_key)?;
                 let trade_token_vault = vault_map.get_account(&trade_token.vault_key)?;
 
                 utils::token::receive(
                     token_program,
                     trade_token_vault,
-                    stable_pool_vault,
+                    pool_vault,
                     bump_signer,
                     transfer_amount,
                 )
@@ -175,16 +174,16 @@ pub fn rebalance_rewards<'a>(
     let trade_token_map = &account_maps.trade_token_map;
     for pool_loader in pool_vec {
         let mut pool = pool_loader.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadPoolData)?;
-        let pre_fee_reward = pool.fee_reward.clone();
-        if pre_fee_reward.un_settle_fee_amount > 0 {
-            let stable_pool_vault = vault_map.get_account(&pool.mint_vault_key)?;
+        let pre_fee_reward = pool.fee_reward;
+        if pre_fee_reward.un_settle_fee_amount > 0u128 {
+            let pool_vault = vault_map.get_account(&pool.mint_vault_key)?;
             let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key)?;
             let trade_token_vault = vault_map.get_account(&trade_token.vault_key)?;
 
             utils::token::receive(
                 token_program,
                 trade_token_vault,
-                stable_pool_vault,
+                pool_vault,
                 bump_signer,
                 pre_fee_reward.un_settle_fee_amount,
             )
