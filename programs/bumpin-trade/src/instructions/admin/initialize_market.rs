@@ -63,9 +63,9 @@ pub struct InitializeMarket<'info> {
 
 pub fn handle_initialize_market(
     ctx: Context<InitializeMarket>,
-    symbol: [u8; 32],
     _pool_index: u16,
     _stable_pool_index: u16,
+    symbol: [u8; 32],
 ) -> Result<()> {
     let mut market = ctx.accounts.market.load_init()?;
     let mut pool = ctx.accounts.pool.load_mut()?;

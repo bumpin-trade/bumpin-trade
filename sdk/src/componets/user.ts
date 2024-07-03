@@ -165,7 +165,7 @@ export class UserComponent extends Component {
     }
 
 
-    public async placePerpOrder(symbol: string, marketIndex: number, param: PlaceOrderParams, wallet: PublicKey, pools: Pool[], markets: Market[], tradeTokens: TradeToken[]) {
+    public async placePerpOrder(symbol: number[], marketIndex: number, param: PlaceOrderParams, wallet: PublicKey, pools: Pool[], markets: Market[], tradeTokens: TradeToken[]) {
         let pool = BumpinPoolUtils.getPoolByMintPublicKey(markets[marketIndex].poolMintKey, pools);
         let stablePool = BumpinPoolUtils.getPoolByMintPublicKey(markets[marketIndex].stablePoolMintKey, pools);
         // let indexPool = BumpinPoolUtils.getPoolByMintPublicKey(markets[marketIndex].indexMintKey, pools);
@@ -173,7 +173,7 @@ export class UserComponent extends Component {
         let indexTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(markets[marketIndex].indexMintKey, tradeTokens);
         let orderParam: InnerPlaceOrderParams = {
             ...param,
-            symbol: BumpinUtils.string2Padded32Bytes(symbol),
+            symbol,
             placeTime: new BN(Date.now()),
             marketIndex: marketIndex,
             poolIndex: pool.index,
@@ -184,7 +184,6 @@ export class UserComponent extends Component {
         await this.program.methods.placeOrder(
             orderParam
         ).accounts({
-            marginToken: pool.mintKey,
             authority: wallet,
         }).signers([]).rpc();
     }

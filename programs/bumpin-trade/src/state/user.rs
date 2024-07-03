@@ -40,6 +40,7 @@ pub struct User {
     pub key: Pubkey,
     pub authority: Pubkey,
     pub user_status: UserStatus,
+    pub padding : [u8; 15],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]

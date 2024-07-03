@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::Mint;
 use anchor_spl::token::{Token, TokenAccount};
+use anchor_spl::token::Mint;
 
 use instructions::*;
 
-use crate::processor::optional_accounts::{load_maps, AccountMaps};
+use crate::processor::optional_accounts::{AccountMaps, load_maps};
 use crate::state::infrastructure::user_order::UserOrder;
 use crate::state::user::UserStatus;
 use crate::state::vault_map::VaultMap;
@@ -82,7 +82,7 @@ pub mod bumpin_trade {
         stable_pool_index: u16,
         symbol: [u8; 32],
     ) -> Result<()> {
-        handle_initialize_market(ctx, symbol, pool_index, stable_pool_index)
+        handle_initialize_market(ctx, pool_index, stable_pool_index, symbol)
     }
 
     /*-----pool pool------*/

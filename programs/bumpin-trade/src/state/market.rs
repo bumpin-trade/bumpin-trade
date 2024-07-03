@@ -23,8 +23,8 @@ pub struct Market {
     pub index_mint_key: Pubkey,
     pub stable_pool_key: Pubkey,
     pub stable_pool_mint_key: Pubkey,
-    pub market_status: MarketStatus,
     pub index: u16,
+    pub market_status: MarketStatus,
     pub padding: [u8; 13],
 }
 

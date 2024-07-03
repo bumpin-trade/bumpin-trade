@@ -20,6 +20,7 @@ import {TradeTokenComponent} from "./componets/tradeToken";
 import {MarketComponent} from "./componets/market";
 import {BumpinTokenUtils} from "./utils/token";
 import {BumpinPoolUtils} from "./utils/pool";
+import {BumpinMarketUtils} from "./utils/market";
 
 
 export class BumpinClient {
@@ -154,9 +155,10 @@ export class BumpinClient {
         }).signers([]).rpc();
     }
 
-    public async placePerpOrder(symbol: string, marketIndex: number, param: PlaceOrderParams, sync: boolean = false) {
-        await this.userComponent.placePerpOrder(symbol, marketIndex, param, this.wallet.publicKey
-            , await this.poolComponent.getPools(sync), await this.marketComponent.getMarkets(sync), await this.tradeTokenComponent.getTradeTokens(sync));
+    public async placePerpOrder(marketIndex: number, param: PlaceOrderParams, sync: boolean = false) {
+        let market = BumpinMarketUtils.getMarketByIndex(marketIndex, await this.getMarkets(sync));
+        await this.userComponent.placePerpOrder(market.symbol, marketIndex, param, this.wallet.publicKey
+            , await this.poolComponent.getPools(sync), await this.marketComponent.getMarkets(), await this.tradeTokenComponent.getTradeTokens(sync));
     }
 
 

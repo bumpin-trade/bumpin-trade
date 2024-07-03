@@ -279,6 +279,8 @@ export type StopTypeValue =
     | typeof StopType.StopLoss
     | typeof StopType.TakeProfit;
 
+
+
 export type UserOrder = {
     orderMargin: BN;
     orderSize: BN;
@@ -298,6 +300,16 @@ export type UserOrder = {
     isPortfolioMargin: boolean;
 }
 
+export class UserStatus {
+    static readonly NORMAL = {normal: {}};
+    static readonly LIQUIDATION = {liquidation: {}};
+    static readonly DISABLE = {disable: {}};
+}
+
+export type UserStatusValue =
+    | typeof UserStatus.NORMAL
+    | typeof UserStatus.LIQUIDATION
+    | typeof UserStatus.DISABLE;
 
 export type UserAccount = {
     nextOrderId: BN;
@@ -309,7 +321,9 @@ export type UserAccount = {
     orders: UserOrder[];
     key: PublicKey;
     authority: PublicKey;
+    status: UserStatusValue;
 }
+
 
 export type TradeTokenBalance = {
     tokenNetValue: BN;
