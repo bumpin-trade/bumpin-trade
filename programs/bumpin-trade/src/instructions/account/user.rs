@@ -39,7 +39,6 @@ pub fn handle_initialize_user(ctx: Context<InitializeUser>) -> Result<()> {
         ctx.accounts.user.load_init().or(Err(BumpErrorCode::UnableToLoadAccountLoader))?;
     user.key = *ctx.accounts.user.to_account_info().key;
     user.authority = *ctx.accounts.authority.to_account_info().key;
-    drop(user);
 
     let init_fee = ctx.accounts.state.init_fee;
     if init_fee > 0 {

@@ -38,7 +38,9 @@ pub struct PlaceOrder<'info> {
 
     #[account(
         mut,
-        constraint = can_sign_for_user(& user, & authority) ?
+        seeds = [b"user", authority.key().as_ref()],
+        bump,
+        constraint = can_sign_for_user(& user, & authority) ? && is_normal(&user) ?,
     )]
     pub user: AccountLoader<'info, User>,
 

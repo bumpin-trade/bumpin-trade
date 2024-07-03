@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::errors::BumpErrorCode;
+use crate::instructions::constraints::*;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::position_processor;
 use crate::state::market::Market;
@@ -20,6 +21,7 @@ pub struct UpdatePositionLeverage<'info> {
         mut,
         seeds = [b"user", authority.key().as_ref()],
         bump,
+        constraint = can_sign_for_user(& user, & authority) ? && is_normal(&user) ?,
     )]
     pub user: AccountLoader<'info, User>,
 

@@ -8,6 +8,7 @@ use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::state::infrastructure::user_order::UserOrder;
 use crate::state::vault_map::VaultMap;
 use crate::traits::Size;
+use crate::state::user::UserStatus;
 
 pub mod errors;
 pub mod ids;
@@ -209,31 +210,28 @@ pub mod bumpin_trade {
         handle_update_position_leverage(ctx, params)
     }
 
-    pub fn liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, LiquidateCrossPosition<'c>>,
-        user_authority_key: Pubkey,
-    ) -> Result<()> {
-        handle_liquidate_cross_position(ctx, user_authority_key)
-    }
-
-    pub fn liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, LiquidateIsolatePosition>,
+    pub fn liquidate_position<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, LiquidatePosition>,
         position_key: Pubkey,
+        liquidation_price: u128,
         market_index: u16,
         pool_index: u16,
         stable_pool_index: u16,
-        index_trade_token_index: u16,
         user_authority_key: Pubkey,
     ) -> Result<()> {
-        handle_liquidate_isolate_position(
+        handle_liquidate_position(
             ctx,
             position_key,
+            liquidation_price,
             market_index,
             pool_index,
             stable_pool_index,
-            index_trade_token_index,
             user_authority_key,
         )
+    }
+
+    pub fn update_user_status(ctx: Context<UpdateUserStatus>, user_status: UserStatus, user_authority_key: Pubkey) -> Result<()> {
+        handle_update_user_status(ctx, user_status, user_authority_key)
     }
 
     /*-----adl------*/

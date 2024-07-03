@@ -3,8 +3,8 @@ use std::ops::DerefMut;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
-use crate::can_sign_for_user;
 use crate::errors::BumpErrorCode;
+use crate::instructions::constraints::*;
 use crate::instructions::Either;
 use crate::math::safe_math::SafeMath;
 use crate::processor::fee_reward_processor::update_account_fee_reward;
@@ -28,9 +28,9 @@ pub struct PortfolioUnStake<'info> {
     pub state: Box<Account<'info, State>>,
     #[account(
         mut,
-        seeds = [b"user", authority.key.as_ref()],
+        seeds = [b"user", authority.key().as_ref()],
         bump,
-        constraint = can_sign_for_user(& user, & authority) ?
+        constraint = can_sign_for_user(& user, & authority) ? && is_normal(&user) ?,
     )]
     pub user: AccountLoader<'info, User>,
 

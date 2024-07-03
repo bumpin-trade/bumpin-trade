@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use std::ops::DerefMut;
 
 use crate::errors::BumpErrorCode;
+use crate::instructions::constraints::*;
 use crate::processor::optional_accounts::load_maps;
 use crate::processor::{pool_processor, stake_processor};
 use crate::state::bump_events::StakeOrUnStakeEvent;
@@ -15,6 +16,7 @@ pub struct AutoCompoundRewards<'info> {
         mut,
         seeds = [b"user", authority.key().as_ref()],
         bump,
+        constraint = can_sign_for_user(& user, & authority) ? && is_normal(&user) ?,
     )]
     pub user: AccountLoader<'info, User>,
 

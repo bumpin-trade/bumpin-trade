@@ -39,6 +39,15 @@ pub struct User {
     pub orders: [UserOrder; 10],
     pub key: Pubkey,
     pub authority: Pubkey,
+    pub user_status: UserStatus,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
+pub enum UserStatus {
+    #[default]
+    NORMAL,
+    LIQUIDATION,
+    DISABLE,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]
@@ -662,8 +671,6 @@ impl User {
             let oracle_price = oracle_map.get_price_data(&trade_token.oracle_key)?;
             total_token_net_value
                 .safe_add(user_token.get_token_net_value(&trade_token, oracle_price)?)?;
-
-            drop(trade_token);
         }
         Ok(total_token_net_value)
     }
