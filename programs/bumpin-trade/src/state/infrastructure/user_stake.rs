@@ -12,6 +12,7 @@ pub struct UserStake {
     pub pool_key: Pubkey,
     pub user_stake_status: UserStakeStatus,
     pub padding: [u8; 15],
+    pub reserve_padding: [u8; 32],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]

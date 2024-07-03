@@ -17,6 +17,7 @@ pub struct UserToken {
     pub user_token_account_key: Pubkey,
     pub user_token_status: UserTokenStatus,
     pub padding: [u8; 15],
+    pub reserve_padding: [u8; 32],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]
@@ -27,17 +28,6 @@ pub enum UserTokenStatus {
 }
 
 impl UserToken {
-    pub fn new_using(token_mint_key: Pubkey, user_token_account_key: Pubkey) -> Self {
-        Self {
-            amount: 0,
-            used_amount: 0,
-            liability_amount: 0,
-            user_token_status: UserTokenStatus::USING,
-            token_mint_key,
-            user_token_account_key,
-            padding: [0; 15],
-        }
-    }
     pub fn add_amount(&mut self, amount: u128) -> BumpResult<Self> {
         let before = self.clone();
         self.amount = self.amount.safe_add(amount)?;

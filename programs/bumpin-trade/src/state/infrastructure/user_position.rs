@@ -41,6 +41,7 @@ pub struct UserPosition {
     pub is_portfolio_margin: bool,
     pub status: PositionStatus,
     pub padding: [u8; 1],
+    pub reserve_padding: [u8; 32],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
