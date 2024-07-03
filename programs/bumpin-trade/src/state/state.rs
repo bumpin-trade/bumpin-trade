@@ -21,4 +21,5 @@ pub struct State {
     pub trading_fee_usd_pool_rewards_ratio: u32,
     pub staking_fee_reward_ratio: u32,
     pub pool_fee_reward_ratio: u32,
+    pub reserve_padding: [u8; 32],
 }

@@ -69,6 +69,7 @@ pub fn handle_initialize_trade_token(
         total_amount: 0,
         vault_key: *ctx.accounts.trade_token_vault.to_account_info().key,
         padding: [0; 4],
+        reserve_padding: [0; 32],
     };
     safe_increment!(state.trade_token_sequence, 1);
     Ok(())

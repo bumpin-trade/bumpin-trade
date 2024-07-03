@@ -40,7 +40,8 @@ pub struct User {
     pub key: Pubkey,
     pub authority: Pubkey,
     pub user_status: UserStatus,
-    pub padding : [u8; 15],
+    pub padding: [u8; 15],
+    pub reserve_padding: [u8; 32],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]
@@ -447,8 +448,8 @@ impl User {
                 && user_order.symbol == symbol
                 && user_order.margin_mint_key.eq(margin_token)
                 && ((is_long_order == is_long
-                    && user_order.position_side.eq(&PositionSide::INCREASE))
-                    || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
+                && user_order.position_side.eq(&PositionSide::INCREASE))
+                || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
             {
                 user_order.set_leverage(leverage)
             }
@@ -864,7 +865,7 @@ impl User {
                 state.bump_signer_nonce,
                 order.order_margin,
             )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                .map_err(|_e| BumpErrorCode::TransferFailed)?;
         }
         Ok(())
     }

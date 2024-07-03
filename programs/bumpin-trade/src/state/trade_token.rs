@@ -19,6 +19,7 @@ pub struct TradeToken {
     pub index: u16,
     pub decimals: u16,
     pub padding: [u8; 4],
+    pub reserve_padding: [u8; 32],
 }
 
 impl Size for TradeToken {

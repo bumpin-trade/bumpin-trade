@@ -67,6 +67,7 @@ pub fn handle_initialize_state(
         trading_fee_usd_pool_rewards_ratio: 0,
         staking_fee_reward_ratio: initialize_state_params.staking_fee_reward_ratio,
         pool_fee_reward_ratio: initialize_state_params.pool_fee_reward_ratio,
+        reserve_padding: [0u8; 32],
     };
     Ok(())
 }

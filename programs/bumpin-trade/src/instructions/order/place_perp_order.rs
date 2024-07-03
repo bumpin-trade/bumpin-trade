@@ -3,14 +3,15 @@ use std::ops::DerefMut;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
+use crate::{get_then_update_id, position, validate};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::instructions::constraints::*;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
-use crate::processor::optional_accounts::{load_maps, AccountMaps};
-use crate::processor::position_processor::DecreasePositionParams;
 use crate::processor::{fee_processor, position_processor};
+use crate::processor::optional_accounts::{AccountMaps, load_maps};
+use crate::processor::position_processor::DecreasePositionParams;
 use crate::state::infrastructure::user_order::{
     OrderSide, OrderStatus, OrderType, PositionSide, StopType, UserOrder,
 };
@@ -23,7 +24,6 @@ use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::{User, UserTokenUpdateReason};
 use crate::utils::{pda, token};
-use crate::{get_then_update_id, position, validate};
 
 #[derive(Accounts)]
 #[instruction(
@@ -40,7 +40,7 @@ pub struct PlaceOrder<'info> {
         mut,
         seeds = [b"user", authority.key().as_ref()],
         bump,
-        constraint = can_sign_for_user(& user, & authority) ? && is_normal(&user) ?,
+        constraint = can_sign_for_user(& user, & authority) ? && is_normal(& user) ?,
     )]
     pub user: AccountLoader<'info, User>,
 
@@ -155,120 +155,120 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
 ) -> Result<()> {
     msg!("All Params: symbol: {:?}, is_portfolio_margin: {:?}, is_native_token: {:?}, order_side: {:?}, position_side: {:?}, order_type: {:?}, stop_type: {:?}, size: {:?}, order_margin: {:?}, leverage: {:?}, trigger_price: {:?}, acceptable_price: {:?}, place_time: {:?}, pool_index: {:?}, stable_pool_index: {:?}, market_index: {:?}, trade_token_index: {:?}, index_trade_token_index: {:?}",
         order.symbol, order.is_portfolio_margin, order.is_native_token, order.order_side, order.position_side, order.order_type, order.stop_type, order.size, order.order_margin, order.leverage, order.trigger_price, order.acceptable_price, order.place_time, order.pool_index, order.stable_pool_index, order.market_index, order.trade_token_index, order.index_trade_token_index);
-    // let market = ctx.accounts.market.load()?;
-    // let mut user = ctx.accounts.user.load_mut()?;
-    // let pool = ctx.accounts.pool.load()?;
-    // let stable_pool = ctx.accounts.stable_pool.load()?;
-    // let margin_token = if order.order_side.eq(&OrderSide::LONG) {
-    //     &market.pool_mint_key
-    // } else {
-    //     &market.stable_pool_mint_key
-    // };
-    // let trade_token = &ctx.accounts.trade_token.load()?;
-    // let remaining_accounts = ctx.remaining_accounts;
-    // msg!("place_order start....");
-    // let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts)?;
-    // let token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
-    // validate!(
-    //     validate_place_order(
-    //         &order,
-    //         margin_token,
-    //         &market,
-    //         if order.order_side.eq(&OrderSide::LONG) { &pool } else { &stable_pool },
-    //         &ctx.accounts.state,
-    //         token_price
-    //     )?,
-    //     BumpErrorCode::InvalidParam
-    // )?;
-    //
-    // if order.position_side == PositionSide::INCREASE && !order.is_portfolio_margin {
-    //     //isolate order, transfer order_margin into pool
-    //     token::receive(
-    //         &ctx.accounts.token_program,
-    //         &ctx.accounts.user_token_account,
-    //         if order.order_side.eq(&OrderSide::LONG) {
-    //             &ctx.accounts.pool_vault
-    //         } else {
-    //             &ctx.accounts.stable_pool_vault
-    //         },
-    //         &ctx.accounts.authority,
-    //         order.order_margin,
-    //     )?;
-    // }
-    // if order.position_side.eq(&PositionSide::INCREASE) && order.is_portfolio_margin {
-    //     //hold usd
-    //     user.add_order_hold_in_usd(order.order_margin)?;
-    // }
-    //
-    // if user.has_other_short_order(order.symbol, margin_token.key(), order.is_portfolio_margin)? {
-    //     return Err(BumpErrorCode::OnlyOneShortOrderAllowed.into());
-    // }
-    //
-    // let order_id = get_then_update_id!(user, next_order_id);
-    // let user_order = UserOrder {
-    //     authority: user.authority,
-    //     order_id,
-    //     symbol: order.symbol,
-    //     order_side: order.order_side,
-    //     position_side: order.position_side,
-    //     order_type: order.order_type,
-    //     stop_type: order.stop_type,
-    //     is_portfolio_margin: order.is_portfolio_margin,
-    //     margin_mint_key: margin_token.key(),
-    //     order_margin: order.order_margin,
-    //     leverage: order.leverage,
-    //     order_size: order.size,
-    //     trigger_price: order.trigger_price,
-    //     acceptable_price: order.acceptable_price,
-    //     created_at: cal_utils::current_time(),
-    //     status: OrderStatus::USING,
-    //     padding: [0u8; 6],
-    // };
-    //
-    // if order.order_type.eq(&OrderType::MARKET) {
-    //     drop(user);
-    //     //execute order
-    //     let user_account_loader = &ctx.accounts.user;
-    //     let pool_account_loader = &ctx.accounts.pool;
-    //     let stable_pool_account_loader = &ctx.accounts.stable_pool;
-    //     let market_account_loader = &ctx.accounts.market;
-    //     let state_account = &ctx.accounts.state;
-    //     let user_token_account = &ctx.accounts.user_token_account;
-    //     let pool_vault_account = &ctx.accounts.pool_vault;
-    //     let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
-    //     let trade_token_loader = &ctx.accounts.trade_token;
-    //     let index_trade_token_loader = &ctx.accounts.index_trade_token;
-    //     let trade_token_vault_account = &ctx.accounts.trade_token_vault;
-    //     let bump_signer_account_info = &ctx.accounts.bump_signer;
-    //     let token_program = &ctx.accounts.token_program;
-    //
-    //     return handle_execute_order(
-    //         user_account_loader,
-    //         pool_account_loader,
-    //         stable_pool_account_loader,
-    //         market_account_loader,
-    //         state_account,
-    //         user_token_account,
-    //         pool_vault_account,
-    //         stable_pool_vault_account,
-    //         trade_token_loader,
-    //         index_trade_token_loader,
-    //         trade_token_vault_account,
-    //         bump_signer_account_info,
-    //         token_program,
-    //         ctx.program_id,
-    //         &trade_token_map,
-    //         &mut oracle_map,
-    //         &user_order,
-    //         order_id,
-    //         false,
-    //     );
-    // } else {
-    //     //store order, wait to execute
-    //     let next_index = user.next_usable_order_index()?;
-    //     user.add_order(&user_order, next_index)?;
-    // }
 
+    let market = ctx.accounts.market.load()?;
+    let mut user = ctx.accounts.user.load_mut()?;
+    let pool = ctx.accounts.pool.load()?;
+    let stable_pool = ctx.accounts.stable_pool.load()?;
+    let margin_token = if order.order_side.eq(&OrderSide::LONG) {
+        &market.pool_mint_key
+    } else {
+        &market.stable_pool_mint_key
+    };
+    let trade_token = &ctx.accounts.trade_token.load()?;
+    let remaining_accounts = ctx.remaining_accounts;
+    msg!("place_order start....");
+    let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts)?;
+    let token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
+    validate!(
+        validate_place_order(
+            &order,
+            margin_token,
+            &market,
+            if order.order_side.eq(&OrderSide::LONG) { &pool } else { &stable_pool },
+            &ctx.accounts.state,
+            token_price
+        )?,
+        BumpErrorCode::InvalidParam
+    )?;
+
+    if order.position_side == PositionSide::INCREASE && !order.is_portfolio_margin {
+        //isolate order, transfer order_margin into pool
+        token::receive(
+            &ctx.accounts.token_program,
+            &ctx.accounts.user_token_account,
+            if order.order_side.eq(&OrderSide::LONG) {
+                &ctx.accounts.pool_vault
+            } else {
+                &ctx.accounts.stable_pool_vault
+            },
+            &ctx.accounts.authority,
+            order.order_margin,
+        )?;
+    }
+    if order.position_side.eq(&PositionSide::INCREASE) && order.is_portfolio_margin {
+        //hold usd
+        user.add_order_hold_in_usd(order.order_margin)?;
+    }
+
+    if user.has_other_short_order(order.symbol, margin_token.key(), order.is_portfolio_margin)? {
+        return Err(BumpErrorCode::OnlyOneShortOrderAllowed.into());
+    }
+
+    let order_id = get_then_update_id!(user, next_order_id);
+    let user_order = UserOrder {
+        authority: user.authority,
+        order_id,
+        symbol: order.symbol,
+        order_side: order.order_side,
+        position_side: order.position_side,
+        order_type: order.order_type,
+        stop_type: order.stop_type,
+        is_portfolio_margin: order.is_portfolio_margin,
+        margin_mint_key: margin_token.key(),
+        order_margin: order.order_margin,
+        leverage: order.leverage,
+        order_size: order.size,
+        trigger_price: order.trigger_price,
+        acceptable_price: order.acceptable_price,
+        created_at: cal_utils::current_time(),
+        status: OrderStatus::USING,
+        ..Default::default()
+    };
+
+    if order.order_type.eq(&OrderType::MARKET) {
+        drop(user);
+        //execute order
+        let user_account_loader = &ctx.accounts.user;
+        let pool_account_loader = &ctx.accounts.pool;
+        let stable_pool_account_loader = &ctx.accounts.stable_pool;
+        let market_account_loader = &ctx.accounts.market;
+        let state_account = &ctx.accounts.state;
+        let user_token_account = &ctx.accounts.user_token_account;
+        let pool_vault_account = &ctx.accounts.pool_vault;
+        let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
+        let trade_token_loader = &ctx.accounts.trade_token;
+        let index_trade_token_loader = &ctx.accounts.index_trade_token;
+        let trade_token_vault_account = &ctx.accounts.trade_token_vault;
+        let bump_signer_account_info = &ctx.accounts.bump_signer;
+        let token_program = &ctx.accounts.token_program;
+
+        return handle_execute_order(
+            user_account_loader,
+            pool_account_loader,
+            stable_pool_account_loader,
+            market_account_loader,
+            state_account,
+            user_token_account,
+            pool_vault_account,
+            stable_pool_vault_account,
+            trade_token_loader,
+            index_trade_token_loader,
+            trade_token_vault_account,
+            bump_signer_account_info,
+            token_program,
+            ctx.program_id,
+            &trade_token_map,
+            &mut oracle_map,
+            &user_order,
+            order_id,
+            false,
+        );
+    } else {
+        //store order, wait to execute
+        let next_index = user.next_usable_order_index()?;
+        user.add_order(&user_order, next_index)?;
+    }
     Ok(())
 }
 
@@ -417,7 +417,7 @@ pub fn handle_execute_order<'info>(
                 )?;
                 Ok(())
             }
-        },
+        }
 
         PositionSide::DECREASE => {
             {
@@ -457,7 +457,7 @@ pub fn handle_execute_order<'info>(
                 )?;
                 Ok(())
             }
-        },
+        }
     }?;
     //delete order
     user.delete_order(order_id)?;
@@ -517,7 +517,7 @@ fn validate_place_order(
             } else {
                 Ok(true)
             }
-        },
+        }
     }
 }
 
@@ -589,7 +589,7 @@ fn get_execution_price(index_price: u128, order: &UserOrder) -> BumpResult<u128>
     if order.order_type.eq(&OrderType::STOP)
         && order.stop_type.eq(&StopType::StopLoss)
         && ((long && order.trigger_price <= index_price)
-            || (!long && order.trigger_price >= index_price))
+        || (!long && order.trigger_price >= index_price))
     {
         return Ok(index_price);
     }
