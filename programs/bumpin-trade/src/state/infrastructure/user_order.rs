@@ -20,7 +20,7 @@ pub struct UserOrder {
     pub status: OrderStatus,
     pub is_portfolio_margin: bool,
     pub padding: [u8; 6],
-    pub reserve_padding: [u8; 32],
+    pub reserve_padding: [u8; 16],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, Default, PartialEq, Debug, Eq)]

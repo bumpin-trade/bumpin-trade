@@ -17,7 +17,7 @@ pub struct UserToken {
     pub user_token_account_key: Pubkey,
     pub user_token_status: UserTokenStatus,
     pub padding: [u8; 15],
-    pub reserve_padding: [u8; 32],
+    pub reserve_padding: [u8; 16],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Eq, PartialEq, Debug)]
