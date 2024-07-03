@@ -540,13 +540,13 @@ fn execute_increase_order_margin(
         let order_margin_temp;
         if available_value < 0i128 {
             let fix_order_margin_in_usd =
-                order.order_size.cast::<i128>()?.safe_add(available_value)?.cast::<i128>()?;
+                order.order_size.cast::<i128>()?.safe_add(available_value)?;
             validate!(fix_order_margin_in_usd > 0i128, BumpErrorCode::BalanceNotEnough.into())?;
-            user.sub_order_hold_in_usd(order.order_size).unwrap();
+            user.sub_order_hold_in_usd(order.order_margin)?;
             order_margin_temp = fix_order_margin_in_usd.abs().cast::<u128>()?;
         } else {
-            order_margin_temp = order.order_size;
-            user.sub_order_hold_in_usd(order.order_size)?;
+            order_margin_temp = order.order_margin;
+            user.sub_order_hold_in_usd(order.order_margin)?;
         }
         order_margin = cal_utils::usd_to_token_u(order_margin_temp, decimals, margin_token_price)?;
         order_margin_from_balance =
