@@ -46,6 +46,12 @@ export class BumpinTokenNotFound extends Error {
     }
 }
 
+export class BumpinInvalidParameter extends Error {
+    constructor(msg: string) {
+        super(`Invalid parameter: ${msg}`);
+    }
+}
+
 export class BumpinSupplyInsufficient extends Error {
     minimalExpected: BN;
     actualValue: BN;
@@ -84,6 +90,25 @@ export class BumpinValueInsufficient extends Error {
     }
 }
 
+export class BumpinTokenAccountUnexpected extends Error {
+    expected: string;
+    actual: string;
+
+    constructor(expected: string,actual: string) {
+        super(`Token account unexpected: ${actual}  != ${expected} (expected)`);
+        this.expected = expected;
+        this.actual = actual;
+
+    }
+
+    public getExpected(): string {
+        return this.expected;
+    }
+
+    public getActual(): string {
+        return this.actual;
+    }
+}
 
 export class BumpinAccountNotFound extends Error {
     accountName: string;

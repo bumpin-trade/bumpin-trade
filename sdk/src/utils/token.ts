@@ -8,6 +8,11 @@ import {isEqual} from 'lodash';
 
 export class BumpinTokenUtils {
 
+    public static async getTradeTokenPrice(oracle: OracleClient, tradeToken: TradeToken): Promise<BN> {
+        let priceData = await oracle.getOraclePriceData(tradeToken.oracleKey);
+        return priceData.price;
+    }
+
     public static async getUserTradeTokenBalance(oracle: OracleClient, user: UserAccount, tradeTokens: TradeToken[]): Promise<TradeTokenBalance> {
         let totalBalance = {
             tokenNetValue: new BN(0),
