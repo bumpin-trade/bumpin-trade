@@ -14,6 +14,5 @@ pub mod traits;
 pub mod user;
 pub mod user_map;
 pub mod vault_map;
-mod rewards_map;
 
 pub use user::*;

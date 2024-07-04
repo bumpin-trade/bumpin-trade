@@ -7,8 +7,8 @@ use crate::errors::BumpErrorCode;
 use crate::instructions::constraints::*;
 use crate::instructions::Either;
 use crate::math::safe_math::SafeMath;
-use crate::processor::{fee_processor, pool_processor, user_processor};
 use crate::processor::optional_accounts::load_maps;
+use crate::processor::{fee_processor, pool_processor, user_processor};
 use crate::state::bump_events::StakeOrUnStakeEvent;
 use crate::state::pool::Pool;
 use crate::state::state::State;
@@ -20,7 +20,6 @@ use crate::{utils, validate};
 #[instruction(un_stake_params: UnStakeParams,)]
 pub struct PortfolioUnStake<'info> {
     #[account(
-        mut,
         seeds = [b"bump_state".as_ref()],
         bump,
     )]
@@ -75,7 +74,6 @@ pub struct PortfolioUnStake<'info> {
 #[instruction(un_stake_params: UnStakeParams,)]
 pub struct WalletUnStake<'info> {
     #[account(
-        mut,
         seeds = [b"bump_state".as_ref()],
         bump,
     )]

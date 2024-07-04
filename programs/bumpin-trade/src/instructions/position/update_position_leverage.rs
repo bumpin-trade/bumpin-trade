@@ -35,7 +35,6 @@ pub struct UpdatePositionLeverage<'info> {
     pub user_token_account: Box<Account<'info, TokenAccount>>,
 
     #[account(
-        mut,
         seeds = [b"bump_state".as_ref()],
         bump,
     )]
