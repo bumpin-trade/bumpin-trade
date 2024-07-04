@@ -27,12 +27,6 @@ pub struct AutoCompoundRewards<'info> {
 
     #[account(
         mut,
-        constraint = user_token_account.owner.eq(& user.load() ?.authority) && pool_vault.mint.eq(& user_token_account.mint),
-    )]
-    pub user_token_account: Account<'info, TokenAccount>,
-
-    #[account(
-        mut,
         seeds = [b"pool".as_ref(), _pool_index.to_le_bytes().as_ref()],
         bump,
     )]
