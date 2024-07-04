@@ -227,6 +227,8 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
 
     if order.order_type.eq(&OrderType::MARKET) {
         drop(user);
+        drop(market);
+        drop(stable_pool);
         //execute order
         let user_account_loader = &ctx.accounts.user;
         let pool_account_loader = &ctx.accounts.pool;
