@@ -4,8 +4,10 @@ use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
+use crate::state::bump_events::UserRewardsUpdateEvent;
 use crate::state::infrastructure::user_position::PositionStatus;
 use crate::state::oracle_map::OracleMap;
+use crate::state::pool::Pool;
 use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::{User, UserTokenUpdateReason};
@@ -66,5 +68,33 @@ pub fn update_cross_position_balance(
             break;
         }
     }
+    Ok(())
+}
+
+pub fn update_account_fee_reward(stake_pool: &mut Pool, user: &mut User) -> BumpResult {
+    let user_key = user.key;
+
+    let user_stake = user.get_user_stake_mut_ref(&stake_pool.key)?;
+
+    let fee_reward = stake_pool.fee_reward;
+    if user_stake.user_rewards.open_rewards_per_stake_token
+        != fee_reward.cumulative_rewards_per_stake_token
+        && user_stake.staked_share > 0
+        && fee_reward
+        .cumulative_rewards_per_stake_token
+        .safe_sub(user_stake.user_rewards.open_rewards_per_stake_token)?
+        > fee_reward.get_rewards_delta_limit()?
+    {
+        let realised_rewards_token_amount = stake_pool
+            .fee_reward
+            .cumulative_rewards_per_stake_token
+            .safe_sub(user_stake.user_rewards.open_rewards_per_stake_token)?
+            .safe_mul_small_rate(user_stake.staked_share)?;
+        user_stake.add_user_rewards(realised_rewards_token_amount)?;
+    }
+    user_stake.user_rewards.open_rewards_per_stake_token =
+        fee_reward.cumulative_rewards_per_stake_token;
+    let user_rewards = user_stake.user_rewards.clone();
+    emit!(UserRewardsUpdateEvent { user_key, token_mint: stake_pool.key, user_rewards });
     Ok(())
 }
