@@ -1,6 +1,7 @@
 use crate::errors::BumpErrorCode;
 use crate::instructions::constraints::*;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
+use crate::processor::user_processor;
 use crate::state::infrastructure::user_stake::UserStakeStatus;
 use crate::state::state::State;
 use crate::state::user::User;
@@ -9,7 +10,6 @@ use crate::utils;
 use anchor_lang::prelude::*;
 use anchor_spl::token::Token;
 use std::ops::DerefMut;
-use crate::processor::user_processor;
 
 #[derive(Accounts)]
 pub struct ClaimRewards<'info> {

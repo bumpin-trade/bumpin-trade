@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
-use crate::errors::{BumpErrorCode, BumpResult};
 use crate::errors::BumpErrorCode::{
     CouldNotFindUserOrder, CouldNotFindUserPosition, CouldNotFindUserStake, CouldNotFindUserToken,
 };
+use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
@@ -468,8 +468,8 @@ impl User {
                 && user_order.symbol == symbol
                 && user_order.margin_mint_key.eq(margin_token)
                 && ((is_long_order == is_long
-                && user_order.position_side.eq(&PositionSide::INCREASE))
-                || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
+                    && user_order.position_side.eq(&PositionSide::INCREASE))
+                    || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
             {
                 user_order.set_leverage(leverage)
             }
@@ -885,7 +885,7 @@ impl User {
                 state.bump_signer_nonce,
                 order.order_margin,
             )
-                .map_err(|_e| BumpErrorCode::TransferFailed)?;
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
         }
         Ok(())
     }

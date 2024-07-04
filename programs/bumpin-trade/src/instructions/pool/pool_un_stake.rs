@@ -15,7 +15,6 @@ use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::{User, UserTokenUpdateReason};
 use crate::{utils, validate};
-use crate::state::user;
 
 #[derive(Accounts)]
 #[instruction(un_stake_params: UnStakeParams,)]
@@ -235,7 +234,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
                 change_supply_amount: un_stake_token_amount,
                 user_stake: user_stake.clone(),
             });
-        }
+        },
         Either::Right(ctx) => {
             let pool = &mut ctx.accounts.pool.load_mut()?;
             let user = &mut ctx.accounts.user.load_mut()?;
@@ -296,7 +295,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
                 change_supply_amount: un_stake_token_amount,
                 user_stake: user_stake.clone(),
             });
-        }
+        },
     }
 
     Ok(())

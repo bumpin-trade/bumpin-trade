@@ -81,9 +81,9 @@ pub fn update_account_fee_reward(stake_pool: &mut Pool, user: &mut User) -> Bump
         != fee_reward.cumulative_rewards_per_stake_token
         && user_stake.staked_share > 0
         && fee_reward
-        .cumulative_rewards_per_stake_token
-        .safe_sub(user_stake.user_rewards.open_rewards_per_stake_token)?
-        > fee_reward.get_rewards_delta_limit()?
+            .cumulative_rewards_per_stake_token
+            .safe_sub(user_stake.user_rewards.open_rewards_per_stake_token)?
+            > fee_reward.get_rewards_delta_limit()?
     {
         let realised_rewards_token_amount = stake_pool
             .fee_reward
