@@ -6,6 +6,7 @@ use instructions::*;
 
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::state::infrastructure::user_order::UserOrder;
+use crate::state::pool::PoolConfig;
 use crate::state::user::UserStatus;
 use crate::state::vault_map::VaultMap;
 use crate::traits::Size;
@@ -25,6 +26,7 @@ declare_id!("EocqPSYv49uCVMEze1sPZJ6vVEpTRmJjD8sHY6EKEPa3");
 #[program]
 pub mod bumpin_trade {
     use super::*;
+    use crate::state::pool::PoolConfig;
 
     pub fn initialize1<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, Initialize1>,
@@ -57,8 +59,10 @@ pub mod bumpin_trade {
     pub fn initialize_pool<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializePool>,
         name: [u8; 32],
+        stable: bool,
+        pool_config: PoolConfig,
     ) -> Result<()> {
-        handle_initialize_pool(ctx, name)
+        handle_initialize_pool(ctx, name, stable, pool_config)
     }
 
     pub fn initialize_user<'a, 'b, 'c: 'info, 'info>(

@@ -819,15 +819,6 @@ pub fn increase_position(
     if position.leverage != order.leverage {
         return Err(BumpErrorCode::LeverageIsNotAllowed.into());
     }
-    if position.position_size == 0u128 && position.status.eq(&PositionStatus::INIT) {
-        position.set_index_mint(market.index_mint_key)?;
-        position.set_symbol(order.symbol)?;
-        position.set_margin_mint(order.margin_mint_key)?;
-        position.set_leverage(order.leverage)?;
-        position.set_is_long(order.order_side.eq(&OrderSide::LONG))?;
-        position.set_portfolio_margin(order.is_portfolio_margin)?;
-        position.set_status(PositionStatus::USING)?;
-    }
     let pool = if position.is_long { base_token_pool } else { stable_pool };
 
     let increase_margin = cal_utils::sub_u128(order_margin, fee)?;
@@ -849,6 +840,12 @@ pub fn increase_position(
 
     if position.position_size == 0u128 {
         //new position
+        position.set_index_mint(market.index_mint_key)?;
+        position.set_symbol(order.symbol)?;
+        position.set_margin_mint(order.margin_mint_key)?;
+        position.set_leverage(order.leverage)?;
+        position.set_is_long(order.order_side.eq(&OrderSide::LONG))?;
+        position.set_portfolio_margin(order.is_portfolio_margin)?;
         position.set_margin_mint(order.margin_mint_key)?;
         position.set_entry_price(execute_price)?;
         position.set_initial_margin(increase_margin)?;

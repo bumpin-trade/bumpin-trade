@@ -19,7 +19,6 @@ pub struct State {
     pub pool_rewards_interval_limit: u128,
     pub init_fee: u64,
     pub trading_fee_usd_pool_rewards_ratio: u32,
-    pub staking_fee_reward_ratio: u32,
     pub pool_fee_reward_ratio: u32,
     pub reserve_padding: [u8; 32],
 }
