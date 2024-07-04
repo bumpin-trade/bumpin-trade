@@ -147,7 +147,6 @@ export class UserComponent extends Component {
                 userTokenAccount: tokenAccount.address,
             }).signers([]).rpc();
         }
-
     }
 
 
@@ -155,7 +154,6 @@ export class UserComponent extends Component {
         let user = await this.getUser();
         let pool = BumpinPoolUtils.getPoolByMintPublicKey(markets[marketIndex].poolMintKey, pools);
         let stablePool = BumpinPoolUtils.getPoolByMintPublicKey(markets[marketIndex].stablePoolMintKey, pools);
-        // let indexPool = BumpinPoolUtils.getPoolByMintPublicKey(markets[marketIndex].indexMintKey, pools);
         let tradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(markets[marketIndex].poolMintKey, tradeTokens);
         let indexTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(markets[marketIndex].indexMintKey, tradeTokens);
 
@@ -213,8 +211,8 @@ export class UserComponent extends Component {
             throw new BumpinInvalidParameter("Order side should not be NONE (when placing order)");
         }
 
-        if (order.size.isZero() && (isEqual(order.positionSide, PositionSide.INCREASE) || isEqual(order.positionSide, PositionSide.DECREASE))) {
-            throw new BumpinInvalidParameter("Order size should not be zero (when placing order)");
+        if (order.size.isZero() && isEqual(order.positionSide, PositionSide.DECREASE)) {
+            throw new BumpinInvalidParameter("Order size should not be zero (when placing order with position side decrease)");
         }
 
         if (isEqual(order.orderType, OrderType.LIMIT) && isEqual(order.positionSide, PositionSide.DECREASE)) {

@@ -83,8 +83,8 @@ export class BumpinTokenUtils {
         });
 
         for (let accountInfo of tokenAccounts.value) {
-            const accountPubKey = accountInfo.pubkey;
-            if (accountPubKey.equals(tokenAccountKey)) {
+            const accountPubKey:PublicKey = accountInfo.pubkey;
+            if (accountPubKey.toString() === tokenAccountKey.toString()) {
                 return await getAccount(connection, accountPubKey);
             }
         }

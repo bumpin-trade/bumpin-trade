@@ -371,3 +371,12 @@ export type InnerPlaceOrderParams = {
     tradeTokenIndex: number;
     indexTradeTokenIndex: number;
 }
+
+export type PoolSummary = {
+    pool: Pool;
+    markets: Market[];
+}
+
+export type EarnSummary = {
+    poolSummaries: PoolSummary[];
+}

@@ -6,8 +6,13 @@ import idlPyth from "./idl/pyth.json"
 import {BumpinClientConfig, NetType} from "./bumpinClientConfig";
 import {BumpinUtils} from "./utils/utils";
 import {BumpinTrade} from "./types/bumpin_trade";
-import {Market, PlaceOrderParams, Pool, State, TradeToken, UserAccount} from "./types";
-import {BumpinAccountNotFound, BumpinSubscriptionFailed, BumpinUserNotLogin} from "./errors";
+import {EarnSummary, Market, PlaceOrderParams, Pool, PoolSummary, State, TradeToken, UserAccount} from "./types";
+import {
+    BumpinAccountNotFound,
+    BumpinClientNotInitialized,
+    BumpinSubscriptionFailed,
+    BumpinUserNotLogin
+} from "./errors";
 import {PollingUserAccountSubscriber} from "./account/pollingUserAccountSubscriber";
 import {BulkAccountLoader} from "./account/bulkAccountLoader";
 import {DataAndSlot} from "./account/types";
@@ -129,6 +134,33 @@ export class BumpinClient {
             authority: this.wallet.publicKey,
             payer: this.wallet.publicKey
         }).signers([]).rpc();
+    }
+
+    public async getEarnSummary(): Promise<EarnSummary> {
+        if (!this.isInitialized) {
+            throw new BumpinClientNotInitialized();
+        }
+
+        let poolSummaries: PoolSummary[] = [];
+
+        let pools = await this.getPools();
+        let markets = await this.getMarkets();
+        for (let pool of pools) {
+            let poolSummary: PoolSummary = {
+                pool: pool,
+                markets: []
+            }
+            for (let market of markets) {
+                if (market.poolKey.equals(pool.key) || market.stablePoolKey.equals(pool.key)) {
+                    poolSummary.markets.push(market);
+                }
+            }
+            poolSummaries.push(poolSummary);
+        }
+
+        return {
+            poolSummaries: poolSummaries
+        }
     }
 
     public async stake(fromPortfolio: boolean, amount: BN, mint: PublicKey, sync: boolean = false) {
