@@ -3,7 +3,6 @@ use std::ops::DerefMut;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
-use crate::{utils, validate};
 use crate::errors::BumpErrorCode;
 use crate::instructions::constraints::*;
 use crate::instructions::Either;
