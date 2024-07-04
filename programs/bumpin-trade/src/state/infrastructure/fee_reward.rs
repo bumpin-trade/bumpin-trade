@@ -24,12 +24,27 @@ impl FeeReward {
         Ok(())
     }
 
+    pub fn sub_fee_amount(&mut self, amount: u128) -> BumpResult<()> {
+        if amount >= self.fee_amount {
+            self.fee_amount = 0u128;
+        } else {
+            self.fee_amount = self.fee_amount.safe_sub(amount)?;
+        }
+        Ok(())
+    }
+
     pub fn add_un_settle_amount(&mut self, amount: u128) -> BumpResult<()> {
         self.fee_amount = self.un_settle_fee_amount.safe_add(amount)?;
         Ok(())
     }
     pub fn sub_un_settle_amount(&mut self, amount: u128) -> BumpResult<()> {
         self.fee_amount = self.un_settle_fee_amount.safe_sub(amount)?;
+        Ok(())
+    }
+
+    pub fn add_cumulative_rewards_per_stake_token(&mut self, amount: u128) -> BumpResult<()> {
+        self.cumulative_rewards_per_stake_token =
+            self.cumulative_rewards_per_stake_token.safe_add(amount)?;
         Ok(())
     }
 }

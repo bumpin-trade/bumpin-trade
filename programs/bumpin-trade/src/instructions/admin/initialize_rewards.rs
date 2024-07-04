@@ -1,5 +1,5 @@
 use crate::state::pool::Pool;
-use crate::state::pool_rewards::PoolRewards;
+use crate::state::rewards::Rewards;
 use crate::state::state::State;
 use crate::traits::Size;
 use anchor_lang::prelude::*;
@@ -30,11 +30,11 @@ pub struct InitializePoolRewards<'info> {
     #[account(
         init,
         seeds = [b"pool_rewards".as_ref(), _pool_index.to_le_bytes().as_ref()],
-        space = PoolRewards::SIZE,
+        space = Rewards::SIZE,
         bump,
         payer = admin,
     )]
-    pub pool_rewards: AccountLoader<'info, PoolRewards>,
+    pub pool_rewards: AccountLoader<'info, Rewards>,
 
     #[account(
         init,
@@ -45,6 +45,11 @@ pub struct InitializePoolRewards<'info> {
         token::authority = bump_signer
     )]
     pub pool_rewards_vault: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        token::mint = pool_mint,
+    )]
+    pub dao_rewards_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(mut)]
     pub admin: Signer<'info>,
@@ -66,9 +71,10 @@ pub fn handle_initialize_pool_rewards(
     ctx: Context<InitializePoolRewards>,
     _pool_index: u16,
 ) -> Result<()> {
-    let mut dao_rewards = ctx.accounts.pool_rewards.load_init()?;
+    let mut pool_rewards = ctx.accounts.pool_rewards.load_init()?;
     let pool = ctx.accounts.pool.load()?;
-    dao_rewards.pool_index = pool.index;
-    dao_rewards.pool_rewards_vault = ctx.accounts.pool_rewards_vault.to_account_info().key();
+    pool_rewards.pool_index = pool.index;
+    pool_rewards.pool_rewards_vault = ctx.accounts.pool_rewards_vault.to_account_info().key();
+    pool_rewards.dao_rewards_vault = ctx.accounts.dao_rewards_vault.to_account_info().key();
     Ok(())
 }

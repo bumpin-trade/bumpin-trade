@@ -3,7 +3,7 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use crate::math_error;
 use crate::safe_increment;
-use crate::state::pool::Pool;
+use crate::state::pool::{Pool, PoolConfig};
 use crate::state::state::State;
 use crate::traits::Size;
 
@@ -54,15 +54,22 @@ pub struct InitializePool<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle_initialize_pool(ctx: Context<InitializePool>, name: [u8; 32]) -> Result<()> {
+pub fn handle_initialize_pool(
+    ctx: Context<InitializePool>,
+    name: [u8; 32],
+    stable: bool,
+    pool_config: PoolConfig,
+) -> Result<()> {
     let mut pool = ctx.accounts.pool.load_init()?;
     let state = &mut ctx.accounts.state;
 
-    pool.key = ctx.accounts.pool.key();
+    pool.key = ctx.accounts.pool.to_account_info().key();
     pool.mint_key = ctx.accounts.pool_vault.mint;
     pool.mint_vault_key = ctx.accounts.pool_vault.key();
     pool.name = name;
     pool.index = state.pool_sequence;
+    pool.stable = stable;
+    pool.config = pool_config;
 
     safe_increment!(state.pool_sequence, 1);
     Ok(())

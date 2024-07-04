@@ -7,17 +7,19 @@ use anchor_lang::prelude::*;
 use anchor_lang::prelude::AccountLoader;
 use arrayref::array_ref;
 
-use crate::errors::BumpErrorCode::CouldNotLoadPoolData;
+use crate::errors::BumpErrorCode::{
+    CouldNotLoadPoolData, CouldNotLoadTradeTokenData, TradeTokenNotFind,
+};
 use crate::errors::BumpResult;
-use crate::state::pool::Pool;
+use crate::state::rewards::Rewards;
 use crate::traits::Size;
 
-pub struct PoolMap<'a>(pub BTreeMap<Pubkey, AccountLoader<'a, Pool>>);
+pub struct PoolRewardsMap<'a>(pub BTreeMap<Pubkey, AccountLoader<'a, Rewards>>);
 
-impl<'a> PoolMap<'a> {
+impl<'a> PoolRewardsMap<'a> {
     #[track_caller]
     #[inline(always)]
-    pub fn get_all_pool_loader(&self) -> BumpResult<Vec<&AccountLoader<'a, Pool>>> {
+    pub fn get_all_pool_loader(&self) -> BumpResult<Vec<&AccountLoader<'a, Rewards>>> {
         let mut pool_vec = Vec::new();
         for pool_loader in self.0.values() {
             pool_vec.push(pool_loader);
@@ -26,12 +28,12 @@ impl<'a> PoolMap<'a> {
     }
     #[track_caller]
     #[inline(always)]
-    pub fn get_ref(&self, pool_key: &Pubkey) -> BumpResult<Ref<Pool>> {
+    pub fn get_ref(&self, pool_key: &Pubkey) -> BumpResult<Ref<Rewards>> {
         let loader = match self.0.get(&pool_key) {
             None => {
                 let caller = Location::caller();
                 msg!("Could not find pool {} at {}:{}", pool_key, caller.file(), caller.line());
-                return Err(CouldNotLoadPoolData);
+                return Err(TradeTokenNotFind);
             },
             Some(loader) => loader,
         };
@@ -41,19 +43,19 @@ impl<'a> PoolMap<'a> {
                 let caller = Location::caller();
                 msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", pool_key, caller.file(), caller.line());
-                Err(CouldNotLoadPoolData)
+                Err(CouldNotLoadTradeTokenData)
             },
         }
     }
 
     #[track_caller]
     #[inline(always)]
-    pub fn get_mut_ref(&self, pool_key: &Pubkey) -> BumpResult<RefMut<Pool>> {
+    pub fn get_mut_ref(&self, pool_key: &Pubkey) -> BumpResult<RefMut<Rewards>> {
         let loader = match self.0.get(&pool_key) {
             None => {
                 let caller = Location::caller();
                 msg!("Could not find pool {} at {}:{}", pool_key, caller.file(), caller.line());
-                return Err(CouldNotLoadPoolData);
+                return Err(TradeTokenNotFind);
             },
             Some(loader) => loader,
         };
@@ -63,35 +65,35 @@ impl<'a> PoolMap<'a> {
                 let caller = Location::caller();
                 msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", pool_key, caller.file(), caller.line());
-                Err(CouldNotLoadPoolData)
+                Err(CouldNotLoadTradeTokenData)
             },
         }
     }
 
     #[track_caller]
     #[inline(always)]
-    pub fn get_account_loader(&self, pool_key: &Pubkey) -> BumpResult<&AccountLoader<'a, Pool>> {
+    pub fn get_account_loader(&self, pool_key: &Pubkey) -> BumpResult<&AccountLoader<'a, Rewards>> {
         let loader = match self.0.get(&pool_key) {
             None => {
                 let caller = Location::caller();
                 msg!("Could not find pool {} at {}:{}", pool_key, caller.file(), caller.line());
-                return Err(CouldNotLoadPoolData);
+                return Err(TradeTokenNotFind);
             },
             Some(loader) => loader,
         };
         Ok(loader)
     }
 
-    pub fn load(remaining_accounts: &'a [AccountInfo<'a>]) -> BumpResult<PoolMap<'a>> {
-        let mut pool_map = PoolMap(BTreeMap::new());
-        let pool_discriminator = Pool::discriminator();
+    pub fn load(remaining_accounts: &'a [AccountInfo<'a>]) -> BumpResult<PoolRewardsMap<'a>> {
+        let mut pool_map = PoolRewardsMap(BTreeMap::new());
+        let pool_discriminator = Rewards::discriminator();
         for account_info in remaining_accounts.iter() {
             if !account_info.owner.eq(&crate::id()) {
                 continue;
             }
             let data = account_info.try_borrow_data().or(Err(CouldNotLoadPoolData))?;
 
-            let expected_data_len = Pool::SIZE;
+            let expected_data_len = Rewards::SIZE;
             if data.len() < expected_data_len {
                 break;
             }
@@ -102,7 +104,7 @@ impl<'a> PoolMap<'a> {
 
             let pool_key = Pubkey::from(*array_ref![data, 8, 32]);
             // let account_info = account_info_iter.next().safe_unwrap()?;
-            let account_loader: AccountLoader<'a, Pool> =
+            let account_loader: AccountLoader<'a, Rewards> =
                 AccountLoader::try_from(account_info).or(Err(CouldNotLoadPoolData))?;
 
             pool_map.0.insert(pool_key, account_loader);

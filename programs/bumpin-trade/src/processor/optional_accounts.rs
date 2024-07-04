@@ -22,6 +22,7 @@ pub fn load_maps<'a: 'info, 'info>(
     let trade_token_map = TradeTokenMap::load(remaining_accounts)?;
     let oracle_map = OracleMap::load(remaining_accounts)?;
     let pool_map = PoolMap::load(remaining_accounts)?;
+    let pool_rewards_map = PoolMap::load(remaining_accounts)?;
     let vault_map = VaultMap::load(remaining_accounts)?;
 
     Ok(AccountMaps { market_map, trade_token_map, oracle_map, pool_map, vault_map })
