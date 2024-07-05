@@ -26,3 +26,4 @@ num-traits = "0.2"
 uint = { version = "0.9", default-features = false }
 bytemuck = { version = "1" }
 arrayref = "0.3"
+whirlpool-cpi = { git = "https://github.com/orca-so/whirlpool-cpi", branch = "anchor/0.30.1" }

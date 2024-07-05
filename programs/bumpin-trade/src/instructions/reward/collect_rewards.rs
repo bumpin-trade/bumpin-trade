@@ -1,12 +1,13 @@
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Token, TokenAccount};
+
 use crate::errors::BumpErrorCode;
-use crate::instructions::{cal_utils, swap};
+use crate::instructions::cal_utils;
 use crate::math::safe_math::SafeMath;
 use crate::state::pool::Pool;
 use crate::state::rewards::Rewards;
 use crate::state::state::State;
 use crate::utils::token;
-use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
 
 #[derive(Accounts)]
 #[instruction(_pool_index: u16, _stable_pool_index: u16,)]
@@ -85,9 +86,9 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
         let stable_fee_reward = &mut pool.stable_fee_reward;
         let fee_amount = stable_fee_reward.fee_amount;
         // todo swap stable to un_stable token, using jup_swap.
-        let amount = swap::jup_swap()?;
-        total_fee_amount = total_fee_amount.safe_add(amount)?;
-        stable_fee_reward.sub_un_settle_amount(fee_amount)?
+        // let amount = swap::jup_swap()?;
+        // total_fee_amount = total_fee_amount.safe_add(amount)?;
+        // stable_fee_reward.sub_un_settle_amount(fee_amount)?
     }
 
     //split fee to pool_rewards & dao_rewards
