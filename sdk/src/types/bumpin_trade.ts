@@ -1405,7 +1405,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "poolIndex"
+                "path": "params.pool_index"
               }
             ]
           }
@@ -1426,7 +1426,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "stablePoolIndex"
+                "path": "params.stable_pool_index"
               }
             ]
           }
@@ -1479,20 +1479,11 @@ export type BumpinTrade = {
       ],
       "args": [
         {
-          "name": "poolIndex",
-          "type": "u16"
-        },
-        {
-          "name": "stablePoolIndex",
-          "type": "u16"
-        },
-        {
-          "name": "symbol",
+          "name": "params",
           "type": {
-            "array": [
-              "u8",
-              32
-            ]
+            "defined": {
+              "name": "marketParams"
+            }
           }
         }
       ]
@@ -4487,6 +4478,67 @@ export type BumpinTrade = {
                 8
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "marketParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "symbol",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "tickSize",
+            "type": "u128"
+          },
+          {
+            "name": "openFeeRate",
+            "type": "u128"
+          },
+          {
+            "name": "closeFeeRate",
+            "type": "u128"
+          },
+          {
+            "name": "maximumLongOpenInterestCap",
+            "type": "u128"
+          },
+          {
+            "name": "maximumShortOpenInterestCap",
+            "type": "u128"
+          },
+          {
+            "name": "longShortRatioLimit",
+            "type": "u128"
+          },
+          {
+            "name": "longShortOiBottomLimit",
+            "type": "u128"
+          },
+          {
+            "name": "maximumLeverage",
+            "type": "u32"
+          },
+          {
+            "name": "minimumLeverage",
+            "type": "u32"
+          },
+          {
+            "name": "poolIndex",
+            "type": "u16"
+          },
+          {
+            "name": "stablePoolIndex",
+            "type": "u16"
           }
         ]
       }

@@ -152,8 +152,8 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
     order: PlaceOrderParams,
 ) -> Result<()> {
-    // msg!("All Params: symbol: {:?}, is_portfolio_margin: {:?}, is_native_token: {:?}, order_side: {:?}, position_side: {:?}, order_type: {:?}, stop_type: {:?}, size: {:?}, order_margin: {:?}, leverage: {:?}, trigger_price: {:?}, acceptable_price: {:?}, place_time: {:?}, pool_index: {:?}, stable_pool_index: {:?}, market_index: {:?}, trade_token_index: {:?}, index_trade_token_index: {:?}",
-    //     order.symbol, order.is_portfolio_margin, order.is_native_token, order.order_side, order.position_side, order.order_type, order.stop_type, order.size, order.order_margin, order.leverage, order.trigger_price, order.acceptable_price, order.place_time, order.pool_index, order.stable_pool_index, order.market_index, order.trade_token_index, order.index_trade_token_index);
+    msg!("All Params: symbol: {:?}, is_portfolio_margin: {:?}, is_native_token: {:?}, order_side: {:?}, position_side: {:?}, order_type: {:?}, stop_type: {:?}, size: {:?}, order_margin: {:?}, leverage: {:?}, trigger_price: {:?}, acceptable_price: {:?}, place_time: {:?}, pool_index: {:?}, stable_pool_index: {:?}, market_index: {:?}, trade_token_index: {:?}, index_trade_token_index: {:?}",
+        order.symbol, order.is_portfolio_margin, order.is_native_token, order.order_side, order.position_side, order.order_type, order.stop_type, order.size, order.order_margin, order.leverage, order.trigger_price, order.acceptable_price, order.place_time, order.pool_index, order.stable_pool_index, order.market_index, order.trade_token_index, order.index_trade_token_index);
     let same_pool = order.pool_index == order.stable_pool_index;
     // let same_trade_token = order.trade_token_index == order.index_trade_token_index;
     let mut market = ctx.accounts.market.load_mut()?;
@@ -168,7 +168,8 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     };
     let remaining_accounts = ctx.remaining_accounts;
     let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts)?;
-    let trade_token = trade_token_map.get_trade_token_by_index_ref(order.trade_token_index)?;
+    let trade_token =
+        trade_token_map.get_trade_token_by_index_ref(order.trade_token_index).unwrap();
     let token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
     drop(trade_token);
     validate!(
@@ -311,7 +312,8 @@ pub fn handle_execute_order<'info>(
         get_execution_price(
             oracle_map.get_price_data(&trade_token.oracle_key).unwrap().price,
             &cloned_order,
-        )?
+        )
+        .unwrap()
     } else {
         get_execution_price(
             oracle_map
@@ -323,7 +325,8 @@ pub fn handle_execute_order<'info>(
                 .unwrap()
                 .price,
             &cloned_order,
-        )?
+        )
+        .unwrap()
     };
 
     //update funding_fee_rate and borrowing_fee_rate

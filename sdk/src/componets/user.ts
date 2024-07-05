@@ -176,6 +176,33 @@ export class UserComponent extends Component {
         }
 
         let remainingAccounts = this.getUserRemainingAccounts(user, tradeTokens);
+        remainingAccounts.push({
+            pubkey: BumpinUtils.getTradeTokenPda(this.program, stablePool.index)[0],
+            isWritable: true,
+            isSigner: false,
+        });
+
+        remainingAccounts.push({
+            pubkey: BumpinUtils.getTradeTokenPda(this.program, indexTradeToken.index)[0],
+            isWritable: true,
+            isSigner: false,
+        });
+        remainingAccounts.push({
+            pubkey: indexTradeToken.oracleKey,
+            isWritable: false,
+            isSigner: false,
+        });
+
+        remainingAccounts.push({
+            pubkey: BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0],
+            isWritable: true,
+            isSigner: false,
+        });
+        remainingAccounts.push({
+            pubkey: tradeToken.oracleKey,
+            isWritable: false,
+            isSigner: false,
+        });
 
         let order: InnerPlaceOrderParams = {
             ...param,
@@ -258,25 +285,25 @@ export class UserComponent extends Component {
             .sub(balanceOfUserTradeTokens.tokenBorrowingValue)
     }
 
-    public getUserRemainingAccounts(user: UserAccount, allTradeTokens: TradeToken[]): Array<AccountMeta> {
+    public getUserRemainingAccounts(user: UserAccount, allTradeTokens: TradeToken[], isWritable: boolean = false): Array<AccountMeta> {
         let remainingAccounts: Array<AccountMeta> = [];
         for (let token of user.tokens) {
             if (isEqual(token.userTokenStatus, UserTokenStatus.USING)) {
                 remainingAccounts.push({
                     pubkey: token.tokenMintKey,
-                    isWritable: true,
+                    isWritable,
                     isSigner: false,
                 });
                 let target = BumpinTokenUtils.getTradeTokenByMintPublicKey(token.tokenMintKey, allTradeTokens);
                 remainingAccounts.push({
                     pubkey: target.oracleKey,
-                    isWritable: true,
+                    isWritable,
                     isSigner: false,
                 });
                 let pda = BumpinUtils.getTradeTokenPda(this.program, target.index)[0];
                 remainingAccounts.push({
                     pubkey: pda,
-                    isWritable: true,
+                    isWritable,
                     isSigner: false,
                 });
             }

@@ -4,7 +4,7 @@ import {AnchorProvider, BN, Program, Wallet} from "@coral-xyz/anchor";
 import idlBumpinTrade from "./idl/bumpin_trade.json"
 import idlPyth from "./idl/pyth.json"
 import {BumpinTrade} from "./types/bumpin_trade";
-import {Market, Pool, PoolConfig, State, TradeToken} from "./types";
+import {Market, MarketParams, Pool, PoolConfig, State, TradeToken} from "./types";
 import {BumpinAdminConfig} from "./bumpinAdminConfig";
 import {BumpinUtils} from "./utils/utils";
 import {Pyth} from "./types/pyth";
@@ -99,8 +99,23 @@ export class BumpinAdmin {
 
     public async initMarket(poolName: string, poolIndex: number, stablePoolIndex: number, indexMint: anchor.web3.PublicKey) {
         const [pda, _] = BumpinUtils.getBumpinStatePda(this.program);
+        //TODO: params
+        let params: MarketParams = {
+            symbol: BumpinUtils.string2Padded32Bytes(poolName),
+            tickSize: new BN(1),
+            openFeeRate: new BN(1000),
+            closeFeeRate: new BN(1000),
+            maximumLongOpenInterestCap: new BN(1000),
+            maximumShortOpenInterestCap: new BN(1000),
+            longShortRatioLimit: new BN(1000),
+            longShortOiBottomLimit: new BN(1000),
+            maximumLeverage: 1000000,
+            minimumLeverage: 10000,
+            poolIndex: poolIndex,
+            stablePoolIndex: stablePoolIndex,
+        };
         await this.program.methods.initializeMarket(
-            poolIndex, stablePoolIndex, BumpinUtils.string2Padded32Bytes(poolName)
+            params
         ).accounts({
             indexMint,
             bumpSigner: pda,

@@ -351,6 +351,22 @@ export type PlaceOrderParams = {
     acceptablePrice: BN;
 }
 
+
+export type MarketParams = {
+    symbol: number[];
+    tickSize: BN;
+    openFeeRate: BN;
+    closeFeeRate: BN;
+    maximumLongOpenInterestCap: BN;
+    maximumShortOpenInterestCap: BN;
+    longShortRatioLimit: BN;
+    longShortOiBottomLimit: BN;
+    maximumLeverage: number;
+    minimumLeverage: number;
+    poolIndex: number;
+    stablePoolIndex: number;
+}
+
 export type InnerPlaceOrderParams = {
     symbol: number[];
     isPortfolioMargin: boolean;
