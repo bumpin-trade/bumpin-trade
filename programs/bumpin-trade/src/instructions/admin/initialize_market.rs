@@ -1,17 +1,18 @@
+use std::ops::DerefMut;
+
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
-use std::ops::DerefMut;
 
 use crate::math_error;
 use crate::safe_increment;
-use crate::state::market::Market;
+use crate::state::market::{Market, MarketConfig};
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::traits::Size;
 
 #[derive(Accounts)]
 #[instruction(
-    _pool_index: u16, _stable_pool_index: u16
+    params: MarketParams,
 )]
 pub struct InitializeMarket<'info> {
     #[account(
@@ -25,14 +26,14 @@ pub struct InitializeMarket<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool".as_ref(), params.pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
         mut,
-        seeds = [b"pool".as_ref(), _stable_pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool".as_ref(), params.stable_pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub stable_pool: AccountLoader<'info, Pool>,
@@ -63,23 +64,52 @@ pub struct InitializeMarket<'info> {
 
 pub fn handle_initialize_market(
     ctx: Context<InitializeMarket>,
-    _pool_index: u16,
-    _stable_pool_index: u16,
-    symbol: [u8; 32],
+    params: MarketParams,
 ) -> Result<()> {
     let mut market = ctx.accounts.market.load_init()?;
     let mut pool = ctx.accounts.pool.load_mut()?;
     let mut stable_pool = ctx.accounts.stable_pool.load_mut()?;
     let state = &mut ctx.accounts.state;
+
+    let config = MarketConfig {
+        tick_size: params.tick_size,
+        open_fee_rate: params.open_fee_rate,
+        close_fee_rate: params.close_fee_rate,
+        maximum_long_open_interest_cap: params.maximum_long_open_interest_cap,
+        maximum_short_open_interest_cap: params.maximum_short_open_interest_cap,
+        long_short_ratio_limit: params.long_short_ratio_limit,
+        long_short_oi_bottom_limit: params.long_short_oi_bottom_limit,
+        maximum_leverage: params.maximum_leverage,
+        minimum_leverage: params.minimum_leverage,
+        padding: [0; 8],
+    };
+
     market.index = state.market_sequence;
-    market.symbol = symbol;
+    market.symbol = params.symbol;
     market.pool_key = pool.key;
     market.pool_mint_key = pool.mint_key;
     market.index_mint_key = ctx.accounts.index_mint.key();
     market.stable_pool_mint_key = stable_pool.mint_key;
     market.stable_pool_key = stable_pool.key;
+    market.config = config;
     safe_increment!(state.market_sequence, 1);
     safe_increment!(pool.deref_mut().market_number, 1);
     safe_increment!(stable_pool.deref_mut().market_number, 1);
     Ok(())
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Eq, PartialEq)]
+pub struct MarketParams {
+    pub symbol: [u8; 32],
+    pub tick_size: u128,
+    pub open_fee_rate: u128,
+    pub close_fee_rate: u128,
+    pub maximum_long_open_interest_cap: u128,
+    pub maximum_short_open_interest_cap: u128,
+    pub long_short_ratio_limit: u128,
+    pub long_short_oi_bottom_limit: u128,
+    pub maximum_leverage: u32,
+    pub minimum_leverage: u32,
+    pub pool_index: u16,
+    pub stable_pool_index: u16,
 }

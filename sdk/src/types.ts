@@ -47,6 +47,7 @@ export type MarketConfig = {
     longShortRatioLimit: BN;
     longShortOiBottomLimit: BN;
     maximumLeverage: number;
+    minimumLeverage: number;
 }
 
 

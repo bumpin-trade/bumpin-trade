@@ -190,7 +190,7 @@ export class UserComponent extends Component {
         };
 
         let tradeTokenPrice = await BumpinTokenUtils.getTradeTokenPrice(this.oracleClient, tradeToken);
-        await this.placePerpOrderValidation(order, tradeTokenPrice);
+        await this.placePerpOrderValidation(order, tradeTokenPrice, markets[marketIndex]);
         await this.program.methods.placeOrder(
             order,
         ).accounts({
@@ -202,7 +202,7 @@ export class UserComponent extends Component {
     }
 
     //TODO: recheck this conditions
-    async placePerpOrderValidation(order: InnerPlaceOrderParams, tradeTokenPrice: BN, sync: boolean = false) {
+    async placePerpOrderValidation(order: InnerPlaceOrderParams, tradeTokenPrice: BN, market: Market, sync: boolean = false) {
         let state = await this.getState(sync);
         if (isEqual(order.orderType, OrderType.NONE)) {
             throw new BumpinInvalidParameter("Order type should not be NONE (when placing order)");
@@ -238,6 +238,9 @@ export class UserComponent extends Component {
             throw new BumpinInvalidParameter("Order margin should be greater than minimum order margin: " + state.minimumOrderMarginUsd.toString());
         }
 
+        if (order.leverage > market.config.maximumLeverage || order.leverage < market.config.minimumLeverage) {
+            throw new BumpinInvalidParameter("Leverage should be between " + market.config.minimumLeverage + " and " + market.config.maximumLeverage);
+        }
     }
 
     public async getUserAvailableValue(user: UserAccount, tradeTokens: TradeToken[]) {

@@ -87,11 +87,9 @@ pub mod bumpin_trade {
 
     pub fn initialize_market<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializeMarket>,
-        pool_index: u16,
-        stable_pool_index: u16,
-        symbol: [u8; 32],
+        params: MarketParams,
     ) -> Result<()> {
-        handle_initialize_market(ctx, pool_index, stable_pool_index, symbol)
+        handle_initialize_market(ctx, params)
     }
 
     /*-----pool pool------*/
