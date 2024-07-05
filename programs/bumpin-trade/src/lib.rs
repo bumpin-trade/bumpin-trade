@@ -156,7 +156,7 @@ pub mod bumpin_trade {
         order: PlaceOrderParams,
     ) -> Result<()> {
         let same_pool = order.pool_index == order.stable_pool_index;
-        let same_trade_token = order.trade_token_index == order.index_trade_token_index;
+        // let same_trade_token = order.trade_token_index == order.index_trade_token_index;
         let mut market = ctx.accounts.market.load_mut()?;
         let mut user = ctx.accounts.user.load_mut()?;
         let mut pool = ctx.accounts.pool.load_mut()?;
@@ -167,9 +167,6 @@ pub mod bumpin_trade {
         } else {
             &market.stable_pool_mint_key
         };
-        let mut trade_token = ctx.accounts.trade_token.load_mut()?;
-        let index_trade_token =
-            if same_trade_token { None } else { Some(ctx.accounts.index_trade_token.load()?) };
 
         let state_account = &ctx.accounts.state;
         let user_token_account = &ctx.accounts.user_token_account;
@@ -184,8 +181,6 @@ pub mod bumpin_trade {
         handle_execute_order(
             user.deref_mut(),
             market.deref_mut(),
-            trade_token.deref_mut(),
-            index_trade_token,
             pool.deref_mut(),
             stable_pool,
             state_account,
@@ -200,6 +195,8 @@ pub mod bumpin_trade {
             &mut oracle_map,
             &UserOrder::default(),
             order.order_id,
+            order.trade_token_index,
+            order.index_trade_token_index,
             true,
         )
     }

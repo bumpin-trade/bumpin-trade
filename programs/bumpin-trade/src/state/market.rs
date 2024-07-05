@@ -223,7 +223,8 @@ pub struct MarketConfig {
     pub long_short_ratio_limit: u128,
     pub long_short_oi_bottom_limit: u128,
     pub maximum_leverage: u32,
-    pub padding: [u8; 12],
+    pub minimum_leverage: u32,
+    pub padding: [u8; 8],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default, Copy)]

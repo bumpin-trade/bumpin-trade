@@ -37,7 +37,51 @@ impl<'a> TradeTokenMap<'a> {
 
     #[track_caller]
     #[inline(always)]
-    pub fn get_trade_token_ref(&self, mint: &Pubkey) -> BumpResult<Ref<TradeToken>> {
+    pub fn get_trade_token_by_index_ref_mut(&self, index: u16) -> BumpResult<RefMut<TradeToken>> {
+        let loader = match self.0.values().find(|loader| loader.load().unwrap().index == index) {
+            None => {
+                let caller = Location::caller();
+                msg!("Could not find trade_token at {}:{}", caller.file(), caller.line());
+                return Err(TradeTokenNotFind);
+            },
+            Some(loader) => loader,
+        };
+        match loader.load_mut() {
+            Ok(trade_token) => Ok(trade_token),
+            Err(e) => {
+                let caller = Location::caller();
+                msg!("{:?}", e);
+                msg!("Could not load trade_token at {}:{}", caller.file(), caller.line());
+                Err(CouldNotLoadTradeTokenData)
+            },
+        }
+    }
+
+    #[track_caller]
+    #[inline(always)]
+    pub fn get_trade_token_by_index_ref(&self, index: u16) -> BumpResult<Ref<TradeToken>> {
+        let loader = match self.0.values().find(|loader| loader.load().unwrap().index == index) {
+            None => {
+                let caller = Location::caller();
+                msg!("Could not find trade_token at {}:{}", caller.file(), caller.line());
+                return Err(TradeTokenNotFind);
+            },
+            Some(loader) => loader,
+        };
+        match loader.load() {
+            Ok(trade_token) => Ok(trade_token),
+            Err(e) => {
+                let caller = Location::caller();
+                msg!("{:?}", e);
+                msg!("Could not load trade_token at {}:{}", caller.file(), caller.line());
+                Err(CouldNotLoadTradeTokenData)
+            },
+        }
+    }
+
+    #[track_caller]
+    #[inline(always)]
+    pub fn get_trade_token_by_mint_ref(&self, mint: &Pubkey) -> BumpResult<Ref<TradeToken>> {
         let loader = match self.0.get(mint) {
             None => {
                 let caller = Location::caller();

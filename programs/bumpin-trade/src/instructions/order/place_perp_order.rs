@@ -1,4 +1,4 @@
-use std::cell::{Ref, RefMut};
+use std::cell::RefMut;
 use std::ops::DerefMut;
 
 use anchor_lang::prelude::*;
@@ -20,7 +20,6 @@ use crate::state::market::Market;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::state::State;
-use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 use crate::state::UserTokenUpdateReason;
@@ -89,31 +88,27 @@ pub struct PlaceOrder<'info> {
     )]
     pub stable_pool_vault: Box<Account<'info, TokenAccount>>,
 
-    #[account(
-        mut,
-        seeds = [b"trade_token", order.trade_token_index.to_le_bytes().as_ref()],
-        bump,
-        constraint = trade_token.load() ?.mint_key.eq(& user_token_account.mint),
-    )]
-    pub trade_token: AccountLoader<'info, TradeToken>,
-
+    // #[account(
+    //     mut,
+    //     seeds = [b"trade_token", order.trade_token_index.to_le_bytes().as_ref()],
+    //     bump,
+    //     constraint = trade_token.load() ?.mint_key.eq(& user_token_account.mint),
+    // )]
+    // pub trade_token: AccountLoader<'info, TradeToken>,
     #[account(
         mut,
         seeds = [b"trade_token_vault".as_ref(), order.trade_token_index.to_le_bytes().as_ref()],
         bump,
-        token::mint = trade_token.load() ?.mint_key,
         token::authority = bump_signer,
-        constraint = trade_token_vault.key() == trade_token.load() ?.vault_key
     )]
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
 
-    #[account(
-        seeds = [b"trade_token", order.index_trade_token_index.to_le_bytes().as_ref()],
-        bump,
-        constraint = index_trade_token.load() ?.mint_key.eq(& market.load() ?.index_mint_key),
-    )]
-    pub index_trade_token: AccountLoader<'info, TradeToken>,
-
+    // #[account(
+    //     seeds = [b"trade_token", order.index_trade_token_index.to_le_bytes().as_ref()],
+    //     bump,
+    //     constraint = index_trade_token.load() ?.mint_key.eq(& market.load() ?.index_mint_key),
+    // )]
+    // pub index_trade_token: AccountLoader<'info, TradeToken>,
     #[account(
         mut,
         constraint = pool_vault.mint.eq(& user_token_account.mint) || stable_pool_vault.mint.eq(& user_token_account.mint),
@@ -160,7 +155,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     // msg!("All Params: symbol: {:?}, is_portfolio_margin: {:?}, is_native_token: {:?}, order_side: {:?}, position_side: {:?}, order_type: {:?}, stop_type: {:?}, size: {:?}, order_margin: {:?}, leverage: {:?}, trigger_price: {:?}, acceptable_price: {:?}, place_time: {:?}, pool_index: {:?}, stable_pool_index: {:?}, market_index: {:?}, trade_token_index: {:?}, index_trade_token_index: {:?}",
     //     order.symbol, order.is_portfolio_margin, order.is_native_token, order.order_side, order.position_side, order.order_type, order.stop_type, order.size, order.order_margin, order.leverage, order.trigger_price, order.acceptable_price, order.place_time, order.pool_index, order.stable_pool_index, order.market_index, order.trade_token_index, order.index_trade_token_index);
     let same_pool = order.pool_index == order.stable_pool_index;
-    let same_trade_token = order.trade_token_index == order.index_trade_token_index;
+    // let same_trade_token = order.trade_token_index == order.index_trade_token_index;
     let mut market = ctx.accounts.market.load_mut()?;
     let mut user = ctx.accounts.user.load_mut()?;
     let mut pool = ctx.accounts.pool.load_mut()?;
@@ -171,12 +166,11 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     } else {
         &market.stable_pool_mint_key
     };
-    let mut trade_token = ctx.accounts.trade_token.load_mut()?;
-    let index_trade_token =
-        if same_trade_token { None } else { Some(ctx.accounts.index_trade_token.load()?) };
     let remaining_accounts = ctx.remaining_accounts;
     let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts)?;
+    let trade_token = trade_token_map.get_trade_token_by_index_ref(order.trade_token_index)?;
     let token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
+    drop(trade_token);
     validate!(
         validate_place_order(
             &order,
@@ -253,8 +247,6 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         return handle_execute_order(
             user.deref_mut(),
             market.deref_mut(),
-            trade_token.deref_mut(),
-            index_trade_token,
             pool.deref_mut(),
             stable_pool,
             state_account,
@@ -269,6 +261,8 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
             &mut oracle_map,
             &user_order,
             order_id,
+            order.trade_token_index,
+            order.index_trade_token_index,
             false,
         );
     } else {
@@ -282,8 +276,6 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
 pub fn handle_execute_order<'info>(
     user: &mut User,
     market: &mut Market,
-    trade_token: &mut TradeToken,
-    index_trade_token: Option<Ref<TradeToken>>,
     base_token_pool: &mut Pool,
     mut stable_pool: Option<RefMut<Pool>>,
     state_account: &Account<'info, State>,
@@ -298,6 +290,8 @@ pub fn handle_execute_order<'info>(
     oracle_map: &mut OracleMap,
     user_order: &UserOrder,
     order_id: u64,
+    trade_token_index: u16,
+    index_trade_token_index: u16,
     execute_from_remote: bool,
 ) -> Result<()> {
     let cloned_order = if execute_from_remote {
@@ -308,18 +302,26 @@ pub fn handle_execute_order<'info>(
     };
 
     let user_key = user.key;
-
+    let same_trade_token = trade_token_index == index_trade_token_index;
+    let mut trade_token = trade_token_map.get_trade_token_by_index_ref_mut(trade_token_index)?;
     //validate order
     validate_execute_order(&cloned_order, &market)?;
     let is_long = OrderSide::LONG == cloned_order.order_side;
-    let execute_price = if let Some(ref index_trade_token) = &index_trade_token {
+    let execute_price = if same_trade_token {
         get_execution_price(
-            oracle_map.get_price_data(&index_trade_token.oracle_key).unwrap().price,
+            oracle_map.get_price_data(&trade_token.oracle_key).unwrap().price,
             &cloned_order,
         )?
     } else {
         get_execution_price(
-            oracle_map.get_price_data(&trade_token.oracle_key).unwrap().price,
+            oracle_map
+                .get_price_data(
+                    &trade_token_map
+                        .get_trade_token_by_index_ref(index_trade_token_index)?
+                        .oracle_key,
+                )
+                .unwrap()
+                .price,
             &cloned_order,
         )?
     };
@@ -399,7 +401,7 @@ pub fn handle_execute_order<'info>(
                     user.un_use_token(&cloned_order.margin_mint_key, fee)?;
                     user.sub_token_with_liability(
                         &cloned_order.margin_mint_key,
-                        trade_token,
+                        trade_token.deref_mut(),
                         fee,
                         &UserTokenUpdateReason::SettleFee,
                     )?;
@@ -451,7 +453,7 @@ pub fn handle_execute_order<'info>(
                     state_account,
                     Some(user_token_account),
                     if position_side { pool_vault_account } else { stable_pool_vault_account },
-                    trade_token,
+                    trade_token.deref_mut(),
                     trade_token_vault_account,
                     bump_signer,
                     token_program,
@@ -614,7 +616,9 @@ fn validate_execute_order(order: &UserOrder, market: &Market) -> BumpResult<()> 
         }
     }
 
-    if order.leverage > market.config.maximum_leverage {
+    if order.leverage > market.config.maximum_leverage
+        || order.leverage < market.config.minimum_leverage
+    {
         return Err(BumpErrorCode::LeverageIsNotAllowed);
     }
     Ok(())

@@ -689,7 +689,8 @@ impl User {
             if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
                 continue;
             }
-            let trade_token = trade_token_map.get_trade_token_ref(&user_token.token_mint_key)?;
+            let trade_token =
+                trade_token_map.get_trade_token_by_mint_ref(&user_token.token_mint_key)?;
             let oracle_price = oracle_map.get_price_data(&trade_token.oracle_key)?;
             total_token_net_value
                 .safe_add(user_token.get_token_net_value(&trade_token, oracle_price)?)?;
@@ -744,7 +745,8 @@ impl User {
             if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
                 continue;
             }
-            let trade_token = trade_token_map.get_trade_token_ref(&user_token.token_mint_key)?;
+            let trade_token =
+                trade_token_map.get_trade_token_by_mint_ref(&user_token.token_mint_key)?;
             let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle_key)?;
 
             let token_net_value =
@@ -769,7 +771,7 @@ impl User {
             }
 
             let index_trade_token =
-                trade_token_map.get_trade_token_ref(&user_position.index_mint_key)?;
+                trade_token_map.get_trade_token_by_mint_ref(&user_position.index_mint_key)?;
             let (initial_margin_usd_from_portfolio, position_un_pnl, mm_usd) =
                 user_position.get_position_value(&index_trade_token, oracle_map)?;
 
@@ -808,9 +810,9 @@ impl User {
                 continue;
             }
             let index_trade_token =
-                trade_token_map.get_trade_token_ref(&user_position.index_mint_key)?;
+                trade_token_map.get_trade_token_by_mint_ref(&user_position.index_mint_key)?;
             let trade_token =
-                trade_token_map.get_trade_token_ref(&user_position.margin_mint_key)?;
+                trade_token_map.get_trade_token_by_mint_ref(&user_position.margin_mint_key)?;
             let index_price = price_map.get_price_data(&index_trade_token.oracle_key)?.price;
             let margin_token_price = price_map.get_price_data(&trade_token.oracle_key)?.price;
             let market = market_map.get_ref(&user_position.symbol)?;
@@ -842,7 +844,8 @@ impl User {
             if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
                 continue;
             }
-            let trade_token = trade_token_map.get_trade_token_ref(&user_token.token_mint_key)?;
+            let trade_token =
+                trade_token_map.get_trade_token_by_mint_ref(&user_token.token_mint_key)?;
             let oracle_price = oracle_map.get_price_data(&trade_token.oracle_key)?;
             total_used_value = total_used_value
                 .safe_add(user_token.get_token_used_value(&trade_token, &oracle_price)?)?;

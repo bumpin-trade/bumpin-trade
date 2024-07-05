@@ -144,7 +144,7 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
             user_token.user_token_account_key.eq(user_token_account.to_account_info().key),
             BumpErrorCode::InvalidTokenAccount
         )?;
-        let index_trade_token = trade_token_map.get_trade_token_ref(&index_mint_key)?;
+        let index_trade_token = trade_token_map.get_trade_token_by_mint_ref(&index_mint_key)?;
         position_processor::decrease_position(
             DecreasePositionParams {
                 order_id: 0,

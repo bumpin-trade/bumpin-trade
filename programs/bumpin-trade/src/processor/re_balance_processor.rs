@@ -40,7 +40,7 @@ pub fn rebalance_pool_unsettle<'a>(
         let pre_fee_reward = pool.fee_reward;
         if pre_fee_reward.un_settle_fee_amount > 0 {
             let pool_vault = vault_map.get_account(&pool.mint_vault_key)?;
-            let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key)?;
+            let trade_token = trade_token_map.get_trade_token_by_mint_ref(&pool.mint_key)?;
             let trade_token_vault = vault_map.get_account(&trade_token.vault_key)?;
 
             utils::token::receive(
@@ -105,7 +105,7 @@ pub fn rebalance_pool_unsettle<'a>(
     for pool_loader in &pool_loader_vec {
         let mut pool = pool_loader.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadPoolData)?;
         if pool.stable {
-            let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key)?;
+            let trade_token = trade_token_map.get_trade_token_by_mint_ref(&pool.mint_key)?;
             if trade_token.total_liability < pool.balance.un_settle_amount {
                 let transfer_amount =
                     pool.balance.un_settle_amount.safe_sub(trade_token.total_liability)?;
@@ -178,7 +178,7 @@ pub fn rebalance_rewards<'a>(
         let pre_fee_reward = pool.fee_reward;
         if pre_fee_reward.un_settle_fee_amount > 0u128 {
             let pool_vault = vault_map.get_account(&pool.mint_vault_key)?;
-            let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key)?;
+            let trade_token = trade_token_map.get_trade_token_by_mint_ref(&pool.mint_key)?;
             let trade_token_vault = vault_map.get_account(&trade_token.vault_key)?;
 
             utils::token::receive(

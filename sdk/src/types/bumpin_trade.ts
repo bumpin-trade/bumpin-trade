@@ -1197,34 +1197,6 @@ export type BumpinTrade = {
           }
         },
         {
-          "name": "tradeToken",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.trade_token_index"
-              }
-            ]
-          }
-        },
-        {
           "name": "tradeTokenVault",
           "writable": true,
           "pda": {
@@ -1254,33 +1226,6 @@ export type BumpinTrade = {
               {
                 "kind": "arg",
                 "path": "order.trade_token_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "indexTradeToken",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.index_trade_token_index"
               }
             ]
           }
@@ -2423,34 +2368,6 @@ export type BumpinTrade = {
           }
         },
         {
-          "name": "tradeToken",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.trade_token_index"
-              }
-            ]
-          }
-        },
-        {
           "name": "tradeTokenVault",
           "writable": true,
           "pda": {
@@ -2480,33 +2397,6 @@ export type BumpinTrade = {
               {
                 "kind": "arg",
                 "path": "order.trade_token_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "indexTradeToken",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.index_trade_token_index"
               }
             ]
           }
@@ -4538,11 +4428,15 @@ export type BumpinTrade = {
             "type": "u32"
           },
           {
+            "name": "minimumLeverage",
+            "type": "u32"
+          },
+          {
             "name": "padding",
             "type": {
               "array": [
                 "u8",
-                12
+                8
               ]
             }
           }

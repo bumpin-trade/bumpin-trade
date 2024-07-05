@@ -17,7 +17,7 @@ pub fn un_stake(
     oracle_map: &mut OracleMap,
     market_map: &MarketMap,
 ) -> BumpResult<u128> {
-    let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key)?;
+    let trade_token = trade_token_map.get_trade_token_by_mint_ref(&pool.mint_key)?;
     let pool_value = pool.get_pool_usd_value(trade_token_map, oracle_map, market_map)?;
 
     let un_stake_usd = cal_utils::mul_div_u(un_stake_amount, pool_value, pool.total_supply)?;
@@ -42,7 +42,7 @@ pub fn stake(
     market_map: &MarketMap,
 ) -> BumpResult<u128> {
     let mut supply_amount = mint_amount;
-    let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key)?;
+    let trade_token = trade_token_map.get_trade_token_by_mint_ref(&pool.mint_key)?;
     if pool.total_supply > 0 {
         let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle_key)?;
 
@@ -62,7 +62,7 @@ pub fn portfolio_to_stake(
     market_map: &MarketMap,
 ) -> BumpResult<(u128, UserStake)> {
     let mut supply_amount = mint_amount;
-    let trade_token = trade_token_map.get_trade_token_ref(&pool.mint_key)?;
+    let trade_token = trade_token_map.get_trade_token_by_mint_ref(&pool.mint_key)?;
 
     let user_token = user.get_user_token_ref(&pool.mint_key)?;
     validate!(user_token.amount > mint_amount, BumpErrorCode::AmountNotEnough)?;

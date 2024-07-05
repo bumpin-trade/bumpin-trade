@@ -237,7 +237,7 @@ impl Pool {
         oracle_map: &mut OracleMap,
         market_vec: &MarketMap,
     ) -> BumpResult<u128> {
-        let trade_token = trade_token_map.get_trade_token_ref(&self.mint_key)?;
+        let trade_token = trade_token_map.get_trade_token_by_mint_ref(&self.mint_key)?;
         let trade_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
         let mut pool_value = cal_utils::token_to_usd_i(
             self.balance.amount.safe_add(self.balance.un_settle_amount)?.cast::<i128>()?,
@@ -263,7 +263,8 @@ impl Pool {
                 .safe_add(self.stable_balance.un_settle_amount)?
                 .safe_sub(self.stable_balance.loss_amount)?;
             if stable_amount > 0u128 {
-                let stable_trade_token = trade_token_map.get_trade_token_ref(&self.stable_key)?;
+                let stable_trade_token =
+                    trade_token_map.get_trade_token_by_mint_ref(&self.stable_key)?;
                 let stable_trade_token_price =
                     oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
                 let stable_usd_value = cal_utils::token_to_usd_i(

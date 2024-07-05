@@ -1005,7 +1005,7 @@ pub fn update_leverage<'info>(
 ) -> BumpResult<()> {
     let mut user = user_account.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
     let position = user.get_user_position_mut_ref(position_key)?;
-    let trade_token = trade_token_map.get_trade_token_ref(&position.margin_mint_key)?;
+    let trade_token = trade_token_map.get_trade_token_by_mint_ref(&position.margin_mint_key)?;
     let pool = &mut pool.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
 
     if position.position_size != 0u128 {

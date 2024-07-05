@@ -1,5 +1,5 @@
 {
-  "address": "EocqPSYv49uCVMEze1sPZJ6vVEpTRmJjD8sHY6EKEPa3",
+  "address": "3vxLXJqLqF3JG5TCbYycbKWRBbCJQLxQmBGCkyqEEefL",
   "metadata": {
     "name": "bumpin_trade",
     "version": "0.1.0",
@@ -1191,34 +1191,6 @@
           }
         },
         {
-          "name": "trade_token",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.trade_token_index"
-              }
-            ]
-          }
-        },
-        {
           "name": "trade_token_vault",
           "writable": true,
           "pda": {
@@ -1248,33 +1220,6 @@
               {
                 "kind": "arg",
                 "path": "order.trade_token_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "index_trade_token",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.index_trade_token_index"
               }
             ]
           }
@@ -2417,34 +2362,6 @@
           }
         },
         {
-          "name": "trade_token",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.trade_token_index"
-              }
-            ]
-          }
-        },
-        {
           "name": "trade_token_vault",
           "writable": true,
           "pda": {
@@ -2474,33 +2391,6 @@
               {
                 "kind": "arg",
                 "path": "order.trade_token_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "index_trade_token",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.index_trade_token_index"
               }
             ]
           }
@@ -4532,11 +4422,15 @@
             "type": "u32"
           },
           {
+            "name": "minimum_leverage",
+            "type": "u32"
+          },
+          {
             "name": "padding",
             "type": {
               "array": [
                 "u8",
-                12
+                8
               ]
             }
           }
