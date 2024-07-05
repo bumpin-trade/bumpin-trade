@@ -17,7 +17,6 @@ use crate::utils;
 #[instruction(pool_index: u16, trade_token_index: u16)]
 pub struct PortfolioStake<'info> {
     #[account(
-        mut,
         seeds = [b"bump_state".as_ref()],
         bump,
     )]
@@ -69,7 +68,6 @@ pub struct PortfolioStake<'info> {
 #[instruction(pool_index: u16)]
 pub struct WalletStake<'info> {
     #[account(
-        mut,
         seeds = [b"bump_state".as_ref()],
         bump,
     )]

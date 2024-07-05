@@ -1,9 +1,9 @@
+use crate::errors::BumpErrorCode;
 use crate::instructions::{cal_utils, swap};
 use crate::math::safe_math::SafeMath;
 use crate::state::pool::Pool;
 use crate::state::rewards::Rewards;
 use crate::state::state::State;
-use crate::state::trade_token::TradeToken;
 use crate::utils::token;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
@@ -103,17 +103,17 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
         &ctx.accounts.bump_signer,
         ctx.accounts.state.bump_signer_nonce,
         pool_rewards_amount,
-    )?;
+    )
+    .map_err(|_e| BumpErrorCode::TransferFailed)?;
     // record pool rewards
     let mut rewards = ctx.accounts.rewards.load_mut()?;
     rewards.add_pool_total_rewards_amount(pool_rewards_amount)?;
     rewards.add_pool_un_claim_rewards(pool_rewards_amount)?;
     let fee_reward = &mut pool.fee_reward;
-    fee_reward.add_cumulative_rewards_per_stake_token(
-        pool_rewards_amount.safe_div_ceil(total_supply)?,
-    )?;
+    let delta = pool_rewards_amount.safe_div_ceil(total_supply)?;
+    fee_reward.add_cumulative_rewards_per_stake_token(delta)?;
+    fee_reward.push_last_rewards_per_stake_token_deltas(delta)?;
     fee_reward.sub_fee_amount(fee_reward.fee_amount)?;
-
 
     //transfer dao rewards
     token::send_from_program_vault(
@@ -123,7 +123,8 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
         &ctx.accounts.bump_signer,
         ctx.accounts.state.bump_signer_nonce,
         dao_rewards_amount,
-    )?;
+    )
+    .map_err(|_e| BumpErrorCode::TransferFailed)?;
     rewards.add_dao_total_rewards_amount(dao_rewards_amount)?;
     Ok(())
 }

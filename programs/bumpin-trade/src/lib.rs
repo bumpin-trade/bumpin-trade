@@ -255,14 +255,16 @@ pub mod bumpin_trade {
     /*-----reward------*/
     pub fn claim_rewards<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ClaimRewards<'c>>,
+        pool_index: u16,
     ) -> Result<()> {
-        handle_claim_rewards(ctx)
+        handle_claim_rewards(ctx, pool_index)
     }
 
     pub fn auto_compound<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, AutoCompoundRewards<'c>>,
+        pool_index: u16,
     ) -> Result<()> {
-        handle_auto_compound(ctx)
+        handle_auto_compound(ctx, pool_index)
     }
 }
 

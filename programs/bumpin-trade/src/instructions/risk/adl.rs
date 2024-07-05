@@ -20,7 +20,6 @@ use crate::validate;
 )]
 pub struct ADL<'info> {
     #[account(
-        mut,
         seeds = [b"bump_state".as_ref()],
         bump,
     )]

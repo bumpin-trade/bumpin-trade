@@ -107,6 +107,8 @@ pub enum BumpErrorCode {
     PoolSubUnsettleNotEnough,
     #[msg("TimestampNotFound")]
     TimestampNotFound,
+    #[msg("ClaimUnqualified")]
+    ClaimUnqualified,
 }
 #[macro_export]
 macro_rules! print_error {
