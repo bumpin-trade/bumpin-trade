@@ -1,3 +1,4 @@
+use std::cell::{Ref, RefMut};
 use std::ops::DerefMut;
 
 use anchor_lang::prelude::*;
@@ -21,7 +22,8 @@ use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
-use crate::state::user::{User, UserTokenUpdateReason};
+use crate::state::user::User;
+use crate::state::UserTokenUpdateReason;
 use crate::utils::{pda, token};
 use crate::{get_then_update_id, position, validate};
 
@@ -88,6 +90,7 @@ pub struct PlaceOrder<'info> {
     pub stable_pool_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
+        mut,
         seeds = [b"trade_token", order.trade_token_index.to_le_bytes().as_ref()],
         bump,
         constraint = trade_token.load() ?.mint_key.eq(& user_token_account.mint),
@@ -147,6 +150,7 @@ pub struct PlaceOrderParams {
     pub position_side: PositionSide,
     pub order_type: OrderType,
     pub stop_type: StopType,
+    pub order_id: u64, // only for execute order from keeper
 }
 
 pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
@@ -155,17 +159,21 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
 ) -> Result<()> {
     // msg!("All Params: symbol: {:?}, is_portfolio_margin: {:?}, is_native_token: {:?}, order_side: {:?}, position_side: {:?}, order_type: {:?}, stop_type: {:?}, size: {:?}, order_margin: {:?}, leverage: {:?}, trigger_price: {:?}, acceptable_price: {:?}, place_time: {:?}, pool_index: {:?}, stable_pool_index: {:?}, market_index: {:?}, trade_token_index: {:?}, index_trade_token_index: {:?}",
     //     order.symbol, order.is_portfolio_margin, order.is_native_token, order.order_side, order.position_side, order.order_type, order.stop_type, order.size, order.order_margin, order.leverage, order.trigger_price, order.acceptable_price, order.place_time, order.pool_index, order.stable_pool_index, order.market_index, order.trade_token_index, order.index_trade_token_index);
-
-    let market = ctx.accounts.market.load()?;
+    let same_pool = order.pool_index == order.stable_pool_index;
+    let same_trade_token = order.trade_token_index == order.index_trade_token_index;
+    let mut market = ctx.accounts.market.load_mut()?;
     let mut user = ctx.accounts.user.load_mut()?;
-    let pool = ctx.accounts.pool.load()?;
-    let stable_pool = ctx.accounts.stable_pool.load()?;
+    let mut pool = ctx.accounts.pool.load_mut()?;
+    let stable_pool: Option<RefMut<Pool>> =
+        if same_pool { None } else { Some(ctx.accounts.stable_pool.load_mut()?) };
     let margin_token = if order.order_side.eq(&OrderSide::LONG) {
         &market.pool_mint_key
     } else {
         &market.stable_pool_mint_key
     };
-    let trade_token = &ctx.accounts.trade_token.load()?;
+    let mut trade_token = ctx.accounts.trade_token.load_mut()?;
+    let index_trade_token =
+        if same_trade_token { None } else { Some(ctx.accounts.index_trade_token.load()?) };
     let remaining_accounts = ctx.remaining_accounts;
     let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts)?;
     let token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
@@ -174,7 +182,15 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
             &order,
             margin_token,
             &market,
-            if order.order_side.eq(&OrderSide::LONG) { &pool } else { &stable_pool },
+            if order.order_side.eq(&OrderSide::LONG) {
+                &pool
+            } else {
+                if same_pool {
+                    &pool
+                } else {
+                    stable_pool.as_ref().unwrap()
+                }
+            },
             &ctx.accounts.state,
             token_price
         )?,
@@ -226,35 +242,25 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     };
 
     if order.order_type.eq(&OrderType::MARKET) {
-        drop(user);
-        drop(market);
-        drop(stable_pool);
-        //execute order
-        let user_account_loader = &ctx.accounts.user;
-        let pool_account_loader = &ctx.accounts.pool;
-        let stable_pool_account_loader = &ctx.accounts.stable_pool;
-        let market_account_loader = &ctx.accounts.market;
         let state_account = &ctx.accounts.state;
         let user_token_account = &ctx.accounts.user_token_account;
         let pool_vault_account = &ctx.accounts.pool_vault;
         let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
-        let trade_token_loader = &ctx.accounts.trade_token;
-        let index_trade_token_loader = &ctx.accounts.index_trade_token;
         let trade_token_vault_account = &ctx.accounts.trade_token_vault;
         let bump_signer_account_info = &ctx.accounts.bump_signer;
         let token_program = &ctx.accounts.token_program;
 
         return handle_execute_order(
-            user_account_loader,
-            pool_account_loader,
-            stable_pool_account_loader,
-            market_account_loader,
+            user.deref_mut(),
+            market.deref_mut(),
+            trade_token.deref_mut(),
+            index_trade_token,
+            pool.deref_mut(),
+            stable_pool,
             state_account,
             user_token_account,
             pool_vault_account,
             stable_pool_vault_account,
-            trade_token_loader,
-            index_trade_token_loader,
             trade_token_vault_account,
             bump_signer_account_info,
             token_program,
@@ -274,16 +280,16 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
 }
 
 pub fn handle_execute_order<'info>(
-    user_account_loader: &AccountLoader<'info, User>,
-    pool_account_loader: &AccountLoader<'info, Pool>,
-    stable_pool_account_loader: &AccountLoader<'info, Pool>,
-    market_account_loader: &AccountLoader<'info, Market>,
+    user: &mut User,
+    market: &mut Market,
+    trade_token: &mut TradeToken,
+    index_trade_token: Option<Ref<TradeToken>>,
+    base_token_pool: &mut Pool,
+    mut stable_pool: Option<RefMut<Pool>>,
     state_account: &Account<'info, State>,
     user_token_account: &Account<'info, TokenAccount>,
     pool_vault_account: &Account<'info, TokenAccount>,
     stable_pool_vault_account: &Account<'info, TokenAccount>,
-    trade_token_loader: &AccountLoader<'info, TradeToken>,
-    index_trade_token_loader: &AccountLoader<'info, TradeToken>,
     trade_token_vault_account: &Account<'info, TokenAccount>,
     bump_signer: &AccountInfo<'info>,
     token_program: &Program<'info, Token>,
@@ -294,32 +300,29 @@ pub fn handle_execute_order<'info>(
     order_id: u64,
     execute_from_remote: bool,
 ) -> Result<()> {
-    let mut user = user_account_loader.load_mut()?;
-
-    let mut market = market_account_loader.load_mut()?;
-    let mut trade_token = trade_token_loader.load_mut()?;
-    let index_trade_token = index_trade_token_loader.load()?;
-    let mut base_token_pool =
-        pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
-    let mut stable_pool =
-        stable_pool_account_loader.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
-
-    let order = if execute_from_remote {
+    let cloned_order = if execute_from_remote {
         let user_order_index = user.get_user_order_index(order_id)?;
-        &user.orders[user_order_index]
+        user.orders[user_order_index].clone()
     } else {
-        user_order
+        user_order.clone()
     };
 
     let user_key = user.key;
 
     //validate order
-    validate_execute_order(order, &market)?;
-    let is_long = OrderSide::LONG == order.order_side;
-    let execute_price = get_execution_price(
-        oracle_map.get_price_data(&index_trade_token.oracle_key).unwrap().price,
-        order,
-    )?;
+    validate_execute_order(&cloned_order, &market)?;
+    let is_long = OrderSide::LONG == cloned_order.order_side;
+    let execute_price = if let Some(ref index_trade_token) = &index_trade_token {
+        get_execution_price(
+            oracle_map.get_price_data(&index_trade_token.oracle_key).unwrap().price,
+            &cloned_order,
+        )?
+    } else {
+        get_execution_price(
+            oracle_map.get_price_data(&trade_token.oracle_key).unwrap().price,
+            &cloned_order,
+        )?
+    };
 
     //update funding_fee_rate and borrowing_fee_rate
     market.update_market_funding_fee_rate(
@@ -328,29 +331,32 @@ pub fn handle_execute_order<'info>(
         trade_token.decimals,
     )?;
 
-    if order.order_side.eq(&OrderSide::LONG) {
+    if cloned_order.order_side.eq(&OrderSide::LONG) {
         base_token_pool.update_pool_borrowing_fee_rate()?;
     } else {
-        stable_pool.update_pool_borrowing_fee_rate()?;
+        if let Some(ref mut stable_pool) = &mut stable_pool {
+            stable_pool.update_pool_borrowing_fee_rate()?;
+        } else {
+            base_token_pool.update_pool_borrowing_fee_rate()?;
+        }
     }
     let position_key = pda::generate_position_key(
         &user_key,
         market.symbol,
-        order.is_portfolio_margin,
+        cloned_order.is_portfolio_margin,
         program_id,
     )?;
 
-    //do execute order and change position
-    match order.position_side {
+    // //do execute order and change position
+    match cloned_order.position_side {
         PositionSide::NONE => Err(BumpErrorCode::PositionSideNotSupport),
         PositionSide::INCREASE => {
             {
-                let margin_token = if order.order_side.eq(&OrderSide::LONG) {
+                let margin_token = if cloned_order.order_side.eq(&OrderSide::LONG) {
                     &market.pool_mint_key
                 } else {
                     &market.stable_pool_mint_key
                 };
-                let mut user = user_account_loader.load_mut()?;
                 let margin_token_price = if market.index_mint_key.eq(margin_token) {
                     execute_price
                 } else {
@@ -359,10 +365,10 @@ pub fn handle_execute_order<'info>(
                 //calculate real order_margin with validation
                 let (order_margin, order_margin_from_balance) = execute_increase_order_margin(
                     user_token_account.to_account_info().key,
-                    order,
+                    &cloned_order,
                     margin_token,
                     trade_token.decimals,
-                    &mut user,
+                    user,
                     margin_token_price,
                     oracle_map,
                     trade_token_map,
@@ -370,32 +376,29 @@ pub fn handle_execute_order<'info>(
                 )?;
 
                 //collect open fee
-                let fee = if order.order_side.eq(&OrderSide::LONG) {
+                let fee = if cloned_order.order_side.eq(&OrderSide::LONG) {
                     fee_processor::collect_long_open_position_fee(
                         &market,
-                        &mut base_token_pool,
+                        base_token_pool,
                         order_margin,
-                        order.is_portfolio_margin,
+                        cloned_order.is_portfolio_margin,
                     )?
                 } else {
                     fee_processor::collect_short_open_position_fee(
                         &market,
-                        &mut base_token_pool,
+                        base_token_pool,
                         &mut stable_pool,
                         state_account,
                         order_margin,
-                        order.is_portfolio_margin,
+                        cloned_order.is_portfolio_margin,
                     )?
                 };
 
                 //record fee in user
-                if order.is_portfolio_margin {
-                    let trade_token = &mut trade_token_loader
-                        .load_mut()
-                        .map_err(|_| BumpErrorCode::CouldNotLoadTradeTokenData)?;
-                    user.un_use_token(&order.margin_mint_key, fee)?;
+                if cloned_order.is_portfolio_margin {
+                    user.un_use_token(&cloned_order.margin_mint_key, fee)?;
                     user.sub_token_with_liability(
-                        &order.margin_mint_key,
+                        &cloned_order.margin_mint_key,
                         trade_token,
                         fee,
                         &UserTokenUpdateReason::SettleFee,
@@ -403,13 +406,13 @@ pub fn handle_execute_order<'info>(
                 }
                 //increase position
                 position_processor::increase_position(
-                    &mut user,
-                    &mut base_token_pool,
-                    &mut stable_pool,
-                    &mut market,
+                    user,
+                    base_token_pool,
+                    stable_pool,
+                    market,
                     &trade_token,
                     program_id,
-                    order,
+                    &cloned_order,
                     order_margin,
                     order_margin_from_balance,
                     execute_price,
@@ -424,7 +427,6 @@ pub fn handle_execute_order<'info>(
             {
                 let position_side = { position!(&user.positions, &position_key)?.is_long };
                 //decrease
-                let mut user = user_account_loader.load_mut()?;
                 let position = user.get_user_position_ref(&position_key)?;
                 if position.position_size == 0u128 || position.status.eq(&PositionStatus::INIT) {
                     return Err(BumpErrorCode::InvalidParam.into());
@@ -438,18 +440,18 @@ pub fn handle_execute_order<'info>(
                         order_id,
                         is_liquidation: false,
                         is_portfolio_margin: false,
-                        margin_token: order.margin_mint_key,
-                        decrease_size: order.order_size,
+                        margin_token: cloned_order.margin_mint_key,
+                        decrease_size: cloned_order.order_size,
                         execute_price,
                     },
-                    user.deref_mut(),
-                    market.deref_mut(),
-                    base_token_pool.deref_mut(),
-                    stable_pool.deref_mut(),
+                    user,
+                    market,
+                    base_token_pool,
+                    &mut stable_pool,
                     state_account,
                     Some(user_token_account),
                     if position_side { pool_vault_account } else { stable_pool_vault_account },
-                    trade_token.deref_mut(),
+                    trade_token,
                     trade_token_vault_account,
                     bump_signer,
                     token_program,

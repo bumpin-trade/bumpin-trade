@@ -1,3 +1,5 @@
+use std::cell::RefMut;
+
 use anchor_lang::prelude::*;
 use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
 use anchor_lang::{emit, ToAccountInfo};
@@ -85,7 +87,7 @@ pub fn decrease_position<'info>(
     user: &mut User,
     market: &mut Market,
     stake_token_pool: &mut Pool,
-    stable_pool: &mut Pool,
+    stable_pool: &mut Option<RefMut<Pool>>,
     state_account: &Account<'info, State>,
     user_token_account: Option<&Account<'info, TokenAccount>>,
     pool_vault_account: &Account<'info, TokenAccount>,
@@ -103,14 +105,30 @@ pub fn decrease_position<'info>(
         let margin_mint_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
         update_borrowing_fee(
             position,
-            if position.is_long { stake_token_pool } else { stable_pool },
+            if position.is_long {
+                stake_token_pool
+            } else {
+                if let Some(ref mut stable_pool) = stable_pool {
+                    stable_pool
+                } else {
+                    stake_token_pool
+                }
+            },
             params.execute_price,
             trade_token,
         )?;
         update_funding_fee(
             position,
             market,
-            if position.is_long { stake_token_pool } else { stable_pool },
+            if position.is_long {
+                stake_token_pool
+            } else {
+                if let Some(ref mut stable_pool) = stable_pool {
+                    stable_pool
+                } else {
+                    stake_token_pool
+                }
+            },
             params.execute_price,
             trade_token,
         )?;
@@ -191,7 +209,15 @@ pub fn decrease_position<'info>(
             state_account,
             trade_token,
             &response,
-            if pre_position.is_long { stake_token_pool } else { stable_pool },
+            if pre_position.is_long {
+                stake_token_pool
+            } else {
+                if let Some(ref mut stable_pool) = stable_pool {
+                    stable_pool
+                } else {
+                    stake_token_pool
+                }
+            },
             &pre_position,
         )?;
     }
@@ -201,7 +227,7 @@ pub fn decrease_position<'info>(
 
 fn collect_decrease_fee(
     base_token_pool: &mut Pool,
-    stable_pool: &mut Pool,
+    stable_pool: &mut Option<RefMut<Pool>>,
     market: &mut Market,
     state_account: &Account<State>,
     is_portfolio_margin: bool,
@@ -215,7 +241,15 @@ fn collect_decrease_fee(
 ) -> BumpResult {
     if is_long {
         fee_processor::collect_long_close_position_fee(
-            if is_long { base_token_pool } else { stable_pool },
+            if is_long {
+                base_token_pool
+            } else {
+                if let Some(ref mut stable_pool) = stable_pool {
+                    stable_pool
+                } else {
+                    base_token_pool
+                }
+            },
             settle_close_fee,
             is_portfolio_margin,
         )?;
@@ -229,17 +263,30 @@ fn collect_decrease_fee(
         )?;
     }
     fee_processor::collect_borrowing_fee(
-        if is_long { base_token_pool } else { stable_pool },
+        if is_long {
+            base_token_pool
+        } else {
+            if let Some(ref mut stable_pool) = stable_pool {
+                stable_pool
+            } else {
+                base_token_pool
+            }
+        },
         settle_borrowing_fee,
         is_portfolio_margin,
     )?;
 
-    if is_long { base_token_pool } else { stable_pool }.borrowing_fee.update_total_borrowing_fee(
-        settle_borrowing_fee,
-        true,
-        settle_borrowing_fee,
-        false,
-    )?;
+    if is_long {
+        base_token_pool
+    } else {
+        if let Some(ref mut stable_pool) = stable_pool {
+            stable_pool
+        } else {
+            base_token_pool
+        }
+    }
+    .borrowing_fee
+    .update_total_borrowing_fee(settle_borrowing_fee, true, settle_borrowing_fee, false)?;
     market.update_market_total_funding_fee(settle_funding_fee, is_long)?;
     market.update_oi(
         false,
@@ -275,7 +322,7 @@ fn settle<'info>(
     response: &UpdateDecreaseResponse,
     user: &mut User,
     base_token_pool: &mut Pool,
-    stable_pool: &mut Pool,
+    stable_pool: &mut Option<RefMut<Pool>>,
     state_account: &Account<'info, State>,
     user_token_account: Option<&Account<'info, TokenAccount>>,
     pool_vault_account: &Account<'info, TokenAccount>,
@@ -327,12 +374,16 @@ fn settle<'info>(
             None,
         )?;
     } else {
-        stable_pool.update_pnl_and_un_hold_pool_amount(
-            response.un_hold_pool_amount,
-            response.pool_pnl_token,
-            add_liability,
-            Some(base_token_pool),
-        )?;
+        if let Some(stable_pool) = stable_pool {
+            stable_pool.update_pnl_and_un_hold_pool_amount(
+                response.un_hold_pool_amount,
+                response.pool_pnl_token,
+                add_liability,
+                Some(base_token_pool),
+            )?;
+        } else {
+            return Err(BumpErrorCode::InvalidParam);
+        }
     }
     Ok(())
 }
@@ -792,7 +843,7 @@ pub fn execute_add_position_margin(
 pub fn increase_position(
     user: &mut User,
     base_token_pool: &mut Pool,
-    stable_pool: &mut Pool,
+    mut stable_pool: Option<RefMut<Pool>>,
     market: &mut Market,
     trade_token: &TradeToken,
     program_id: &Pubkey,
@@ -819,7 +870,15 @@ pub fn increase_position(
     if position.leverage != order.leverage {
         return Err(BumpErrorCode::LeverageIsNotAllowed.into());
     }
-    let pool = if position.is_long { base_token_pool } else { stable_pool };
+    let pool = if position.is_long {
+        base_token_pool
+    } else {
+        if let Some(pool) = stable_pool.as_mut() {
+            pool
+        } else {
+            base_token_pool
+        }
+    };
 
     let increase_margin = cal_utils::sub_u128(order_margin, fee)?;
     let increase_margin_from_balance = if order_margin_from_balance > fee {

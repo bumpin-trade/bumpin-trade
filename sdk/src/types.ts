@@ -29,7 +29,6 @@ export type State = {
     poolRewardsIntervalLimit: BN;
     initFee: BN;
     tradingFeeUsdPoolRewardsRatio: number;
-    stakingFeeRewardRatio: number;
     poolFeeRewardRatio: number;
 }
 
@@ -107,6 +106,7 @@ export type PoolConfig = {
     stakeFeeRate: number;
     unStakeFeeRate: number;
     unSettleMintRatioLimit: number;
+    padding: number[];
 }
 
 export class PoolStatus {
@@ -280,7 +280,6 @@ export type StopTypeValue =
     | typeof StopType.TakeProfit;
 
 
-
 export type UserOrder = {
     orderMargin: BN;
     orderSize: BN;
@@ -370,6 +369,7 @@ export type InnerPlaceOrderParams = {
     marketIndex: number;
     tradeTokenIndex: number;
     indexTradeTokenIndex: number;
+    orderId: BN,
 }
 
 export type PoolSummary = {

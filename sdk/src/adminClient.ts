@@ -4,7 +4,7 @@ import {AnchorProvider, BN, Program, Wallet} from "@coral-xyz/anchor";
 import idlBumpinTrade from "./idl/bumpin_trade.json"
 import idlPyth from "./idl/pyth.json"
 import {BumpinTrade} from "./types/bumpin_trade";
-import {Market, Pool, State, TradeToken} from "./types";
+import {Market, Pool, PoolConfig, State, TradeToken} from "./types";
 import {BumpinAdminConfig} from "./bumpinAdminConfig";
 import {BumpinUtils} from "./utils/utils";
 import {Pyth} from "./types/pyth";
@@ -42,10 +42,10 @@ export class BumpinAdmin {
         }).signers([]).rpc();
     }
 
-    public async initPool(poolName: string, poolMint: anchor.web3.PublicKey) {
+    public async initPool(poolName: string, poolMint: anchor.web3.PublicKey, stable: boolean, config: PoolConfig) {
         const [pda, _] = BumpinUtils.getBumpinStatePda(this.program);
         await this.program.methods.initializePool(
-            BumpinUtils.string2Padded32Bytes(poolName),
+            BumpinUtils.string2Padded32Bytes(poolName), stable, config
         ).accounts({
             poolMint,
             bumpSigner: pda,

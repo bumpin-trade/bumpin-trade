@@ -25,8 +25,13 @@ declare_id!("EocqPSYv49uCVMEze1sPZJ6vVEpTRmJjD8sHY6EKEPa3");
 
 #[program]
 pub mod bumpin_trade {
+    use std::cell::RefMut;
+    use std::ops::DerefMut;
+
+    use crate::state::infrastructure::user_order::OrderSide;
+    use crate::state::pool::{Pool, PoolConfig};
+
     use super::*;
-    use crate::state::pool::PoolConfig;
 
     pub fn initialize1<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, Initialize1>,
@@ -148,18 +153,28 @@ pub mod bumpin_trade {
 
     pub fn execute_order<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
-        order_id: u64,
+        order: PlaceOrderParams,
     ) -> Result<()> {
-        let user_account_loader = &ctx.accounts.user;
-        let pool_account_loader = &ctx.accounts.pool;
-        let stable_pool_account_loader = &ctx.accounts.stable_pool;
-        let market_account_loader = &ctx.accounts.market;
+        let same_pool = order.pool_index == order.stable_pool_index;
+        let same_trade_token = order.trade_token_index == order.index_trade_token_index;
+        let mut market = ctx.accounts.market.load_mut()?;
+        let mut user = ctx.accounts.user.load_mut()?;
+        let mut pool = ctx.accounts.pool.load_mut()?;
+        let stable_pool: Option<RefMut<Pool>> =
+            if same_pool { None } else { Some(ctx.accounts.stable_pool.load_mut()?) };
+        let _margin_token = if order.order_side.eq(&OrderSide::LONG) {
+            &market.pool_mint_key
+        } else {
+            &market.stable_pool_mint_key
+        };
+        let mut trade_token = ctx.accounts.trade_token.load_mut()?;
+        let index_trade_token =
+            if same_trade_token { None } else { Some(ctx.accounts.index_trade_token.load()?) };
+
         let state_account = &ctx.accounts.state;
         let user_token_account = &ctx.accounts.user_token_account;
         let pool_vault_account = &ctx.accounts.pool_vault;
         let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
-        let trade_token_loader = &ctx.accounts.trade_token;
-        let index_trade_token_loader = &ctx.accounts.index_trade_token;
         let trade_token_vault_account = &ctx.accounts.trade_token_vault;
         let bump_signer_account_info = &ctx.accounts.bump_signer;
         let token_program = &ctx.accounts.token_program;
@@ -167,16 +182,16 @@ pub mod bumpin_trade {
         let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts)?;
 
         handle_execute_order(
-            user_account_loader,
-            pool_account_loader,
-            stable_pool_account_loader,
-            market_account_loader,
+            user.deref_mut(),
+            market.deref_mut(),
+            trade_token.deref_mut(),
+            index_trade_token,
+            pool.deref_mut(),
+            stable_pool,
             state_account,
             user_token_account,
             pool_vault_account,
             stable_pool_vault_account,
-            trade_token_loader,
-            index_trade_token_loader,
             trade_token_vault_account,
             bump_signer_account_info,
             token_program,
@@ -184,7 +199,7 @@ pub mod bumpin_trade {
             &trade_token_map,
             &mut oracle_map,
             &UserOrder::default(),
-            order_id,
+            order.order_id,
             true,
         )
     }

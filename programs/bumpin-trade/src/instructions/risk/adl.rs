@@ -1,6 +1,8 @@
+use std::cell::RefMut;
+use std::ops::DerefMut;
+
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
-use std::ops::DerefMut;
 
 use crate::errors::BumpErrorCode;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
@@ -16,7 +18,7 @@ use crate::validate;
 
 #[derive(Accounts)]
 #[instruction(
-    _pool_index: u16, _stable_pool_index: u16, _market_index: u16, _trade_token_index: u16
+    pool_index: u16, stable_pool_index: u16, _market_index: u16, _trade_token_index: u16
 )]
 pub struct ADL<'info> {
     #[account(
@@ -34,7 +36,7 @@ pub struct ADL<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool".as_ref(), pool_index.to_le_bytes().as_ref()],
         bump,
         constraint = pool.load() ?.key.eq(& market.load() ?.pool_key),
     )]
@@ -42,7 +44,7 @@ pub struct ADL<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool".as_ref(), _stable_pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool".as_ref(), stable_pool_index.to_le_bytes().as_ref()],
         bump,
         constraint = stable_pool.load() ?.key.eq(& market.load() ?.stable_pool_key),
     )]
@@ -50,7 +52,7 @@ pub struct ADL<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), pool_index.to_le_bytes().as_ref()],
         bump,
         token::mint = pool.load() ?.mint_key,
         token::authority = state.bump_signer
@@ -59,7 +61,7 @@ pub struct ADL<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool_vault".as_ref(), _stable_pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), stable_pool_index.to_le_bytes().as_ref()],
         bump,
         token::mint = stable_pool.load() ?.mint_key,
         token::authority = state.bump_signer
@@ -92,14 +94,19 @@ pub struct ADL<'info> {
 
 pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, ADL<'info>>,
-    _pool_index: u16,
-    _stable_pool_index: u16,
+    pool_index: u16,
+    stable_pool_index: u16,
     _market_index: u16,
     _trade_token_index: u16,
     params: [ADLParams; 10],
 ) -> Result<()> {
-    let pool_account_loader = &ctx.accounts.pool;
-    let stable_pool_account_loader = &ctx.accounts.stable_pool;
+    let same_pool = pool_index == stable_pool_index;
+    let mut pool = ctx.accounts.pool.load_mut()?;
+    let mut stable_pool: Option<RefMut<Pool>> =
+        if same_pool { None } else { Some(ctx.accounts.stable_pool.load_mut()?) };
+
+    // let pool_account_loader = &ctx.accounts.pool;
+    // let stable_pool_account_loader = &ctx.accounts.stable_pool;
     let market_account_loader = &ctx.accounts.market;
     let state_account = &ctx.accounts.state;
     let pool_vault_account = &ctx.accounts.pool_vault;
@@ -152,8 +159,8 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
             },
             &mut user_account,
             market_account_loader.load_mut()?.deref_mut(),
-            pool_account_loader.load_mut()?.deref_mut(),
-            stable_pool_account_loader.load_mut()?.deref_mut(),
+            pool.deref_mut(),
+            &mut stable_pool,
             state_account,
             Some(user_token_account),
             if is_long { pool_vault_account } else { stable_pool_vault_account },

@@ -206,7 +206,6 @@ export type BumpinTrade = {
       "accounts": [
         {
           "name": "state",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -486,8 +485,90 @@ export type BumpinTrade = {
           "signer": true
         },
         {
-          "name": "state",
+          "name": "pool",
           "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "poolVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "poolRewardsVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  115,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "state",
           "pda": {
             "seeds": [
               {
@@ -507,9 +588,21 @@ export type BumpinTrade = {
               }
             ]
           }
+        },
+        {
+          "name": "bumpSigner"
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "poolIndex",
+          "type": "u16"
+        }
+      ]
     },
     {
       "name": "cancelOrder",
@@ -657,7 +750,6 @@ export type BumpinTrade = {
       "accounts": [
         {
           "name": "state",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -704,6 +796,93 @@ export type BumpinTrade = {
           "signer": true
         },
         {
+          "name": "userTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "poolVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "poolRewardsVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  115,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
           "name": "bumpSigner"
         },
         {
@@ -711,7 +890,12 @@ export type BumpinTrade = {
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "poolIndex",
+          "type": "u16"
+        }
+      ]
     },
     {
       "name": "deposit",
@@ -1014,6 +1198,7 @@ export type BumpinTrade = {
         },
         {
           "name": "tradeToken",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1114,8 +1299,12 @@ export type BumpinTrade = {
       ],
       "args": [
         {
-          "name": "orderId",
-          "type": "u64"
+          "name": "order",
+          "type": {
+            "defined": {
+              "name": "placeOrderParams"
+            }
+          }
         }
       ]
     },
@@ -1484,6 +1673,18 @@ export type BumpinTrade = {
               "u8",
               32
             ]
+          }
+        },
+        {
+          "name": "stable",
+          "type": "bool"
+        },
+        {
+          "name": "poolConfig",
+          "type": {
+            "defined": {
+              "name": "poolConfig"
+            }
           }
         }
       ]
@@ -2223,6 +2424,7 @@ export type BumpinTrade = {
         },
         {
           "name": "tradeToken",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -2347,7 +2549,6 @@ export type BumpinTrade = {
       "accounts": [
         {
           "name": "state",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -2513,7 +2714,6 @@ export type BumpinTrade = {
       "accounts": [
         {
           "name": "state",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -2763,7 +2963,6 @@ export type BumpinTrade = {
         },
         {
           "name": "state",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -2965,7 +3164,6 @@ export type BumpinTrade = {
       "accounts": [
         {
           "name": "state",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -3098,7 +3296,6 @@ export type BumpinTrade = {
       "accounts": [
         {
           "name": "state",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -3872,6 +4069,11 @@ export type BumpinTrade = {
       "code": 6050,
       "name": "timestampNotFound",
       "msg": "timestampNotFound"
+    },
+    {
+      "code": 6051,
+      "name": "claimUnqualified",
+      "msg": "claimUnqualified"
     }
   ],
   "types": [
@@ -4579,6 +4781,10 @@ export type BumpinTrade = {
                 "name": "stopType"
               }
             }
+          },
+          {
+            "name": "orderId",
+            "type": "u64"
           }
         ]
       }
@@ -5079,10 +5285,6 @@ export type BumpinTrade = {
           },
           {
             "name": "tradingFeeUsdPoolRewardsRatio",
-            "type": "u32"
-          },
-          {
-            "name": "stakingFeeRewardRatio",
             "type": "u32"
           },
           {

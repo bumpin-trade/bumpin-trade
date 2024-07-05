@@ -200,7 +200,6 @@
       "accounts": [
         {
           "name": "state",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -260,7 +259,7 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "pool_index"
               }
             ]
           }
@@ -281,7 +280,7 @@
               },
               {
                 "kind": "arg",
-                "path": "_stable_pool_index"
+                "path": "stable_pool_index"
               }
             ]
           }
@@ -308,7 +307,7 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "pool_index"
               }
             ]
           }
@@ -335,7 +334,7 @@
               },
               {
                 "kind": "arg",
-                "path": "_stable_pool_index"
+                "path": "stable_pool_index"
               }
             ]
           }
@@ -480,8 +479,90 @@
           "signer": true
         },
         {
-          "name": "state",
+          "name": "pool",
           "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool_rewards_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  115,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "state",
           "pda": {
             "seeds": [
               {
@@ -501,9 +582,21 @@
               }
             ]
           }
+        },
+        {
+          "name": "bump_signer"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "pool_index",
+          "type": "u16"
+        }
+      ]
     },
     {
       "name": "cancel_order",
@@ -651,7 +744,6 @@
       "accounts": [
         {
           "name": "state",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -698,6 +790,93 @@
           "signer": true
         },
         {
+          "name": "user_token_account",
+          "writable": true
+        },
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool_rewards_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  115,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
+        },
+        {
           "name": "bump_signer"
         },
         {
@@ -705,7 +884,12 @@
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "pool_index",
+          "type": "u16"
+        }
+      ]
     },
     {
       "name": "deposit",
@@ -1008,6 +1192,7 @@
         },
         {
           "name": "trade_token",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1108,8 +1293,12 @@
       ],
       "args": [
         {
-          "name": "order_id",
-          "type": "u64"
+          "name": "order",
+          "type": {
+            "defined": {
+              "name": "PlaceOrderParams"
+            }
+          }
         }
       ]
     },
@@ -1478,6 +1667,18 @@
               "u8",
               32
             ]
+          }
+        },
+        {
+          "name": "stable",
+          "type": "bool"
+        },
+        {
+          "name": "pool_config",
+          "type": {
+            "defined": {
+              "name": "PoolConfig"
+            }
           }
         }
       ]
@@ -1853,7 +2054,7 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "pool_index"
               }
             ]
           }
@@ -1874,7 +2075,7 @@
               },
               {
                 "kind": "arg",
-                "path": "_stable_pool_index"
+                "path": "stable_pool_index"
               }
             ]
           }
@@ -1901,7 +2102,7 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "pool_index"
               }
             ]
           }
@@ -1928,7 +2129,7 @@
               },
               {
                 "kind": "arg",
-                "path": "_stable_pool_index"
+                "path": "stable_pool_index"
               }
             ]
           }
@@ -2217,6 +2418,7 @@
         },
         {
           "name": "trade_token",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -2341,7 +2543,6 @@
       "accounts": [
         {
           "name": "state",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -2507,7 +2708,6 @@
       "accounts": [
         {
           "name": "state",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -2757,7 +2957,6 @@
         },
         {
           "name": "state",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -2959,7 +3158,6 @@
       "accounts": [
         {
           "name": "state",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -3092,7 +3290,6 @@
       "accounts": [
         {
           "name": "state",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -3866,6 +4063,11 @@
       "code": 6050,
       "name": "TimestampNotFound",
       "msg": "TimestampNotFound"
+    },
+    {
+      "code": 6051,
+      "name": "ClaimUnqualified",
+      "msg": "ClaimUnqualified"
     }
   ],
   "types": [
@@ -4573,6 +4775,10 @@
                 "name": "StopType"
               }
             }
+          },
+          {
+            "name": "order_id",
+            "type": "u64"
           }
         ]
       }
@@ -5073,10 +5279,6 @@
           },
           {
             "name": "trading_fee_usd_pool_rewards_ratio",
-            "type": "u32"
-          },
-          {
-            "name": "staking_fee_reward_ratio",
             "type": "u32"
           },
           {

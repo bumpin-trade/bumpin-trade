@@ -186,6 +186,7 @@ export class UserComponent extends Component {
             stablePoolIndex: stablePool.index,
             tradeTokenIndex: tradeToken.index,
             indexTradeTokenIndex: indexTradeToken.index,
+            orderId: new BN(0)
         };
 
         let tradeTokenPrice = await BumpinTokenUtils.getTradeTokenPrice(this.oracleClient, tradeToken);
@@ -260,19 +261,19 @@ export class UserComponent extends Component {
             if (isEqual(token.userTokenStatus, UserTokenStatus.USING)) {
                 remainingAccounts.push({
                     pubkey: token.tokenMintKey,
-                    isWritable: false,
+                    isWritable: true,
                     isSigner: false,
                 });
                 let target = BumpinTokenUtils.getTradeTokenByMintPublicKey(token.tokenMintKey, allTradeTokens);
                 remainingAccounts.push({
                     pubkey: target.oracleKey,
-                    isWritable: false,
+                    isWritable: true,
                     isSigner: false,
                 });
                 let pda = BumpinUtils.getTradeTokenPda(this.program, target.index)[0];
                 remainingAccounts.push({
                     pubkey: pda,
-                    isWritable: false,
+                    isWritable: true,
                     isSigner: false,
                 });
             }
