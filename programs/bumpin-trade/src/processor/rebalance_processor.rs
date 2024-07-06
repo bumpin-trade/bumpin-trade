@@ -1,5 +1,5 @@
-use anchor_lang::prelude::*;
 use anchor_lang::prelude::Program;
+use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::errors::{BumpErrorCode, BumpResult};
@@ -33,7 +33,7 @@ pub fn rebalance_pool_unsettle<'a>(
         state.bump_signer_nonce,
         fee_reward_unsettle,
     )
-        .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
+    .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
     pool.fee_reward.sub_un_settle_amount(fee_reward_unsettle)?;
     //balance pool unsettle
     if pool.balance.un_settle_amount >= trade_token.total_liability {
@@ -47,7 +47,7 @@ pub fn rebalance_pool_unsettle<'a>(
             state.bump_signer_nonce,
             transfer_amount,
         )
-            .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
+        .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
         pool.sub_unsettle(transfer_amount)?;
         trade_token.total_liability = 0u128;
     } else {
@@ -61,7 +61,7 @@ pub fn rebalance_pool_unsettle<'a>(
             state.bump_signer_nonce,
             transfer_amount,
         )
-            .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
+        .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
         pool.balance.un_settle_amount = 0u128;
         trade_token.sub_liability(transfer_amount)?;
     }
@@ -121,7 +121,7 @@ pub fn rebalance_rewards<'a>(
         state.bump_signer_nonce,
         fee_reward_unsettle,
     )
-        .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
+    .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
     pool.fee_reward.sub_un_settle_amount(fee_reward_unsettle)
 }
 
@@ -135,8 +135,30 @@ pub fn auto_rebalance<'a>(
     bump_signer: &AccountInfo<'a>,
     token_program: &Program<'a, Token>,
 ) -> BumpResult {
-    rebalance_pool_unsettle(state, pool_account_loader, trade_token_account_loader, pool_vault, trade_token_vault, bump_signer, token_program)?;
-    rebalance_rewards(state, pool_account_loader, pool_vault, trade_token_vault, bump_signer, token_program)?;
-    rebalance_stable_pool(state, pool_account_loader, pool_vault, stable_pool_vault, bump_signer, token_program)?;
+    rebalance_pool_unsettle(
+        state,
+        pool_account_loader,
+        trade_token_account_loader,
+        pool_vault,
+        trade_token_vault,
+        bump_signer,
+        token_program,
+    )?;
+    rebalance_rewards(
+        state,
+        pool_account_loader,
+        pool_vault,
+        trade_token_vault,
+        bump_signer,
+        token_program,
+    )?;
+    rebalance_stable_pool(
+        state,
+        pool_account_loader,
+        pool_vault,
+        stable_pool_vault,
+        bump_signer,
+        token_program,
+    )?;
     Ok(())
 }

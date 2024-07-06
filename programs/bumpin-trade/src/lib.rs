@@ -242,14 +242,6 @@ pub mod bumpin_trade {
         )
     }
 
-    pub fn update_user_status(
-        ctx: Context<UpdateUserStatus>,
-        user_status: UserStatus,
-        user_authority_key: Pubkey,
-    ) -> Result<()> {
-        handle_update_user_status(ctx, user_status, user_authority_key)
-    }
-
     /*-----adl------*/
     pub fn adl<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ADL<'info>>,
@@ -260,6 +252,14 @@ pub mod bumpin_trade {
         params: [ADLParams; 10],
     ) -> Result<()> {
         handle_adl(ctx, pool_index, stable_pool_index, market_index, trade_token_index, params)
+    }
+
+    pub fn update_user_status(
+        ctx: Context<UpdateUserStatus>,
+        user_status: UserStatus,
+        user_authority_key: Pubkey,
+    ) -> Result<()> {
+        handle_update_user_status(ctx, user_status, user_authority_key)
     }
 
     /*-----reward------*/
