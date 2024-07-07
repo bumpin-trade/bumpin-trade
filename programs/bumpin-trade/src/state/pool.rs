@@ -286,7 +286,7 @@ impl Pool {
         market_vec: &MarketMap,
     ) -> BumpResult<u128> {
         let pool_value = self.get_pool_usd_value(trade_token_map, oracle_map, market_vec)?;
-        cal_utils::div_to_precision_u(pool_value, self.total_supply, PRICE_PRECISION)?;
+        cal_utils::div_to_precision_u(pool_value, self.total_supply, PRICE_PRECISION)
     }
 
     pub fn update_pnl_and_un_hold_pool_amount(
@@ -320,7 +320,7 @@ impl Pool {
                         u_token_pnl
                     })?;
                 }
-            }
+            },
             Some(base_token_pool) => {
                 if token_pnl < 0i128 {
                     if self.stable {
@@ -344,7 +344,7 @@ impl Pool {
                         u_token_pnl
                     })?;
                 }
-            }
+            },
         })
     }
 }

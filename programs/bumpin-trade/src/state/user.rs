@@ -42,7 +42,7 @@ pub struct User {
     pub authority: Pubkey,
     pub user_status: UserStatus,
     pub padding: [u8; 15],
-    pub reserve_padding: [u8; 496],
+    pub reserve_padding: [u8; 288],
 }
 
 impl Default for User {
@@ -59,7 +59,7 @@ impl Default for User {
             authority: Pubkey::default(),
             user_status: UserStatus::NORMAL,
             padding: [0u8; 15],
-            reserve_padding: [0u8; 496],
+            reserve_padding: [0u8; 288],
         }
     }
 }

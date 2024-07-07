@@ -1,6 +1,7 @@
 import {PublicKey} from "@solana/web3.js";
 // import BN from "bn.js";
 import {BN} from "@coral-xyz/anchor";
+import {OraclePriceData} from "./oracles/types";
 
 
 export class OracleSource {
@@ -390,14 +391,28 @@ export type InnerPlaceOrderParams = {
     orderId: BN,
 }
 
-export type PoolSummary = {
-    pool: Pool;
-    markets: Market[];
+export type MarketWithIndexTradeTokenPrices = {
+    longOpenInterest: MarketPosition;
+    shortOpenInterest: MarketPosition;
+    fundingFee: MarketFundingFee;
+    config: MarketConfig;
+    poolKey: PublicKey;
+    poolMintKey: PublicKey;
+    indexMintKey: PublicKey;
+    stablePoolKey: PublicKey;
+    stablePoolMintKey: PublicKey;
+    index: number;
+    symbol: number[];
+    indexTradeTokenPrices: OraclePriceData[];
 }
 
-export type EarnSummary = {
-    poolSummaries: PoolSummary[];
+
+export type PoolSummary = {
+    pool: Pool;
+    markets: MarketWithIndexTradeTokenPrices[];
 }
+
+
 export  type UserClaimResult = {
     total: BN;
     claimed: BN;

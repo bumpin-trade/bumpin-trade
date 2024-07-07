@@ -7,15 +7,16 @@ import {BumpinClientConfig, NetType} from "./bumpinClientConfig";
 import {BumpinUtils} from "./utils/utils";
 import {BumpinTrade} from "./types/bumpin_trade";
 import {
-    EarnSummary,
     Market,
+    MarketWithIndexTradeTokenPrices,
     PlaceOrderParams,
     Pool,
     PoolSummary,
     State,
     TradeToken,
     UserAccount,
-    UserClaimResult, UserStakeStatus
+    UserClaimResult,
+    UserStakeStatus
 } from "./types";
 import {
     BumpinAccountNotFound,
@@ -147,15 +148,16 @@ export class BumpinClient {
         }).signers([]).rpc();
     }
 
-    public async getEarnSummary(): Promise<EarnSummary> {
+    public async getPoolSummary(stashedPrice: number = 2, sync: boolean = false): Promise<PoolSummary[]> {
         if (!this.isInitialized) {
             throw new BumpinClientNotInitialized();
         }
 
         let poolSummaries: PoolSummary[] = [];
 
-        let pools = await this.getPools();
-        let markets = await this.getMarkets();
+        let pools = await this.getPools(sync);
+        let markets = await this.getMarkets(sync);
+
         for (let pool of pools) {
             let poolSummary: PoolSummary = {
                 pool: pool,
@@ -163,15 +165,20 @@ export class BumpinClient {
             }
             for (let market of markets) {
                 if (market.poolKey.equals(pool.key) || market.stablePoolKey.equals(pool.key)) {
-                    poolSummary.markets.push(market);
+                    let indexTradeToken = await this.tradeTokenComponent.getTradeTokenByMintKey(market.indexMintKey, sync);
+                    let prices = this.tradeTokenComponent.getTradeTokenPrices(BumpinUtils.getTradeTokenPda(this.program, indexTradeToken.index)[0], stashedPrice);
+
+                    let marketWithPrices: MarketWithIndexTradeTokenPrices = {
+                        ...market,
+                        indexTradeTokenPrices: prices
+                    }
+                    poolSummary.markets.push(marketWithPrices);
                 }
             }
             poolSummaries.push(poolSummary);
         }
 
-        return {
-            poolSummaries: poolSummaries
-        }
+        return poolSummaries
     }
 
     public async stake(fromPortfolio: boolean, amount: BN, mint: PublicKey, sync: boolean = false) {

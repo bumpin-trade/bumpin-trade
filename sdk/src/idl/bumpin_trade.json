@@ -1,5 +1,5 @@
 {
-  "address": "3vxLXJqLqF3JG5TCbYycbKWRBbCJQLxQmBGCkyqEEefL",
+  "address": "EocqPSYv49uCVMEze1sPZJ6vVEpTRmJjD8sHY6EKEPa3",
   "metadata": {
     "name": "bumpin_trade",
     "version": "0.1.0",
@@ -5559,7 +5559,7 @@
             "type": {
               "array": [
                 "u8",
-                496
+                288
               ]
             }
           }
@@ -5858,6 +5858,10 @@
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "total_claim_rewards_amount",
+            "type": "u128"
+          },
           {
             "name": "realised_rewards_token_amount",
             "type": "u128"

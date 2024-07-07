@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/bumpin_trade.json`.
  */
 export type BumpinTrade = {
-  "address": "3vxLXJqLqF3JG5TCbYycbKWRBbCJQLxQmBGCkyqEEefL",
+  "address": "EocqPSYv49uCVMEze1sPZJ6vVEpTRmJjD8sHY6EKEPa3",
   "metadata": {
     "name": "bumpinTrade",
     "version": "0.1.0",
@@ -5565,7 +5565,7 @@ export type BumpinTrade = {
             "type": {
               "array": [
                 "u8",
-                496
+                288
               ]
             }
           }
@@ -5864,6 +5864,10 @@ export type BumpinTrade = {
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "totalClaimRewardsAmount",
+            "type": "u128"
+          },
           {
             "name": "realisedRewardsTokenAmount",
             "type": "u128"

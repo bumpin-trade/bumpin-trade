@@ -75,7 +75,6 @@ pub struct AutoRebalance<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-
 #[derive(Accounts)]
 #[instruction(
     pool_index: u16, stable_pool_index: u16, _trade_token_index: u16

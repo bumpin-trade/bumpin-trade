@@ -10,14 +10,19 @@ import {PollingStateAccountSubscriber} from "../account/pollingStateAccountSubsc
 import {BumpinSubscriptionFailed} from "../errors";
 import {DataAndSlot} from "../account/types";
 import {PollingTradeTokenAccountSubscriber} from "../account/pollingTradeTokenAccountSubscriber";
+import {StashedPythClient} from "../oracles/stashedPythClient";
+import {OraclePriceData} from "../oracles/types";
 
 export class TradeTokenComponent extends Component {
+    bulkAccountLoader: BulkAccountLoader;
     program: Program<BumpinTrade>;
     tradeTokens: Map<PublicKey, PollingTradeTokenAccountSubscriber> = new Map();
+    tradeTokenPyths: Map<PublicKey, StashedPythClient> = new Map();
 
     constructor(bulkAccountLoader: BulkAccountLoader, stateSubscriber: PollingStateAccountSubscriber, program: Program<BumpinTrade>) {
         super(stateSubscriber, program);
         let state = super.getStateSync();
+        this.bulkAccountLoader = bulkAccountLoader;
         this.program = program;
         for (let i = 0; i < state.tradeTokenSequence; i++) {
             const [pda, _] = BumpinUtils.getTradeTokenPda(this.program, i);
@@ -27,8 +32,13 @@ export class TradeTokenComponent extends Component {
     }
 
     public async subscribe() {
-        for (let tradeTokenAccountSubscriber of this.tradeTokens.values()) {
+        this.tradeTokens.entries()
+        for (let [key, tradeTokenAccountSubscriber] of this.tradeTokens.entries()) {
             await tradeTokenAccountSubscriber.subscribe();
+            let tradeToken: TradeToken = tradeTokenAccountSubscriber.getAccountAndSlot().data;
+            let stashedPythClient = new StashedPythClient(tradeToken.oracleKey, 2, this.bulkAccountLoader);
+            await stashedPythClient.initialize();
+            this.tradeTokenPyths.set(key, stashedPythClient);
         }
     }
 
@@ -46,6 +56,25 @@ export class TradeTokenComponent extends Component {
     public async getTradeToken(tradeTokenKey: PublicKey, sync: boolean = false): Promise<TradeToken> {
         let poolWithSlot = await this.getTradeTokenWithSlot(tradeTokenKey, sync);
         return poolWithSlot.data;
+    }
+
+    public async getTradeTokenByMintKey(mintKey: PublicKey, sync: boolean = false): Promise<TradeToken> {
+        let tradeTokens = await this.getTradeTokens(sync);
+        for (let tradeToken of tradeTokens) {
+            if (tradeToken.mintKey.equals(mintKey)) {
+                return tradeToken;
+            }
+        }
+        throw new BumpinSubscriptionFailed(`TradeToken with the mint key ${mintKey} does not exist`);
+    }
+
+    public getTradeTokenPrices(tradeTokenKey: PublicKey, count: number): OraclePriceData[] {
+        let stashedPythClient = this.tradeTokenPyths.get(tradeTokenKey);
+        if (stashedPythClient === undefined) {
+            throw new BumpinSubscriptionFailed(`TradeToken with the key ${tradeTokenKey} does not exist`);
+        }
+        return stashedPythClient.getLastOraclePriceData(count);
+
     }
 
     public async getTradeTokensWithSlot(sync: boolean = false): Promise<DataAndSlot<TradeToken>[]> {
