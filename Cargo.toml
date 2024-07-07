@@ -1,6 +1,8 @@
 [workspace]
-members = [ "bumpin-trade-attribute",
-    "programs/*"
+members = [
+    "bumpin-trade-attribute",
+    "programs/bumpin-trade",
+    "programs/pyth"
 ]
 resolver = "2"
 
