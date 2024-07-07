@@ -38,7 +38,7 @@ BN.prototype.toToken = function (tokenPrice: BN, decimals: number): BN {
     return this.mul(new BN(decimals)).div(tokenPrice.mul(TEN.pow(new BN(10))));
 }
 BN.prototype.divWithDecimals = function (decimals: number): BN {
-    return this.div(TEN.pow(decimals));
+    return this.div(TEN.pow(new BN(decimals)));
 }
 
 BN.prototype.mulRate = function (rate: BN): BN {

@@ -36,6 +36,7 @@ import {MarketComponent} from "./componets/market";
 import {BumpinTokenUtils} from "./utils/token";
 import {BumpinPoolUtils} from "./utils/pool";
 import {BumpinMarketUtils} from "./utils/market";
+import {ZERO} from "./constants/numericConstants";
 
 
 export class BumpinClient {
@@ -283,7 +284,7 @@ export class BumpinClient {
             total: new BN(0)
         }
         for (const stake of user.stakes) {
-            if (stake.userStakeStatus == UserStakeStatus.USING && stake.userRewards.openRewardsPerStakeToken > 0) {
+            if (stake.userStakeStatus == UserStakeStatus.USING && stake.userRewards.openRewardsPerStakeToken.gt(ZERO)) {
                 let pool = await this.getPool(stake.poolKey);
                 let oraclePriceData = await this.pythClient.getOraclePriceData(stake.userRewards.tokenKey);
                 let unRealisedRewards = pool.feeReward.cumulativeRewardsPerStakeToken.sub(stake.userRewards.openRewardsPerStakeToken)
