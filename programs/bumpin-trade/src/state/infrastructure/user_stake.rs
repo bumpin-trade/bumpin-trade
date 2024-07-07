@@ -43,6 +43,7 @@ impl UserStake {
 
 #[bumpin_zero_copy_unsafe]
 pub struct UserRewards {
+    pub total_claim_rewards_amount: u128,
     pub realised_rewards_token_amount: u128,
     pub open_rewards_per_stake_token: u128,
     pub token_key: Pubkey,

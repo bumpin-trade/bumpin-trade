@@ -9,6 +9,7 @@ use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::user::User;
 use crate::{utils, validate};
+use crate::instructions::cal_utils;
 
 #[derive(Accounts)]
 #[instruction(_pool_index: u16,)]
@@ -93,8 +94,9 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
         bump_signer_nonce,
         user_stake.user_rewards.realised_rewards_token_amount,
     )
-    .map_err(|_e| BumpErrorCode::TransferFailed)?;
-
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
+    user_stake.user_rewards.total_claim_rewards_amount = cal_utils::add_u128(user_stake.user_rewards.total_claim_rewards_amount,
+                                                                             user_stake.user_rewards.realised_rewards_token_amount)?;
     user_stake.user_rewards.realised_rewards_token_amount = 0;
     user_stake.user_rewards.open_rewards_per_stake_token =
         pool.fee_reward.cumulative_rewards_per_stake_token;
