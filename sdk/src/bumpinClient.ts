@@ -6,7 +6,17 @@ import idlPyth from "./idl/pyth.json"
 import {BumpinClientConfig, NetType} from "./bumpinClientConfig";
 import {BumpinUtils} from "./utils/utils";
 import {BumpinTrade} from "./types/bumpin_trade";
-import {EarnSummary, Market, PlaceOrderParams, Pool, PoolSummary, State, TradeToken, UserAccount} from "./types";
+import {
+    EarnSummary,
+    Market,
+    PlaceOrderParams,
+    Pool,
+    PoolSummary,
+    State,
+    TradeToken,
+    UserAccount,
+    UserClaimResult, UserStakeStatus
+} from "./types";
 import {
     BumpinAccountNotFound,
     BumpinClientNotInitialized,
@@ -265,5 +275,25 @@ export class BumpinClient {
         return this.marketComponent.getMarketWithSlot(marketKey, sync);
     }
 
+    public async getUserRewards(): Promise<UserClaimResult> {
+        let user = await this.getUser();
+        let claimResult: UserClaimResult = {
+            claimed: new BN(0),
+            unClaim: new BN(0),
+            total: new BN(0)
+        }
+        for (const stake of user.stakes) {
+            if (stake.userStakeStatus == UserStakeStatus.USING && stake.userRewards.openRewardsPerStakeToken > 0) {
+                let pool = await this.getPool(stake.poolKey);
+                let oraclePriceData = await this.pythClient.getOraclePriceData(stake.userRewards.tokenKey);
+                let unRealisedRewards = pool.feeReward.cumulativeRewardsPerStakeToken.sub(stake.userRewards.openRewardsPerStakeToken)
+                    .mulSmallRate(stake.stakedShare).downSmallRate();
 
+                claimResult.total = claimResult.total.add(unRealisedRewards.add(stake.userRewards.total_claim_rewards_amount.downSmallRate()).mul(oraclePriceData.price).downPrice());
+                claimResult.claimed = claimResult.claimed.add(stake.userRewards.total_claim_rewards_amount.downSmallRate().mul(oraclePriceData.price).downPrice());
+                claimResult.unClaim = claimResult.unClaim.add(unRealisedRewards.mul(oraclePriceData.price).downPrice());
+            }
+        }
+        return claimResult
+    }
 }

@@ -160,6 +160,7 @@ export class UserStakeStatus {
 
 
 export type UserRewards = {
+    total_claim_rewards_amount: BN;
     realisedRewardsTokenAmount: BN;
     openRewardsPerStakeToken: BN;
     tokenKey: PublicKey;
@@ -396,4 +397,9 @@ export type PoolSummary = {
 
 export type EarnSummary = {
     poolSummaries: PoolSummary[];
+}
+export  type UserClaimResult = {
+    total: BN;
+    claimed: BN;
+    unClaim: BN
 }
