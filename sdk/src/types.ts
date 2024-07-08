@@ -416,5 +416,10 @@ export type PoolSummary = {
 export  type UserClaimResult = {
     total: BN;
     claimed: BN;
-    unClaim: BN
+    unClaim: BN;
+    rewards: Array<UserClaimRewardsResult>;
+}
+export type UserClaimRewardsResult = {
+    pool: number[];
+    rewardsAmount: BN;
 }

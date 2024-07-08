@@ -15,7 +15,7 @@ import {
     State,
     TradeToken,
     UserAccount,
-    UserClaimResult,
+    UserClaimResult, UserClaimRewardsResult,
     UserStakeStatus
 } from "./types";
 import {
@@ -288,7 +288,8 @@ export class BumpinClient {
         let claimResult: UserClaimResult = {
             claimed: new BN(0),
             unClaim: new BN(0),
-            total: new BN(0)
+            total: new BN(0),
+            rewards: []
         }
         for (const stake of user.stakes) {
             if (stake.userStakeStatus == UserStakeStatus.USING && stake.userRewards.openRewardsPerStakeToken.gt(ZERO)) {
@@ -300,6 +301,11 @@ export class BumpinClient {
                 claimResult.total = claimResult.total.add(unRealisedRewards.add(stake.userRewards.total_claim_rewards_amount.downSmallRate()).mul(oraclePriceData.price).downPrice());
                 claimResult.claimed = claimResult.claimed.add(stake.userRewards.total_claim_rewards_amount.downSmallRate().mul(oraclePriceData.price).downPrice());
                 claimResult.unClaim = claimResult.unClaim.add(unRealisedRewards.mul(oraclePriceData.price).downPrice());
+                let userClaimRewardsResult: UserClaimRewardsResult = {
+                    pool: pool.name,
+                    rewardsAmount: unRealisedRewards.mul(oraclePriceData.price).downPrice()
+                };
+                claimResult.rewards.push(userClaimRewardsResult);
             }
         }
         return claimResult
