@@ -1,11 +1,13 @@
 .anchor
 .DS_Store
 # Ignore everything in the target directory
-/target/*
-
-# Except for .json files in target/deploy directory
-!target/deploy/
-!target/deploy/*.json
+/target/debug
+/target/release
+/target/idl
+/target/sbf-solana-solana
+/target/types
+/target/.rustc_info.json
+target/deploy/*.so
 **/*.rs.bk
 node_modules
 test-ledger

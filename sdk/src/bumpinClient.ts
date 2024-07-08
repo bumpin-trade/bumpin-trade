@@ -159,10 +159,13 @@ export class BumpinClient {
         let markets = await this.getMarkets(sync);
 
         for (let pool of pools) {
+
             let poolSummary: PoolSummary = {
                 pool: pool,
+                categoryTags: [],
                 markets: []
             }
+            let isMixed = false;
             for (let market of markets) {
                 if (market.poolKey.equals(pool.key) || market.stablePoolKey.equals(pool.key)) {
                     let indexTradeToken = await this.tradeTokenComponent.getTradeTokenByMintKey(market.indexMintKey, sync);
@@ -173,7 +176,17 @@ export class BumpinClient {
                         indexTradeTokenPrices: prices
                     }
                     poolSummary.markets.push(marketWithPrices);
+                    if (!market.indexMintKey.equals(market.poolMintKey)) {
+                        isMixed = true;
+                    }
                 }
+            }
+            if (pool.stable) {
+                poolSummary.categoryTags.push("__tr_stable_pool");
+            } else if (isMixed) {
+                poolSummary.categoryTags.push("__tr_mixed_pool");
+            } else {
+                poolSummary.categoryTags.push("__tr_standard_pool");
             }
             poolSummaries.push(poolSummary);
         }
