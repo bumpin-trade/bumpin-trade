@@ -98,7 +98,7 @@ export class BumpinClient {
         await this.stateSubscriber.subscribe();
 
 
-        this.poolComponent = new PoolComponent(this.pythClient, this.bulkAccountLoader, this.stateSubscriber, this.program);
+        this.poolComponent = new PoolComponent(this.bulkAccountLoader, this.stateSubscriber, this.program);
         await this.poolComponent.subscribe();
 
         this.tradeTokenComponent = new TradeTokenComponent(this.bulkAccountLoader, this.stateSubscriber, this.program);

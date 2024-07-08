@@ -1,4 +1,3 @@
-import {OracleClient} from "../oracles/types";
 import {PublicKey} from '@solana/web3.js';
 import {Pool} from "../types";
 import {PollingPoolAccountSubscriber} from "../account/pollingPoolAccountSubscriber";
@@ -13,14 +12,12 @@ import {BumpinSubscriptionFailed} from "../errors";
 import {DataAndSlot} from "../account/types";
 
 export class PoolComponent extends Component {
-    oracleClient: OracleClient
     program: Program<BumpinTrade>;
     pools: Map<PublicKey, PollingPoolAccountSubscriber> = new Map();
 
-    constructor(oracleClient: OracleClient, bulkAccountLoader: BulkAccountLoader, stateSubscriber: PollingStateAccountSubscriber, program: Program<BumpinTrade>) {
+    constructor(bulkAccountLoader: BulkAccountLoader, stateSubscriber: PollingStateAccountSubscriber, program: Program<BumpinTrade>) {
         super(stateSubscriber, program);
         let state = super.getStateSync();
-        this.oracleClient = oracleClient;
         this.program = program;
         for (let i = 0; i < state.poolSequence; i++) {
             const [pda, _] = BumpinUtils.getPoolPda(this.program, i);

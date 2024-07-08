@@ -1,4 +1,4 @@
-import {Connection, PublicKey} from '@solana/web3.js';
+import {AccountInfo, Connection, PublicKey} from '@solana/web3.js';
 import * as anchor from "@coral-xyz/anchor";
 import {AnchorProvider, BN, Program, Wallet} from "@coral-xyz/anchor";
 import idlBumpinTrade from "./idl/bumpin_trade.json"
@@ -8,6 +8,7 @@ import {Market, MarketParams, Pool, PoolConfig, State, TradeToken} from "./types
 import {BumpinAdminConfig} from "./bumpinAdminConfig";
 import {BumpinUtils} from "./utils/utils";
 import {Pyth} from "./types/pyth";
+import {parsePriceData, PriceData} from "@pythnetwork/client";
 
 export class BumpinAdmin {
     connection: Connection;
@@ -24,6 +25,7 @@ export class BumpinAdmin {
     pools: Pool[] = [];
     market: Market[] = [];
 
+
     constructor(config: BumpinAdminConfig) {
         this.connection = new Connection(config.endpoint);
         this.wallet = config.wallet;
@@ -31,6 +33,22 @@ export class BumpinAdmin {
         this.program = new anchor.Program(JSON.parse(JSON.stringify(idlBumpinTrade)), this.provider);
         //TEST ONLY
         this.TEST_PYTH = new anchor.Program(JSON.parse(JSON.stringify(idlPyth)), this.provider);
+    }
+
+
+    public async getOnlinePriceData(priceAccountPublicKey: PublicKey): Promise<PriceData> {
+        let connection = new Connection("https://solana-mainnet.g.alchemy.com/v2/F9RT25tFEPdrMzTGOzst2hOqu4agu8Zw");
+        let buffer: AccountInfo<Buffer> = await connection.getAccountInfo(priceAccountPublicKey);
+        return parsePriceData(buffer.data);
+    }
+
+    public async initializeAll(stateParam: any) {
+        let instructions = [];
+        instructions.push(await this.program.methods.initializeState(
+            stateParam
+        ).accounts({
+            admin: this.wallet.publicKey,
+        }).signers([]).instruction());
     }
 
 

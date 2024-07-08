@@ -4,8 +4,9 @@ import {OraclePriceData} from './types';
 import {BN} from '@coral-xyz/anchor';
 import {PollingPythAccountSubscriber} from "../account/pollingPythAccountSubscriber";
 import {BulkAccountLoader} from "../account/bulkAccountLoader";
-import {PRICE_PRECISION, TEN} from "../constants/numericConstants";
+import {TEN} from "../constants/numericConstants";
 
+export const PRICE_PRECISION = new BN(10).pow(new BN(8));
 export class StashedPythClient {
     private readonly priceDataAccountPublicKey: PublicKey;
     private readonly stashLength: number;
@@ -35,7 +36,6 @@ export class StashedPythClient {
         await this.subscriber.subscribe((data: Buffer) => {
             const priceData = this.getOraclePriceDataFromBuffer(data);
             this.queue.enqueue(priceData);
-            console.log('Received new price data:', priceData, 'queue size:', this.queue.size());
 
         });
     }
