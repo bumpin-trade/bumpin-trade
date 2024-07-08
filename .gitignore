@@ -1,6 +1,11 @@
 .anchor
 .DS_Store
-target
+# Ignore everything in the target directory
+/target/*
+
+# Except for .json files in target/deploy directory
+!target/deploy/
+!target/deploy/*.json
 **/*.rs.bk
 node_modules
 test-ledger
