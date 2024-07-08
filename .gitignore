@@ -1,6 +1,13 @@
 .anchor
 .DS_Store
-target
+# Ignore everything in the target directory
+/target/debug
+/target/release
+/target/idl
+/target/sbf-solana-solana
+/target/types
+/target/.rustc_info.json
+target/deploy/*.so
 **/*.rs.bk
 node_modules
 test-ledger

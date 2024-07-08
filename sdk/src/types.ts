@@ -409,6 +409,7 @@ export type MarketWithIndexTradeTokenPrices = {
 
 export type PoolSummary = {
     pool: Pool;
+    categoryTags: string[];
     markets: MarketWithIndexTradeTokenPrices[];
 }
 
