@@ -171,7 +171,7 @@ export type Pool = {
     config: PoolConfig;
     mintVaultKey: PublicKey;
     key: PublicKey;
-    stableKey: PublicKey;
+    stableMintKey: PublicKey;
     mintKey: PublicKey;
     index: number;
     status: PoolStatus;

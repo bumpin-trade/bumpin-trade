@@ -65,9 +65,10 @@ pub mod bumpin_trade {
         ctx: Context<'a, 'b, 'c, 'info, InitializePool>,
         name: [u8; 32],
         stable: bool,
+        stable_mint_key: Pubkey,
         pool_config: PoolConfig,
     ) -> Result<()> {
-        handle_initialize_pool(ctx, name, stable, pool_config)
+        handle_initialize_pool(ctx, name, stable, stable_mint_key, pool_config)
     }
 
     pub fn initialize_user<'a, 'b, 'c: 'info, 'info>(

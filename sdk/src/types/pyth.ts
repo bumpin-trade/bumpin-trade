@@ -36,7 +36,7 @@ export type Pyth = {
           "type": "i64"
         },
         {
-          "name": "expo",
+          "name": "exponent",
           "type": "i32"
         },
         {

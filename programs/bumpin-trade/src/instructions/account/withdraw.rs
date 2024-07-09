@@ -14,7 +14,12 @@ use crate::{utils, validate};
 #[derive(Accounts)]
 #[instruction(token_index: u16,)]
 pub struct Withdraw<'info> {
+    #[account(
+        seeds = [b"bump_state".as_ref()],
+        bump,
+    )]
     pub state: Account<'info, State>,
+
     #[account(
         mut,
         constraint = can_sign_for_user(& user, & authority) ?

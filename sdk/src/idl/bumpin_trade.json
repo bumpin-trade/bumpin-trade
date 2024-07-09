@@ -1476,7 +1476,7 @@
           "name": "params",
           "type": {
             "defined": {
-              "name": "MarketParams"
+              "name": "InitializeMarketParams"
             }
           }
         }
@@ -1608,6 +1608,10 @@
         {
           "name": "stable",
           "type": "bool"
+        },
+        {
+          "name": "stable_mint_key",
+          "type": "pubkey"
         },
         {
           "name": "pool_config",
@@ -4174,6 +4178,67 @@
       }
     },
     {
+      "name": "InitializeMarketParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "symbol",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "tick_size",
+            "type": "u128"
+          },
+          {
+            "name": "open_fee_rate",
+            "type": "u128"
+          },
+          {
+            "name": "close_fee_rate",
+            "type": "u128"
+          },
+          {
+            "name": "maximum_long_open_interest_cap",
+            "type": "u128"
+          },
+          {
+            "name": "maximum_short_open_interest_cap",
+            "type": "u128"
+          },
+          {
+            "name": "long_short_ratio_limit",
+            "type": "u128"
+          },
+          {
+            "name": "long_short_oi_bottom_limit",
+            "type": "u128"
+          },
+          {
+            "name": "maximum_leverage",
+            "type": "u32"
+          },
+          {
+            "name": "minimum_leverage",
+            "type": "u32"
+          },
+          {
+            "name": "pool_index",
+            "type": "u16"
+          },
+          {
+            "name": "stable_pool_index",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
       "name": "InitializeStateParams",
       "type": {
         "kind": "struct",
@@ -4477,67 +4542,6 @@
       }
     },
     {
-      "name": "MarketParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "symbol",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
-            "name": "tick_size",
-            "type": "u128"
-          },
-          {
-            "name": "open_fee_rate",
-            "type": "u128"
-          },
-          {
-            "name": "close_fee_rate",
-            "type": "u128"
-          },
-          {
-            "name": "maximum_long_open_interest_cap",
-            "type": "u128"
-          },
-          {
-            "name": "maximum_short_open_interest_cap",
-            "type": "u128"
-          },
-          {
-            "name": "long_short_ratio_limit",
-            "type": "u128"
-          },
-          {
-            "name": "long_short_oi_bottom_limit",
-            "type": "u128"
-          },
-          {
-            "name": "maximum_leverage",
-            "type": "u32"
-          },
-          {
-            "name": "minimum_leverage",
-            "type": "u32"
-          },
-          {
-            "name": "pool_index",
-            "type": "u16"
-          },
-          {
-            "name": "stable_pool_index",
-            "type": "u16"
-          }
-        ]
-      }
-    },
-    {
       "name": "MarketPosition",
       "repr": {
         "kind": "c"
@@ -4824,7 +4828,7 @@
             "type": "pubkey"
           },
           {
-            "name": "stable_key",
+            "name": "stable_mint_key",
             "type": "pubkey"
           },
           {

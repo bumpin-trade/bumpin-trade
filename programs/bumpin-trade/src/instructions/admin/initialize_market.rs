@@ -12,7 +12,7 @@ use crate::traits::Size;
 
 #[derive(Accounts)]
 #[instruction(
-    params: MarketParams,
+    params: InitializeMarketParams,
 )]
 pub struct InitializeMarket<'info> {
     #[account(
