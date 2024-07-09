@@ -42,7 +42,7 @@ pub struct InitializePool<'info> {
         bump,
         has_one = admin
     )]
-    pub state: Box<Account<'info, State>>,
+    pub state: Account<'info, State>,
 
     #[account(mut)]
     pub admin: Signer<'info>,
