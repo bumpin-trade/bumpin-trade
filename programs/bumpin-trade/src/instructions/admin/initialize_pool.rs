@@ -37,6 +37,7 @@ pub struct InitializePool<'info> {
     pub bump_signer: AccountInfo<'info>,
 
     #[account(
+        mut,
         seeds = [b"bump_state".as_ref()],
         bump,
         has_one = admin
@@ -76,7 +77,6 @@ pub fn handle_initialize_pool(
     pool.stable = params.stable;
     pool.stable_mint_key = Pubkey::new_from_array(params.stable_mint_key);
     pool.config = params.pool_config;
-
     safe_increment!(state.pool_sequence, 1);
     Ok(())
 }
