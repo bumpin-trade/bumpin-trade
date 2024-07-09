@@ -13,7 +13,7 @@ import {DataAndSlot} from "../account/types";
 
 export class PoolComponent extends Component {
     program: Program<BumpinTrade>;
-    pools: Map<PublicKey, PollingPoolAccountSubscriber> = new Map();
+    pools: Map<string, PollingPoolAccountSubscriber> = new Map();
 
     constructor(bulkAccountLoader: BulkAccountLoader, stateSubscriber: PollingStateAccountSubscriber, program: Program<BumpinTrade>) {
         super(stateSubscriber, program);
@@ -22,7 +22,7 @@ export class PoolComponent extends Component {
         for (let i = 0; i < state.poolSequence; i++) {
             const [pda, _] = BumpinUtils.getPoolPda(this.program, i);
             let poolAccountSubscriber = new PollingPoolAccountSubscriber(program, pda, bulkAccountLoader);
-            this.pools.set(pda, poolAccountSubscriber);
+            this.pools.set(pda.toString(), poolAccountSubscriber);
         }
     }
 
@@ -60,7 +60,7 @@ export class PoolComponent extends Component {
     }
 
     public async getPoolWithSlot(poolKey: PublicKey, sync: boolean = false): Promise<DataAndSlot<Pool>> {
-        const poolAccountSubscriber: PollingPoolAccountSubscriber | undefined = this.pools.get(poolKey);
+        const poolAccountSubscriber: PollingPoolAccountSubscriber | undefined = this.pools.get(poolKey.toString());
         if (poolAccountSubscriber === undefined) {
             throw new BumpinSubscriptionFailed(`Pool with the key ${poolKey} does not exist`);
         }

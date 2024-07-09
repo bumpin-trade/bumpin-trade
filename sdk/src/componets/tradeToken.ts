@@ -16,8 +16,8 @@ import {OraclePriceData} from "../oracles/types";
 export class TradeTokenComponent extends Component {
     bulkAccountLoader: BulkAccountLoader;
     program: Program<BumpinTrade>;
-    tradeTokens: Map<PublicKey, PollingTradeTokenAccountSubscriber> = new Map();
-    tradeTokenPyths: Map<PublicKey, StashedPythClient> = new Map();
+    tradeTokens: Map<string, PollingTradeTokenAccountSubscriber> = new Map();
+    tradeTokenPyths: Map<string, StashedPythClient> = new Map();
 
     constructor(bulkAccountLoader: BulkAccountLoader, stateSubscriber: PollingStateAccountSubscriber, program: Program<BumpinTrade>) {
         super(stateSubscriber, program);
@@ -27,7 +27,7 @@ export class TradeTokenComponent extends Component {
         for (let i = 0; i < state.tradeTokenSequence; i++) {
             const [pda, _] = BumpinUtils.getTradeTokenPda(this.program, i);
             let tradeTokenAccountSubscriber = new PollingTradeTokenAccountSubscriber(program, pda, bulkAccountLoader);
-            this.tradeTokens.set(pda, tradeTokenAccountSubscriber);
+            this.tradeTokens.set(pda.toString(), tradeTokenAccountSubscriber);
         }
     }
 
@@ -69,7 +69,7 @@ export class TradeTokenComponent extends Component {
     }
 
     public getTradeTokenPrices(tradeTokenKey: PublicKey, count: number): OraclePriceData[] {
-        let stashedPythClient = this.tradeTokenPyths.get(tradeTokenKey);
+        let stashedPythClient = this.tradeTokenPyths.get(tradeTokenKey.toString());
         if (stashedPythClient === undefined) {
             throw new BumpinSubscriptionFailed(`TradeToken with the key ${tradeTokenKey} does not exist`);
         }
@@ -89,7 +89,7 @@ export class TradeTokenComponent extends Component {
     }
 
     public async getTradeTokenWithSlot(tradeTokenKey: PublicKey, sync: boolean = false): Promise<DataAndSlot<TradeToken>> {
-        const tradeTokenAccountSubscriber: PollingTradeTokenAccountSubscriber | undefined = this.tradeTokens.get(tradeTokenKey);
+        const tradeTokenAccountSubscriber: PollingTradeTokenAccountSubscriber | undefined = this.tradeTokens.get(tradeTokenKey.toString());
         if (tradeTokenAccountSubscriber === undefined) {
             throw new BumpinSubscriptionFailed(`TradeToken with the key ${tradeTokenKey} does not exist`);
         }

@@ -87,7 +87,7 @@ pub mod bumpin_trade {
 
     pub fn initialize_market<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializeMarket>,
-        params: MarketParams,
+        params: InitializeMarketParams,
     ) -> Result<()> {
         handle_initialize_market(ctx, params)
     }

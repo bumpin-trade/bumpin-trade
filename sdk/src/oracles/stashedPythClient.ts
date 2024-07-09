@@ -7,6 +7,7 @@ import {BulkAccountLoader} from "../account/bulkAccountLoader";
 import {TEN} from "../constants/numericConstants";
 
 export const PRICE_PRECISION = new BN(10).pow(new BN(8));
+
 export class StashedPythClient {
     private readonly priceDataAccountPublicKey: PublicKey;
     private readonly stashLength: number;

@@ -13,7 +13,7 @@ import {PollingMarketAccountSubscriber} from "../account/pollingMarketAccountSub
 
 export class MarketComponent extends Component {
     program: Program<BumpinTrade>;
-    markets: Map<PublicKey, PollingMarketAccountSubscriber> = new Map();
+    markets: Map<string, PollingMarketAccountSubscriber> = new Map();
 
     constructor(bulkAccountLoader: BulkAccountLoader, stateSubscriber: PollingStateAccountSubscriber, program: Program<BumpinTrade>) {
         super(stateSubscriber, program);
@@ -22,7 +22,7 @@ export class MarketComponent extends Component {
         for (let i = 0; i < state.marketSequence; i++) {
             const [pda, _] = BumpinUtils.getMarketPda(this.program, i);
             let marketAccountSubscriber = new PollingMarketAccountSubscriber(program, pda, bulkAccountLoader);
-            this.markets.set(pda, marketAccountSubscriber);
+            this.markets.set(pda.toString(), marketAccountSubscriber);
         }
     }
 
@@ -60,7 +60,7 @@ export class MarketComponent extends Component {
     }
 
     public async getMarketWithSlot(marketPublicKey: PublicKey, sync: boolean = false): Promise<DataAndSlot<Market>> {
-        const marketAccountSubscriber: PollingMarketAccountSubscriber | undefined = this.markets.get(marketPublicKey);
+        const marketAccountSubscriber: PollingMarketAccountSubscriber | undefined = this.markets.get(marketPublicKey.toString());
         if (marketAccountSubscriber === undefined) {
             throw new BumpinSubscriptionFailed(`Market with the key ${marketPublicKey} does not exist`);
         }

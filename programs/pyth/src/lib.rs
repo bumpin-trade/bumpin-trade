@@ -11,7 +11,7 @@ declare_id!("CC1ePebfvPy7QRTimPoVecS2UsBvYv46ynrzWocc92s");
 pub mod pyth {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>, price: i64, expo: i32, conf: u64) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialize>, price: i64, exponent: i32, conf: u64) -> Result<()> {
         let clock = Clock::get()?;
         let oracle = &ctx.accounts.price;
         let mut price_oracle = Price::load(oracle).unwrap();
@@ -21,7 +21,7 @@ pub mod pyth {
         price_oracle.atype = 3;
         price_oracle.size = 3312;
         price_oracle.ptype = pc::PriceType::Price;
-        price_oracle.expo = expo;
+        price_oracle.exponent = exponent;
         price_oracle.valid_slot = clock.slot;
         price_oracle.timestamp = clock.unix_timestamp;
 

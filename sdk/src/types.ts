@@ -14,6 +14,44 @@ export class OracleSource {
     static readonly Prelaunch = {prelaunch: {}};
 }
 
+
+export type InitializeMarketParams = {
+    symbol: number[];
+    tickSize: BN;
+    openFeeRate: BN;
+    closeFeeRate: BN;
+    maximumLongOpenInterestCap: BN;
+    maximumShortOpenInterestCap: BN;
+    longShortRatioLimit: BN;
+    longShortOiBottomLimit: BN;
+    maximumLeverage: number;
+    minimumLeverage: number;
+    poolIndex: number;
+    stablePoolIndex: number;
+}
+
+export type InitializeStateParams = {
+    minOrderMarginUsd: BN;
+    maximumMaintenanceMarginRate: number;
+    fundingFeeBaseRate: BN;
+    maxFundingBaseRate: BN;
+    tradingFeeStakingRewardsRatio: BN;
+    tradingFeePoolRewardsRatio: BN;
+    tradingFeeUsdPoolRewardsRatio: BN;
+    borrowingFeeStakingRewardsRatio: BN;
+    borrowingFeePoolRewardsRatio: BN;
+    minPrecisionMultiple: BN;
+    mintFeeStakingRewardsRatio: BN;
+    mintFeePoolRewardsRatio: BN;
+    redeemFeeStakingRewardsRatio: BN;
+    redeemFeePoolRewardsRatio: BN;
+    poolRewardsIntervalLimit: BN;
+    initFee: BN;
+    stakingFeeRewardRatio: number;
+    poolFeeRewardRatio: number;
+}
+
+
 export type State = {
     admin: PublicKey;
     bumpSigner: PublicKey;
@@ -28,7 +66,7 @@ export type State = {
     maximumFundingBaseRate: BN;
     minimumPrecisionMultiple: BN;
     poolRewardsIntervalLimit: BN;
-    initFee: BN;
+    initFee: number;
     tradingFeeUsdPoolRewardsRatio: number;
     poolFeeRewardRatio: number;
 }
@@ -354,20 +392,6 @@ export type PlaceOrderParams = {
 }
 
 
-export type MarketParams = {
-    symbol: number[];
-    tickSize: BN;
-    openFeeRate: BN;
-    closeFeeRate: BN;
-    maximumLongOpenInterestCap: BN;
-    maximumShortOpenInterestCap: BN;
-    longShortRatioLimit: BN;
-    longShortOiBottomLimit: BN;
-    maximumLeverage: number;
-    minimumLeverage: number;
-    poolIndex: number;
-    stablePoolIndex: number;
-}
 
 export type InnerPlaceOrderParams = {
     symbol: number[];

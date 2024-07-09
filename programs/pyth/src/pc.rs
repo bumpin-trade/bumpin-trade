@@ -67,7 +67,7 @@ pub struct Price {
     pub atype: u32,            // Account type.
     pub size: u32,             // Price account size.
     pub ptype: PriceType,      // Price or calculation type.
-    pub expo: i32,             // Price exponent.
+    pub exponent: i32,             // Price exponent.
     pub num: u32,              // Number of component prices.
     pub num_qt: u32,           // Number of quoters that make up aggregate
     pub last_slot: u64,        // slot of last valid (not unknown) aggregate price

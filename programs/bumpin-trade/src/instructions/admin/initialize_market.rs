@@ -64,7 +64,7 @@ pub struct InitializeMarket<'info> {
 
 pub fn handle_initialize_market(
     ctx: Context<InitializeMarket>,
-    params: MarketParams,
+    params: InitializeMarketParams,
 ) -> Result<()> {
     let mut market = ctx.accounts.market.load_init()?;
     let mut pool = ctx.accounts.pool.load_mut()?;
@@ -99,7 +99,7 @@ pub fn handle_initialize_market(
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Eq, PartialEq)]
-pub struct MarketParams {
+pub struct InitializeMarketParams {
     pub symbol: [u8; 32],
     pub tick_size: u128,
     pub open_fee_rate: u128,

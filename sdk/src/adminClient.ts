@@ -4,7 +4,7 @@ import {AnchorProvider, BN, Program, Wallet} from "@coral-xyz/anchor";
 import idlBumpinTrade from "./idl/bumpin_trade.json"
 import idlPyth from "./idl/pyth.json"
 import {BumpinTrade} from "./types/bumpin_trade";
-import {Market, MarketParams, Pool, PoolConfig, State, TradeToken} from "./types";
+import {InitializeMarketParams, InitializeStateParams, Market, Pool, PoolConfig, State, TradeToken} from "./types";
 import {BumpinAdminConfig} from "./bumpinAdminConfig";
 import {BumpinUtils} from "./utils/utils";
 import {Pyth} from "./types/pyth";
@@ -52,7 +52,7 @@ export class BumpinAdmin {
     }
 
 
-    public async initState(param: any) {
+    public async initState(param: InitializeStateParams) {
         await this.program.methods.initializeState(
             param
         ).accounts({
@@ -70,7 +70,7 @@ export class BumpinAdmin {
         }).signers([]).rpc();
     }
 
-    public async DEV_TEST_ONLY__INIT_ORACLE(initPrice: number, confidence = undefined, expo = -4): Promise<anchor.web3.Keypair> {
+    public async DEV_TEST_ONLY__INIT_ORACLE(initPrice: number, confidence = undefined, expo): Promise<anchor.web3.Keypair> {
         let oracleKeypair = anchor.web3.Keypair.generate();
         await BumpinUtils.manualCreateAccount(this.provider, this.wallet, oracleKeypair, 3312,
             await this.TEST_PYTH.provider.connection.getMinimumBalanceForRentExemption(
@@ -98,10 +98,10 @@ export class BumpinAdmin {
             .rpc();
     }
 
-    public async initTradeToken(tradeTokenName: string, tradeTokenMint: string, discount: number, liquidationFactor: number) {
+    public async initTradeToken(tradeTokenName: string, tradeTokenMint: string, discount: number, liquidationFactor: number, exponent: number) {
         let tradeTokenMintPublicKey = new PublicKey(tradeTokenMint);
         const s = BumpinUtils.string2Padded32Bytes(tradeTokenName);
-        let oracleKeypair = await this.DEV_TEST_ONLY__INIT_ORACLE(70000, 1.0, -4);
+        let oracleKeypair = await this.DEV_TEST_ONLY__INIT_ORACLE(70000, 1.0, exponent);
 
         let [pda, nonce] = BumpinUtils.getBumpinStatePda(this.program);
         await this.program.methods.initializeTradeToken(
@@ -118,7 +118,7 @@ export class BumpinAdmin {
     public async initMarket(poolName: string, poolIndex: number, stablePoolIndex: number, indexMint: anchor.web3.PublicKey) {
         const [pda, _] = BumpinUtils.getBumpinStatePda(this.program);
         //TODO: params
-        let params: MarketParams = {
+        let params: InitializeMarketParams = {
             symbol: BumpinUtils.string2Padded32Bytes(poolName),
             tickSize: new BN(1),
             openFeeRate: new BN(1000),
