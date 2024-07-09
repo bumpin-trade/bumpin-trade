@@ -1,10 +1,21 @@
 import {PublicKey, TransactionMessage, VersionedTransaction} from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import {Program, Provider, Wallet} from "@coral-xyz/anchor";
+import {BN, Program, Provider, Wallet} from "@coral-xyz/anchor";
 import {Buffer} from "buffer";
 import {BumpinTrade} from "../types/bumpin_trade";
+import BigNumber from 'bignumber.js';
 
 export class BumpinUtils {
+    public static size2Amount(size: number, decimals: number): BN {
+        const bigNum = new BigNumber(size).multipliedBy(new BigNumber(10).pow(Math.abs(decimals)));
+        return new BN(bigNum.toFixed(0));
+    }
+
+    public static amount2Size(amount: BN, decimals: number): number {
+        const bigNum = new BigNumber(amount.toString()).dividedBy(new BigNumber(10).pow(Math.abs(decimals)));
+        return bigNum.toNumber();
+    }
+
     public static decodeString(bytes: number[]): string {
         const buffer = Buffer.from(bytes);
         return buffer.toString('utf8').trim();

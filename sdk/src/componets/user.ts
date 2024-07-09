@@ -61,10 +61,10 @@ export class UserComponent extends Component {
     }
 
 
-    public async portfolioStake(amount: BN, targetTradeToken: TradeToken, allTradeTokens: TradeToken[], pool: Pool, sync: boolean = false): Promise<void> {
+    public async portfolioStake(size: number, tradeToken: TradeToken, allTradeTokens: TradeToken[], pool: Pool, sync: boolean = false): Promise<void> {
         let user = await this.getUser(sync);
-
-        let stake_value = await this.checkStakeAmountFulfilRequirements(amount, targetTradeToken, pool);
+        let amount = BumpinUtils.size2Amount(size, tradeToken.decimals);
+        let stake_value = await this.checkStakeAmountFulfilRequirements(amount, tradeToken, pool);
         let availableValue = await this.getUserAvailableValue(user, allTradeTokens);
         if (!availableValue.gt(stake_value)) {
             throw new BumpinValueInsufficient(amount, availableValue)
@@ -73,7 +73,7 @@ export class UserComponent extends Component {
         let remainingAccounts = this.getUserRemainingAccounts(user, allTradeTokens);
 
         await this.program.methods.portfolioStake(
-            pool.index, targetTradeToken.index, amount
+            pool.index, tradeToken.index, amount
         ).accounts(
             {
                 authority: this.publicKey,
@@ -83,8 +83,9 @@ export class UserComponent extends Component {
             .signers([]).rpc();
     }
 
-    public async walletStake(amount: BN, tradeToken: TradeToken, allTradeTokens: TradeToken[], wallet: PublicKey, pool: Pool, sync: boolean = false): Promise<void> {
-        let user = await this.getUser(sync);
+    public async walletStake(size: number, tradeToken: TradeToken, allTradeTokens: TradeToken[], wallet: PublicKey, pool: Pool, sync: boolean = false): Promise<void> {
+        // let user = await this.getUser(sync);
+        let amount = BumpinUtils.size2Amount(size, tradeToken.decimals);
         await this.checkStakeAmountFulfilRequirements(amount, tradeToken, pool);
         await this.checkStakeWalletAmountSufficient(amount, wallet, tradeToken);
         let tokenAccount = await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(this.program.provider.connection, wallet, tradeToken.mintKey);

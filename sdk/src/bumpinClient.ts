@@ -15,7 +15,8 @@ import {
     State,
     TradeToken,
     UserAccount,
-    UserClaimResult, UserClaimRewardsResult,
+    UserClaimResult,
+    UserClaimRewardsResult,
     UserStakeStatus
 } from "./types";
 import {
@@ -111,7 +112,6 @@ export class BumpinClient {
         console.log("BumpinClient initialized");
     }
 
-
     public async subscriptionMe(): Promise<PollingUserAccountSubscriber> {
         if (this.userAccountSubscriber) {
             await this.userAccountSubscriber.unsubscribe();
@@ -194,13 +194,13 @@ export class BumpinClient {
         return poolSummaries
     }
 
-    public async stake(fromPortfolio: boolean, amount: BN, mint: PublicKey, sync: boolean = false) {
+    public async stake(fromPortfolio: boolean, size: number, mint: PublicKey, sync: boolean = false) {
         let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(mint, await this.getTradeTokens());
         let targetPool = BumpinPoolUtils.getPoolByMintPublicKey(mint, await this.getPools());
         if (fromPortfolio) {
-            await this.userComponent.portfolioStake(amount, targetTradeToken, await this.getTradeTokens(), targetPool, sync);
+            await this.userComponent.portfolioStake(size, targetTradeToken, await this.getTradeTokens(), targetPool, sync);
         } else {
-            await this.userComponent.walletStake(amount, targetTradeToken, await this.getTradeTokens(), this.wallet.publicKey, targetPool, sync);
+            await this.userComponent.walletStake(size, targetTradeToken, await this.getTradeTokens(), this.wallet.publicKey, targetPool, sync);
         }
     }
 
@@ -210,9 +210,10 @@ export class BumpinClient {
         await this.userComponent.unStake(toPortfolio, share, targetTradeToken, this.wallet.publicKey, targetPool);
     }
 
-    public async deposit(userTokenAccount: PublicKey, mintPublicKey: PublicKey, amount: BN) {
+    public async deposit(userTokenAccount: PublicKey, mintPublicKey: PublicKey, size: number) {
         const [statePda, _] = BumpinUtils.getBumpinStatePda(this.program);
         let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(mintPublicKey, await this.getTradeTokens());
+        let amount = BumpinUtils.size2Amount(size, targetTradeToken.decimals);
         await this.program.methods.deposit(targetTradeToken.index, amount).accounts({
             userTokenAccount,
         }).signers([]).rpc();
