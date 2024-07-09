@@ -3,7 +3,7 @@ pub mod pc;
 use pc::Price;
 
 #[cfg(feature = "local-net")]
-declare_id!("AszCjfpwoxuCy4wiHVo5R4sHFuAzp4bDEgYC1VC5jHT8");
+declare_id!("AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca");
 #[cfg(not(feature = "local-net"))]
 declare_id!("CC1ePebfvPy7QRTimPoVecS2UsBvYv46ynrzWocc92s");
 
