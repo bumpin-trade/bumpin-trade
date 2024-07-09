@@ -2,6 +2,7 @@ import {PublicKey} from "@solana/web3.js";
 // import BN from "bn.js";
 import {BN} from "@coral-xyz/anchor";
 import {OraclePriceData} from "./oracles/types";
+import {PriceData} from "@pythnetwork/client";
 
 
 export class OracleSource {
@@ -427,7 +428,7 @@ export type MarketWithIndexTradeTokenPrices = {
     stablePoolMintKey: PublicKey;
     index: number;
     symbol: number[];
-    indexTradeTokenPrices: OraclePriceData[];
+    indexTradeTokenPrices: PriceData[];
 }
 
 

@@ -6,6 +6,7 @@ import {BumpinTrade} from "../types/bumpin_trade";
 import BigNumber from 'bignumber.js';
 
 export class BumpinUtils {
+
     public static size2Amount(size: number, decimals: number): BN {
         const bigNum = new BigNumber(size).multipliedBy(new BigNumber(10).pow(Math.abs(decimals)));
         return new BN(bigNum.toFixed(0));

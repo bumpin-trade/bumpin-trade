@@ -1,4 +1,4 @@
-import {parsePriceData} from '@pythnetwork/client';
+import {parsePriceData, PriceData} from '@pythnetwork/client';
 import {PublicKey} from '@solana/web3.js';
 import {OraclePriceData} from './types';
 import {BN} from '@coral-xyz/anchor';
@@ -11,7 +11,7 @@ export const PRICE_PRECISION = new BN(10).pow(new BN(8));
 export class StashedPythClient {
     private readonly priceDataAccountPublicKey: PublicKey;
     private readonly stashLength: number;
-    private queue: FixedLengthQueue<OraclePriceData>;
+    private queue: FixedLengthQueue<PriceData>;
     private subscriber: PollingPythAccountSubscriber;
 
     public constructor(
@@ -21,7 +21,7 @@ export class StashedPythClient {
     ) {
         this.priceDataAccountPublicKey = priceDataAccountPublicKey;
         this.stashLength = stashLength;
-        this.queue = new FixedLengthQueue<OraclePriceData>(stashLength);
+        this.queue = new FixedLengthQueue<PriceData>(stashLength);
         this.subscriber = new PollingPythAccountSubscriber(priceDataAccountPublicKey, accountLoader);
     }
 
@@ -35,17 +35,18 @@ export class StashedPythClient {
 
     public async initialize(): Promise<void> {
         await this.subscriber.subscribe((data: Buffer) => {
-            const priceData = this.getOraclePriceDataFromBuffer(data);
+            let priceData = parsePriceData(data);
+            // const priceData = this.getOraclePriceDataFromBuffer(data);
             this.queue.enqueue(priceData);
 
         });
     }
 
-    public getLastOraclePriceData(count: number): OraclePriceData[] {
+    public getLastOraclePriceData(count: number): PriceData[] {
         return this.queue.last(count).reverse();
     }
 
-    public getLatestOraclePriceData(): OraclePriceData {
+    public getLatestOraclePriceData(): PriceData {
         return this.queue.last(1)[0];
 
     }

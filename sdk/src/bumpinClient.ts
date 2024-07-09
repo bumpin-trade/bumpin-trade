@@ -39,6 +39,7 @@ import {BumpinTokenUtils} from "./utils/token";
 import {BumpinPoolUtils} from "./utils/pool";
 import {BumpinMarketUtils} from "./utils/market";
 import {ZERO} from "./constants/numericConstants";
+import {PriceData} from "@pythnetwork/client";
 
 
 export class BumpinClient {
@@ -88,6 +89,9 @@ export class BumpinClient {
         }
     }
 
+    public getTradeTokenPrice(tradeTokenKey: PublicKey): PriceData {
+        return this.tradeTokenComponent.getTradeTokenPrices(tradeTokenKey, 1)[0];
+    }
 
     public async initialize() {
         if (this.isInitialized) {

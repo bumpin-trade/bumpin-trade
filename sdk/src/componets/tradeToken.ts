@@ -12,6 +12,7 @@ import {DataAndSlot} from "../account/types";
 import {PollingTradeTokenAccountSubscriber} from "../account/pollingTradeTokenAccountSubscriber";
 import {StashedPythClient} from "../oracles/stashedPythClient";
 import {OraclePriceData} from "../oracles/types";
+import {PriceData} from "@pythnetwork/client";
 
 export class TradeTokenComponent extends Component {
     bulkAccountLoader: BulkAccountLoader;
@@ -68,7 +69,7 @@ export class TradeTokenComponent extends Component {
         throw new BumpinSubscriptionFailed(`TradeToken with the mint key ${mintKey} does not exist`);
     }
 
-    public getTradeTokenPrices(tradeTokenKey: PublicKey, count: number): OraclePriceData[] {
+    public getTradeTokenPrices(tradeTokenKey: PublicKey, count: number): PriceData[] {
         let stashedPythClient = this.tradeTokenPyths.get(tradeTokenKey.toString());
         if (stashedPythClient === undefined) {
             throw new BumpinSubscriptionFailed(`TradeToken with the key ${tradeTokenKey} does not exist`);
