@@ -1460,6 +1460,7 @@ export type BumpinTrade = {
         },
         {
           "name": "state",
+          "writable": true,
           "pda": {
             "seeds": [
               {

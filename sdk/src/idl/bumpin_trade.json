@@ -1454,6 +1454,7 @@
         },
         {
           "name": "state",
+          "writable": true,
           "pda": {
             "seeds": [
               {

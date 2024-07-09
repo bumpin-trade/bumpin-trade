@@ -59,6 +59,8 @@ pub struct InitializePoolParams {
     pub name: [u8; 32],
     pub stable_mint_key: [u8; 32],
     pub pool_config: PoolConfig,
+    pub icon_id: u16, // max 65535
+    pub tags_mask: u16, // max 16
     pub stable: bool,
 }
 
@@ -77,6 +79,8 @@ pub fn handle_initialize_pool(
     pool.stable = params.stable;
     pool.stable_mint_key = Pubkey::new_from_array(params.stable_mint_key);
     pool.config = params.pool_config;
+    pool.icon_id = params.icon_id;
+    pool.tags_mask = params.tags_mask;
     safe_increment!(state.pool_sequence, 1);
     Ok(())
 }

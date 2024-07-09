@@ -322,8 +322,8 @@ export class UserComponent extends Component {
     }
 
     async checkStakeAmountFulfilRequirements(amount: BN, tradeToken: TradeToken, pool: Pool): Promise<BN> {
-        let priceData = await this.oracleClient.getOraclePriceData(tradeToken.oracleKey);
-        let value = amount.toUsd(priceData.price, tradeToken.decimals);
+        let priceData = await this.oracleClient.getPriceData(tradeToken.oracleKey);
+        let value = BumpinUtils.toUsdBN(amount, priceData.price, tradeToken.decimals);
         if (value < pool.config.minimumStakeAmount) {
             throw new BumpinValueInsufficient(pool.config.minimumStakeAmount, value)
         }

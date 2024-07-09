@@ -1,4 +1,4 @@
-import {parsePriceData} from '@pythnetwork/client';
+import {parsePriceData, PriceData} from '@pythnetwork/client';
 import {Connection, PublicKey} from '@solana/web3.js';
 import {OracleClient, OraclePriceData} from './types';
 import {BN} from '@coral-xyz/anchor';
@@ -19,6 +19,13 @@ export class PythClient implements OracleClient {
         this.connection = connection;
         this.multiple = multiple;
         this.stableCoin = stableCoin;
+    }
+
+    public async getPriceData(
+        pricePublicKey: PublicKey
+    ): Promise<PriceData> {
+        const accountInfo = await this.connection.getAccountInfo(pricePublicKey);
+        return parsePriceData(accountInfo.data);
     }
 
     public async getOraclePriceData(
