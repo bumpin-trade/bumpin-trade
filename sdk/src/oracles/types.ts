@@ -1,6 +1,7 @@
 import { BN } from '@coral-xyz/anchor';
 import { PublicKey } from '@solana/web3.js';
 import { OracleSource } from '../types';
+import {PriceData} from "@pythnetwork/client";
 
 export type OraclePriceData = {
 	price: BN;
@@ -20,4 +21,5 @@ export type OracleInfo = {
 export interface OracleClient {
 	getOraclePriceDataFromBuffer(buffer: Buffer): OraclePriceData;
 	getOraclePriceData(publicKey: PublicKey): Promise<OraclePriceData>;
+	getPriceData(publicKey: PublicKey): Promise<PriceData>;
 }
