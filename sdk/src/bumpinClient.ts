@@ -141,9 +141,7 @@ export class BumpinClient {
 
 
     public async initializeUser() {
-        const [statePda, _] = BumpinUtils.getBumpinStatePda(this.program);
         await this.program.methods.initializeUser().accounts({
-            state: statePda,
             authority: this.wallet.publicKey,
             payer: this.wallet.publicKey
         }).signers([]).rpc();
