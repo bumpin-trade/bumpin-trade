@@ -60,7 +60,7 @@ pub fn handle_initialize_pool(
     stable_mint_key: [u8; 32],
     pool_config: PoolConfig,
 ) -> Result<()> {
-    let mut pool = ctx.accounts.pool.load_init()?;
+    let mut pool = ctx.accounts.pool.load_mut()?;
     let state = &mut ctx.accounts.state;
 
     pool.key = ctx.accounts.pool.to_account_info().key();

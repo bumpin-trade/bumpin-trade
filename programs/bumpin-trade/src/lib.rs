@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::Mint;
 use anchor_spl::token::{Token, TokenAccount};
+use anchor_spl::token::Mint;
 
 use instructions::*;
 
-use crate::processor::optional_accounts::{load_maps, AccountMaps};
+use crate::processor::optional_accounts::{AccountMaps, load_maps};
 use crate::state::infrastructure::user_order::UserOrder;
 use crate::state::pool::PoolConfig;
 use crate::state::user::UserStatus;
@@ -65,8 +65,8 @@ pub mod bumpin_trade {
         ctx: Context<'a, 'b, 'c, 'info, InitializePool>,
         name: [u8; 32],
         stable_mint_key: [u8; 32],
-        stable: bool,
         pool_config: PoolConfig,
+        stable: bool,
     ) -> Result<()> {
         handle_initialize_pool(ctx, name, stable, stable_mint_key, pool_config)
     }
