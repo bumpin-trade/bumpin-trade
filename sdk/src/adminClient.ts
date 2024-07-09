@@ -63,7 +63,7 @@ export class BumpinAdmin {
     public async initPool(poolName: string, poolMint: anchor.web3.PublicKey, stable: boolean, stableMint: PublicKey, config: PoolConfig) {
         const [pda, _] = BumpinUtils.getBumpinStatePda(this.program);
         await this.program.methods.initializePool(
-            BumpinUtils.encodeString(poolName), BumpinUtils.encodeString(stableMint.toString()), stable, config
+            BumpinUtils.encodeString(poolName), BumpinUtils.encodeString(stableMint.toString()), config, stable
         ).accounts({
             poolMint,
             bumpSigner: pda,

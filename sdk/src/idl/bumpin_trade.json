@@ -1596,32 +1596,10 @@
       ],
       "args": [
         {
-          "name": "name",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "stable_mint_key",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "stable",
-          "type": "bool"
-        },
-        {
-          "name": "pool_config",
+          "name": "params",
           "type": {
             "defined": {
-              "name": "PoolConfig"
+              "name": "InitializePoolParams"
             }
           }
         }
@@ -4276,6 +4254,44 @@
           {
             "name": "stable_pool_index",
             "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializePoolParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "stable_mint_key",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "pool_config",
+            "type": {
+              "defined": {
+                "name": "PoolConfig"
+              }
+            }
+          },
+          {
+            "name": "stable",
+            "type": "bool"
           }
         ]
       }

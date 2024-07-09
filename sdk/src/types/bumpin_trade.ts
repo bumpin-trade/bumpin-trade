@@ -1602,32 +1602,10 @@ export type BumpinTrade = {
       ],
       "args": [
         {
-          "name": "name",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "stableMintKey",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
-          "name": "stable",
-          "type": "bool"
-        },
-        {
-          "name": "poolConfig",
+          "name": "params",
           "type": {
             "defined": {
-              "name": "poolConfig"
+              "name": "initializePoolParams"
             }
           }
         }
@@ -4282,6 +4260,44 @@ export type BumpinTrade = {
           {
             "name": "stablePoolIndex",
             "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "initializePoolParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "stableMintKey",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "poolConfig",
+            "type": {
+              "defined": {
+                "name": "poolConfig"
+              }
+            }
+          },
+          {
+            "name": "stable",
+            "type": "bool"
           }
         ]
       }

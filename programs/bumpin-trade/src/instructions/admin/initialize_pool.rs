@@ -53,12 +53,17 @@ pub struct InitializePool<'info> {
     pub token_program: Program<'info, Token>,
 }
 
+#[derive(AnchorDeserialize, AnchorSerialize, Debug, Clone, Copy)]
+pub struct InitializePoolParams {
+    pub name: [u8; 32],
+    pub stable_mint_key: [u8; 32],
+    pub pool_config: PoolConfig,
+    pub stable: bool,
+}
+
 pub fn handle_initialize_pool(
     ctx: Context<InitializePool>,
-    name: [u8; 32],
-    stable: bool,
-    stable_mint_key: [u8; 32],
-    pool_config: PoolConfig,
+    params: InitializePoolParams,
 ) -> Result<()> {
     let mut pool = ctx.accounts.pool.load_mut()?;
     let state = &mut ctx.accounts.state;
@@ -66,11 +71,11 @@ pub fn handle_initialize_pool(
     pool.key = ctx.accounts.pool.to_account_info().key();
     pool.mint_key = ctx.accounts.pool_vault.mint;
     pool.mint_vault_key = ctx.accounts.pool_vault.key();
-    pool.name = name;
+    pool.name = params.name;
     pool.index = state.pool_sequence;
-    pool.stable = stable;
-    pool.stable_mint_key = Pubkey::new_from_array(stable_mint_key);
-    pool.config = pool_config;
+    pool.stable = params.stable;
+    pool.stable_mint_key = Pubkey::new_from_array(params.stable_mint_key);
+    pool.config = params.pool_config;
 
     safe_increment!(state.pool_sequence, 1);
     Ok(())
