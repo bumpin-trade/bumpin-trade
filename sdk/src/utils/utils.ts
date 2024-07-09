@@ -7,14 +7,23 @@ import BigNumber from 'bignumber.js';
 
 export class BumpinUtils {
 
-    public static size2Amount(size: number, decimals: number): BN {
-        const bigNum = new BigNumber(size).multipliedBy(new BigNumber(10).pow(Math.abs(decimals)));
+    public static toUsd(amount: BN, tokenPrice: number, decimals: number): BigNumber {
+        let size = this.amount2Size(amount, decimals);
+        return size.multipliedBy(tokenPrice);
+    }
+
+    public static toUsdBN(amount: BN, tokenPrice: number, decimals: number): BN {
+        let size = this.amount2Size(amount, decimals);
+        return this.size2Amount(size.multipliedBy(tokenPrice), decimals);
+    }
+
+    public static size2Amount(size: BigNumber, decimals: number): BN {
+        const bigNum = size.multipliedBy(new BigNumber(10).pow(Math.abs(decimals)));
         return new BN(bigNum.toFixed(0));
     }
 
-    public static amount2Size(amount: BN, decimals: number): number {
-        const bigNum = new BigNumber(amount.toString()).dividedBy(new BigNumber(10).pow(Math.abs(decimals)));
-        return bigNum.toNumber();
+    public static amount2Size(amount: BN, decimals: number): BigNumber {
+        return new BigNumber(amount.toString()).dividedBy(new BigNumber(10).pow(Math.abs(decimals)));
     }
 
     public static decodeString(bytes: number[]): string {
@@ -32,7 +41,7 @@ export class BumpinUtils {
         return buffer;
     }
 
-    public static string2Padded32Bytes(str: string): number[] {
+    public static encodeString(str: string): number[] {
         const buffer = Buffer.from(str, 'utf-8');
         const paddedBuffer = Buffer.concat([buffer, Buffer.alloc(32 - buffer.length)]);
         return Array.from(paddedBuffer);

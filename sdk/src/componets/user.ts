@@ -36,6 +36,7 @@ import {BumpinTokenUtils} from "../utils/token";
 import {BumpinPositionUtils} from "../utils/position";
 import {BumpinPoolUtils} from "../utils/pool";
 import {Account} from "@solana/spl-token";
+import BigNumber from "bignumber.js";
 
 export class UserComponent extends Component {
     publicKey: PublicKey;
@@ -63,7 +64,7 @@ export class UserComponent extends Component {
 
     public async portfolioStake(size: number, tradeToken: TradeToken, allTradeTokens: TradeToken[], pool: Pool, sync: boolean = false): Promise<void> {
         let user = await this.getUser(sync);
-        let amount = BumpinUtils.size2Amount(size, tradeToken.decimals);
+        let amount = BumpinUtils.size2Amount(new BigNumber(size), tradeToken.decimals);
         let stake_value = await this.checkStakeAmountFulfilRequirements(amount, tradeToken, pool);
         let availableValue = await this.getUserAvailableValue(user, allTradeTokens);
         if (!availableValue.gt(stake_value)) {
@@ -85,7 +86,7 @@ export class UserComponent extends Component {
 
     public async walletStake(size: number, tradeToken: TradeToken, allTradeTokens: TradeToken[], wallet: PublicKey, pool: Pool, sync: boolean = false): Promise<void> {
         // let user = await this.getUser(sync);
-        let amount = BumpinUtils.size2Amount(size, tradeToken.decimals);
+        let amount = BumpinUtils.size2Amount(new BigNumber(size), tradeToken.decimals);
         await this.checkStakeAmountFulfilRequirements(amount, tradeToken, pool);
         await this.checkStakeWalletAmountSufficient(amount, wallet, tradeToken);
         let tokenAccount = await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(this.program.provider.connection, wallet, tradeToken.mintKey);

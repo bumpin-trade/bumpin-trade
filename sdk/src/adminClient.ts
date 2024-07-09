@@ -63,7 +63,7 @@ export class BumpinAdmin {
     public async initPool(poolName: string, poolMint: anchor.web3.PublicKey, stable: boolean, config: PoolConfig) {
         const [pda, _] = BumpinUtils.getBumpinStatePda(this.program);
         await this.program.methods.initializePool(
-            BumpinUtils.string2Padded32Bytes(poolName), stable, config
+            BumpinUtils.encodeString(poolName), stable, config
         ).accounts({
             poolMint,
             bumpSigner: pda,
@@ -100,7 +100,7 @@ export class BumpinAdmin {
 
     public async initTradeToken(tradeTokenName: string, tradeTokenMint: string, discount: number, liquidationFactor: number, exponent: number) {
         let tradeTokenMintPublicKey = new PublicKey(tradeTokenMint);
-        const s = BumpinUtils.string2Padded32Bytes(tradeTokenName);
+        const s = BumpinUtils.encodeString(tradeTokenName);
         let oracleKeypair = await this.DEV_TEST_ONLY__INIT_ORACLE(70000, 1.0, exponent);
 
         let [pda, nonce] = BumpinUtils.getBumpinStatePda(this.program);
@@ -119,7 +119,7 @@ export class BumpinAdmin {
         const [pda, _] = BumpinUtils.getBumpinStatePda(this.program);
         //TODO: params
         let params: InitializeMarketParams = {
-            symbol: BumpinUtils.string2Padded32Bytes(poolName),
+            symbol: BumpinUtils.encodeString(poolName),
             tickSize: new BN(1),
             openFeeRate: new BN(1000),
             closeFeeRate: new BN(1000),

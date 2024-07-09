@@ -7,7 +7,7 @@ export * from './bumpinClient';
 export * from './bumpinClientConfig';
 export * from './adminClient';
 export * from './utils/utils';
-export * from './types/bn';
+// export * from './types/bn';
 
 
 export { BN, PublicKey };

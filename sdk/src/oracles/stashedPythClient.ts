@@ -38,7 +38,7 @@ export class StashedPythClient {
             let priceData = parsePriceData(data);
             // const priceData = this.getOraclePriceDataFromBuffer(data);
             this.queue.enqueue(priceData);
-
+            // console.log('Price data updated, key: ', this.priceDataAccountPublicKey.toString(), 'price: ', priceData.price, 'queue size: ', this.queue.size());
         });
     }
 

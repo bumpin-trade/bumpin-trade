@@ -40,6 +40,7 @@ import {BumpinPoolUtils} from "./utils/pool";
 import {BumpinMarketUtils} from "./utils/market";
 import {ZERO} from "./constants/numericConstants";
 import {PriceData} from "@pythnetwork/client";
+import BigNumber from "bignumber.js";
 
 
 export class BumpinClient {
@@ -87,10 +88,6 @@ export class BumpinClient {
             this.programPyth = new anchor.Program(JSON.parse(JSON.stringify(idlPyth)), this.provider);
             this.pythClient = new PythClient(this.programPyth.provider.connection);
         }
-    }
-
-    public getTradeTokenPrice(tradeTokenKey: PublicKey): PriceData {
-        return this.tradeTokenComponent.getTradeTokenPrices(tradeTokenKey, 1)[0];
     }
 
     public async initialize() {
@@ -150,6 +147,15 @@ export class BumpinClient {
             authority: this.wallet.publicKey,
             payer: this.wallet.publicKey
         }).signers([]).rpc();
+    }
+
+    public getTradeTokenPrice(tradeTokenKey: PublicKey): PriceData {
+        return this.tradeTokenComponent.getTradeTokenPrices(tradeTokenKey, 1)[0];
+    }
+
+    public async getTradeTokenPriceByMintKey(mintKey: PublicKey): Promise<PriceData> {
+        let res = await this.tradeTokenComponent.getTradeTokenPricesByMintKey(mintKey, 1);
+        return res[0];
     }
 
     public async getPoolSummary(stashedPrice: number = 2, sync: boolean = false): Promise<PoolSummary[]> {
@@ -217,7 +223,7 @@ export class BumpinClient {
     public async deposit(userTokenAccount: PublicKey, mintPublicKey: PublicKey, size: number) {
         const [statePda, _] = BumpinUtils.getBumpinStatePda(this.program);
         let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(mintPublicKey, await this.getTradeTokens());
-        let amount = BumpinUtils.size2Amount(size, targetTradeToken.decimals);
+        let amount = BumpinUtils.size2Amount(new BigNumber(size), targetTradeToken.decimals);
         await this.program.methods.deposit(targetTradeToken.index, amount).accounts({
             userTokenAccount,
         }).signers([]).rpc();
@@ -279,6 +285,10 @@ export class BumpinClient {
 
     public async getTradeToken(tradeTokenKey: PublicKey, sync: boolean = false): Promise<TradeToken> {
         return this.tradeTokenComponent.getTradeToken(tradeTokenKey, sync);
+    }
+
+    public async getTradeTokenByMintKey(mintKey: PublicKey, sync: boolean = false): Promise<TradeToken> {
+        return this.tradeTokenComponent.getTradeTokenByMintKey(mintKey, sync);
     }
 
     public async getTradeTokenWithSlot(tradeTokenKey: PublicKey, sync: boolean = false): Promise<DataAndSlot<TradeToken>> {

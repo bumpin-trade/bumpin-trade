@@ -11,7 +11,6 @@ import {BumpinSubscriptionFailed} from "../errors";
 import {DataAndSlot} from "../account/types";
 import {PollingTradeTokenAccountSubscriber} from "../account/pollingTradeTokenAccountSubscriber";
 import {StashedPythClient} from "../oracles/stashedPythClient";
-import {OraclePriceData} from "../oracles/types";
 import {PriceData} from "@pythnetwork/client";
 
 export class TradeTokenComponent extends Component {
@@ -75,7 +74,11 @@ export class TradeTokenComponent extends Component {
             throw new BumpinSubscriptionFailed(`TradeToken with the key ${tradeTokenKey} does not exist`);
         }
         return stashedPythClient.getLastOraclePriceData(count);
+    }
 
+    public async getTradeTokenPricesByMintKey(mintKey: PublicKey, count: number, sync: boolean = false): Promise<PriceData[]> {
+        let tradeToken = await this.getTradeTokenByMintKey(mintKey, sync);
+        return this.getTradeTokenPrices(BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0], count);
     }
 
     public async getTradeTokensWithSlot(sync: boolean = false): Promise<DataAndSlot<TradeToken>[]> {
