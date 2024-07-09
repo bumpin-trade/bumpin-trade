@@ -22,6 +22,10 @@ pub struct InitializeUser<'info> {
     )]
     pub user: AccountLoader<'info, User>,
 
+    #[account(
+        seeds = [b"bump_state".as_ref()],
+        bump,
+    )]
     pub state: Box<Account<'info, State>>,
 
     pub authority: Signer<'info>,
@@ -40,6 +44,7 @@ pub fn handle_initialize_user(ctx: Context<InitializeUser>) -> Result<()> {
     user.key = *ctx.accounts.user.to_account_info().key;
     user.authority = *ctx.accounts.authority.to_account_info().key;
 
+    drop(user);
     let init_fee = ctx.accounts.state.init_fee;
     if init_fee > 0 {
         let payer_lamports = ctx.accounts.payer.to_account_info().try_lamports()?;

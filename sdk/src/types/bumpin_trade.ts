@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/bumpin_trade.json`.
  */
 export type BumpinTrade = {
-  "address": "Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR",
+  "address": "AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca",
   "metadata": {
     "name": "bumpinTrade",
     "version": "0.1.0",
@@ -1482,7 +1482,7 @@ export type BumpinTrade = {
           "name": "params",
           "type": {
             "defined": {
-              "name": "marketParams"
+              "name": "initializeMarketParams"
             }
           }
         }
@@ -1614,6 +1614,10 @@ export type BumpinTrade = {
         {
           "name": "stable",
           "type": "bool"
+        },
+        {
+          "name": "stableMintKey",
+          "type": "pubkey"
         },
         {
           "name": "poolConfig",
@@ -4180,6 +4184,67 @@ export type BumpinTrade = {
       }
     },
     {
+      "name": "initializeMarketParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "symbol",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "tickSize",
+            "type": "u128"
+          },
+          {
+            "name": "openFeeRate",
+            "type": "u128"
+          },
+          {
+            "name": "closeFeeRate",
+            "type": "u128"
+          },
+          {
+            "name": "maximumLongOpenInterestCap",
+            "type": "u128"
+          },
+          {
+            "name": "maximumShortOpenInterestCap",
+            "type": "u128"
+          },
+          {
+            "name": "longShortRatioLimit",
+            "type": "u128"
+          },
+          {
+            "name": "longShortOiBottomLimit",
+            "type": "u128"
+          },
+          {
+            "name": "maximumLeverage",
+            "type": "u32"
+          },
+          {
+            "name": "minimumLeverage",
+            "type": "u32"
+          },
+          {
+            "name": "poolIndex",
+            "type": "u16"
+          },
+          {
+            "name": "stablePoolIndex",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
       "name": "initializeStateParams",
       "type": {
         "kind": "struct",
@@ -4483,67 +4548,6 @@ export type BumpinTrade = {
       }
     },
     {
-      "name": "marketParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "symbol",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
-            "name": "tickSize",
-            "type": "u128"
-          },
-          {
-            "name": "openFeeRate",
-            "type": "u128"
-          },
-          {
-            "name": "closeFeeRate",
-            "type": "u128"
-          },
-          {
-            "name": "maximumLongOpenInterestCap",
-            "type": "u128"
-          },
-          {
-            "name": "maximumShortOpenInterestCap",
-            "type": "u128"
-          },
-          {
-            "name": "longShortRatioLimit",
-            "type": "u128"
-          },
-          {
-            "name": "longShortOiBottomLimit",
-            "type": "u128"
-          },
-          {
-            "name": "maximumLeverage",
-            "type": "u32"
-          },
-          {
-            "name": "minimumLeverage",
-            "type": "u32"
-          },
-          {
-            "name": "poolIndex",
-            "type": "u16"
-          },
-          {
-            "name": "stablePoolIndex",
-            "type": "u16"
-          }
-        ]
-      }
-    },
-    {
       "name": "marketPosition",
       "repr": {
         "kind": "c"
@@ -4830,7 +4834,7 @@ export type BumpinTrade = {
             "type": "pubkey"
           },
           {
-            "name": "stableKey",
+            "name": "stableMintKey",
             "type": "pubkey"
           },
           {

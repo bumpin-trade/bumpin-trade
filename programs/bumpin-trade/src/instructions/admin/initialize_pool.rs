@@ -37,7 +37,6 @@ pub struct InitializePool<'info> {
     pub bump_signer: AccountInfo<'info>,
 
     #[account(
-        mut,
         seeds = [b"bump_state".as_ref()],
         bump,
         has_one = admin
@@ -58,6 +57,7 @@ pub fn handle_initialize_pool(
     ctx: Context<InitializePool>,
     name: [u8; 32],
     stable: bool,
+    stable_mint_key: Pubkey,
     pool_config: PoolConfig,
 ) -> Result<()> {
     let mut pool = ctx.accounts.pool.load_init()?;
@@ -69,6 +69,7 @@ pub fn handle_initialize_pool(
     pool.name = name;
     pool.index = state.pool_sequence;
     pool.stable = stable;
+    pool.stable_mint_key = stable_mint_key;
     pool.config = pool_config;
 
     safe_increment!(state.pool_sequence, 1);
