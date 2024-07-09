@@ -53,6 +53,13 @@ export type InitializeStateParams = {
 }
 
 
+export type InitializePoolParams = {
+    name: number[];
+    stableMintKey: number[];
+    poolConfig: PoolConfig;
+    stable: boolean;
+}
+
 export type State = {
     admin: PublicKey;
     bumpSigner: PublicKey;

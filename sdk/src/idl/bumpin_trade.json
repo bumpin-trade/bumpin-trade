@@ -1248,105 +1248,6 @@
       ]
     },
     {
-      "name": "initialize",
-      "discriminator": [
-        175,
-        175,
-        109,
-        31,
-        13,
-        152,
-        155,
-        237
-      ],
-      "accounts": [
-        {
-          "name": "trade_token_vault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "bump_signer"
-        },
-        {
-          "name": "trade_token_mint"
-        },
-        {
-          "name": "admin",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "rent",
-          "address": "SysvarRent111111111111111111111111111111111"
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "initialize1",
-      "discriminator": [
-        217,
-        221,
-        202,
-        48,
-        229,
-        106,
-        212,
-        42
-      ],
-      "accounts": [
-        {
-          "name": "key_value",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "user",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "initialize_market",
       "discriminator": [
         35,
@@ -3477,19 +3378,6 @@
   ],
   "accounts": [
     {
-      "name": "KeyValue",
-      "discriminator": [
-        110,
-        10,
-        191,
-        244,
-        233,
-        95,
-        74,
-        118
-      ]
-    },
-    {
       "name": "Market",
       "discriminator": [
         219,
@@ -4372,22 +4260,6 @@
           {
             "name": "pool_fee_reward_ratio",
             "type": "u32"
-          }
-        ]
-      }
-    },
-    {
-      "name": "KeyValue",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "key",
-            "type": "string"
-          },
-          {
-            "name": "value",
-            "type": "string"
           }
         ]
       }

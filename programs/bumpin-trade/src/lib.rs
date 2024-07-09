@@ -33,26 +33,6 @@ pub mod bumpin_trade {
 
     use super::*;
 
-    pub fn initialize1<'a, 'b, 'c: 'info, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, Initialize1>,
-    ) -> Result<()> {
-        msg!("initialize1");
-
-        let r = VaultMap::load(ctx.remaining_accounts);
-        msg!("r: {}", r.is_ok());
-        let u = r.unwrap();
-        msg!("len: {}", u.0.len());
-        u.0.iter().for_each(|(k, v)| {
-            msg!("k: {:?}", k);
-            msg!("v: {:?}", v);
-        });
-        Ok(())
-    }
-
-    pub fn initialize(_ctx: Context<Initialize>) -> Result<()> {
-        msg!("initialize");
-        Ok(())
-    }
 
     pub fn initialize_state<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializeState>,

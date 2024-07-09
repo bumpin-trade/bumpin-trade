@@ -65,10 +65,10 @@ pub fn handle_initialize_pool(
     ctx: Context<InitializePool>,
     params: InitializePoolParams,
 ) -> Result<()> {
-    let mut pool = ctx.accounts.pool.load_mut()?;
+    let key = ctx.accounts.pool.key();
+    let pool = &mut ctx.accounts.pool.load_init()?;
     let state = &mut ctx.accounts.state;
-
-    pool.key = ctx.accounts.pool.to_account_info().key();
+    pool.key = key;
     pool.mint_key = ctx.accounts.pool_vault.mint;
     pool.mint_vault_key = ctx.accounts.pool_vault.key();
     pool.name = params.name;

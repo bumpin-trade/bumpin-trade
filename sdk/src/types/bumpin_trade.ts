@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/bumpin_trade.json`.
  */
 export type BumpinTrade = {
-  "address": "AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca",
+  "address": "Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR",
   "metadata": {
     "name": "bumpinTrade",
     "version": "0.1.0",
@@ -1252,105 +1252,6 @@ export type BumpinTrade = {
           }
         }
       ]
-    },
-    {
-      "name": "initialize",
-      "discriminator": [
-        175,
-        175,
-        109,
-        31,
-        13,
-        152,
-        155,
-        237
-      ],
-      "accounts": [
-        {
-          "name": "tradeTokenVault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "bumpSigner"
-        },
-        {
-          "name": "tradeTokenMint"
-        },
-        {
-          "name": "admin",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "rent",
-          "address": "SysvarRent111111111111111111111111111111111"
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
-        },
-        {
-          "name": "tokenProgram",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "initialize1",
-      "discriminator": [
-        217,
-        221,
-        202,
-        48,
-        229,
-        106,
-        212,
-        42
-      ],
-      "accounts": [
-        {
-          "name": "keyValue",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "user",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": []
     },
     {
       "name": "initializeMarket",
@@ -3483,19 +3384,6 @@ export type BumpinTrade = {
   ],
   "accounts": [
     {
-      "name": "keyValue",
-      "discriminator": [
-        110,
-        10,
-        191,
-        244,
-        233,
-        95,
-        74,
-        118
-      ]
-    },
-    {
       "name": "market",
       "discriminator": [
         219,
@@ -4378,22 +4266,6 @@ export type BumpinTrade = {
           {
             "name": "poolFeeRewardRatio",
             "type": "u32"
-          }
-        ]
-      }
-    },
-    {
-      "name": "keyValue",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "key",
-            "type": "string"
-          },
-          {
-            "name": "value",
-            "type": "string"
           }
         ]
       }
