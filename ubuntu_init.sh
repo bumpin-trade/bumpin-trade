@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-num_loops=10
+num_loops=5
 echo "num_loops: $num_loops"
 echo "Creating... "
 
@@ -25,12 +25,17 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+# SOL USDC WBTC WHETH BONK
+decimals=(9 6 8 8 5)
+
 results=""
 
 for ((i=1; i<=num_loops; i++))
 do
+  decimals_value=${decimals[$((i-1))]}
+
   # Step 2: Create a new SPL token and extract the token address
-token=$(spl-token create-token --output json --url localhost | jq -r .commandOutput.address)
+token=$(spl-token create-token --decimals "$decimals_value" --output json --url localhost | jq -r .commandOutput.address)
   if [ -z "$token" ]; then
     echo "Failed to create token"
     exit 1
@@ -52,7 +57,7 @@ token=$(spl-token create-token --output json --url localhost | jq -r .commandOut
     exit 1
   fi
 
-  results+="Token Mint: $token Token Account PublicKey: $account Amount: $mint_amount\n"
+  results+="Token Mint: $token Token Account PublicKey: $account Amount: $mint_amount Decimals: $decimals_value\n"
 done
 
 echo -e "$results"

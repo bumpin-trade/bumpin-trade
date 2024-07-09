@@ -1,14 +1,14 @@
 {
   "name": "@bumpin-trade/sdk",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "license": "Apache-2.0",
-  "directories": {
-    "lib": "lib"
-  },
+  "files": [
+    "lib/**/*"
+  ],
   "publishConfig": {
-    "access": "public"
+    "registry": "http://45.32.140.58:4873"
   },
   "scripts": {
     "lint": "eslint './**/*.{ts,tsx}' --quiet",
