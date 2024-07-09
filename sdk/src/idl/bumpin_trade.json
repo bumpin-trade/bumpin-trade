@@ -1454,6 +1454,7 @@
         },
         {
           "name": "state",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -4162,12 +4163,7 @@
           },
           {
             "name": "stable_mint_key",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
+            "type": "pubkey"
           },
           {
             "name": "pool_config",

@@ -1460,6 +1460,7 @@ export type BumpinTrade = {
         },
         {
           "name": "state",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -4168,12 +4169,7 @@ export type BumpinTrade = {
           },
           {
             "name": "stableMintKey",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
+            "type": "pubkey"
           },
           {
             "name": "poolConfig",

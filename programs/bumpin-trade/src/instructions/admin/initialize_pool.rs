@@ -57,7 +57,7 @@ pub struct InitializePool<'info> {
 #[derive(AnchorDeserialize, AnchorSerialize, Debug, Clone, Copy)]
 pub struct InitializePoolParams {
     pub name: [u8; 32],
-    pub stable_mint_key: [u8; 32],
+    pub stable_mint_key: Pubkey,
     pub pool_config: PoolConfig,
     pub stable: bool,
 }
@@ -75,7 +75,7 @@ pub fn handle_initialize_pool(
     pool.name = params.name;
     pool.index = state.pool_sequence;
     pool.stable = params.stable;
-    pool.stable_mint_key = Pubkey::new_from_array(params.stable_mint_key);
+    pool.stable_mint_key = params.stable_mint_key;
     pool.config = params.pool_config;
     safe_increment!(state.pool_sequence, 1);
     Ok(())

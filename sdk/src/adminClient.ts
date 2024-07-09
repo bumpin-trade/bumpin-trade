@@ -73,7 +73,7 @@ export class BumpinAdmin {
         const [pda, _] = BumpinUtils.getBumpinStatePda(this.program);
         let params:InitializePoolParams = {
             name: BumpinUtils.encodeString(poolName),
-            stableMintKey: BumpinUtils.encodeString(stableMint.toString()),
+            stableMintKey: stableMint,
             poolConfig: config,
             stable: stable
         }

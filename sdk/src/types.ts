@@ -55,7 +55,7 @@ export type InitializeStateParams = {
 
 export type InitializePoolParams = {
     name: number[];
-    stableMintKey: number[];
+    stableMintKey: PublicKey;
     poolConfig: PoolConfig;
     stable: boolean;
 }
