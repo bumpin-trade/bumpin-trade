@@ -59,7 +59,7 @@ pub struct InitializePoolParams {
     pub name: [u8; 32],
     pub stable_mint_key: [u8; 32],
     pub pool_config: PoolConfig,
-    pub icon_id: u16, // max 65535
+    pub icon_id: u16,   // max 65535
     pub tags_mask: u16, // max 16
     pub stable: bool,
 }

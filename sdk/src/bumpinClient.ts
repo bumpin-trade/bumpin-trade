@@ -282,10 +282,11 @@ export class BumpinClient {
         }
     }
 
-    public async unStake(toPortfolio: boolean, share: BN, mint: PublicKey) {
+    public async unStake(toPortfolio: boolean, share: number, mint: PublicKey) {
+        let amount_share = BumpinUtils.size2Amount(new BigNumber(share), 9);
         let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(mint, await this.getTradeTokens());
         let targetPool = BumpinPoolUtils.getPoolByMintPublicKey(mint, await this.getPools());
-        await this.userComponent.unStake(toPortfolio, share, targetTradeToken, this.wallet.publicKey, targetPool);
+        await this.userComponent.unStake(toPortfolio, amount_share, targetTradeToken, this.wallet.publicKey, targetPool);
     }
 
     public async deposit(userTokenAccount: PublicKey, mintPublicKey: PublicKey, size: number) {

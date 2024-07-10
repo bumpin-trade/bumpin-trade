@@ -6,7 +6,7 @@ echo "num_loops: $num_loops"
 echo "Creating... "
 # Step 1: Airdrop SOL to the admin account
 solana airdrop 10000 $(solana-keygen pubkey ./keys/admin.json) --url localhost> /dev/null
-decimals=(9 6 8 8 5)
+decimals=(9 6 8 8 8 5)
 results=""
 
 for ((i=1; i<=num_loops; i++))

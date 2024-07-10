@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
 use anchor_spl::token::Mint;
+use anchor_spl::token::{Token, TokenAccount};
 
 use instructions::*;
 
-use crate::processor::optional_accounts::{AccountMaps, load_maps};
+use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::state::infrastructure::user_order::UserOrder;
 use crate::state::pool::PoolConfig;
 use crate::state::user::UserStatus;
@@ -32,7 +32,6 @@ pub mod bumpin_trade {
     use crate::state::pool::{Pool, PoolConfig};
 
     use super::*;
-
 
     pub fn initialize_state<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializeState>,

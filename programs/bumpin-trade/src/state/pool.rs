@@ -2,8 +2,8 @@ use anchor_lang::prelude::*;
 
 use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
-use crate::errors::{BumpErrorCode, BumpResult};
 use crate::errors::BumpErrorCode::PoolSubUnsettleNotEnough;
+use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{add_i128, add_u128, cal_utils, sub_u128};
 use crate::math::casting::Cast;
 use crate::math::constants::PRICE_PRECISION;
@@ -41,7 +41,7 @@ pub struct Pool {
     pub status: PoolStatus,
     pub stable: bool,
     pub market_number: u16,
-    pub icon_id: u16, // max 65535
+    pub icon_id: u16,   // max 65535
     pub tags_mask: u16, // max 16
     pub padding: [u8; 6],
     pub reserve_padding: [u8; 32],
@@ -322,7 +322,7 @@ impl Pool {
                         u_token_pnl
                     })?;
                 }
-            }
+            },
             Some(base_token_pool) => {
                 if token_pnl < 0i128 {
                     if self.stable {
@@ -346,7 +346,7 @@ impl Pool {
                         u_token_pnl
                     })?;
                 }
-            }
+            },
         })
     }
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-num_loops=5
+num_loops=6
 echo "num_loops: $num_loops"
 echo "Creating... "
 
@@ -26,7 +26,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # SOL USDC WBTC WHETH BONK
-decimals=(9 6 8 8 5)
+decimals=(9 6 8 8 8 5)
 
 results=""
 
