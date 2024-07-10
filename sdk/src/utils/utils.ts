@@ -1,4 +1,4 @@
-import {PublicKey, TransactionMessage, VersionedTransaction} from "@solana/web3.js";
+import {ConfirmOptions, PublicKey, TransactionMessage, VersionedTransaction} from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {BN, Program, Provider, Wallet} from "@coral-xyz/anchor";
 import {Buffer} from "buffer";
@@ -6,6 +6,10 @@ import {BumpinTrade} from "../types/bumpin_trade";
 import BigNumber from 'bignumber.js';
 
 export class BumpinUtils {
+
+    public static bigintToUsd(amount: bigint, tokenPrice: number, decimals: number): BigNumber {
+        return BumpinUtils.toUsd(new BN(amount.toString()), tokenPrice, decimals);
+    }
 
     public static toUsd(amount: BN, tokenPrice: number, decimals: number): BigNumber {
         let size = this.amount2Size(amount, decimals);
@@ -90,6 +94,34 @@ export class BumpinUtils {
         );
     }
 
+    public static setTag(tags: number, tag: number): void {
+        tags |= 1 << tag;
+    }
+
+    public static unsetTag(tags: number, tag: number): void {
+        tags &= ~(1 << tag);
+    }
+
+    public static getTags(tags: number): number[] {
+        const result = [];
+        for (let i = 0; i < 32; i++) {
+            if (tags & (1 << i)) {
+                result.push(i);
+            }
+        }
+        return result;
+    }
+
+    public static getRootConfirmOptions() {
+        let opt: ConfirmOptions = {
+            skipPreflight: false,
+            commitment: "root", //default commitment: confirmed
+            preflightCommitment: "root",
+            maxRetries: 0,
+            minContextSlot: null
+        };
+        return opt;
+    }
 
     public static async manualCreateAccount(provider: Provider, wallet: Wallet, newAccountPk: anchor.web3.Keypair, space: number, lamports: number, programId: PublicKey) {
         let i = anchor.web3.SystemProgram.createAccount({

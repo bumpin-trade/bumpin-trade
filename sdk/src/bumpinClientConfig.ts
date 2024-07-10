@@ -11,7 +11,7 @@ export enum NetType {
 export type BumpinClientConfig = {
     netType: NetType;
     endpoint: string;
-    wallet: Wallet;
+    wallet: Wallet | null;
     pollingFrequency: number
 }
 

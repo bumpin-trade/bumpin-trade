@@ -2,6 +2,9 @@ import {PublicKey} from "@solana/web3.js";
 // import BN from "bn.js";
 import {BN} from "@coral-xyz/anchor";
 import {PriceData} from "@pythnetwork/client";
+import {BumpinUtils} from "./utils/utils";
+import {BumpinTokenNotFound} from "./errors";
+import BigNumber from "bignumber.js";
 
 
 export class OracleSource {
@@ -455,4 +458,49 @@ export  type UserClaimResult = {
 export type UserClaimRewardsResult = {
     pool: number[];
     rewardsAmount: BN;
+}
+
+export class TokenBalance {
+    tradeToken: TradeToken;
+    amount: BN;
+    tradeTokenPriceData: PriceData;
+
+    constructor(tradeToken: TradeToken, amount: bigint, tradeTokenPriceData: PriceData) {
+        this.tradeToken = tradeToken;
+        this.amount = new BN(amount.toString());
+        this.tradeTokenPriceData = tradeTokenPriceData;
+    }
+
+    public getTokenName(): string {
+        return BumpinUtils.decodeString(this.tradeToken.name);
+    }
+
+    public getTokenBalanceUsd(): BigNumber {
+        return BumpinUtils.toUsd(this.amount, this.tradeTokenPriceData.price, this.tradeToken.decimals);
+    }
+}
+
+export class WalletBalance {
+    recognized: boolean;
+    solLamports: number;
+    solDecimals: number;
+    tokenBalances: TokenBalance[];
+
+    constructor(recognized: boolean, solLamports: number, solDecimals: number, tokenBalances: TokenBalance[]) {
+        this.recognized = recognized;
+        this.solLamports = solLamports;
+        this.solDecimals = solDecimals;
+        this.tokenBalances = tokenBalances;
+    }
+
+
+    public getTokenBalance(mintKey: PublicKey): TokenBalance {
+        for (let tokenBalance of this.tokenBalances) {
+            if (tokenBalance.tradeToken.mintKey.equals(mintKey)) {
+                return tokenBalance;
+            }
+        }
+        throw new BumpinTokenNotFound(mintKey);
+    }
+
 }

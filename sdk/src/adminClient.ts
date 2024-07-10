@@ -48,8 +48,8 @@ export class BumpinAdmin {
         this.wallet = config.wallet;
         let opt: ConfirmOptions = {
             skipPreflight: false,
-            commitment: "root", //default commitment: confirmed
-            preflightCommitment: "root",
+            commitment: "confirmed", //default commitment: confirmed
+            preflightCommitment: "confirmed",
             maxRetries: 0,
             minContextSlot: null
         };
@@ -86,7 +86,7 @@ export class BumpinAdmin {
             ).accounts({
                 poolMint: poolParam.poolMint,
                 bumpSigner: pda,
-            }).signers([]).rpc();
+            }).signers([]).rpc(BumpinUtils.getRootConfirmOptions());
             console.log("Pool initialized: ", BumpinUtils.decodeString(poolParam.param.name))
         }
 
@@ -97,7 +97,7 @@ export class BumpinAdmin {
             ).accounts({
                 indexMint: marketParam.indexMint,
                 bumpSigner: pda,
-            }).signers([]).rpc();
+            }).signers([]).rpc(BumpinUtils.getRootConfirmOptions());
             console.log("Market initialized: ", BumpinUtils.decodeString(marketParam.params.symbol))
         }
 
@@ -171,7 +171,7 @@ export class BumpinAdmin {
             tradeTokenMint: tradeTokenMintPublicKey,
             oracle: oracleKeypair.publicKey,
             bumpSigner: pda,
-        }).signers([]).rpc();
+        }).signers([]).rpc(BumpinUtils.getRootConfirmOptions());
 
     }
 

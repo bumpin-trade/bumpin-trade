@@ -13,15 +13,18 @@ import {
     Pool,
     PoolSummary,
     State,
+    TokenBalance,
     TradeToken,
     UserAccount,
     UserClaimResult,
     UserClaimRewardsResult,
-    UserStakeStatus
+    UserStakeStatus,
+    WalletBalance
 } from "./types";
 import {
     BumpinAccountNotFound,
     BumpinClientNotInitialized,
+    BumpinInvalidParameter,
     BumpinSubscriptionFailed,
     BumpinUserNotLogin
 } from "./errors";
@@ -41,12 +44,13 @@ import {BumpinMarketUtils} from "./utils/market";
 import {ZERO} from "./constants/numericConstants";
 import {PriceData} from "@pythnetwork/client";
 import BigNumber from "bignumber.js";
+import {AccountLayout, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 
 
 export class BumpinClient {
     netType: NetType;
     connection: Connection;
-    wallet: Wallet;
+    wallet: Wallet | null;
     provider: AnchorProvider;
     public program: Program<BumpinTrade>;
     programPyth: Program<Pyth>;
@@ -90,6 +94,10 @@ export class BumpinClient {
         }
     }
 
+    public hasWallet(): boolean {
+        return this.wallet !== null;
+    }
+
     public async initialize() {
         if (this.isInitialized) {
             return;
@@ -130,6 +138,9 @@ export class BumpinClient {
     }
 
     public async login(): Promise<UserAccount> {
+        if (!this.wallet) {
+            throw new BumpinInvalidParameter("Wallet is not set, when user connect the wallet please reconstruct the BumpinClient instance with wallet parameter.");
+        }
         const [pda, _] = BumpinUtils.getPdaSync(this.program, [Buffer.from("user"), this.wallet.publicKey.toBuffer()]);
         let me = await this.program.account.user.fetch(pda) as any as UserAccount;
         if (me) {
@@ -141,10 +152,62 @@ export class BumpinClient {
 
 
     public async initializeUser() {
+        if (!this.wallet) {
+            throw new BumpinInvalidParameter("Wallet is not set, when user connect the wallet please reconstruct the BumpinClient instance with wallet parameter.");
+        }
+
         await this.program.methods.initializeUser().accounts({
             authority: this.wallet.publicKey,
             payer: this.wallet.publicKey
         }).signers([]).rpc();
+    }
+
+    public async getWalletBalance(recognized: boolean = true, sync: boolean = false): Promise<WalletBalance> {
+        if (!this.wallet) {
+            throw new BumpinInvalidParameter("Wallet is not set, when user connect the wallet please reconstruct the BumpinClient instance with wallet parameter.");
+        }
+
+        if (!this.isInitialized) {
+            throw new BumpinClientNotInitialized();
+        }
+
+        const tradeTokens = await this.getTradeTokens(sync);
+
+        const balance = await this.connection.getBalance(this.wallet.publicKey);
+        const userTokenAccounts = await this.connection.getTokenAccountsByOwner(this.wallet.publicKey, {
+            programId: TOKEN_PROGRAM_ID
+        });
+        const accounts = userTokenAccounts.value.map((accountInfo: any) => {
+            const key: PublicKey = accountInfo.publicKey;
+            const accountData = AccountLayout.decode(accountInfo.account.data);
+            const mint = accountData.mint;
+            const amount = accountData.amount;
+            return {
+                key,
+                mint,
+                amount
+            };
+        });
+
+        let available = accounts;
+        if (recognized) {
+            available = accounts.filter((account) => {
+                return tradeTokens.some((tradeToken) => {
+                    return tradeToken.mintKey.equals(account.mint);
+                });
+            });
+        }
+
+        let tokenBalances: TokenBalance[] = available.map((account) => {
+            const tradeToken = tradeTokens.find((tradeToken) => {
+                return tradeToken.mintKey.equals(account.mint);
+            });
+            const tradeTokenPriceData = this.getTradeTokenPrice(BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0]);
+            return new TokenBalance(tradeToken, account.amount, tradeTokenPriceData);
+        })
+
+
+        return new WalletBalance(recognized, balance, 9, tokenBalances);
     }
 
     public getTradeTokenPrice(tradeTokenKey: PublicKey): PriceData {
