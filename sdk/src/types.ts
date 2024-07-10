@@ -1,7 +1,6 @@
 import {PublicKey} from "@solana/web3.js";
 // import BN from "bn.js";
 import {BN} from "@coral-xyz/anchor";
-import {OraclePriceData} from "./oracles/types";
 import {PriceData} from "@pythnetwork/client";
 
 
@@ -55,9 +54,11 @@ export type InitializeStateParams = {
 
 export type InitializePoolParams = {
     name: number[];
-    stableMintKey: PublicKey;
+    stableMintKey: number[];
     poolConfig: PoolConfig;
     stable: boolean;
+    iconId: number;
+    tagsMask: number
 }
 
 export type State = {
@@ -398,7 +399,6 @@ export type PlaceOrderParams = {
     triggerPrice: BN;
     acceptablePrice: BN;
 }
-
 
 
 export type InnerPlaceOrderParams = {

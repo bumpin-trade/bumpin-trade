@@ -75,8 +75,8 @@ export class BumpinClient {
         this.wallet = config.wallet;
         let opt: ConfirmOptions = {
             skipPreflight: false,
-            commitment: "root", //default commitment: root
-            preflightCommitment: "root",
+            commitment: "confirmed", //default commitment: confirmed
+            preflightCommitment: "confirmed",
             maxRetries: 0,
             minContextSlot: null
         };
@@ -190,11 +190,11 @@ export class BumpinClient {
                 }
             }
             if (pool.stable) {
-                poolSummary.categoryTags.push("__tr_stable_pool");
+                poolSummary.categoryTags.push("stable_pool");
             } else if (isMixed) {
-                poolSummary.categoryTags.push("__tr_mixed_pool");
+                poolSummary.categoryTags.push("mix_pool");
             } else {
-                poolSummary.categoryTags.push("__tr_standard_pool");
+                poolSummary.categoryTags.push("standard_pool");
             }
             poolSummaries.push(poolSummary);
         }

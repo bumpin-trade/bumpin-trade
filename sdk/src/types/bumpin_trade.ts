@@ -4169,7 +4169,12 @@ export type BumpinTrade = {
           },
           {
             "name": "stableMintKey",
-            "type": "pubkey"
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           },
           {
             "name": "poolConfig",
@@ -4178,6 +4183,14 @@ export type BumpinTrade = {
                 "name": "poolConfig"
               }
             }
+          },
+          {
+            "name": "iconId",
+            "type": "u16"
+          },
+          {
+            "name": "tagsMask",
+            "type": "u16"
           },
           {
             "name": "stable",
@@ -4788,11 +4801,19 @@ export type BumpinTrade = {
             "type": "u16"
           },
           {
+            "name": "iconId",
+            "type": "u16"
+          },
+          {
+            "name": "tagsMask",
+            "type": "u16"
+          },
+          {
             "name": "padding",
             "type": {
               "array": [
                 "u8",
-                10
+                6
               ]
             }
           },

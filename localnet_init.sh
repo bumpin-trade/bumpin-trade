@@ -6,13 +6,14 @@ echo "num_loops: $num_loops"
 echo "Creating... "
 # Step 1: Airdrop SOL to the admin account
 solana airdrop 10000 $(solana-keygen pubkey ./keys/admin.json) --url localhost> /dev/null
-
+decimals=(9 6 8 8 5)
 results=""
 
 for ((i=1; i<=num_loops; i++))
 do
+  decimals_value=${decimals[$((i-1))]}
   # Step 2: Create a new SPL token and extract the token address
-  token=$(spl-token create-token --output json | jq -r .commandOutput.address)
+  token=$(spl-token create-token --decimals "$decimals_value" --output json | jq -r .commandOutput.address)
 
   # Step 3: Create a new token account and extract the account address
   account_output=$(spl-token create-account $token)
@@ -22,7 +23,7 @@ do
   mint_amount=$((i * 1000000))
   spl-token mint $token $mint_amount $account > /dev/null
 
-  results+="Token: $token Account: $account Mint: $mint_amount\n"
+  results+="Token Mint: $token Token Account PublicKey: $account Amount: $mint_amount Decimals: $decimals_value\n"
 done
 
 echo  "$results"

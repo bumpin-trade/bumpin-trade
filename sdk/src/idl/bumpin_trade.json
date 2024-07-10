@@ -4163,7 +4163,12 @@
           },
           {
             "name": "stable_mint_key",
-            "type": "pubkey"
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           },
           {
             "name": "pool_config",
@@ -4172,6 +4177,14 @@
                 "name": "PoolConfig"
               }
             }
+          },
+          {
+            "name": "icon_id",
+            "type": "u16"
+          },
+          {
+            "name": "tags_mask",
+            "type": "u16"
           },
           {
             "name": "stable",
@@ -4782,11 +4795,19 @@
             "type": "u16"
           },
           {
+            "name": "icon_id",
+            "type": "u16"
+          },
+          {
+            "name": "tags_mask",
+            "type": "u16"
+          },
+          {
             "name": "padding",
             "type": {
               "array": [
                 "u8",
-                10
+                6
               ]
             }
           },

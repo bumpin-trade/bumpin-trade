@@ -1,4 +1,12 @@
-import {AccountInfo, Connection, PublicKey} from '@solana/web3.js';
+import {
+    AccountInfo,
+    ConfirmOptions,
+    Connection,
+    PublicKey,
+    TransactionInstruction,
+    TransactionMessage,
+    VersionedTransaction
+} from '@solana/web3.js';
 import * as anchor from "@coral-xyz/anchor";
 import {AnchorProvider, BN, Program, Wallet} from "@coral-xyz/anchor";
 import idlBumpinTrade from "./idl/bumpin_trade.json"
@@ -38,7 +46,14 @@ export class BumpinAdmin {
     constructor(config: BumpinAdminConfig) {
         this.connection = new Connection(config.endpoint);
         this.wallet = config.wallet;
-        this.provider = new anchor.AnchorProvider(this.connection, this.wallet, anchor.AnchorProvider.defaultOptions());
+        let opt: ConfirmOptions = {
+            skipPreflight: false,
+            commitment: "confirmed", //default commitment: confirmed
+            preflightCommitment: "confirmed",
+            maxRetries: 0,
+            minContextSlot: null
+        };
+        this.provider = new anchor.AnchorProvider(this.connection, this.wallet, opt);
         this.program = new anchor.Program(JSON.parse(JSON.stringify(idlBumpinTrade)), this.provider);
         //TEST ONLY
         this.TEST_PYTH = new anchor.Program(JSON.parse(JSON.stringify(idlPyth)), this.provider);
@@ -51,13 +66,46 @@ export class BumpinAdmin {
         return parsePriceData(buffer.data);
     }
 
-    public async initializeAll(stateParam: any) {
+    public async initializeAll(stateParam: InitializeStateParams, tradeTokenParams: WrappedInitializeTradeTokenParams[], poolParams: WrappedInitializePoolParams[], marketParams: WrappedInitializeMarketParams[]) {
+        const [pda, _] = BumpinUtils.getBumpinStatePda(this.program);
         let instructions = [];
-        instructions.push(await this.program.methods.initializeState(
-            stateParam
-        ).accounts({
-            admin: this.wallet.publicKey,
-        }).signers([]).instruction());
+
+        await this.initState(stateParam);
+        console.log("State initialized")
+
+        ////////// init tradeToken
+        //TODO: remove oracle init when using Prod env.
+        for (let p of tradeTokenParams) {
+            await this.initTradeToken(p.tradeTokenName, p.tradeTokenMint, p.discount, p.liquidationFactor, p.exponent);
+            console.log("TradeToken initialized: ", p.tradeTokenName)
+        }
+
+        ///////// init pools
+        for (let poolParam of poolParams) {
+            instructions.push(await this.program.methods.initializePool(
+                poolParam.param
+            ).accounts({
+                poolMint: poolParam.poolMint,
+                bumpSigner: pda,
+            }).instruction());
+        }
+
+        await this.sendAndConfirmTransaction(instructions);
+        instructions = [];
+
+
+        //////// init markets
+        for (let marketParam of marketParams) {
+            instructions.push(await this.program.methods.initializeMarket(
+                marketParam.params
+            ).accounts({
+                indexMint: marketParam.indexMint,
+                bumpSigner: pda,
+            }).instruction());
+        }
+
+        await this.sendAndConfirmTransaction(instructions);
+        console.log("All initialized!")
     }
 
 
@@ -69,13 +117,15 @@ export class BumpinAdmin {
         }).signers([]).rpc();
     }
 
-    public async initPool(poolName: string, poolMint: anchor.web3.PublicKey, stable: boolean, stableMint: PublicKey, config: PoolConfig) {
+    public async initPool(poolName: string, poolMint: anchor.web3.PublicKey, stable: boolean, stableMint: PublicKey, iconId: number, tagsMask: number, config: PoolConfig) {
         const [pda, _] = BumpinUtils.getBumpinStatePda(this.program);
-        let params:InitializePoolParams = {
+        let params: InitializePoolParams = {
             name: BumpinUtils.encodeString(poolName),
-            stableMintKey: stableMint,
+            stableMintKey: BumpinUtils.encodeString(stableMint.toString()),
             poolConfig: config,
-            stable: stable
+            stable: stable,
+            iconId: iconId,
+            tagsMask: tagsMask,
         }
         await this.program.methods.initializePool(
             params
@@ -155,5 +205,45 @@ export class BumpinAdmin {
         }).signers([]).rpc();
     }
 
+    async sendAndConfirmTransaction(instructions: Array<TransactionInstruction>) {
+        let lastBlockHash = await this.program.provider.connection
+            .getLatestBlockhash();
+        let blockhash = lastBlockHash.blockhash;
+        let lastValidBlockHeight = lastBlockHash.lastValidBlockHeight;
 
+
+        const messageV0 = new TransactionMessage({
+            instructions: instructions,
+            payerKey: this.wallet.publicKey,
+            recentBlockhash: blockhash,
+        }).compileToV0Message();
+        const transaction = new VersionedTransaction(messageV0);
+        let signedTransaction = await this.wallet.signTransaction(transaction);
+        const signature = await this.provider.connection.sendTransaction(signedTransaction);
+        await this.provider.connection.confirmTransaction({
+            blockhash,
+            lastValidBlockHeight,
+            signature
+        }, 'confirmed');
+    }
+
+}
+
+export type WrappedInitializePoolParams = {
+    poolMint: PublicKey,
+    param: InitializePoolParams,
+}
+
+export type WrappedInitializeTradeTokenParams = {
+    //tradeTokenName: string, tradeTokenMint: string, discount: number, liquidationFactor: number, exponent: number
+    tradeTokenName: string,
+    tradeTokenMint: string,
+    discount: number,
+    liquidationFactor: number,
+    exponent: number
+}
+
+export type WrappedInitializeMarketParams = {
+    indexMint: PublicKey,
+    params: InitializeMarketParams
 }
