@@ -295,13 +295,14 @@ export class UserComponent extends Component {
         let balanceOfUserTradeTokens = await BumpinTokenUtils.getUserTradeTokenBalance(this.oracleClient, user, tradeTokens);
         let balanceOfUserPositions = await BumpinPositionUtils.getUserPositionValue(this.oracleClient, user, tradeTokens);
         return balanceOfUserTradeTokens.tokenNetValue
-            .add(balanceOfUserPositions.initialMarginUsdFromPortfolio)
+            .add(balanceOfUserPositions.initialMarginUsd)
             .add(user.hold)
             .sub(balanceOfUserTradeTokens.tokenUsedValue)
             .add(
                 balanceOfUserPositions.positionUnPnl.gt(new BN(0)) ? new BN(0) : balanceOfUserPositions.positionUnPnl
             )
             .sub(balanceOfUserPositions.initialMarginUsdFromPortfolio)
+            .sub(user.hold)
             .sub(balanceOfUserTradeTokens.tokenBorrowingValue)
     }
 

@@ -19,9 +19,10 @@ export class BumpinPositionUtils {
 
     public static async getUserPositionValue(oracle: OracleClient, user: UserAccount, tradeTokens: TradeToken[]): Promise<PositionBalance> {
         let totalBalance = {
-            initialMarginUsdFromPortfolio: new BN(0),
+            initialMarginUsd: new BN(0),
             positionUnPnl: new BN(0),
-            mmUsd: new BN(0)
+            mmUsd: new BN(0),
+            initialMarginUsdFromPortfolio: new BN(0),
         };
 
         for (let userPosition of user.positions) {
@@ -32,6 +33,7 @@ export class BumpinPositionUtils {
             let unPnlValue = await BumpinPositionUtils.getPositionUnPnlValue(oracle, indexTradeToken, userPosition);
             totalBalance.positionUnPnl = totalBalance.positionUnPnl.add(unPnlValue);
             totalBalance.mmUsd = totalBalance.mmUsd.add(userPosition.mmUsd);
+            totalBalance.initialMarginUsd = totalBalance.initialMarginUsd.add(userPosition.initialMarginUsd);
             totalBalance.initialMarginUsdFromPortfolio = totalBalance.initialMarginUsdFromPortfolio.add(userPosition.initialMarginUsdFromPortfolio);
         }
 

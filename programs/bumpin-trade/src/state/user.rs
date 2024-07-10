@@ -468,8 +468,8 @@ impl User {
                 && user_order.symbol == symbol
                 && user_order.margin_mint_key.eq(margin_token)
                 && ((is_long_order == is_long
-                    && user_order.position_side.eq(&PositionSide::INCREASE))
-                    || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
+                && user_order.position_side.eq(&PositionSide::INCREASE))
+                || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
             {
                 user_order.set_leverage(leverage)
             }
@@ -787,7 +787,8 @@ impl User {
             .safe_sub(total_used_value.cast()?)?
             .safe_add(if total_un_pnl_value > 0 { 0i128 } else { total_un_pnl_value })?
             .safe_sub(total_im_from_portfolio_value.cast()?)?
-            .safe_sub(total_borrowing_value.cast()?)?;
+            .safe_sub(total_borrowing_value.cast()?)?
+            .safe_sub(self.hold.cast()?)?;
         Ok(available_value)
     }
 
@@ -888,7 +889,7 @@ impl User {
                 state.bump_signer_nonce,
                 order.order_margin,
             )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                .map_err(|_e| BumpErrorCode::TransferFailed)?;
         }
         Ok(())
     }

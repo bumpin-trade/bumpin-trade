@@ -384,6 +384,7 @@ export type TradeTokenBalance = {
 }
 
 export type PositionBalance = {
+    initialMarginUsd: BN;
     initialMarginUsdFromPortfolio: BN;
     positionUnPnl: BN;
     mmUsd: BN;
