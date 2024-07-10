@@ -18,7 +18,7 @@ pub fn stake(
 ) -> BumpResult<u128> {
     let trade_token = trade_token_map.get_trade_token_by_mint_ref(&pool.mint_key).unwrap();
 
-    let token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
+    let token_price = oracle_map.get_price_data(&trade_token.oracle_key).unwrap().price;
 
     validate!(
         pool.config.minimum_stake_amount

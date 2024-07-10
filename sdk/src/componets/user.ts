@@ -37,6 +37,7 @@ import {BumpinPositionUtils} from "../utils/position";
 import {BumpinPoolUtils} from "../utils/pool";
 import {Account} from "@solana/spl-token";
 import BigNumber from "bignumber.js";
+import {BumpinMarketUtils} from "../utils/market";
 
 export class UserComponent extends Component {
     publicKey: PublicKey;
@@ -62,7 +63,7 @@ export class UserComponent extends Component {
     }
 
 
-    public async portfolioStake(size: number, tradeToken: TradeToken, allTradeTokens: TradeToken[], pool: Pool, sync: boolean = false): Promise<void> {
+    public async portfolioStake(size: number, tradeToken: TradeToken, allTradeTokens: TradeToken[], pool: Pool, allMarkets: Market[], sync: boolean = false): Promise<void> {
         let user = await this.getUser(sync);
         let amount = BumpinUtils.size2Amount(new BigNumber(size), tradeToken.decimals);
         let stake_value = await this.checkStakeAmountFulfilRequirements(amount, tradeToken, pool);
@@ -71,7 +72,15 @@ export class UserComponent extends Component {
             throw new BumpinValueInsufficient(amount, availableValue)
         }
 
-        let remainingAccounts = this.getUserRemainingAccounts(user, allTradeTokens);
+        let remainingAccounts = this.getUserRemainingAccounts(await this.getUser(), allTradeTokens);
+        let markets = BumpinMarketUtils.getMarketsByPoolKey(pool.key, allMarkets);
+        for (let market of markets) {
+            remainingAccounts.push({
+                pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
+                isWritable: true,
+                isSigner: false,
+            });
+        }
 
         await this.program.methods.portfolioStake(
             pool.index, tradeToken.index, amount
@@ -84,7 +93,7 @@ export class UserComponent extends Component {
             .signers([]).rpc();
     }
 
-    public async walletStake(size: number, tradeToken: TradeToken, allTradeTokens: TradeToken[], wallet: PublicKey, pool: Pool, sync: boolean = false): Promise<void> {
+    public async walletStake(size: number, tradeToken: TradeToken, allTradeTokens: TradeToken[], wallet: PublicKey, pool: Pool, allMarkets: Market[], sync: boolean = false): Promise<void> {
         // let user = await this.getUser(sync);
         let amount = BumpinUtils.size2Amount(new BigNumber(size), tradeToken.decimals);
         await this.checkStakeAmountFulfilRequirements(amount, tradeToken, pool);
@@ -108,6 +117,15 @@ export class UserComponent extends Component {
             isWritable: false,
             isSigner: false,
         });
+
+        let markets = BumpinMarketUtils.getMarketsByPoolKey(pool.key, allMarkets);
+        for (let market of markets) {
+            remainingAccounts.push({
+                pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
+                isWritable: true,
+                isSigner: false,
+            });
+        }
 
         await this.program.methods.walletStake(
             pool.index, tradeToken.index, amount

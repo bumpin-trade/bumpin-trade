@@ -273,12 +273,13 @@ export class BumpinClient {
     }
 
     public async stake(fromPortfolio: boolean, size: number, mint: PublicKey, sync: boolean = false) {
+        let markets = await this.getMarkets(sync);
         let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(mint, await this.getTradeTokens());
         let targetPool = BumpinPoolUtils.getPoolByMintPublicKey(mint, await this.getPools());
         if (fromPortfolio) {
-            await this.userComponent.portfolioStake(size, targetTradeToken, await this.getTradeTokens(), targetPool, sync);
+            await this.userComponent.portfolioStake(size, targetTradeToken, await this.getTradeTokens(), targetPool,markets, sync);
         } else {
-            await this.userComponent.walletStake(size, targetTradeToken, await this.getTradeTokens(), this.wallet.publicKey, targetPool, sync);
+            await this.userComponent.walletStake(size, targetTradeToken, await this.getTradeTokens(), this.wallet.publicKey, targetPool, markets, sync);
         }
     }
 
