@@ -48,8 +48,8 @@ export class BumpinAdmin {
         this.wallet = config.wallet;
         let opt: ConfirmOptions = {
             skipPreflight: false,
-            commitment: "confirmed", //default commitment: confirmed
-            preflightCommitment: "confirmed",
+            commitment: "root", //default commitment: confirmed
+            preflightCommitment: "root",
             maxRetries: 0,
             minContextSlot: null
         };
@@ -68,13 +68,12 @@ export class BumpinAdmin {
 
     public async initializeAll(stateParam: InitializeStateParams, tradeTokenParams: WrappedInitializeTradeTokenParams[], poolParams: WrappedInitializePoolParams[], marketParams: WrappedInitializeMarketParams[]) {
         const [pda, _] = BumpinUtils.getBumpinStatePda(this.program);
-        let instructions = [];
 
         await this.initState(stateParam);
         console.log("State initialized")
 
-        ////////// init tradeToken
-        //TODO: remove oracle init when using Prod env.
+        // ////////// init tradeToken
+        // //TODO: remove oracle init when using Prod env.
         for (let p of tradeTokenParams) {
             await this.initTradeToken(p.tradeTokenName, p.tradeTokenMint, p.discount, p.liquidationFactor, p.exponent);
             console.log("TradeToken initialized: ", p.tradeTokenName)
@@ -82,29 +81,26 @@ export class BumpinAdmin {
 
         ///////// init pools
         for (let poolParam of poolParams) {
-            instructions.push(await this.program.methods.initializePool(
+            await this.program.methods.initializePool(
                 poolParam.param
             ).accounts({
                 poolMint: poolParam.poolMint,
                 bumpSigner: pda,
-            }).instruction());
+            }).signers([]).rpc();
+            console.log("Pool initialized: ", BumpinUtils.decodeString(poolParam.param.name))
         }
-
-        await this.sendAndConfirmTransaction(instructions);
-        instructions = [];
-
 
         //////// init markets
         for (let marketParam of marketParams) {
-            instructions.push(await this.program.methods.initializeMarket(
+            await this.program.methods.initializeMarket(
                 marketParam.params
             ).accounts({
                 indexMint: marketParam.indexMint,
                 bumpSigner: pda,
-            }).instruction());
+            }).signers([]).rpc();
+            console.log("Market initialized: ", BumpinUtils.decodeString(marketParam.params.symbol))
         }
 
-        await this.sendAndConfirmTransaction(instructions);
         console.log("All initialized!")
     }
 
