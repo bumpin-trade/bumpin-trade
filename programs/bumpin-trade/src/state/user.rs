@@ -769,11 +769,13 @@ impl User {
             if user_position.status.eq(&PositionStatus::INIT) {
                 continue;
             }
-
-            let index_trade_token =
-                trade_token_map.get_trade_token_by_mint_ref(&user_position.index_mint_key)?;
-            let (initial_margin_usd_from_portfolio, position_un_pnl, mm_usd) =
-                user_position.get_position_value(&index_trade_token, oracle_map)?;
+            let (initial_margin_usd_from_portfolio, position_un_pnl, mm_usd) = user_position
+                .get_position_value(
+                    oracle_map
+                        .get_price_data(&user_position.index_mint_oracle)
+                        .map_err(|_e| BumpErrorCode::OracleNotFound)?
+                        .price,
+                )?;
 
             total_im_from_portfolio_value =
                 total_im_from_portfolio_value.safe_add(initial_margin_usd_from_portfolio)?;
@@ -810,11 +812,10 @@ impl User {
             if user_position.status.eq(&PositionStatus::INIT) {
                 continue;
             }
-            let index_trade_token =
-                trade_token_map.get_trade_token_by_mint_ref(&user_position.index_mint_key)?;
+
             let trade_token =
                 trade_token_map.get_trade_token_by_mint_ref(&user_position.margin_mint_key)?;
-            let index_price = price_map.get_price_data(&index_trade_token.oracle_key)?.price;
+            let index_price = price_map.get_price_data(&user_position.index_mint_oracle)?.price;
             let margin_token_price = price_map.get_price_data(&trade_token.oracle_key)?.price;
             let market = market_map.get_ref(&user_position.symbol)?;
             let pool = pool_map.get_ref(&market.pool_key)?;

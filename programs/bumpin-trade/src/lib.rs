@@ -6,9 +6,7 @@ use instructions::*;
 
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::state::infrastructure::user_order::UserOrder;
-use crate::state::pool::PoolConfig;
 use crate::state::user::UserStatus;
-use crate::state::vault_map::VaultMap;
 use crate::traits::Size;
 
 pub mod errors;
@@ -25,12 +23,7 @@ declare_id!("Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR");
 
 #[program]
 pub mod bumpin_trade {
-    use std::cell::RefMut;
-    use std::ops::DerefMut;
-
     use crate::state::infrastructure::user_order::OrderSide;
-    use crate::state::pool::{Pool, PoolConfig};
-
     use super::*;
 
     pub fn initialize_state<'a, 'b, 'c: 'info, 'info>(
@@ -130,48 +123,40 @@ pub mod bumpin_trade {
         ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
         order: PlaceOrderParams,
     ) -> Result<()> {
-        let same_pool = order.pool_index == order.stable_pool_index;
         // let same_trade_token = order.trade_token_index == order.index_trade_token_index;
-        let mut market = ctx.accounts.market.load_mut()?;
-        let mut user = ctx.accounts.user.load_mut()?;
-        let mut pool = ctx.accounts.pool.load_mut()?;
-        let stable_pool: Option<RefMut<Pool>> =
-            if same_pool { None } else { Some(ctx.accounts.stable_pool.load_mut()?) };
-        let _margin_token = if order.order_side.eq(&OrderSide::LONG) {
-            &market.pool_mint_key
-        } else {
-            &market.stable_pool_mint_key
-        };
+        let market = &mut ctx.accounts.market.load_mut()?;
+        let user = &mut ctx.accounts.user.load_mut()?;
+        let pool = &mut ctx.accounts.pool.load_mut()?;
+        let stable_pool = &mut ctx.accounts.stable_pool.load_mut()?;
 
         let state_account = &ctx.accounts.state;
         let user_token_account = &ctx.accounts.user_token_account;
         let pool_vault_account = &ctx.accounts.pool_vault;
         let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
-        let trade_token_vault_account = &ctx.accounts.trade_token_vault;
         let bump_signer_account_info = &ctx.accounts.bump_signer;
         let token_program = &ctx.accounts.token_program;
         let remaining_accounts = ctx.remaining_accounts;
-        let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts)?;
+        let AccountMaps { trade_token_map, mut oracle_map, market_map, .. } =
+            load_maps(remaining_accounts)?;
 
         handle_execute_order(
-            user.deref_mut(),
-            market.deref_mut(),
-            pool.deref_mut(),
+            user,
+            market,
+            pool,
             stable_pool,
             state_account,
             user_token_account,
             pool_vault_account,
             stable_pool_vault_account,
-            trade_token_vault_account,
             bump_signer_account_info,
             token_program,
             ctx.program_id,
             &trade_token_map,
             &mut oracle_map,
+            if order.order_side.eq(&OrderSide::LONG) { &ctx.accounts.trade_token_vault } else { &ctx.accounts.stable_trade_token_vault },
+            &market_map,
             &UserOrder::default(),
             order.order_id,
-            order.trade_token_index,
-            order.index_trade_token_index,
             true,
         )
     }
@@ -203,32 +188,24 @@ pub mod bumpin_trade {
         ctx: Context<'a, 'b, 'c, 'info, LiquidatePosition>,
         position_key: Pubkey,
         liquidation_price: u128,
-        market_index: u16,
-        pool_index: u16,
-        stable_pool_index: u16,
-        user_authority_key: Pubkey,
+        _market_index: u16,
+        _pool_index: u16,
+        _stable_pool_index: u16,
+        _user_authority_key: Pubkey,
     ) -> Result<()> {
-        handle_liquidate_position(
-            ctx,
-            position_key,
-            liquidation_price,
-            market_index,
-            pool_index,
-            stable_pool_index,
-            user_authority_key,
-        )
+        handle_liquidate_position(ctx, position_key, liquidation_price)
     }
 
     /*-----adl------*/
     pub fn adl<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ADL<'info>>,
-        pool_index: u16,
-        stable_pool_index: u16,
-        market_index: u16,
-        trade_token_index: u16,
+        _pool_index: u16,
+        _stable_pool_index: u16,
+        _market_index: u16,
+        _trade_token_index: u16,
         params: [ADLParams; 10],
     ) -> Result<()> {
-        handle_adl(ctx, pool_index, stable_pool_index, market_index, trade_token_index, params)
+        handle_adl(ctx, params)
     }
 
     pub fn update_user_status(

@@ -178,6 +178,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 stake_params.request_token_amount,
             )?;
             pool.add_amount_and_supply(stake_params.request_token_amount, supply_amount)?;
+            pool.update_pool_borrowing_fee_rate()?;
             emit!(StakeOrUnStakeEvent {
                 user_key: user.key,
                 token_mint: pool.mint_key,
@@ -218,6 +219,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 stake_params.request_token_amount,
             )?;
             pool.add_amount_and_supply(stake_params.request_token_amount, supply_amount)?;
+            pool.update_pool_borrowing_fee_rate()?;
             emit!(StakeOrUnStakeEvent {
                 user_key,
                 token_mint: pool.mint_key,

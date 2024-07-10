@@ -21,7 +21,7 @@ pub struct UpdatePositionLeverage<'info> {
         mut,
         seeds = [b"user", authority.key().as_ref()],
         bump,
-        constraint = can_sign_for_user(& user, & authority) ? && is_normal(&user) ?,
+        constraint = can_sign_for_user(& user, & authority) ? && is_normal(& user) ?,
     )]
     pub user: AccountLoader<'info, User>,
 
@@ -48,6 +48,13 @@ pub struct UpdatePositionLeverage<'info> {
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
+        seeds = [b"pool", params.pool_index.to_le_bytes().as_ref()],
+        bump,
+        constraint = pool.load() ?.mint_key.eq(& user_token_account.mint),
+    )]
+    pub stable_pool: AccountLoader<'info, Pool>,
+
+    #[account(
         seeds = [b"market", params.market_index.to_le_bytes().as_ref()],
         bump,
         constraint = (market.load() ?.pool_mint_key.eq(& user_token_account.mint) || market.load() ?.pool_key.eq(& user_token_account.mint)) && market.load() ?.pool_key.eq(& pool.load() ?.key) || market.load() ?.stable_pool_key.eq(& pool.load() ?.key),
@@ -57,7 +64,7 @@ pub struct UpdatePositionLeverage<'info> {
     #[account(
         seeds = [b"pool_vault".as_ref(), params.pool_index.to_le_bytes().as_ref()],
         bump,
-        token::mint = pool.load()?.mint_key,
+        token::mint = pool.load() ?.mint_key,
         token::authority = bump_signer
     )]
     pub pool_mint_vault: Box<Account<'info, TokenAccount>>,
@@ -85,11 +92,14 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
     params: UpdatePositionLeverageParams,
 ) -> Result<()> {
     let user = &mut ctx.accounts.user.load_mut()?;
+    let pool = &mut ctx.accounts.pool.load_mut()?;
+    let stable_pool = &mut ctx.accounts.stable_pool.load_mut()?;
+    let market = &mut ctx.accounts.market.load_mut()?;
 
     let remaining_accounts = ctx.remaining_accounts;
-    let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts)?;
+    let AccountMaps { trade_token_map, mut oracle_map, market_map, .. } =
+        load_maps(remaining_accounts)?;
 
-    let market = ctx.accounts.market.load_mut()?;
     validate!(
         params.leverage <= market.config.maximum_leverage,
         BumpErrorCode::LeverageIsNotAllowed
@@ -101,23 +111,27 @@ pub fn handle_update_position_leverage<'a, 'b, 'c: 'info, 'info>(
         params.is_portfolio_margin,
         ctx.program_id,
     )?;
-    let position = user.get_user_position_ref(&position_key)?;
-    validate!(position.leverage != params.leverage, BumpErrorCode::LeverageIsNotAllowed)?;
+    {
+        let position = user.get_user_position_ref(&position_key)?;
+        validate!(position.leverage != params.leverage, BumpErrorCode::LeverageIsNotAllowed)?;
+    }
 
     position_processor::update_leverage(
         params,
         &position_key,
-        &ctx.accounts.user,
+        user,
         &ctx.accounts.authority,
-        &ctx.accounts.pool,
+        pool,
+        stable_pool,
         &ctx.accounts.state,
-        &ctx.accounts.market,
+        market,
         &ctx.accounts.user_token_account,
         &ctx.accounts.pool_mint_vault,
         &ctx.accounts.bump_signer,
         &ctx.accounts.token_program,
         &trade_token_map,
         &mut oracle_map,
+        &market_map,
     )?;
     Ok(())
 }

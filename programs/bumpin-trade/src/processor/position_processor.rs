@@ -1,7 +1,5 @@
-use std::cell::RefMut;
-
 use anchor_lang::prelude::*;
-use anchor_lang::prelude::{Account, AccountLoader, Program, Signer};
+use anchor_lang::prelude::{Account, Program, Signer};
 use anchor_lang::{emit, ToAccountInfo};
 use anchor_spl::token::{Token, TokenAccount};
 
@@ -16,6 +14,7 @@ use crate::state::bump_events::{
 use crate::state::infrastructure::user_order::{OrderSide, UserOrder};
 use crate::state::infrastructure::user_position::{PositionStatus, UserPosition};
 use crate::state::market::{Market, UpdateOIParams};
+use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::state::State;
@@ -87,7 +86,7 @@ pub fn decrease_position<'info>(
     user: &mut User,
     market: &mut Market,
     stake_token_pool: &mut Pool,
-    stable_pool: &mut Option<RefMut<Pool>>,
+    stable_pool: &mut Pool,
     state_account: &Account<'info, State>,
     user_token_account: Option<&Account<'info, TokenAccount>>,
     pool_vault_account: &Account<'info, TokenAccount>,
@@ -105,30 +104,14 @@ pub fn decrease_position<'info>(
         let margin_mint_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
         update_borrowing_fee(
             position,
-            if position.is_long {
-                stake_token_pool
-            } else {
-                if let Some(ref mut stable_pool) = stable_pool {
-                    stable_pool
-                } else {
-                    stake_token_pool
-                }
-            },
+            if position.is_long { stake_token_pool } else { stable_pool },
             params.execute_price,
             trade_token,
         )?;
         update_funding_fee(
             position,
             market,
-            if position.is_long {
-                stake_token_pool
-            } else {
-                if let Some(ref mut stable_pool) = stable_pool {
-                    stable_pool
-                } else {
-                    stake_token_pool
-                }
-            },
+            if position.is_long { stake_token_pool } else { stable_pool },
             params.execute_price,
             trade_token,
         )?;
@@ -209,15 +192,7 @@ pub fn decrease_position<'info>(
             state_account,
             trade_token,
             &response,
-            if pre_position.is_long {
-                stake_token_pool
-            } else {
-                if let Some(ref mut stable_pool) = stable_pool {
-                    stable_pool
-                } else {
-                    stake_token_pool
-                }
-            },
+            if pre_position.is_long { stake_token_pool } else { stable_pool },
             &pre_position,
         )?;
     }
@@ -227,7 +202,7 @@ pub fn decrease_position<'info>(
 
 fn collect_decrease_fee(
     base_token_pool: &mut Pool,
-    stable_pool: &mut Option<RefMut<Pool>>,
+    stable_pool: &mut Pool,
     market: &mut Market,
     state_account: &Account<State>,
     is_portfolio_margin: bool,
@@ -241,15 +216,7 @@ fn collect_decrease_fee(
 ) -> BumpResult {
     if is_long {
         fee_processor::collect_long_close_position_fee(
-            if is_long {
-                base_token_pool
-            } else {
-                if let Some(ref mut stable_pool) = stable_pool {
-                    stable_pool
-                } else {
-                    base_token_pool
-                }
-            },
+            if is_long { base_token_pool } else { stable_pool },
             settle_close_fee,
             is_portfolio_margin,
         )?;
@@ -263,30 +230,17 @@ fn collect_decrease_fee(
         )?;
     }
     fee_processor::collect_borrowing_fee(
-        if is_long {
-            base_token_pool
-        } else {
-            if let Some(ref mut stable_pool) = stable_pool {
-                stable_pool
-            } else {
-                base_token_pool
-            }
-        },
+        if is_long { base_token_pool } else { stable_pool },
         settle_borrowing_fee,
         is_portfolio_margin,
     )?;
 
-    if is_long {
-        base_token_pool
-    } else {
-        if let Some(ref mut stable_pool) = stable_pool {
-            stable_pool
-        } else {
-            base_token_pool
-        }
-    }
-    .borrowing_fee
-    .update_total_borrowing_fee(settle_borrowing_fee, true, settle_borrowing_fee, false)?;
+    if is_long { base_token_pool } else { stable_pool }.borrowing_fee.update_total_borrowing_fee(
+        settle_borrowing_fee,
+        true,
+        settle_borrowing_fee,
+        false,
+    )?;
     market.update_market_total_funding_fee(settle_funding_fee, is_long)?;
     market.update_oi(
         false,
@@ -322,7 +276,7 @@ fn settle<'info>(
     response: &UpdateDecreaseResponse,
     user: &mut User,
     base_token_pool: &mut Pool,
-    stable_pool: &mut Option<RefMut<Pool>>,
+    stable_pool: &mut Pool,
     state_account: &Account<'info, State>,
     user_token_account: Option<&Account<'info, TokenAccount>>,
     pool_vault_account: &Account<'info, TokenAccount>,
@@ -374,16 +328,12 @@ fn settle<'info>(
             None,
         )?;
     } else {
-        if let Some(stable_pool) = stable_pool {
-            stable_pool.update_pnl_and_un_hold_pool_amount(
-                response.un_hold_pool_amount,
-                response.pool_pnl_token,
-                add_liability,
-                Some(base_token_pool),
-            )?;
-        } else {
-            return Err(BumpErrorCode::InvalidParam);
-        }
+        stable_pool.update_pnl_and_un_hold_pool_amount(
+            response.un_hold_pool_amount,
+            response.pool_pnl_token,
+            add_liability,
+            Some(base_token_pool),
+        )?;
     }
     Ok(())
 }
@@ -537,11 +487,16 @@ fn add_insurance_fund(
 pub fn execute_reduce_position_margin(
     params: &UpdatePositionMarginParams,
     need_update_leverage: bool,
-    trade_token: &TradeToken,
-    pool: &mut Pool,
+    base_trade_token: &TradeToken,
+    stable_trade_token: &TradeToken,
+    base_token_pool: &mut Pool,
+    stable_pool: &mut Pool,
     market: &Market,
     state: &State,
     position: &mut UserPosition,
+    oracle_map: &mut OracleMap,
+    trade_token_map: &TradeTokenMap,
+    market_map: &MarketMap,
 ) -> BumpResult<u128> {
     let max_reduce_margin_in_usd = position.initial_margin_usd.safe_sub(
         cal_utils::div_rate_u(position.position_size, market.config.maximum_leverage as u128)?
@@ -555,7 +510,7 @@ pub fn execute_reduce_position_margin(
     let pre_position = *position;
     let reduce_margin_amount = cal_utils::usd_to_token_u(
         params.update_margin_amount,
-        trade_token.decimals,
+        if position.is_long { base_trade_token.decimals } else { stable_trade_token.decimals },
         position.entry_price,
     )?;
 
@@ -586,7 +541,34 @@ pub fn execute_reduce_position_margin(
         position.set_initial_margin_usd_from_portfolio(position.initial_margin_usd)?;
     }
     position.add_hold_pool_amount(reduce_margin_amount)?;
-    pool.hold_pool(reduce_margin_amount)?;
+
+    //lock pool amount
+    if position.is_long {
+        base_token_pool.hold_pool_amount(
+            reduce_margin_amount,
+            oracle_map,
+            base_trade_token,
+            stable_trade_token,
+        )?
+    } else {
+        let base_token_pool_value =
+            base_token_pool.get_pool_usd_value(trade_token_map, oracle_map, market_map)?;
+        validate!(
+            base_token_pool_value
+                >= cal_utils::token_to_usd_u(
+                    reduce_margin_amount,
+                    stable_trade_token.decimals,
+                    oracle_map.get_price_data(&stable_trade_token.oracle_key).map_err(|_e|BumpErrorCode::OracleNotFound)?.price
+                )?,
+            BumpErrorCode::AmountNotEnough
+        )?;
+        stable_pool.hold_pool_amount(
+            reduce_margin_amount,
+            oracle_map,
+            base_trade_token,
+            stable_trade_token,
+        )?
+    }
     emit!(AddOrDecreaseMarginEvent { user_key, position: *position, pre_position, is_add: false });
     Ok(reduce_margin_amount)
 }
@@ -843,9 +825,10 @@ pub fn execute_add_position_margin(
 pub fn increase_position(
     user: &mut User,
     base_token_pool: &mut Pool,
-    mut stable_pool: Option<RefMut<Pool>>,
+    stable_pool: &mut Pool,
     market: &mut Market,
     trade_token: &TradeToken,
+    stable_trade_token: &TradeToken,
     program_id: &Pubkey,
     order: &UserOrder,
     order_margin: u128,
@@ -853,6 +836,9 @@ pub fn increase_position(
     execute_price: u128,
     margin_token_price: u128,
     fee: u128,
+    oracle_map: &mut OracleMap,
+    trade_token_map: &TradeTokenMap,
+    market_map: &MarketMap,
 ) -> BumpResult<()> {
     let position_key = pda::generate_position_key(
         &user.key,
@@ -870,15 +856,6 @@ pub fn increase_position(
     if position.leverage != order.leverage {
         return Err(BumpErrorCode::LeverageIsNotAllowed.into());
     }
-    let pool = if position.is_long {
-        base_token_pool
-    } else {
-        if let Some(pool) = stable_pool.as_mut() {
-            pool
-        } else {
-            base_token_pool
-        }
-    };
 
     let increase_margin = cal_utils::sub_u128(order_margin, fee)?;
     let increase_margin_from_balance = if order_margin_from_balance > fee {
@@ -899,7 +876,7 @@ pub fn increase_position(
 
     if position.position_size == 0u128 {
         //new position
-        position.set_index_mint(market.index_mint_key)?;
+        position.set_index_mint(market.index_mint_oracle)?;
         position.set_symbol(order.symbol)?;
         position.set_margin_mint(order.margin_mint_key)?;
         position.set_leverage(order.leverage)?;
@@ -927,9 +904,11 @@ pub fn increase_position(
         position.set_realized_pnl(
             -cal_utils::token_to_usd_u(fee, decimal, margin_token_price)?.cast::<i128>()?,
         )?;
-        position.set_open_borrowing_fee_per_token(
-            pool.borrowing_fee.cumulative_borrowing_fee_per_token,
-        )?;
+        position.set_open_borrowing_fee_per_token(if order.order_side.eq(&OrderSide::LONG) {
+            base_token_pool.borrowing_fee.cumulative_borrowing_fee_per_token
+        } else {
+            stable_pool.borrowing_fee.cumulative_borrowing_fee_per_token
+        })?;
         position.set_open_funding_fee_amount_per_size(if is_long {
             market.funding_fee.long_funding_fee_amount_per_size
         } else {
@@ -941,8 +920,19 @@ pub fn increase_position(
     } else {
         let pre_position = position.clone();
         //increase position
-        update_borrowing_fee(position, pool, margin_token_price, &trade_token)?;
-        update_funding_fee(position, market, pool, margin_token_price, &trade_token)?;
+        update_borrowing_fee(
+            position,
+            if order.order_side.eq(&OrderSide::LONG) { base_token_pool } else { stable_pool },
+            margin_token_price,
+            &trade_token,
+        )?;
+        update_funding_fee(
+            position,
+            market,
+            if order.order_side.eq(&OrderSide::LONG) { base_token_pool } else { stable_pool },
+            margin_token_price,
+            &trade_token,
+        )?;
         position.set_entry_price(cal_utils::compute_avg_entry_price(
             position.position_size,
             position.entry_price,
@@ -983,7 +973,32 @@ pub fn increase_position(
     )?;
 
     //lock pool amount
-    pool.hold_pool(increase_hold)?;
+    if order.order_side.eq(&OrderSide::LONG) {
+        base_token_pool.hold_pool_amount(
+            increase_hold,
+            oracle_map,
+            trade_token,
+            stable_trade_token,
+        )?
+    } else {
+        let base_token_pool_value =
+            base_token_pool.get_pool_usd_value(trade_token_map, oracle_map, market_map)?;
+        validate!(
+            base_token_pool_value
+                >= cal_utils::token_to_usd_u(
+                    increase_margin,
+                    stable_trade_token.decimals,
+                    margin_token_price
+                )?,
+            BumpErrorCode::AmountNotEnough
+        )?;
+        stable_pool.hold_pool_amount(
+            increase_margin,
+            oracle_map,
+            trade_token,
+            stable_trade_token,
+        )?
+    }
 
     Ok(())
 }
@@ -991,36 +1006,45 @@ pub fn increase_position(
 pub fn update_leverage<'info>(
     params: UpdatePositionLeverageParams,
     position_key: &Pubkey,
-    user_account: &AccountLoader<'info, User>,
+    user: &mut User,
     authority: &Signer<'info>,
-    pool: &AccountLoader<'info, Pool>,
-    state: &Account<'info, State>,
-    market: &AccountLoader<'info, Market>,
+    base_token_pool: &mut Pool,
+    stable_pool: &mut Pool,
+    state: &State,
+    market: &mut Market,
     user_token_account: &Account<'info, TokenAccount>,
     pool_vault: &Account<'info, TokenAccount>,
     bump_signer: &AccountInfo<'info>,
     token_program: &Program<'info, Token>,
     trade_token_map: &TradeTokenMap,
     oracle_map: &mut OracleMap,
+    market_map: &MarketMap,
 ) -> BumpResult<()> {
-    let mut user = user_account.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
-    let position = user.get_user_position_mut_ref(position_key)?;
-    let trade_token = trade_token_map.get_trade_token_by_mint_ref(&position.margin_mint_key)?;
-    let pool = &mut pool.load_mut().map_err(|_| BumpErrorCode::CouldNotLoadPoolData)?;
+    let position = *user.get_user_position_ref(position_key)?;
+    let base_trade_token = trade_token_map.get_trade_token_by_mint_ref(&market.pool_mint_key)?;
+    let stable_trade_token =
+        trade_token_map.get_trade_token_by_mint_ref(&market.stable_pool_mint_key)?;
 
     if position.position_size != 0u128 {
         if position.leverage > params.leverage {
             let add_margin_amount;
             let mut add_initial_margin_from_portfolio = 0u128;
             if position.is_portfolio_margin {
-                let user = &mut user_account
-                    .load_mut()
-                    .map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
-                let available_amount =
-                    user.get_user_token_ref(&trade_token.mint_key)?.get_token_available_amount()?;
-                position.set_leverage(params.leverage)?;
+                let (position_leverage, position_size, position_entry_price) = {
+                    let position = user.get_user_position_mut_ref(position_key)?;
+                    position.set_leverage(params.leverage)?;
+                    (position.leverage, position.position_size, position.entry_price)
+                };
+
+                let available_amount = user
+                    .get_user_token_ref(&if position.is_long {
+                        base_trade_token.mint_key
+                    } else {
+                        stable_trade_token.mint_key
+                    })?
+                    .get_token_available_amount()?;
                 let new_initial_margin_in_usd =
-                    cal_utils::div_rate_u(position.position_size, position.leverage as u128)?;
+                    cal_utils::div_rate_u(position_size, position_leverage as u128)?;
                 let add_margin_in_usd = if new_initial_margin_in_usd > position.initial_margin_usd {
                     new_initial_margin_in_usd.safe_sub(position.initial_margin_usd)?
                 } else {
@@ -1033,21 +1057,31 @@ pub fn update_leverage<'info>(
                     BumpErrorCode::AmountNotEnough.into()
                 )?;
 
-                let user = &mut user_account
-                    .load_mut()
-                    .map_err(|_e| BumpErrorCode::CouldNotLoadUserData)?;
                 add_margin_amount = cal_utils::usd_to_token_u(
                     add_margin_in_usd,
-                    trade_token.decimals,
-                    position.entry_price,
+                    if position.is_long {
+                        base_trade_token.decimals
+                    } else {
+                        stable_trade_token.decimals
+                    },
+                    position_entry_price,
                 )?;
                 add_initial_margin_from_portfolio = cal_utils::token_to_usd_u(
                     add_margin_amount.min(available_amount),
-                    trade_token.decimals,
-                    position.entry_price,
+                    if position.is_long {
+                        base_trade_token.decimals
+                    } else {
+                        stable_trade_token.decimals
+                    },
+                    position_entry_price,
                 )?;
+
                 user.use_token(
-                    &trade_token.mint_key,
+                    &if position.is_long {
+                        base_trade_token.mint_key
+                    } else {
+                        stable_trade_token.mint_key
+                    },
                     add_margin_amount,
                     user_token_account.to_account_info().key,
                     false,
@@ -1056,6 +1090,7 @@ pub fn update_leverage<'info>(
                 add_margin_amount = params.add_margin_amount;
             }
 
+            let position = user.get_user_position_mut_ref(position_key)?;
             execute_add_position_margin(
                 &UpdatePositionMarginParams {
                     position_key: *position_key,
@@ -1064,8 +1099,8 @@ pub fn update_leverage<'info>(
                     add_initial_margin_from_portfolio,
                     ..UpdatePositionMarginParams::default()
                 },
-                &trade_token,
-                pool,
+                if position.is_long { &base_trade_token } else { &stable_trade_token },
+                if position.is_long { base_token_pool } else { stable_pool },
                 position,
             )?;
             if !params.is_portfolio_margin {
@@ -1079,6 +1114,7 @@ pub fn update_leverage<'info>(
                 .map_err(|_e| BumpErrorCode::TransferFailed)?;
             }
         } else {
+            let position = user.get_user_position_mut_ref(position_key)?;
             position.set_leverage(params.leverage)?;
             let reduce_margin = position.initial_margin_usd.safe_sub(cal_utils::div_rate_u(
                 position.position_size,
@@ -1093,17 +1129,21 @@ pub fn update_leverage<'info>(
                     ..UpdatePositionMarginParams::default()
                 },
                 false,
-                &trade_token,
-                pool,
-                &*market.load().map_err(|_| BumpErrorCode::CouldNotLoadMarketData)?,
+                &base_trade_token,
+                &stable_trade_token,
+                base_token_pool,
+                stable_pool,
+                market,
                 state,
                 position,
+                oracle_map,
+                trade_token_map,
+                market_map,
             )?;
-            if position.is_portfolio_margin {
-                let user = &mut user_account
-                    .load_mut()
-                    .map_err(|_| BumpErrorCode::CouldNotLoadUserData)?;
-                user.un_use_token(&position.margin_mint_key, reduce_margin_amount)?;
+            let is_cross = position.is_portfolio_margin;
+            if is_cross {
+                let margin_mint_key = position.margin_mint_key;
+                user.un_use_token(&margin_mint_key, reduce_margin_amount)?;
             } else {
                 token::send_from_program_vault(
                     token_program,

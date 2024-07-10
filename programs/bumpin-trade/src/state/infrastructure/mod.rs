@@ -1,6 +1,5 @@
 pub mod fee_reward;
 pub mod market_funding_fee;
-pub mod poo_token_balance;
 pub mod pool_borrowing_fee;
 pub mod user_order;
 pub mod user_position;

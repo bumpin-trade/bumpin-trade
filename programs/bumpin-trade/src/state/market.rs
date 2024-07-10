@@ -20,7 +20,7 @@ pub struct Market {
     pub config: MarketConfig,
     pub pool_key: Pubkey,
     pub pool_mint_key: Pubkey,
-    pub index_mint_key: Pubkey,
+    pub index_mint_oracle: Pubkey,
     pub stable_pool_key: Pubkey,
     pub stable_pool_mint_key: Pubkey,
     pub index: u16,
@@ -157,7 +157,7 @@ impl Market {
     pub fn get_market_un_pnl(&self, is_long: bool, oracle_map: &mut OracleMap) -> BumpResult<i128> {
         let position = if is_long { &self.long_open_interest } else { &self.short_open_interest };
         let mark_price = oracle_map
-            .get_price_data(&self.index_mint_key)
+            .get_price_data(&self.index_mint_oracle)
             .map_err(|_e| BumpErrorCode::OracleNotFound)?
             .price;
         if position.entry_price == 0u128 {

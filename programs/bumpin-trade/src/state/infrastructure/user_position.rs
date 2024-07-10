@@ -1,15 +1,16 @@
+use anchor_lang::prelude::*;
+
+use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
+
 use crate::errors::BumpResult;
 use crate::instructions::cal_utils;
 use crate::math::casting::Cast;
 use crate::math::constants::RATE_PRECISION;
 use crate::math::safe_math::SafeMath;
 use crate::state::market::Market;
-use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
-use anchor_lang::prelude::*;
-use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
 #[bumpin_zero_copy_unsafe]
 pub struct UserPosition {
@@ -32,7 +33,7 @@ pub struct UserPosition {
     pub realized_pnl: i128,
     pub user_key: Pubkey,
     pub margin_mint_key: Pubkey,
-    pub index_mint_key: Pubkey,
+    pub index_mint_oracle: Pubkey,
     pub position_key: Pubkey,
     pub symbol: [u8; 32],
     pub updated_at: i64,
@@ -252,8 +253,8 @@ impl UserPosition {
         Ok(())
     }
 
-    pub fn set_index_mint(&mut self, index_mint: Pubkey) -> BumpResult {
-        self.index_mint_key = index_mint;
+    pub fn set_index_mint(&mut self, index_mint_oracle: Pubkey) -> BumpResult {
+        self.index_mint_oracle = index_mint_oracle;
         Ok(())
     }
 
@@ -409,15 +410,9 @@ impl UserPosition {
             .safe_add(self.close_fee_in_usd.cast()?)?)
     }
 
-    pub fn get_position_value(
-        &self,
-        index_trade_token: &TradeToken,
-        oracle_map: &mut OracleMap,
-    ) -> BumpResult<(u128, i128, u128)> {
+    pub fn get_position_value(&self, price: u128) -> BumpResult<(u128, i128, u128)> {
         if self.is_portfolio_margin {
-            let index_price_data = oracle_map.get_price_data(&index_trade_token.oracle_key)?;
-
-            let position_un_pnl = self.get_position_un_pnl_usd(index_price_data.price)?;
+            let position_un_pnl = self.get_position_un_pnl_usd(price)?;
 
             Ok((self.initial_margin_usd_from_portfolio, position_un_pnl, self.mm_usd))
         } else {

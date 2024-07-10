@@ -218,6 +218,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
             )?;
 
             pool.sub_amount_and_supply(un_stake_token_amount, un_stake_params.share)?;
+            pool.update_pool_borrowing_fee_rate()?;
 
             let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
 
@@ -279,6 +280,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
             )?;
 
             pool.sub_amount_and_supply(un_stake_token_amount, un_stake_params.share)?;
+            pool.update_pool_borrowing_fee_rate()?;
 
             let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
 

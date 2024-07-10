@@ -13,6 +13,7 @@ use crate::state::infrastructure::fee_reward::FeeReward;
 use crate::state::infrastructure::pool_borrowing_fee::BorrowingFee;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
+use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::traits::Size;
 use crate::validate;
@@ -26,7 +27,6 @@ pub struct Pool {
     pub apr: u128,
     pub insurance_fund_amount: u128,
     pub total_supply: u128,
-    pub settle_funding_fee: i128,
     pub balance: PoolBalance,
     pub stable_balance: PoolBalance,
     pub borrowing_fee: BorrowingFee,
@@ -61,6 +61,7 @@ pub enum PoolStatus {
 
 #[bumpin_zero_copy_unsafe]
 pub struct PoolBalance {
+    pub settle_funding_fee: i128,
     pub amount: u128,
     pub hold_amount: u128,
     pub un_settle_amount: u128,
@@ -124,11 +125,17 @@ impl Pool {
         Ok(())
     }
 
-    pub fn hold_pool(&mut self, amount: u128) -> BumpResult<()> {
-        let pre_pool = self.clone();
-        validate!(self.check_hold_is_allowed(amount)?, BumpErrorCode::AmountNotEnough.into())?;
-        self.balance.hold_amount = add_u128(self.balance.hold_amount, amount)?;
-        self.emit_pool_update_event(&pre_pool);
+    pub fn hold_pool_amount(
+        &mut self,
+        amount: u128,
+        oracle_map: &mut OracleMap,
+        base_trade_token: &TradeToken,
+        stable_trade_token: &TradeToken,
+    ) -> BumpResult<()> {
+        let available_liquidity =
+            self.get_pool_available_liquidity(oracle_map, base_trade_token, stable_trade_token)?;
+        validate!(amount < available_liquidity, BumpErrorCode::AmountNotEnough)?;
+        self.hold_pool(amount)?;
         Ok(())
     }
 
@@ -188,24 +195,107 @@ impl Pool {
     }
 
     pub fn update_pool_funding_fee(&mut self, amount: i128, is_add: bool) -> BumpResult {
-        self.settle_funding_fee = if is_add {
-            self.settle_funding_fee.safe_add(amount)?
+        self.balance.settle_funding_fee = if is_add {
+            self.balance.settle_funding_fee.safe_add(amount)?
         } else {
-            self.settle_funding_fee.safe_sub(amount)?
+            self.balance.settle_funding_fee.safe_sub(amount)?
         };
         Ok(())
     }
 
-    fn check_hold_is_allowed(&self, amount: u128) -> BumpResult<bool> {
-        if self.config.pool_liquidity_limit == 0 {
-            return Ok(add_u128(self.balance.amount, self.balance.un_settle_amount)?
-                .safe_sub(self.balance.hold_amount)?
-                >= amount);
+    pub fn get_pool_available_liquidity(
+        &self,
+        oracle_map: &mut OracleMap,
+        base_trade_token: &TradeToken,
+        stable_trade_token: &TradeToken,
+    ) -> BumpResult<u128> {
+        let mut base_token_amount = self
+            .balance
+            .amount
+            .cast::<i128>()?
+            .safe_add(self.balance.un_settle_amount.cast::<i128>()?)?
+            .safe_sub(self.balance.hold_amount.cast::<i128>()?)?;
+        if base_token_amount <= 0i128 {
+            return Ok(0u128);
         }
-        return Ok(add_u128(self.balance.amount, self.balance.un_settle_amount)?
-            .safe_sub(self.balance.hold_amount)?
-            .safe_mul(self.config.pool_liquidity_limit)?
-            >= amount);
+        if Self::get_token_amount(&self.stable_balance)? < 0i128 {
+            let token_usd = cal_utils::token_to_usd_i(
+                Self::get_token_amount(&self.stable_balance)?,
+                base_trade_token.decimals,
+                oracle_map
+                    .get_price_data(&base_trade_token.oracle_key)
+                    .map_err(|_e| BumpErrorCode::OracleNotFound)?
+                    .price,
+            )?;
+            let stable_to_base_token = cal_utils::usd_to_token_i(
+                token_usd,
+                stable_trade_token.decimals,
+                oracle_map
+                    .get_price_data(&stable_trade_token.oracle_key)
+                    .map_err(|_e| BumpErrorCode::OracleNotFound)?
+                    .price,
+            )?;
+            if base_token_amount > stable_to_base_token {
+                base_token_amount = base_token_amount.safe_sub(stable_to_base_token)?;
+            } else {
+                base_token_amount = 0i128
+            }
+        }
+        let available_token_amount = cal_utils::mul_rate_i(
+            base_token_amount,
+            self.config.pool_liquidity_limit.cast::<i128>()?,
+        )?;
+        if available_token_amount > self.balance.hold_amount.cast::<i128>()? {
+            Ok(available_token_amount
+                .safe_sub(self.balance.hold_amount.cast::<i128>()?)?
+                .cast::<u128>()?)
+        } else {
+            Ok(0u128)
+        }
+    }
+
+    fn hold_pool(&mut self, amount: u128) -> BumpResult<()> {
+        let pre_pool = *self;
+        if amount == 0u128 {
+            return Ok(());
+        };
+        validate!(
+            Self::check_hold_allowed(&self.balance, self.config.pool_liquidity_limit, amount)?,
+            BumpErrorCode::AmountNotEnough
+        )?;
+        self.balance.hold_amount = self.balance.hold_amount.safe_add(amount)?;
+        self.emit_pool_update_event(&pre_pool);
+        Ok(())
+    }
+
+    fn check_hold_allowed(
+        token_balance: &PoolBalance,
+        pool_liquidity_limit: u128,
+        amount: u128,
+    ) -> BumpResult<bool> {
+        return if pool_liquidity_limit == 0u128 {
+            Ok(token_balance
+                .amount
+                .safe_add(token_balance.un_settle_amount)?
+                .safe_sub(token_balance.hold_amount)?
+                >= amount)
+        } else {
+            Ok(cal_utils::mul_rate_u(
+                token_balance.amount.safe_add(token_balance.un_settle_amount)?,
+                pool_liquidity_limit,
+            )?
+            .safe_sub(token_balance.hold_amount)?
+                >= amount)
+        };
+    }
+
+    fn get_token_amount(pool_balance: &PoolBalance) -> BumpResult<i128> {
+        Ok(pool_balance
+            .amount
+            .safe_add(pool_balance.un_settle_amount)?
+            .cast::<i128>()?
+            .safe_add(pool_balance.settle_funding_fee)?
+            .safe_sub(pool_balance.loss_amount.cast()?)?)
     }
 
     fn emit_pool_update_event(&self, pre_pool: &Pool) {

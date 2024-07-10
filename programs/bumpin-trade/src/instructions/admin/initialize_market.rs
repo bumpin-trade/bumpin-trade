@@ -1,7 +1,6 @@
 use std::ops::DerefMut;
 
 use anchor_lang::prelude::*;
-use anchor_spl::token::Mint;
 
 use crate::math_error;
 use crate::safe_increment;
@@ -38,7 +37,8 @@ pub struct InitializeMarket<'info> {
     )]
     pub stable_pool: AccountLoader<'info, Pool>,
 
-    pub index_mint: Account<'info, Mint>,
+    /// CHECK: checked by admin
+    pub index_mint_oracle: AccountInfo<'info>,
 
     #[account(mut)]
     pub admin: Signer<'info>,
@@ -88,7 +88,7 @@ pub fn handle_initialize_market(
     market.symbol = params.symbol;
     market.pool_key = pool.key;
     market.pool_mint_key = pool.mint_key;
-    market.index_mint_key = ctx.accounts.index_mint.key();
+    market.index_mint_oracle = ctx.accounts.index_mint_oracle.key();
     market.stable_pool_mint_key = stable_pool.mint_key;
     market.stable_pool_key = stable_pool.key;
     market.config = config;

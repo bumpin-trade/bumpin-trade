@@ -3,6 +3,7 @@ use anchor_spl::token::{Token, TokenAccount};
 
 use crate::errors::BumpErrorCode;
 use crate::instructions::constraints::*;
+use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::position_processor;
 use crate::state::market::Market;
 use crate::state::pool::Pool;
@@ -21,7 +22,7 @@ pub struct AddPositionMargin<'info> {
         mut,
         seeds = [b"user", authority.key().as_ref()],
         bump,
-        constraint = can_sign_for_user(& user, & authority) ? && is_normal(&user) ?,
+        constraint = can_sign_for_user(& user, & authority) ? && is_normal(& user) ?,
     )]
     pub user: AccountLoader<'info, User>,
 
@@ -50,9 +51,16 @@ pub struct AddPositionMargin<'info> {
     #[account(
         seeds = [b"pool", params.pool_index.to_le_bytes().as_ref()],
         bump,
-        constraint = pool.load() ?.mint_key.eq(& user_token_account.mint),
+        constraint = pool.load() ?.key.eq(& market.load()?.pool_key),
     )]
     pub pool: AccountLoader<'info, Pool>,
+
+    #[account(
+        seeds = [b"pool", params.stable_pool_index.to_le_bytes().as_ref()],
+        bump,
+        constraint = stable_pool.load() ?.mint_key.eq(& market.load()?.stable_pool_key),
+    )]
+    pub stable_pool: AccountLoader<'info, Pool>,
 
     #[account(
         seeds = [b"market", params.market_index.to_le_bytes().as_ref()],
@@ -84,6 +92,7 @@ pub struct UpdatePositionMarginParams {
     pub add_initial_margin_from_portfolio: u128,
     pub market_index: u16,
     pub pool_index: u16,
+    pub stable_pool_index: u16,
     pub trade_token_index: u16,
 }
 
@@ -92,12 +101,20 @@ pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
     params: UpdatePositionMarginParams,
 ) -> Result<()> {
     validate!(params.update_margin_amount > 0u128, BumpErrorCode::AmountNotEnough)?;
+    let market = ctx.accounts.market.load_mut()?;
+    let remaining_accounts = ctx.remaining_accounts;
+    let AccountMaps { trade_token_map, mut oracle_map, market_map, .. } =
+        load_maps(remaining_accounts)?;
+
     let mut user = ctx.accounts.user.load_mut()?;
-    let trade_token = ctx.accounts.trade_token.load_mut()?;
+    let base_trade_token = trade_token_map.get_trade_token_by_mint_ref(&market.pool_mint_key)?;
+    let stable_trade_token =
+        trade_token_map.get_trade_token_by_mint_ref(&market.stable_pool_mint_key)?;
     let position = user.get_user_position_mut_ref(&params.position_key)?;
     let mut pool = ctx.accounts.pool.load_mut()?;
-    let market = ctx.accounts.market.load_mut()?;
+    let mut stable_pool = ctx.accounts.stable_pool.load_mut()?;
     validate!(position.is_portfolio_margin, BumpErrorCode::OnlyIsolatePositionAllowed)?;
+
     if params.is_add {
         token::receive(
             &ctx.accounts.token_program,
@@ -107,24 +124,36 @@ pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
             params.update_margin_amount,
         )?;
     }
-    validate!(trade_token.mint_key.eq(&position.margin_mint_key), BumpErrorCode::AmountNotEnough)?;
+    validate!(
+        if position.is_long {
+            base_trade_token.mint_key.eq(&position.margin_mint_key)
+        } else {
+            stable_trade_token.mint_key.eq(&position.margin_mint_key)
+        },
+        BumpErrorCode::InvalidParam
+    )?;
 
     if params.is_add {
         position_processor::execute_add_position_margin(
             &params,
-            &trade_token,
-            &mut pool,
+            if position.is_long { &base_trade_token } else { &stable_trade_token },
+            if position.is_long { &mut pool } else { &mut stable_pool },
             position,
         )?;
     } else {
         let reduce_margin_amount = position_processor::execute_reduce_position_margin(
             &params,
             true,
-            &trade_token,
+            &base_trade_token,
+            &stable_trade_token,
             &mut pool,
+            &mut stable_pool,
             &market,
             &ctx.accounts.state,
             position,
+            &mut oracle_map,
+            &trade_token_map,
+            &market_map,
         )?;
         token::send_from_program_vault(
             &ctx.accounts.token_program,
@@ -135,7 +164,7 @@ pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
             reduce_margin_amount,
         )?;
     }
-    let mut user = ctx.accounts.user.load_mut()?;
+    let position = *position;
     user.update_all_orders_leverage(
         position.leverage,
         position.symbol,

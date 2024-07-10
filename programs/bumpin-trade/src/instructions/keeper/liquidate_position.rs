@@ -1,4 +1,3 @@
-use std::cell::RefMut;
 use std::ops::DerefMut;
 
 use anchor_lang::prelude::*;
@@ -17,7 +16,7 @@ use crate::utils::pda::generate_position_key;
 
 #[derive(Accounts)]
 #[instruction(
-    _market_index: u16, pool_index: u16, stable_pool_index: u16, _trade_token_index: u16, _user_authority_key: Pubkey
+    _market_index: u16, _pool_index: u16, _stable_pool_index: u16, _trade_token_index: u16, _user_authority_key: Pubkey
 )]
 pub struct LiquidatePosition<'info> {
     #[account(
@@ -50,7 +49,7 @@ pub struct LiquidatePosition<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool", pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool", _pool_index.to_le_bytes().as_ref()],
         bump,
         constraint = pool.load() ?.mint_key.eq(& market.load() ?.pool_mint_key)
     )]
@@ -58,7 +57,7 @@ pub struct LiquidatePosition<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool", stable_pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool", _stable_pool_index.to_le_bytes().as_ref()],
         bump,
         constraint = stable_pool.load() ?.mint_key.eq(& market.load() ?.stable_pool_mint_key)
     )]
@@ -66,14 +65,14 @@ pub struct LiquidatePosition<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool_vault".as_ref(), pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub pool_vault: Account<'info, TokenAccount>,
 
     #[account(
         mut,
-        seeds = [b"pool_vault".as_ref(), stable_pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), _stable_pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub stable_pool_vault: Account<'info, TokenAccount>,
@@ -106,26 +105,20 @@ pub fn handle_liquidate_position<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, LiquidatePosition>,
     position_key: Pubkey,
     liquidation_price: u128,
-    _market_index: u16,
-    pool_index: u16,
-    stable_pool_index: u16,
-    _user_authority_key: Pubkey,
 ) -> Result<()> {
-    let same_pool = pool_index == stable_pool_index;
     let mut user = ctx.accounts.user.load_mut()?;
     let remaining_accounts = ctx.remaining_accounts;
     let mut market = ctx.accounts.market.load_mut()?;
     let mut trade_token = ctx.accounts.trade_token.load_mut()?;
     let mut oracle_map = OracleMap::load(remaining_accounts)?;
     let mut base_token_pool = ctx.accounts.pool.load_mut()?;
-    let mut stable_pool: Option<RefMut<Pool>> =
-        if same_pool { None } else { Some(ctx.accounts.stable_pool.load_mut()?) };
+    let mut stable_pool = ctx.accounts.stable_pool.load_mut()?;
 
     let (is_long, is_cross, margin_mint, position_size) = update_borrowing_fee_and_funding_fee(
         &position_key,
         &user,
         base_token_pool.deref_mut(),
-        &mut stable_pool,
+        stable_pool.deref_mut(),
         &ctx.accounts.state,
         &trade_token,
         market.deref_mut(),
@@ -164,22 +157,14 @@ fn update_borrowing_fee_and_funding_fee(
     position_key: &Pubkey,
     user: &User,
     base_token_pool: &mut Pool,
-    stable_pool: &mut Option<RefMut<Pool>>,
+    stable_pool: &mut Pool,
     state: &State,
     trade_token: &TradeToken,
     market: &mut Market,
     oracle_map: &mut OracleMap,
 ) -> BumpResult<(bool, bool, Pubkey, u128)> {
     let user_position = user.get_user_position_ref(position_key)?;
-    let pool = if user_position.is_long {
-        base_token_pool
-    } else {
-        if let Some(ref mut stable_pool) = stable_pool {
-            stable_pool
-        } else {
-            base_token_pool
-        }
-    };
+    let pool = if user_position.is_long { base_token_pool } else { stable_pool };
 
     market.update_market_funding_fee_rate(
         state,

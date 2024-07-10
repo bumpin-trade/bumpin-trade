@@ -1,4 +1,3 @@
-use std::cell::RefMut;
 use std::ops::DerefMut;
 
 use anchor_lang::prelude::*;
@@ -18,7 +17,7 @@ use crate::validate;
 
 #[derive(Accounts)]
 #[instruction(
-    pool_index: u16, stable_pool_index: u16, _market_index: u16, _trade_token_index: u16
+    _pool_index: u16, _stable_pool_index: u16, _market_index: u16, _trade_token_index: u16
 )]
 pub struct ADL<'info> {
     #[account(
@@ -36,7 +35,7 @@ pub struct ADL<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool".as_ref(), pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool".as_ref(), _pool_index.to_le_bytes().as_ref()],
         bump,
         constraint = pool.load() ?.key.eq(& market.load() ?.pool_key),
     )]
@@ -44,7 +43,7 @@ pub struct ADL<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool".as_ref(), stable_pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool".as_ref(), _stable_pool_index.to_le_bytes().as_ref()],
         bump,
         constraint = stable_pool.load() ?.key.eq(& market.load() ?.stable_pool_key),
     )]
@@ -52,7 +51,7 @@ pub struct ADL<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool_vault".as_ref(), pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
         bump,
         token::mint = pool.load() ?.mint_key,
         token::authority = state.bump_signer
@@ -61,7 +60,7 @@ pub struct ADL<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool_vault".as_ref(), stable_pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), _stable_pool_index.to_le_bytes().as_ref()],
         bump,
         token::mint = stable_pool.load() ?.mint_key,
         token::authority = state.bump_signer
@@ -94,16 +93,10 @@ pub struct ADL<'info> {
 
 pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, ADL<'info>>,
-    pool_index: u16,
-    stable_pool_index: u16,
-    _market_index: u16,
-    _trade_token_index: u16,
     params: [ADLParams; 10],
 ) -> Result<()> {
-    let same_pool = pool_index == stable_pool_index;
     let mut pool = ctx.accounts.pool.load_mut()?;
-    let mut stable_pool: Option<RefMut<Pool>> =
-        if same_pool { None } else { Some(ctx.accounts.stable_pool.load_mut()?) };
+    let mut stable_pool = ctx.accounts.stable_pool.load_mut()?;
 
     // let pool_account_loader = &ctx.accounts.pool;
     // let stable_pool_account_loader = &ctx.accounts.stable_pool;
@@ -118,7 +111,7 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
 
     let remaining_accounts = ctx.remaining_accounts;
 
-    let AccountMaps { mut oracle_map, trade_token_map, .. } = load_maps(remaining_accounts)?;
+    let AccountMaps { mut oracle_map, .. } = load_maps(remaining_accounts)?;
     let user_map = UserMap::load(remaining_accounts, ctx.program_id)?;
     let vault_vec = VaultMap::load_vec(remaining_accounts)?;
 
@@ -135,7 +128,6 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
         let is_portfolio_margin = position.is_portfolio_margin;
         let margin_token = position.margin_mint_key;
         let decrease_size = position.position_size;
-        let index_mint_key = position.index_mint_key;
         let position_key = position.position_key;
         let is_long = position.is_long;
         let user_token = user_account.get_user_token_ref(&margin_token)?;
@@ -144,7 +136,6 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
             user_token.user_token_account_key.eq(user_token_account.to_account_info().key),
             BumpErrorCode::InvalidTokenAccount
         )?;
-        let index_trade_token = trade_token_map.get_trade_token_by_mint_ref(&index_mint_key)?;
         position_processor::decrease_position(
             DecreasePositionParams {
                 order_id: 0,
@@ -153,14 +144,14 @@ pub fn handle_adl<'a, 'b, 'c: 'info, 'info>(
                 margin_token,
                 decrease_size,
                 execute_price: oracle_map
-                    .get_price_data(&index_trade_token.oracle_key)
+                    .get_price_data(&position.index_mint_oracle)
                     .map_err(|_e| BumpErrorCode::OracleNotFound)?
                     .price,
             },
-            &mut user_account,
+            user_account.deref_mut(),
             market_account_loader.load_mut()?.deref_mut(),
             pool.deref_mut(),
-            &mut stable_pool,
+            stable_pool.deref_mut(),
             state_account,
             Some(user_token_account),
             if is_long { pool_vault_account } else { stable_pool_vault_account },
