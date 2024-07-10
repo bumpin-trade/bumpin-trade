@@ -109,14 +109,15 @@ export class BumpinClient {
 
 
         this.poolComponent = new PoolComponent(this.bulkAccountLoader, this.stateSubscriber, this.program);
-        await this.poolComponent.subscribe();
+        const p1 = this.poolComponent.subscribe();
 
         this.tradeTokenComponent = new TradeTokenComponent(this.bulkAccountLoader, this.stateSubscriber, this.program);
-        await this.tradeTokenComponent.subscribe();
+        const p2 = this.tradeTokenComponent.subscribe();
 
         this.marketComponent = new MarketComponent(this.bulkAccountLoader, this.stateSubscriber, this.program);
-        await this.marketComponent.subscribe();
+        const p3 = this.marketComponent.subscribe();
 
+        await Promise.all([p1, p2, p3]);
         this.isInitialized = true;
         console.log("BumpinClient initialized");
     }
@@ -142,12 +143,18 @@ export class BumpinClient {
             throw new BumpinInvalidParameter("Wallet is not set, when user connect the wallet please reconstruct the BumpinClient instance with wallet parameter.");
         }
         const [pda, _] = BumpinUtils.getPdaSync(this.program, [Buffer.from("user"), this.wallet.publicKey.toBuffer()]);
-        let me = await this.program.account.user.fetch(pda) as any as UserAccount;
-        if (me) {
-            this.userComponent = new UserComponent(this.wallet.publicKey, this.pythClient, this.bulkAccountLoader, this.stateSubscriber, this.program);
-            await this.userComponent.subscribe();
+        try {
+            let me = await this.program.account.user.fetch(pda) as any as UserAccount;
+            if (me) {
+                this.userComponent = new UserComponent(this.wallet.publicKey, this.pythClient, this.bulkAccountLoader, this.stateSubscriber, this.program);
+                await this.userComponent.subscribe();
+            }
+            return me;
+        } catch (e) {
+            throw new BumpinAccountNotFound("User Account, pda: " + pda.toString() + " wallet: " + this.wallet.publicKey.toString());
         }
-        return me;
+        //TODO: Maybe has another error type
+
     }
 
 
