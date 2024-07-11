@@ -3,21 +3,21 @@ use std::ops::DerefMut;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
+use crate::{utils, validate};
 use crate::errors::BumpErrorCode;
 use crate::instructions::constraints::*;
 use crate::instructions::Either;
 use crate::math::safe_math::SafeMath;
-use crate::processor::optional_accounts::load_maps;
 use crate::processor::{fee_processor, pool_processor, user_processor};
+use crate::processor::optional_accounts::load_maps;
 use crate::state::bump_events::StakeOrUnStakeEvent;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::{User, UserTokenUpdateReason};
-use crate::{utils, validate};
 
 #[derive(Accounts)]
-#[instruction(un_stake_params: UnStakeParams,)]
+#[instruction(params: UnStakeParams,)]
 pub struct PortfolioUnStake<'info> {
     #[account(
         seeds = [b"bump_state".as_ref()],
@@ -34,34 +34,34 @@ pub struct PortfolioUnStake<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool".as_ref(), un_stake_params.pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool".as_ref(), params.pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
         mut,
-        seeds = [b"pool_vault".as_ref(), un_stake_params.pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), params.pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub pool_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
-        seeds = [b"trade_token_vault".as_ref(), un_stake_params.trade_token_index.to_le_bytes().as_ref()],
+        seeds = [b"trade_token_vault".as_ref(), params.trade_token_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
-        seeds = [b"trade_token".as_ref(), un_stake_params.trade_token_index.to_le_bytes().as_ref()],
+        seeds = [b"trade_token".as_ref(), params.trade_token_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub trade_token: AccountLoader<'info, TradeToken>,
 
     #[account(
-        seeds = [b"pool_rewards_vault".as_ref(), un_stake_params.pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_rewards_vault".as_ref(), params.pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub pool_rewards_vault: Box<Account<'info, TokenAccount>>,
@@ -71,13 +71,14 @@ pub struct PortfolioUnStake<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(un_stake_params: UnStakeParams,)]
+#[instruction(params: UnStakeParams,)]
 pub struct WalletUnStake<'info> {
     #[account(
         seeds = [b"bump_state".as_ref()],
         bump,
     )]
     pub state: Box<Account<'info, State>>,
+
     #[account(
         mut,
         seeds = [b"user", authority.key.as_ref()],
@@ -88,27 +89,27 @@ pub struct WalletUnStake<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool".as_ref(), un_stake_params.pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool".as_ref(), params.pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
         mut,
-        seeds = [b"pool_vault".as_ref(), un_stake_params.pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), params.pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub pool_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
-        seeds = [b"trade_token".as_ref(), un_stake_params.trade_token_index.to_le_bytes().as_ref()],
+        seeds = [b"trade_token".as_ref(), params.trade_token_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub trade_token: AccountLoader<'info, TradeToken>,
 
     #[account(
-        seeds = [b"pool_rewards_vault".as_ref(), un_stake_params.pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_rewards_vault".as_ref(), params.pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub pool_rewards_vault: Box<Account<'info, TokenAccount>>,
@@ -233,7 +234,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
                 change_supply_amount: un_stake_token_amount,
                 user_stake: user_stake.clone(),
             });
-        },
+        }
         Either::Right(ctx) => {
             let pool = &mut ctx.accounts.pool.load_mut()?;
             let user = &mut ctx.accounts.user.load_mut()?;
@@ -295,7 +296,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
                 change_supply_amount: un_stake_token_amount,
                 user_stake: user_stake.clone(),
             });
-        },
+        }
     }
 
     Ok(())

@@ -355,7 +355,7 @@ export class UserComponent extends Component {
 
     public async findUsingStake(poolKey: PublicKey, sync: boolean) {
         let user = await this.getUser(sync);
-        return user.stakes.find((value, index, obj) => value.userStakeStatus === UserStakeStatus.USING && value.poolKey === poolKey);
+        return user.stakes.find((value, index, obj) => isEqual(value.userStakeStatus, UserStakeStatus.USING) && value.poolKey.equals(poolKey));
     }
 
     public async getUser(sync: boolean = false): Promise<UserAccount> {

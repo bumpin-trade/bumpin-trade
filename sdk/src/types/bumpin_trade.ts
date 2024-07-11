@@ -1568,6 +1568,158 @@ export type BumpinTrade = {
       ]
     },
     {
+      "name": "initializeRewards",
+      "discriminator": [
+        91,
+        174,
+        112,
+        191,
+        233,
+        236,
+        147,
+        12
+      ],
+      "accounts": [
+        {
+          "name": "state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  109,
+                  112,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "poolMint"
+        },
+        {
+          "name": "rewards",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  115
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "poolRewardsVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  115,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "daoRewardsVault"
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "state"
+          ]
+        },
+        {
+          "name": "bumpSigner"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "poolIndex",
+          "type": "u16"
+        }
+      ]
+    },
+    {
       "name": "initializeState",
       "discriminator": [
         190,
@@ -2647,7 +2799,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "un_stake_params.pool_index"
+                "path": "params.pool_index"
               }
             ]
           }
@@ -2674,7 +2826,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "un_stake_params.pool_index"
+                "path": "params.pool_index"
               }
             ]
           }
@@ -2708,7 +2860,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "un_stake_params.trade_token_index"
+                "path": "params.trade_token_index"
               }
             ]
           }
@@ -2736,7 +2888,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "un_stake_params.trade_token_index"
+                "path": "params.trade_token_index"
               }
             ]
           }
@@ -2770,7 +2922,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "un_stake_params.pool_index"
+                "path": "params.pool_index"
               }
             ]
           }
@@ -3249,7 +3401,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "un_stake_params.pool_index"
+                "path": "params.pool_index"
               }
             ]
           }
@@ -3276,7 +3428,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "un_stake_params.pool_index"
+                "path": "params.pool_index"
               }
             ]
           }
@@ -3304,7 +3456,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "un_stake_params.trade_token_index"
+                "path": "params.trade_token_index"
               }
             ]
           }
@@ -3338,7 +3490,7 @@ export type BumpinTrade = {
               },
               {
                 "kind": "arg",
-                "path": "un_stake_params.pool_index"
+                "path": "params.pool_index"
               }
             ]
           }
@@ -3516,6 +3668,19 @@ export type BumpinTrade = {
         177,
         109,
         188
+      ]
+    },
+    {
+      "name": "rewards",
+      "discriminator": [
+        12,
+        223,
+        68,
+        101,
+        63,
+        33,
+        38,
+        101
       ]
     },
     {
@@ -5192,6 +5357,60 @@ export type BumpinTrade = {
           },
           {
             "name": "using"
+          }
+        ]
+      }
+    },
+    {
+      "name": "rewards",
+      "serialization": "bytemuckunsafe",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "poolUnClaimAmount",
+            "type": "u128"
+          },
+          {
+            "name": "poolTotalRewardsAmount",
+            "type": "u128"
+          },
+          {
+            "name": "poolRewardsVault",
+            "type": "pubkey"
+          },
+          {
+            "name": "poolIndex",
+            "type": "u16"
+          },
+          {
+            "name": "daoRewardsVault",
+            "type": "pubkey"
+          },
+          {
+            "name": "daoTotalRewardsAmount",
+            "type": "u128"
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                14
+              ]
+            }
+          },
+          {
+            "name": "reservePadding",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           }
         ]
       }
