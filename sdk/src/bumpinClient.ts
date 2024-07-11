@@ -11,7 +11,7 @@ import {
     MarketWithIndexTradeTokenPrices,
     PlaceOrderParams,
     Pool,
-    PoolSummary,
+    PoolSummary, Rewards,
     State,
     TokenBalance,
     TradeToken,
@@ -45,6 +45,7 @@ import {ZERO} from "./constants/numericConstants";
 import {PriceData} from "@pythnetwork/client";
 import BigNumber from "bignumber.js";
 import {AccountLayout, TOKEN_PROGRAM_ID} from "@solana/spl-token";
+import {RewardsComponent} from "./componets/rewards";
 
 
 export class BumpinClient {
@@ -66,6 +67,7 @@ export class BumpinClient {
 
     // Components
     poolComponent: PoolComponent;
+    rewardComponent: RewardsComponent;
     tradeTokenComponent: TradeTokenComponent;
     marketComponent: MarketComponent;
     userComponent: UserComponent;
@@ -117,7 +119,10 @@ export class BumpinClient {
         this.marketComponent = new MarketComponent(this.bulkAccountLoader, this.stateSubscriber, this.program);
         const p3 = this.marketComponent.subscribe();
 
-        await Promise.all([p1, p2, p3]);
+        this.rewardComponent = new RewardsComponent(this.bulkAccountLoader, this.stateSubscriber, this.program);
+        const p4 = this.rewardComponent.subscribe();
+
+        await Promise.all([p1, p2, p3, p4]);
         this.isInitialized = true;
         console.log("BumpinClient initialized");
     }
@@ -329,6 +334,10 @@ export class BumpinClient {
 
     public async getPools(sync: boolean = false): Promise<Pool[]> {
         return this.poolComponent.getPools(sync);
+    }
+
+    public async getRewards(sync: boolean = false): Promise<Rewards[]> {
+        return this.rewardComponent.getRewards(sync);
     }
 
     public async getPoolsWithSlot(sync: boolean = false): Promise<DataAndSlot<Pool>[]> {

@@ -189,6 +189,15 @@ export type Pool = {
     stable: boolean;
 }
 
+export type Rewards = {
+     poolUnClaimAmount: BN,
+     poolTotalRewardsAmount: BN,
+     poolRewardsVault: PublicKey,
+     daoRewardsVault: PublicKey,
+     daoTotalRewardsAmount: BN,
+     poolIndex: number,
+}
+
 
 export type TradeToken = {
     totalLiability: BN;

@@ -5377,16 +5377,16 @@
             "type": "pubkey"
           },
           {
-            "name": "pool_index",
-            "type": "u16"
-          },
-          {
             "name": "dao_rewards_vault",
             "type": "pubkey"
           },
           {
             "name": "dao_total_rewards_amount",
             "type": "u128"
+          },
+          {
+            "name": "pool_index",
+            "type": "u16"
           },
           {
             "name": "padding",

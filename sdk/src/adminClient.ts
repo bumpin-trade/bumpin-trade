@@ -66,7 +66,7 @@ export class BumpinAdmin {
         return parsePriceData(buffer.data);
     }
 
-    public async initializeAll(stateParam: InitializeStateParams, tradeTokenParams: WrappedInitializeTradeTokenParams[], poolParams: WrappedInitializePoolParams[], marketParams: WrappedInitializeMarketParams[]) {
+    public async initializeAll(stateParam: InitializeStateParams, tradeTokenParams: WrappedInitializeTradeTokenParams[], poolParams: WrappedInitializePoolParams[], marketParams: WrappedInitializeMarketParams[], rewardPrams: WrappedInitializeRewardsParams[]) {
         const [pda, _] = BumpinUtils.getBumpinStatePda(this.program);
 
         await this.initState(stateParam);
@@ -79,7 +79,7 @@ export class BumpinAdmin {
         for (let p of tradeTokenParams) {
             let oracleKey = await this.initTradeToken(p.tradeTokenName, p.tradeTokenMint, p.discount, p.liquidationFactor, p.exponent);
             tradeTokenOracleMap.set(p.tradeTokenMint, oracleKey.toString());
-            console.log("TradeToken initialized: ", p.tradeTokenName,' oracle: ', oracleKey.toString());
+            console.log("TradeToken initialized: ", p.tradeTokenName, ' oracle: ', oracleKey.toString());
         }
 
         ///////// init pools
@@ -91,6 +91,19 @@ export class BumpinAdmin {
                 bumpSigner: pda,
             }).signers([]).rpc(BumpinUtils.getRootConfirmOptions());
             console.log("Pool initialized: ", BumpinUtils.decodeString(poolParam.param.name))
+        }
+
+        //////// init rewards
+        for (let rewardsPram of rewardPrams) {
+            let daoRewardsPublicKey = new PublicKey(rewardsPram.daoVault);
+            await this.program.methods.initializeRewards(
+                rewardsPram.poolIndex
+            ).accounts({
+                poolMint: rewardsPram.poolMint,
+                daoRewardsVault: daoRewardsPublicKey,
+                bumpSigner: pda,
+            }).signers([]).rpc(BumpinUtils.getRootConfirmOptions());
+            console.log("Reward initialized: ", rewardsPram.poolIndex)
         }
 
         //////// init markets
@@ -179,6 +192,20 @@ export class BumpinAdmin {
         return oracleKeypair.publicKey;
     }
 
+    public async initRewards(pool_index: number, poolMint: string, daoReward: string,): Promise<void> {
+        let poolMintPublicKey = new PublicKey(poolMint);
+        let daoRewardsPublicKey = new PublicKey(daoReward);
+
+        let [pda, nonce] = BumpinUtils.getBumpinStatePda(this.program);
+        await this.program.methods.initializeRewards(
+            pool_index
+        ).accounts({
+            poolMint: poolMintPublicKey,
+            bumpSigner: pda,
+            daoRewardsVault: daoRewardsPublicKey,
+        }).signers([]).rpc(BumpinUtils.getRootConfirmOptions());
+    }
+
 
     public async initMarket(poolName: string, poolIndex: number, stablePoolIndex: number, indexMintOracle: anchor.web3.PublicKey) {
         const [pda, _] = BumpinUtils.getBumpinStatePda(this.program);
@@ -246,4 +273,10 @@ export type WrappedInitializeTradeTokenParams = {
 export type WrappedInitializeMarketParams = {
     indexMint: PublicKey,
     params: InitializeMarketParams
+}
+
+export type WrappedInitializeRewardsParams = {
+    poolIndex: number,
+    poolMint: PublicKey,
+    daoVault: string,
 }

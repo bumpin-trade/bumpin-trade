@@ -5383,16 +5383,16 @@ export type BumpinTrade = {
             "type": "pubkey"
           },
           {
-            "name": "poolIndex",
-            "type": "u16"
-          },
-          {
             "name": "daoRewardsVault",
             "type": "pubkey"
           },
           {
             "name": "daoTotalRewardsAmount",
             "type": "u128"
+          },
+          {
+            "name": "poolIndex",
+            "type": "u16"
           },
           {
             "name": "padding",

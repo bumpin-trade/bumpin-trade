@@ -87,6 +87,13 @@ export class BumpinUtils {
         );
     }
 
+    public static getRewardsPda(program: Program<BumpinTrade>, index: number): [PublicKey, number] {
+        return PublicKey.findProgramAddressSync(
+            [Buffer.from("rewards"), new anchor.BN(index).toArrayLike(Buffer, 'le', 2)],
+            program.programId
+        );
+    }
+
     public static getMarketPda(program: Program<BumpinTrade>, index: number): [PublicKey, number] {
         return PublicKey.findProgramAddressSync(
             [Buffer.from("market"), new anchor.BN(index).toArrayLike(Buffer, 'le', 2)],
