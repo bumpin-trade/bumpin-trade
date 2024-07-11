@@ -125,6 +125,26 @@ export type BumpinTrade = {
           }
         },
         {
+          "name": "stablePool",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "params.stable_pool_index"
+              }
+            ]
+          }
+        },
+        {
           "name": "market",
           "pda": {
             "seeds": [
@@ -1231,6 +1251,40 @@ export type BumpinTrade = {
           }
         },
         {
+          "name": "stableTradeTokenVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "order.stable_trade_token_index"
+              }
+            ]
+          }
+        },
+        {
           "name": "userTokenAccount",
           "writable": true
         },
@@ -1333,7 +1387,7 @@ export type BumpinTrade = {
           }
         },
         {
-          "name": "indexMint"
+          "name": "indexMintOracle"
         },
         {
           "name": "admin",
@@ -2300,6 +2354,40 @@ export type BumpinTrade = {
           }
         },
         {
+          "name": "stableTradeTokenVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "order.stable_trade_token_index"
+              }
+            ]
+          }
+        },
+        {
           "name": "userTokenAccount",
           "writable": true
         },
@@ -2773,6 +2861,26 @@ export type BumpinTrade = {
         },
         {
           "name": "pool",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "params.pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "stablePool",
           "pda": {
             "seeds": [
               {
@@ -4338,7 +4446,7 @@ export type BumpinTrade = {
             "type": "pubkey"
           },
           {
-            "name": "indexMintKey",
+            "name": "indexMintOracle",
             "type": "pubkey"
           },
           {
@@ -4628,7 +4736,7 @@ export type BumpinTrade = {
             "type": "u16"
           },
           {
-            "name": "indexTradeTokenIndex",
+            "name": "stableTradeTokenIndex",
             "type": "u16"
           },
           {
@@ -4711,10 +4819,6 @@ export type BumpinTrade = {
           {
             "name": "totalSupply",
             "type": "u128"
-          },
-          {
-            "name": "settleFundingFee",
-            "type": "i128"
           },
           {
             "name": "balance",
@@ -4837,6 +4941,10 @@ export type BumpinTrade = {
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "settleFundingFee",
+            "type": "i128"
+          },
           {
             "name": "amount",
             "type": "u128"
@@ -5383,6 +5491,10 @@ export type BumpinTrade = {
             "type": "u16"
           },
           {
+            "name": "stablePoolIndex",
+            "type": "u16"
+          },
+          {
             "name": "tradeTokenIndex",
             "type": "u16"
           }
@@ -5746,7 +5858,7 @@ export type BumpinTrade = {
             "type": "pubkey"
           },
           {
-            "name": "indexMintKey",
+            "name": "indexMintOracle",
             "type": "pubkey"
           },
           {

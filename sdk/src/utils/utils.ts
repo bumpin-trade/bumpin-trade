@@ -94,22 +94,19 @@ export class BumpinUtils {
         );
     }
 
-    public static setTag(tags: number, tag: number): void {
-        tags |= 1 << tag;
-    }
-
-    public static unsetTag(tags: number, tag: number): void {
-        tags &= ~(1 << tag);
-    }
-
-    public static getTags(tags: number): number[] {
-        const result = [];
-        for (let i = 0; i < 32; i++) {
-            if (tags & (1 << i)) {
-                result.push(i);
-            }
+    public static prettyUsd(amount: BigNumber, max: number = 8): number {
+        let amountStr = amount.toFixed(max);
+        if (amountStr.length <= max + 1) {
+            return parseFloat(amountStr);
         }
-        return result;
+        const [integerPart, decimalPart] = amountStr.split('.');
+        if (integerPart.length >= max + 1) {
+            return parseFloat(integerPart.slice(0, max + 1));
+        }
+        const maxDecimalLength = max - integerPart.length;
+        const truncatedDecimalPart = decimalPart.slice(0, maxDecimalLength);
+        const formattedAmountStr = `${integerPart}.${truncatedDecimalPart}`;
+        return parseFloat(formattedAmountStr);
     }
 
     public static getRootConfirmOptions() {

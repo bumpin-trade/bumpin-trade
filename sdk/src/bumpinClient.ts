@@ -246,17 +246,17 @@ export class BumpinClient {
             let isMixed = false;
             for (let market of markets) {
                 if (market.poolKey.equals(pool.key) || market.stablePoolKey.equals(pool.key)) {
-                    let indexTradeToken = await this.tradeTokenComponent.getTradeTokenByMintKey(market.indexMintKey, sync);
-                    let prices = this.tradeTokenComponent.getTradeTokenPrices(BumpinUtils.getTradeTokenPda(this.program, indexTradeToken.index)[0], stashedPrice);
+                    let prices = this.tradeTokenComponent.getTradeTokenPricesByOracleKey(market.indexMintOracle, stashedPrice);
 
                     let marketWithPrices: MarketWithIndexTradeTokenPrices = {
                         ...market,
                         indexTradeTokenPrices: prices
                     }
                     poolSummary.markets.push(marketWithPrices);
-                    if (!market.indexMintKey.equals(market.poolMintKey)) {
-                        isMixed = true;
-                    }
+                    //TODO: fix
+                    // if (!market.indexMintKey.equals(market.poolMintKey)) {
+                    //     isMixed = true;
+                    // }
                 }
             }
             if (pool.stable) {
@@ -277,7 +277,7 @@ export class BumpinClient {
         let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(mint, await this.getTradeTokens());
         let targetPool = BumpinPoolUtils.getPoolByMintPublicKey(mint, await this.getPools());
         if (fromPortfolio) {
-            await this.userComponent.portfolioStake(size, targetTradeToken, await this.getTradeTokens(), targetPool,markets, sync);
+            await this.userComponent.portfolioStake(size, targetTradeToken, await this.getTradeTokens(), targetPool, markets, sync);
         } else {
             await this.userComponent.walletStake(size, targetTradeToken, await this.getTradeTokens(), this.wallet.publicKey, targetPool, markets, sync);
         }

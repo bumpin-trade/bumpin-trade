@@ -175,7 +175,7 @@ export class UserComponent extends Component {
         let pool = BumpinPoolUtils.getPoolByMintPublicKey(markets[marketIndex].poolMintKey, pools);
         let stablePool = BumpinPoolUtils.getPoolByMintPublicKey(markets[marketIndex].stablePoolMintKey, pools);
         let tradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(markets[marketIndex].poolMintKey, tradeTokens);
-        let indexTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(markets[marketIndex].indexMintKey, tradeTokens);
+        let stableTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(markets[marketIndex].stablePoolMintKey, tradeTokens);
 
         // When trading position by position (Isolated position), userTokenAccount is determined based on the order direction.
         let uta = userTokenAccount;
@@ -189,7 +189,7 @@ export class UserComponent extends Component {
             } else {
                 tokenAccount = await BumpinTokenUtils.getTokenAccountFromWalletAndKey(this.program.provider.connection, wallet, userTokenAccount);
                 if (!tokenAccount.mint.equals(stablePool.mintKey)) {
-                    throw new BumpinTokenAccountUnexpected("Stable Pool mint key: " + indexTradeToken.mintKey.toString(), "Token account mint key: " + tokenAccount.mint.toString());
+                    throw new BumpinTokenAccountUnexpected("Stable pool mint key: " + stablePool.mintKey.toString(), "Token account mint key: " + tokenAccount.mint.toString());
                 }
             }
             uta = tokenAccount.address;
@@ -203,12 +203,7 @@ export class UserComponent extends Component {
         });
 
         remainingAccounts.push({
-            pubkey: BumpinUtils.getTradeTokenPda(this.program, indexTradeToken.index)[0],
-            isWritable: true,
-            isSigner: false,
-        });
-        remainingAccounts.push({
-            pubkey: indexTradeToken.oracleKey,
+            pubkey: markets[marketIndex].indexMintOracle,
             isWritable: false,
             isSigner: false,
         });
@@ -232,7 +227,7 @@ export class UserComponent extends Component {
             poolIndex: pool.index,
             stablePoolIndex: stablePool.index,
             tradeTokenIndex: tradeToken.index,
-            indexTradeTokenIndex: indexTradeToken.index,
+            stableTradeTokenIndex: stableTradeToken.index,
             orderId: new BN(0)
         };
 

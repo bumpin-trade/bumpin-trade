@@ -70,13 +70,16 @@ export class BumpinAdmin {
         const [pda, _] = BumpinUtils.getBumpinStatePda(this.program);
 
         await this.initState(stateParam);
-        console.log("State initialized")
+        console.log("State initialized");
+
+        let tradeTokenOracleMap = new Map<string, string>();
 
         // ////////// init tradeToken
         // //TODO: remove oracle init when using Prod env.
         for (let p of tradeTokenParams) {
-            await this.initTradeToken(p.tradeTokenName, p.tradeTokenMint, p.discount, p.liquidationFactor, p.exponent);
-            console.log("TradeToken initialized: ", p.tradeTokenName)
+            let oracleKey = await this.initTradeToken(p.tradeTokenName, p.tradeTokenMint, p.discount, p.liquidationFactor, p.exponent);
+            tradeTokenOracleMap.set(p.tradeTokenMint, oracleKey.toString());
+            console.log("TradeToken initialized: ", p.tradeTokenName,' oracle: ', oracleKey.toString());
         }
 
         ///////// init pools
@@ -92,10 +95,11 @@ export class BumpinAdmin {
 
         //////// init markets
         for (let marketParam of marketParams) {
+            let oracleKey = new PublicKey(tradeTokenOracleMap.get(marketParam.indexMint.toString()));
             await this.program.methods.initializeMarket(
                 marketParam.params
             ).accounts({
-                indexMint: marketParam.indexMint,
+                indexMintOracle: oracleKey,
                 bumpSigner: pda,
             }).signers([]).rpc(BumpinUtils.getRootConfirmOptions());
             console.log("Market initialized: ", BumpinUtils.decodeString(marketParam.params.symbol))
@@ -159,7 +163,7 @@ export class BumpinAdmin {
             .rpc();
     }
 
-    public async initTradeToken(tradeTokenName: string, tradeTokenMint: string, discount: number, liquidationFactor: number, exponent: number) {
+    public async initTradeToken(tradeTokenName: string, tradeTokenMint: string, discount: number, liquidationFactor: number, exponent: number): Promise<PublicKey> {
         let tradeTokenMintPublicKey = new PublicKey(tradeTokenMint);
         const s = BumpinUtils.encodeString(tradeTokenName);
         let oracleKeypair = await this.DEV_TEST_ONLY__INIT_ORACLE(70000, 1.0, exponent);
@@ -172,11 +176,11 @@ export class BumpinAdmin {
             oracle: oracleKeypair.publicKey,
             bumpSigner: pda,
         }).signers([]).rpc(BumpinUtils.getRootConfirmOptions());
-
+        return oracleKeypair.publicKey;
     }
 
 
-    public async initMarket(poolName: string, poolIndex: number, stablePoolIndex: number, indexMint: anchor.web3.PublicKey) {
+    public async initMarket(poolName: string, poolIndex: number, stablePoolIndex: number, indexMintOracle: anchor.web3.PublicKey) {
         const [pda, _] = BumpinUtils.getBumpinStatePda(this.program);
         //TODO: params
         let params: InitializeMarketParams = {
@@ -196,7 +200,7 @@ export class BumpinAdmin {
         await this.program.methods.initializeMarket(
             params
         ).accounts({
-            indexMint,
+            indexMintOracle,
             bumpSigner: pda,
         }).signers([]).rpc();
     }

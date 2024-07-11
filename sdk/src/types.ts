@@ -119,7 +119,7 @@ export type Market = {
     config: MarketConfig;
     poolKey: PublicKey;
     poolMintKey: PublicKey;
-    indexMintKey: PublicKey;
+    indexMintOracle: PublicKey;
     stablePoolKey: PublicKey;
     stablePoolMintKey: PublicKey;
     index: number;
@@ -423,7 +423,7 @@ export type InnerPlaceOrderParams = {
     stablePoolIndex: number;
     marketIndex: number;
     tradeTokenIndex: number;
-    indexTradeTokenIndex: number;
+    stableTradeTokenIndex: number;
     orderId: BN,
 }
 
@@ -434,7 +434,7 @@ export type MarketWithIndexTradeTokenPrices = {
     config: MarketConfig;
     poolKey: PublicKey;
     poolMintKey: PublicKey;
-    indexMintKey: PublicKey;
+    indexMintOracle: PublicKey;
     stablePoolKey: PublicKey;
     stablePoolMintKey: PublicKey;
     index: number;

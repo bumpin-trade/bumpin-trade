@@ -36,9 +36,9 @@ export class StashedPythClient {
     public async initialize(): Promise<void> {
         await this.subscriber.subscribe((data: Buffer) => {
             let priceData = parsePriceData(data);
-            // const priceData = this.getOraclePriceDataFromBuffer(data);
             this.queue.enqueue(priceData);
-            // console.log('Price data updated, key: ', this.priceDataAccountPublicKey.toString(), 'price: ', priceData.price, 'queue size: ', this.queue.size());
+            // console.log('Price data updated, key: ', this.priceDataAccountPublicKey.toString(), 'price: ', priceData.price, 'queue size: ', this.queue.size(),
+            //     'price 1: ' , this.queue.getQueue()[0].price.toString(), 'price 2: ', this.queue.getQueue()[1].price.toString());
         });
     }
 
@@ -102,6 +102,10 @@ class FixedLengthQueue<T> {
         }
         this.queue = [];
         this.maxLength = maxLength;
+    }
+
+    getQueue(): T[] {
+        return this.queue;
     }
 
     enqueue(item: T): void {

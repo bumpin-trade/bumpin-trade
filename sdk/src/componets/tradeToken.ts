@@ -18,6 +18,7 @@ export class TradeTokenComponent extends Component {
     program: Program<BumpinTrade>;
     tradeTokens: Map<string, PollingTradeTokenAccountSubscriber> = new Map();
     tradeTokenPyths: Map<string, StashedPythClient> = new Map();
+    tradeTokenOraclePyths: Map<string, StashedPythClient> = new Map();
 
     constructor(bulkAccountLoader: BulkAccountLoader, stateSubscriber: PollingStateAccountSubscriber, program: Program<BumpinTrade>) {
         super(stateSubscriber, program);
@@ -39,6 +40,7 @@ export class TradeTokenComponent extends Component {
             let stashedPythClient = new StashedPythClient(tradeToken.oracleKey, 2, this.bulkAccountLoader);
             await stashedPythClient.initialize();
             this.tradeTokenPyths.set(key, stashedPythClient);
+            this.tradeTokenOraclePyths.set(tradeToken.oracleKey.toString(), stashedPythClient);
         }
     }
 
@@ -76,10 +78,19 @@ export class TradeTokenComponent extends Component {
         return stashedPythClient.getLastOraclePriceData(count);
     }
 
+    public getTradeTokenPricesByOracleKey(oracleKey: PublicKey, count: number): PriceData[] {
+        let stashedPythClient = this.tradeTokenOraclePyths.get(oracleKey.toString());
+        if (stashedPythClient === undefined) {
+            throw new BumpinSubscriptionFailed(`TradeToken with the oracle key ${oracleKey} does not exist`);
+        }
+        return stashedPythClient.getLastOraclePriceData(count);
+    }
+
     public async getTradeTokenPricesByMintKey(mintKey: PublicKey, count: number, sync: boolean = false): Promise<PriceData[]> {
         let tradeToken = await this.getTradeTokenByMintKey(mintKey, sync);
         return this.getTradeTokenPrices(BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0], count);
     }
+
 
     public async getTradeTokensWithSlot(sync: boolean = false): Promise<DataAndSlot<TradeToken>[]> {
         let tradeTokensWithSlot: DataAndSlot<TradeToken>[] = [];

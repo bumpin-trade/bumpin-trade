@@ -119,6 +119,26 @@
           }
         },
         {
+          "name": "stable_pool",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "params.stable_pool_index"
+              }
+            ]
+          }
+        },
+        {
           "name": "market",
           "pda": {
             "seeds": [
@@ -259,7 +279,7 @@
               },
               {
                 "kind": "arg",
-                "path": "pool_index"
+                "path": "_pool_index"
               }
             ]
           }
@@ -280,7 +300,7 @@
               },
               {
                 "kind": "arg",
-                "path": "stable_pool_index"
+                "path": "_stable_pool_index"
               }
             ]
           }
@@ -307,7 +327,7 @@
               },
               {
                 "kind": "arg",
-                "path": "pool_index"
+                "path": "_pool_index"
               }
             ]
           }
@@ -334,7 +354,7 @@
               },
               {
                 "kind": "arg",
-                "path": "stable_pool_index"
+                "path": "_stable_pool_index"
               }
             ]
           }
@@ -410,19 +430,19 @@
       ],
       "args": [
         {
-          "name": "pool_index",
+          "name": "_pool_index",
           "type": "u16"
         },
         {
-          "name": "stable_pool_index",
+          "name": "_stable_pool_index",
           "type": "u16"
         },
         {
-          "name": "market_index",
+          "name": "_market_index",
           "type": "u16"
         },
         {
-          "name": "trade_token_index",
+          "name": "_trade_token_index",
           "type": "u16"
         },
         {
@@ -1225,6 +1245,40 @@
           }
         },
         {
+          "name": "stable_trade_token_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "order.stable_trade_token_index"
+              }
+            ]
+          }
+        },
+        {
           "name": "user_token_account",
           "writable": true
         },
@@ -1327,7 +1381,7 @@
           }
         },
         {
-          "name": "index_mint"
+          "name": "index_mint_oracle"
         },
         {
           "name": "admin",
@@ -1897,7 +1951,7 @@
               },
               {
                 "kind": "arg",
-                "path": "pool_index"
+                "path": "_pool_index"
               }
             ]
           }
@@ -1918,7 +1972,7 @@
               },
               {
                 "kind": "arg",
-                "path": "stable_pool_index"
+                "path": "_stable_pool_index"
               }
             ]
           }
@@ -1945,7 +1999,7 @@
               },
               {
                 "kind": "arg",
-                "path": "pool_index"
+                "path": "_pool_index"
               }
             ]
           }
@@ -1972,7 +2026,7 @@
               },
               {
                 "kind": "arg",
-                "path": "stable_pool_index"
+                "path": "_stable_pool_index"
               }
             ]
           }
@@ -2063,19 +2117,19 @@
           "type": "u128"
         },
         {
-          "name": "market_index",
+          "name": "_market_index",
           "type": "u16"
         },
         {
-          "name": "pool_index",
+          "name": "_pool_index",
           "type": "u16"
         },
         {
-          "name": "stable_pool_index",
+          "name": "_stable_pool_index",
           "type": "u16"
         },
         {
-          "name": "user_authority_key",
+          "name": "_user_authority_key",
           "type": "pubkey"
         }
       ]
@@ -2289,6 +2343,40 @@
               {
                 "kind": "arg",
                 "path": "order.trade_token_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "stable_trade_token_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "order.stable_trade_token_index"
               }
             ]
           }
@@ -2767,6 +2855,26 @@
         },
         {
           "name": "pool",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "params.pool_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "stable_pool",
           "pda": {
             "seeds": [
               {
@@ -4332,7 +4440,7 @@
             "type": "pubkey"
           },
           {
-            "name": "index_mint_key",
+            "name": "index_mint_oracle",
             "type": "pubkey"
           },
           {
@@ -4622,7 +4730,7 @@
             "type": "u16"
           },
           {
-            "name": "index_trade_token_index",
+            "name": "stable_trade_token_index",
             "type": "u16"
           },
           {
@@ -4705,10 +4813,6 @@
           {
             "name": "total_supply",
             "type": "u128"
-          },
-          {
-            "name": "settle_funding_fee",
-            "type": "i128"
           },
           {
             "name": "balance",
@@ -4831,6 +4935,10 @@
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "settle_funding_fee",
+            "type": "i128"
+          },
           {
             "name": "amount",
             "type": "u128"
@@ -5377,6 +5485,10 @@
             "type": "u16"
           },
           {
+            "name": "stable_pool_index",
+            "type": "u16"
+          },
+          {
             "name": "trade_token_index",
             "type": "u16"
           }
@@ -5740,7 +5852,7 @@
             "type": "pubkey"
           },
           {
-            "name": "index_mint_key",
+            "name": "index_mint_oracle",
             "type": "pubkey"
           },
           {
