@@ -1,10 +1,10 @@
+use anchor_lang::prelude::*;
 use crate::errors::BumpResult;
 use crate::math::safe_math::SafeMath;
 use crate::traits::Size;
-use anchor_lang::prelude::*;
 
 #[account(zero_copy(unsafe))]
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Default, Debug)]
 #[repr(C)]
 pub struct Rewards {
     pub pool_un_claim_amount: u128,

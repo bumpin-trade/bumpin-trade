@@ -62,6 +62,13 @@ pub mod bumpin_trade {
         handle_initialize_market(ctx, params)
     }
 
+    pub fn initialize_rewards(
+        ctx: Context<InitializePoolRewards>,
+        _pool_index: u16,
+    ) -> Result<()>{
+        handle_initialize_rewards(ctx)
+    }
+
     /*-----pool pool------*/
     pub fn portfolio_stake<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PortfolioStake>,
