@@ -29,12 +29,12 @@ pub struct InitializePoolRewards<'info> {
 
     #[account(
         init,
-        seeds = [b"pool_rewards".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        seeds = [b"rewards".as_ref(), _pool_index.to_le_bytes().as_ref()],
         space = Rewards::SIZE,
         bump,
         payer = admin,
     )]
-    pub pool_rewards: AccountLoader<'info, Rewards>,
+    pub rewards: AccountLoader<'info, Rewards>,
 
     #[account(
         init,
@@ -67,14 +67,13 @@ pub struct InitializePoolRewards<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle_initialize_pool_rewards(
+pub fn handle_initialize_rewards(
     ctx: Context<InitializePoolRewards>,
-    _pool_index: u16,
 ) -> Result<()> {
-    let mut pool_rewards = ctx.accounts.pool_rewards.load_init()?;
+    let mut rewards = ctx.accounts.rewards.load_init()?;
     let pool = ctx.accounts.pool.load()?;
-    pool_rewards.pool_index = pool.index;
-    pool_rewards.pool_rewards_vault = ctx.accounts.pool_rewards_vault.to_account_info().key();
-    pool_rewards.dao_rewards_vault = ctx.accounts.dao_rewards_vault.to_account_info().key();
+    rewards.pool_index = pool.index;
+    rewards.pool_rewards_vault = ctx.accounts.pool_rewards_vault.to_account_info().key();
+    rewards.dao_rewards_vault = ctx.accounts.dao_rewards_vault.to_account_info().key();
     Ok(())
 }

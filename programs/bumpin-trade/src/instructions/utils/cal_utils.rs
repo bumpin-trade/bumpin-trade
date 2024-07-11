@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;
-use crate::math::constants::{PRICE_TO_LAMPORT, RATE_PRECISION, SMALL_RATE_PRECISION};
+use crate::math::constants::{PRICE_TO_USD_PRECISION, RATE_PRECISION, SMALL_RATE_PRECISION};
 use crate::math::safe_math::SafeMath;
 
 pub fn mul_div_i(a: i128, b: i128, denominator: i128) -> BumpResult<i128> {
@@ -41,7 +41,11 @@ pub fn mul_small_rate_i(value: i128, rate: i128) -> BumpResult<i128> {
     mul_div_i(value, rate, SMALL_RATE_PRECISION.cast::<i128>()?)
 }
 
-pub fn div_rate_i(value: i128, rate: i128) -> BumpResult<i128> {
+pub fn div_small_rate_u(value: u128, rate: u128) -> BumpResult<u128> {
+    mul_div_u(value, SMALL_RATE_PRECISION, rate)
+}
+
+pub fn div_small_rate_i(value: i128, rate: i128) -> BumpResult<i128> {
     mul_div_i(value, SMALL_RATE_PRECISION.cast::<i128>()?, rate)
 }
 
@@ -73,7 +77,7 @@ pub fn usd_to_token_u(usd_value: u128, decimals: u16, token_price: u128) -> Bump
     mul_div_u(
         usd_value,
         10u128.pow(decimals.cast::<u32>()?),
-        token_price.safe_mul(PRICE_TO_LAMPORT)?,
+        token_price.safe_mul(PRICE_TO_USD_PRECISION)?,
     )
 }
 
@@ -81,21 +85,21 @@ pub fn usd_to_token_i(usd_value: i128, decimals: u16, token_price: u128) -> Bump
     mul_div_i(
         usd_value,
         10i128.pow(decimals.cast::<u32>()?),
-        token_price.cast::<i128>()?.safe_mul(PRICE_TO_LAMPORT.cast::<i128>()?)?,
+        token_price.cast::<i128>()?.safe_mul(PRICE_TO_USD_PRECISION.cast::<i128>()?)?,
     )
 }
 
 pub fn token_to_usd_u(token_amount: u128, decimals: u16, token_price: u128) -> BumpResult<u128> {
     token_amount
         .safe_mul(token_price)?
-        .safe_mul(PRICE_TO_LAMPORT)?
+        .safe_mul(PRICE_TO_USD_PRECISION)?
         .safe_div(10u128.pow(decimals.cast::<u32>()?))
 }
 
 pub fn token_to_usd_i(token_amount: i128, decimals: u16, token_price: u128) -> BumpResult<i128> {
     token_amount
         .safe_mul(token_price.cast::<i128>()?)?
-        .safe_mul(PRICE_TO_LAMPORT.cast::<i128>()?)?
+        .safe_mul(PRICE_TO_USD_PRECISION.cast::<i128>()?)?
         .safe_div(10i128.pow(decimals.cast::<u32>()?))
 }
 
