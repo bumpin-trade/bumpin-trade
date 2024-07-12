@@ -3365,6 +3365,9 @@ export type BumpinTrade = {
           }
         },
         {
+          "name": "bumpSigner"
+        },
+        {
           "name": "user",
           "writable": true,
           "pda": {

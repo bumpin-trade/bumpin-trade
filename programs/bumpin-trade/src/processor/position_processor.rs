@@ -558,7 +558,10 @@ pub fn execute_reduce_position_margin(
                 >= cal_utils::token_to_usd_u(
                     reduce_margin_amount,
                     stable_trade_token.decimals,
-                    oracle_map.get_price_data(&stable_trade_token.oracle_key).map_err(|_e|BumpErrorCode::OracleNotFound)?.price
+                    oracle_map
+                        .get_price_data(&stable_trade_token.oracle_key)
+                        .map_err(|_e| BumpErrorCode::OracleNotFound)?
+                        .price
                 )?,
             BumpErrorCode::AmountNotEnough
         )?;

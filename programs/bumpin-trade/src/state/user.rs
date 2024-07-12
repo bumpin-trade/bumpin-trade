@@ -147,6 +147,10 @@ impl User {
             .map(move |user_stake_index| &mut self.stakes[user_stake_index])
     }
 
+    pub fn get_user_stake_share(&mut self, pool_key: &Pubkey) -> BumpResult<u128> {
+        Ok(self.get_user_stake_ref(pool_key)?.staked_share)
+    }
+
     pub fn get_user_stake_ref(&self, pool_key: &Pubkey) -> BumpResult<&UserStake> {
         self.get_user_stake_index(pool_key).map(|user_stake| &self.stakes[user_stake])
     }
@@ -468,8 +472,8 @@ impl User {
                 && user_order.symbol == symbol
                 && user_order.margin_mint_key.eq(margin_token)
                 && ((is_long_order == is_long
-                && user_order.position_side.eq(&PositionSide::INCREASE))
-                || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
+                    && user_order.position_side.eq(&PositionSide::INCREASE))
+                    || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
             {
                 user_order.set_leverage(leverage)
             }
@@ -890,7 +894,7 @@ impl User {
                 state.bump_signer_nonce,
                 order.order_margin,
             )
-                .map_err(|_e| BumpErrorCode::TransferFailed)?;
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
         }
         Ok(())
     }

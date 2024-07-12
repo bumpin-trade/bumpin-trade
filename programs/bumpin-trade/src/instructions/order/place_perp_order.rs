@@ -3,15 +3,14 @@ use std::ops::DerefMut;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
-use crate::{get_then_update_id, position, validate};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::instructions::constraints::*;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
-use crate::processor::{fee_processor, position_processor};
-use crate::processor::optional_accounts::{AccountMaps, load_maps};
+use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::position_processor::DecreasePositionParams;
+use crate::processor::{fee_processor, position_processor};
 use crate::state::infrastructure::user_order::{
     OrderSide, OrderStatus, OrderType, PositionSide, StopType, UserOrder,
 };
@@ -25,6 +24,7 @@ use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 use crate::state::UserTokenUpdateReason;
 use crate::utils::{pda, token};
+use crate::{get_then_update_id, position, validate};
 
 #[derive(Accounts)]
 #[instruction(
@@ -242,7 +242,11 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
             ctx.program_id,
             &trade_token_map,
             &mut oracle_map,
-            if order.order_side.eq(&OrderSide::LONG) { &ctx.accounts.trade_token_vault } else { &ctx.accounts.stable_trade_token_vault },
+            if order.order_side.eq(&OrderSide::LONG) {
+                &ctx.accounts.trade_token_vault
+            } else {
+                &ctx.accounts.stable_trade_token_vault
+            },
             &market_map,
             &user_order,
             order_id,
@@ -410,7 +414,7 @@ pub fn handle_execute_order<'info>(
                 )?;
                 Ok(())
             }
-        }
+        },
 
         PositionSide::DECREASE => {
             {
@@ -453,7 +457,7 @@ pub fn handle_execute_order<'info>(
                 )?;
                 Ok(())
             }
-        }
+        },
     }?;
     //delete order
     user.delete_order(order_id)?;
@@ -513,7 +517,7 @@ fn validate_place_order(
             } else {
                 Ok(true)
             }
-        }
+        },
     }
 }
 
@@ -585,7 +589,7 @@ fn get_execution_price(index_price: u128, order: &UserOrder) -> BumpResult<u128>
     if order.order_type.eq(&OrderType::STOP)
         && order.stop_type.eq(&StopType::StopLoss)
         && ((long && order.trigger_price <= index_price)
-        || (!long && order.trigger_price >= index_price))
+            || (!long && order.trigger_price >= index_price))
     {
         return Ok(index_price);
     }

@@ -4,19 +4,21 @@ import {PublicKey} from "@solana/web3.js";
 export class BumpinClientNotInitialized extends Error {
     constructor() {
         super("Bumpin client not initialized");
+        Object.setPrototypeOf(this, BumpinClientNotInitialized.prototype);
     }
 }
 
 export class BumpinClientInternalError extends Error {
     constructor(msg: string = "") {
         super("Bumpin client internal error: " + msg);
+        Object.setPrototypeOf(this, BumpinClientInternalError.prototype);
     }
 }
 
 export class BumpinUserNotLogin extends Error {
     constructor() {
         super(`User not login`);
-
+        Object.setPrototypeOf(this, BumpinUserNotLogin.prototype);
     }
 }
 
@@ -26,6 +28,7 @@ export class BumpinPoolNotFound extends Error {
     constructor(mint: PublicKey) {
         super(`Pool not found: ${mint}`);
         this.mint = mint;
+        Object.setPrototypeOf(this, BumpinPoolNotFound.prototype);
     }
 
     public getMint(): PublicKey {
@@ -39,6 +42,7 @@ export class BumpinTokenNotFound extends Error {
     constructor(mint: PublicKey) {
         super(`Token not found: ${mint}`);
         this.mint = mint;
+        Object.setPrototypeOf(this, BumpinTokenNotFound.prototype);
     }
 
     public getMint(): PublicKey {
@@ -49,6 +53,7 @@ export class BumpinTokenNotFound extends Error {
 export class BumpinInvalidParameter extends Error {
     constructor(msg: string) {
         super(`Invalid parameter: ${msg}`);
+        Object.setPrototypeOf(this, BumpinInvalidParameter.prototype);
     }
 }
 
@@ -60,6 +65,7 @@ export class BumpinSupplyInsufficient extends Error {
         super(`Supply is insufficient: ${actualValue}  < ${minimalExpected} (expected)`);
         this.minimalExpected = minimalExpected;
         this.actualValue = actualValue;
+        Object.setPrototypeOf(this, BumpinSupplyInsufficient.prototype);
     }
 
     public getMinimalExpected(): BN {
@@ -79,6 +85,7 @@ export class BumpinValueInsufficient extends Error {
         super(`Value is insufficient: ${actualValue}  < ${minimalExpected} (expected)`);
         this.minimalExpected = minimalExpected;
         this.actualValue = actualValue;
+        Object.setPrototypeOf(this, BumpinValueInsufficient.prototype);
     }
 
     public getMinimalExpected(): BN {
@@ -94,11 +101,11 @@ export class BumpinTokenAccountUnexpected extends Error {
     expected: string;
     actual: string;
 
-    constructor(expected: string,actual: string) {
+    constructor(expected: string, actual: string) {
         super(`Token account unexpected: ${actual}  != ${expected} (expected)`);
         this.expected = expected;
         this.actual = actual;
-
+        Object.setPrototypeOf(this, BumpinTokenAccountUnexpected.prototype);
     }
 
     public getExpected(): string {
@@ -116,7 +123,7 @@ export class BumpinAccountNotFound extends Error {
     constructor(accountName: string) {
         super(`Account not found: ${accountName}`);
         this.accountName = accountName;
-
+        Object.setPrototypeOf(this, BumpinAccountNotFound.prototype);
     }
 
     public getAccountName(): string {
@@ -132,6 +139,7 @@ export class BumpinSubscriptionFailed extends Error {
         super(`Account not subscribed: ${accountName}`);
         this.accountName = accountName;
         this.index = index
+        Object.setPrototypeOf(this, BumpinSubscriptionFailed.prototype);
     }
 
     public getAccountName(): string {

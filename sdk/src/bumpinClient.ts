@@ -11,7 +11,8 @@ import {
     MarketWithIndexTradeTokenPrices,
     PlaceOrderParams,
     Pool,
-    PoolSummary, Rewards,
+    PoolSummary,
+    Rewards,
     State,
     TokenBalance,
     TradeToken,
@@ -287,10 +288,11 @@ export class BumpinClient {
         }
     }
 
-    public async unStake(toPortfolio: boolean, share: BN, mint: PublicKey) {
+    public async unStake(toPortfolio: boolean, share: BN, mint: PublicKey, sync: boolean = false) {
         let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(mint, await this.getTradeTokens());
         let targetPool = BumpinPoolUtils.getPoolByMintPublicKey(mint, await this.getPools());
-        await this.userComponent.unStake(toPortfolio, share, targetTradeToken, this.wallet.publicKey, targetPool);
+        let markets = await this.getMarkets(sync);
+        await this.userComponent.unStake(toPortfolio, share, targetTradeToken, this.wallet.publicKey, targetPool, markets);
     }
 
     public async deposit(userTokenAccount: PublicKey, mintPublicKey: PublicKey, size: number) {

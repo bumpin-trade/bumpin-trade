@@ -67,9 +67,7 @@ pub struct InitializePoolRewards<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle_initialize_rewards(
-    ctx: Context<InitializePoolRewards>,
-) -> Result<()> {
+pub fn handle_initialize_rewards(ctx: Context<InitializePoolRewards>) -> Result<()> {
     let mut rewards = ctx.accounts.rewards.load_init()?;
     let pool = ctx.accounts.pool.load()?;
     rewards.pool_index = pool.index;

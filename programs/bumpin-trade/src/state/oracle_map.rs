@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
-use anchor_lang::Key;
 use anchor_lang::prelude::*;
+use anchor_lang::Key;
 
 use crate::errors::BumpErrorCode::OracleNotFound;
 use crate::errors::BumpResult;
@@ -33,7 +33,7 @@ impl<'a> OracleMap<'a> {
             None => {
                 msg!("oracle pubkey not found in oracle_map: {}", pubkey);
                 return Err(OracleNotFound);
-            }
+            },
         };
         let price_result = get_oracle_price(account_info)?;
         self.price_data.insert(*pubkey, price_result);
