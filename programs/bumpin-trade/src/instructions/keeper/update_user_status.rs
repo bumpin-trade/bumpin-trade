@@ -12,7 +12,7 @@ pub struct UpdateUserStatus<'info> {
     #[account(
         mut,
         seeds = [b"bump_state".as_ref()],
-        // has_one = keeper_key,
+        has_one = keeper_key,
         bump,
     )]
     pub state: Account<'info, State>,
@@ -23,7 +23,7 @@ pub struct UpdateUserStatus<'info> {
     )]
     pub user: AccountLoader<'info, User>,
 
-    pub keeper_signer: Signer<'info>,
+    pub keeper_key: Signer<'info>,
 }
 
 pub fn handle_update_user_status(

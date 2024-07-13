@@ -989,18 +989,13 @@ pub fn increase_position(
         validate!(
             base_token_pool_value
                 >= cal_utils::token_to_usd_u(
-                    increase_margin,
+                    increase_hold,
                     stable_trade_token.decimals,
                     margin_token_price
                 )?,
             BumpErrorCode::AmountNotEnough
         )?;
-        stable_pool.hold_pool_amount(
-            increase_margin,
-            oracle_map,
-            trade_token,
-            stable_trade_token,
-        )?
+        stable_pool.hold_pool_amount(increase_hold, oracle_map, trade_token, stable_trade_token)?
     }
 
     Ok(())
