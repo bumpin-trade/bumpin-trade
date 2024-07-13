@@ -4,9 +4,11 @@ use anchor_spl::token::{Token, TokenAccount};
 use crate::errors::BumpErrorCode;
 use crate::instructions::cal_utils;
 use crate::math::safe_math::SafeMath;
+use crate::processor::optional_accounts::{AccountMaps, load_maps};
 use crate::state::pool::Pool;
 use crate::state::rewards::Rewards;
 use crate::state::state::State;
+use crate::state::trade_token::TradeToken;
 use crate::utils::token;
 
 #[derive(Accounts)]
@@ -40,6 +42,20 @@ pub struct CollectRewards<'info> {
         bump,
     )]
     pub stable_pool_vault: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        mut,
+        seeds = [b"trade_token", _trade_token_index.to_le_bytes().as_ref()],
+        bump,
+    )]
+    pub trade_token: AccountLoader<'info, TradeToken>,
+
+    #[account(
+        mut,
+        seeds = [b"trade_token", _stable_trade_token_index.to_le_bytes().as_ref()],
+        bump,
+    )]
+    pub stable_trade_token: AccountLoader<'info, TradeToken>,
 
     #[account(
         mut,
@@ -79,7 +95,12 @@ pub struct CollectRewards<'info> {
 pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, CollectRewards<'info>>,
 ) -> Result<()> {
+    let remaining_accounts = ctx.remaining_accounts;
+
+    let AccountMaps { mut oracle_map, .. } = load_maps(remaining_accounts)?;
     let mut pool = ctx.accounts.pool.load_mut()?;
+    let trade_token = ctx.accounts.trade_token.load()?;
+    let stable_trade_token = ctx.accounts.trade_token.load()?;
     let total_supply = pool.total_supply;
     let fee_reward = &pool.fee_reward;
     let mut total_fee_amount = fee_reward.fee_amount;
@@ -87,10 +108,14 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
         //need swap stable_fee_reward to amount
         let stable_fee_reward = &mut pool.stable_fee_reward;
         let fee_amount = stable_fee_reward.fee_amount;
+        let stable_token_price = oracle_map.get_price_data(&stable_trade_token.oracle_key).map_err(|_e| BumpErrorCode::OracleNotFound)?.price;
+        let transfer_usd = cal_utils::token_to_usd_u(fee_amount, stable_trade_token.decimals, stable_token_price)?;
+        let token_price = oracle_map.get_price_data(&trade_token.oracle_key).map_err(|_e| BumpErrorCode::OracleNotFound)?.price;
+        let transfer_amount = cal_utils::usd_to_token_u(transfer_usd, trade_token.decimals, token_price)?;
         // todo swap stable to un_stable token, using jup_swap.
         // let amount = swap::jup_swap()?;
-        // total_fee_amount = total_fee_amount.safe_add(amount)?;
-        // stable_fee_reward.sub_un_settle_amount(fee_amount)?
+        total_fee_amount = total_fee_amount.safe_add(transfer_amount)?;
+        stable_fee_reward.sub_un_settle_amount(fee_amount)?
     }
 
     //split fee to pool_rewards & dao_rewards
@@ -107,7 +132,7 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
         ctx.accounts.state.bump_signer_nonce,
         pool_rewards_amount,
     )
-    .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
     // record pool rewards
     let mut rewards = ctx.accounts.rewards.load_mut()?;
     rewards.add_pool_total_rewards_amount(pool_rewards_amount)?;
@@ -127,7 +152,7 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
         ctx.accounts.state.bump_signer_nonce,
         dao_rewards_amount,
     )
-    .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
     rewards.add_dao_total_rewards_amount(dao_rewards_amount)?;
     Ok(())
 }
