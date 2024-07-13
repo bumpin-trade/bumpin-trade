@@ -34,6 +34,7 @@ export type InitializeMarketParams = {
 }
 
 export type InitializeStateParams = {
+    keeperKey: number[],
     minOrderMarginUsd: BN;
     maximumMaintenanceMarginRate: number;
     fundingFeeBaseRate: BN;
@@ -190,12 +191,12 @@ export type Pool = {
 }
 
 export type Rewards = {
-     poolUnClaimAmount: BN,
-     poolTotalRewardsAmount: BN,
-     poolRewardsVault: PublicKey,
-     daoRewardsVault: PublicKey,
-     daoTotalRewardsAmount: BN,
-     poolIndex: number,
+    poolUnClaimAmount: BN,
+    poolTotalRewardsAmount: BN,
+    poolRewardsVault: PublicKey,
+    daoRewardsVault: PublicKey,
+    daoTotalRewardsAmount: BN,
+    poolIndex: number,
 }
 
 

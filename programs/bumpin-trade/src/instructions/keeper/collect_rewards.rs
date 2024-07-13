@@ -9,12 +9,13 @@ use crate::state::rewards::Rewards;
 use crate::state::state::State;
 use crate::utils::token;
 
+
 #[derive(Accounts)]
 #[instruction(_pool_index: u16, _stable_pool_index: u16,)]
 pub struct CollectRewards<'info> {
     #[account(
         seeds = [b"bump_state".as_ref()],
-        has_one = keeper_signer,
+        // has_one = keeper_key,
         bump,
     )]
     pub state: Box<Account<'info, State>>,

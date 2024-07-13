@@ -23,6 +23,7 @@ pub struct InitializeState<'info> {
 
 #[derive(AnchorDeserialize, AnchorSerialize, Debug, Clone, Copy)]
 pub struct InitializeStateParams {
+    pub keeper_key: [u8; 32],
     pub min_order_margin_usd: u128, //最小下单头寸 param: InitializeStateParams
     pub maximum_maintenance_margin_rate: u32, //最大维持保证金率，类似于用来做adl
     pub funding_fee_base_rate: u128, //fundingfee 基础费率
@@ -52,7 +53,7 @@ pub fn handle_initialize_state(
     *ctx.accounts.state = State {
         admin: *ctx.accounts.admin.key,
         bump_signer,
-        keeper_signer: Pubkey::default(),
+        keeper_key: Pubkey::new_from_array(initialize_state_params.keeper_key),
         bump_signer_nonce,
         market_sequence: 0,
         pool_sequence: 0,

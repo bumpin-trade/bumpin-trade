@@ -2246,10 +2246,7 @@
         },
         {
           "name": "keeper_signer",
-          "signer": true,
-          "relations": [
-            "state"
-          ]
+          "signer": true
         },
         {
           "name": "bump_signer"
@@ -3170,10 +3167,7 @@
         },
         {
           "name": "keeper_signer",
-          "signer": true,
-          "relations": [
-            "state"
-          ]
+          "signer": true
         }
       ],
       "args": [
@@ -4475,6 +4469,15 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "keeper_key",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
             "name": "min_order_margin_usd",
             "type": "u128"
           },
@@ -5457,7 +5460,7 @@
             "type": "pubkey"
           },
           {
-            "name": "keeper_signer",
+            "name": "keeper_key",
             "type": "pubkey"
           },
           {

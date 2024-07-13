@@ -1,7 +1,8 @@
+use anchor_lang::prelude::*;
+
 use crate::errors::BumpErrorCode;
 use crate::state::state::State;
 use crate::state::user::{User, UserStatus};
-use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 #[instruction(
@@ -11,7 +12,7 @@ pub struct UpdateUserStatus<'info> {
     #[account(
         mut,
         seeds = [b"bump_state".as_ref()],
-        has_one = keeper_signer,
+        // has_one = keeper_key,
         bump,
     )]
     pub state: Account<'info, State>,

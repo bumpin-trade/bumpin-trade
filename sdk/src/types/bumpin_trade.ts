@@ -2252,10 +2252,7 @@ export type BumpinTrade = {
         },
         {
           "name": "keeperSigner",
-          "signer": true,
-          "relations": [
-            "state"
-          ]
+          "signer": true
         },
         {
           "name": "bumpSigner"
@@ -3176,10 +3173,7 @@ export type BumpinTrade = {
         },
         {
           "name": "keeperSigner",
-          "signer": true,
-          "relations": [
-            "state"
-          ]
+          "signer": true
         }
       ],
       "args": [
@@ -4481,6 +4475,15 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
+            "name": "keeperKey",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
             "name": "minOrderMarginUsd",
             "type": "u128"
           },
@@ -5463,7 +5466,7 @@ export type BumpinTrade = {
             "type": "pubkey"
           },
           {
-            "name": "keeperSigner",
+            "name": "keeperKey",
             "type": "pubkey"
           },
           {

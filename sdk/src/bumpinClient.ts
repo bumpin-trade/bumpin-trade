@@ -257,6 +257,7 @@ export class BumpinClient {
                         ...market,
                         indexTradeTokenPrices: prices
                     }
+
                     poolSummary.markets.push(marketWithPrices);
                     //TODO: fix
                     // if (!market.indexMintKey.equals(market.poolMintKey)) {
