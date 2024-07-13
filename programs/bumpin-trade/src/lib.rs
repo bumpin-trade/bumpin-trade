@@ -243,6 +243,8 @@ pub mod bumpin_trade {
         ctx: Context<'a, 'b, 'c, 'info, CollectRewards<'info>>,
         _pool_index: u16,
         _stable_pool_index: u16,
+        _trade_token_index: u16,
+        _stable_trade_token_index: u16
     ) -> Result<()>{
         handle_collect_rewards(ctx)
     }

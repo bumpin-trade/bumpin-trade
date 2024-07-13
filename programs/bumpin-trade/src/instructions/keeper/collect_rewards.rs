@@ -12,7 +12,9 @@ use crate::state::trade_token::TradeToken;
 use crate::utils::token;
 
 #[derive(Accounts)]
-#[instruction(_pool_index: u16, _stable_pool_index: u16,)]
+#[instruction(
+    _pool_index: u16, _stable_pool_index: u16, _trade_token_index: u16, _stable_trade_token_index: u16
+)]
 pub struct CollectRewards<'info> {
     #[account(
         seeds = [b"bump_state".as_ref()],
