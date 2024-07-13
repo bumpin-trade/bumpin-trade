@@ -238,6 +238,14 @@ pub mod bumpin_trade {
     ) -> Result<()> {
         handle_auto_compound(ctx, pool_index)
     }
+
+    pub fn collect_rewards<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, CollectRewards<'info>>,
+        _pool_index: u16,
+        _stable_pool_index: u16,
+    ) -> Result<()>{
+        handle_collect_rewards(ctx)
+    }
 }
 
 #[derive(Accounts)]

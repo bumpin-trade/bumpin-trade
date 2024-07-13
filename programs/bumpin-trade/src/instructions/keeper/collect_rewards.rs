@@ -15,6 +15,7 @@ pub struct CollectRewards<'info> {
     #[account(
         seeds = [b"bump_state".as_ref()],
         has_one = keeper_signer,
+        has_one = bump_signer,
         bump,
     )]
     pub state: Box<Account<'info, State>>,
@@ -61,6 +62,9 @@ pub struct CollectRewards<'info> {
     )]
     pub dao_rewards_vault: Box<Account<'info, TokenAccount>>,
 
+    #[account(
+        constraint = state.keeper_signer.eq(& keeper_signer.key())
+    )]
     pub keeper_signer: Signer<'info>,
 
     #[account(
@@ -74,8 +78,6 @@ pub struct CollectRewards<'info> {
 
 pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, CollectRewards<'info>>,
-    _pool_index: u16,
-    _stable_pool_index: u16,
 ) -> Result<()> {
     let mut pool = ctx.accounts.pool.load_mut()?;
     let total_supply = pool.total_supply;

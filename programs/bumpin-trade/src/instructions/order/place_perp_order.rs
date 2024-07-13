@@ -291,6 +291,17 @@ pub fn handle_execute_order<'info>(
     let mut trade_token = trade_token_map.get_trade_token_ref_mut(&market.pool_mint_key)?;
     let mut stable_trade_token =
         trade_token_map.get_trade_token_ref_mut(&market.stable_pool_mint_key)?;
+
+    //validate trade_token_vault
+    validate!(
+        if cloned_order.order_side.eq(&OrderSide::LONG) {
+            trade_token.vault_key.eq(token_vault.to_account_info().key)
+        } else {
+            stable_trade_token.vault_key.eq(token_vault.to_account_info().key)
+        },
+        BumpErrorCode::InvalidParam
+    )?;
+
     //validate order
     validate_execute_order(&cloned_order, &market)?;
     let is_long = OrderSide::LONG == cloned_order.order_side;
@@ -303,7 +314,7 @@ pub fn handle_execute_order<'info>(
     )?;
 
     let margin_token_price = oracle_map
-        .get_price_data(if user_order.order_side.eq(&OrderSide::LONG) {
+        .get_price_data(if cloned_order.order_side.eq(&OrderSide::LONG) {
             &trade_token.oracle_key
         } else {
             &stable_trade_token.oracle_key
@@ -314,7 +325,7 @@ pub fn handle_execute_order<'info>(
     market.update_market_funding_fee_rate(
         state_account,
         margin_token_price,
-        if user_order.order_side.eq(&OrderSide::LONG) {
+        if cloned_order.order_side.eq(&OrderSide::LONG) {
             trade_token.decimals
         } else {
             stable_trade_token.decimals
@@ -348,7 +359,7 @@ pub fn handle_execute_order<'info>(
                     user_token_account.to_account_info().key,
                     &cloned_order,
                     margin_token,
-                    if user_order.order_side.eq(&OrderSide::LONG) {
+                    if cloned_order.order_side.eq(&OrderSide::LONG) {
                         trade_token.decimals
                     } else {
                         stable_trade_token.decimals
@@ -384,7 +395,7 @@ pub fn handle_execute_order<'info>(
                     user.un_use_token(&cloned_order.margin_mint_key, fee)?;
                     user.sub_token_with_liability(
                         &cloned_order.margin_mint_key,
-                        if user_order.order_side.eq(&OrderSide::LONG) {
+                        if cloned_order.order_side.eq(&OrderSide::LONG) {
                             trade_token.deref_mut()
                         } else {
                             stable_trade_token.deref_mut()
@@ -444,7 +455,7 @@ pub fn handle_execute_order<'info>(
                     state_account,
                     Some(user_token_account),
                     if position_side { pool_vault_account } else { stable_pool_vault_account },
-                    if user_order.order_side.eq(&OrderSide::LONG) {
+                    if cloned_order.order_side.eq(&OrderSide::LONG) {
                         trade_token.deref_mut()
                     } else {
                         stable_trade_token.deref_mut()
