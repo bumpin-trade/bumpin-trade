@@ -1,17 +1,17 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
-num_loops="\$1"
+num_loops=6
 echo "num_loops: $num_loops"
 echo "Creating... "
 # Step 1: Airdrop SOL to the admin account
-solana airdrop 100000 $(solana-keygen pubkey ./keys/admin.json) --url localhost > /dev/null
-solana airdrop 100000 $(solana-keygen pubkey ./keys/keeper.json) --url localhost > /dev/null
-solana airdrop 100000 $(solana-keygen pubkey ./keys/player.json) --url localhost > /dev/null
-solana airdrop 100000 $(solana-keygen pubkey ./keys/player2.json) --url localhost > /dev/null
-solana airdrop 100000 $(solana-keygen pubkey ./keys/player3.json) --url localhost > /dev/null
-solana airdrop 100000 $(solana-keygen pubkey ./keys/player4.json) --url localhost > /dev/null
-solana airdrop 100000 $(solana-keygen pubkey ./keys/player5.json) --url localhost > /dev/null
-solana airdrop 100000 $(solana-keygen pubkey ./keys/reward.json) --url localhost > /dev/null
+solana airdrop 100000 $(solana-keygen pubkey ./keys/admin.json) --url localhost> /dev/null
+solana airdrop 100000 $(solana-keygen pubkey ./keys/keeper.json) --url localhost> /dev/null
+solana airdrop 100000 $(solana-keygen pubkey ./keys/player.json) --url localhost> /dev/null
+solana airdrop 100000 $(solana-keygen pubkey ./keys/player2.json) --url localhost> /dev/null
+solana airdrop 100000 $(solana-keygen pubkey ./keys/player3.json) --url localhost> /dev/null
+solana airdrop 100000 $(solana-keygen pubkey ./keys/player4.json) --url localhost> /dev/null
+solana airdrop 100000 $(solana-keygen pubkey ./keys/player5.json) --url localhost> /dev/null
+solana airdrop 100000 $(solana-keygen pubkey ./keys/reward.json) --url localhost> /dev/null
 decimals=(9 6 8 8 8 5)
 results="================================================\n"
 
@@ -34,6 +34,7 @@ do
   account5=$(echo "$account_player5_output" | sed -n 's/Creating account \(.*\)/\1/p')
   account_reward_output=$(spl-token create-account $token --owner ./keys/reward.json)
   account_reward=$(echo "$account_reward_output" | sed -n 's/Creating account \(.*\)/\1/p')
+
 
   # Step 4: Mint tokens to the created account
   mint_amount=$((i * 100000000))
