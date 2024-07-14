@@ -18,6 +18,7 @@ import * as anchor from "@coral-xyz/anchor";
 import {BN, Program} from "@coral-xyz/anchor";
 import {BumpinUtils} from "../utils/utils";
 import {BumpinTrade} from "../types/bumpin_trade";
+// @ts-ignore
 import {isEqual} from 'lodash';
 import {Component} from "./componet";
 import {PollingStateAccountSubscriber} from "../account/pollingStateAccountSubscriber";
@@ -139,6 +140,9 @@ export class UserComponent extends Component {
 
     public async unStake(portfolio: boolean, share: BN, tradeToken: TradeToken, wallet: PublicKey, pool: Pool, allMarkets: Market[]): Promise<void> {
         let userStake = await this.findUsingStake(pool.key, false);
+        if (!userStake) {
+            throw new BumpinInvalidParameter("User stake not found");
+        }
         if (share.gt(userStake.stakedShare)) {
             throw new BumpinValueInsufficient(userStake.stakedShare, share)
         }
@@ -365,6 +369,9 @@ export class UserComponent extends Component {
 
     async checkStakeAmountFulfilRequirements(amount: BN, tradeToken: TradeToken, pool: Pool): Promise<BN> {
         let priceData = await this.oracleClient.getPriceData(tradeToken.oracleKey);
+        if (!priceData.price) {
+            throw new BumpinInvalidParameter("Price data not found");
+        }
         let value = BumpinUtils.toUsdBN(amount, priceData.price, tradeToken.decimals);
         if (value < pool.config.minimumStakeAmount) {
             throw new BumpinValueInsufficient(pool.config.minimumStakeAmount, value)

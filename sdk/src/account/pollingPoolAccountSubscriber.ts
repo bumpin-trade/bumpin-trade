@@ -33,7 +33,7 @@ export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
         }
 
         if (userAccount) {
-            this.pool = {data: userAccount, slot: undefined};
+            this.pool = {data: userAccount, slot: 0};
         }
 
         await this.addToAccountLoader();
@@ -94,9 +94,9 @@ export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
                     slot: dataAndContext.context.slot,
                 };
             }
-        } catch (e) {
+        } catch (e: any) {
             console.log(
-                `PollingUserAccountSubscriber.fetch() PoolAccount does not exist: ${e.message}`
+                `PollingPoolAccountSubscriber.fetch() PoolAccount does not exist: ${e.message}`
             );
         }
     }
@@ -106,7 +106,7 @@ export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
     }
 
     async unsubscribe(): Promise<void> {
-        if (!this.isSubscribed) {
+        if (!this.isSubscribed || !this.callbackId) {
             return;
         }
 
@@ -116,7 +116,8 @@ export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
         );
         this.callbackId = undefined;
 
-        this.accountLoader.removeErrorCallbacks(this.errorCallbackId);
+        if (this.errorCallbackId)
+            this.accountLoader.removeErrorCallbacks(this.errorCallbackId);
         this.errorCallbackId = undefined;
 
         this.isSubscribed = false;
@@ -131,7 +132,7 @@ export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
     }
 
     public getAccountAndSlot(): DataAndSlot<Pool> {
-        if (!this.doesAccountExist()) {
+        if (!this.doesAccountExist() || !this.pool) {
             throw new Error(
                 'You must call `subscribe` or `fetch` before using this function'
             );

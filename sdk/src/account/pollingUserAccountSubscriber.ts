@@ -33,7 +33,7 @@ export class PollingUserAccountSubscriber implements AccountSubscriber<UserAccou
         }
 
         if (userAccount) {
-            this.user = {data: userAccount, slot: undefined};
+            this.user = {data: userAccount, slot: 0};
         }
 
         await this.addToAccountLoader();
@@ -94,7 +94,7 @@ export class PollingUserAccountSubscriber implements AccountSubscriber<UserAccou
                     slot: dataAndContext.context.slot,
                 };
             }
-        } catch (e) {
+        } catch (e: any) {
             console.log(
                 `PollingUserAccountSubscriber.fetch() UserAccount does not exist: ${e.message}`
             );
@@ -106,7 +106,7 @@ export class PollingUserAccountSubscriber implements AccountSubscriber<UserAccou
     }
 
     async unsubscribe(): Promise<void> {
-        if (!this.isSubscribed) {
+        if (!this.isSubscribed || !this.callbackId) {
             return;
         }
 
@@ -116,7 +116,8 @@ export class PollingUserAccountSubscriber implements AccountSubscriber<UserAccou
         );
         this.callbackId = undefined;
 
-        this.accountLoader.removeErrorCallbacks(this.errorCallbackId);
+        if (this.errorCallbackId)
+            this.accountLoader.removeErrorCallbacks(this.errorCallbackId);
         this.errorCallbackId = undefined;
 
         this.isSubscribed = false;
@@ -131,7 +132,7 @@ export class PollingUserAccountSubscriber implements AccountSubscriber<UserAccou
     }
 
     public getAccountAndSlot(): DataAndSlot<UserAccount> {
-        if (!this.doesAccountExist()) {
+        if (!this.doesAccountExist() || !this.user) {
             throw new Error(
                 'You must call `subscribe` or `fetch` before using this function'
             );

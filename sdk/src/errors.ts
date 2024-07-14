@@ -2,8 +2,11 @@ import {BN} from "@coral-xyz/anchor";
 import {PublicKey} from "@solana/web3.js";
 
 export class BumpinClientNotInitialized extends Error {
-    constructor() {
-        super("Bumpin client not initialized");
+    whichComponent: string;
+
+    constructor(whichComponent: string = "self") {
+        super("Bumpin client not initialized for " + whichComponent);
+        this.whichComponent = whichComponent;
         Object.setPrototypeOf(this, BumpinClientNotInitialized.prototype);
     }
 }
@@ -135,7 +138,7 @@ export class BumpinSubscriptionFailed extends Error {
     accountName: string;
     index: number
 
-    constructor(accountName: string, index: number = undefined) {
+    constructor(accountName: string, index: number = -1) {
         super(`Account not subscribed: ${accountName}`);
         this.accountName = accountName;
         this.index = index

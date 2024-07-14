@@ -33,7 +33,7 @@ export class PollingTradeTokenAccountSubscriber implements AccountSubscriber<Tra
         }
 
         if (userAccount) {
-            this.tradeToken = {data: userAccount, slot: undefined};
+            this.tradeToken = {data: userAccount, slot: 0};
         }
 
         await this.addToAccountLoader();
@@ -93,7 +93,7 @@ export class PollingTradeTokenAccountSubscriber implements AccountSubscriber<Tra
                     slot: dataAndContext.context.slot,
                 };
             }
-        } catch (e) {
+        } catch (e: any) {
             console.log(
                 `PollingUserAccountSubscriber.fetch() TradeTokenAccount does not exist: ${e.message}`
             );
@@ -105,7 +105,7 @@ export class PollingTradeTokenAccountSubscriber implements AccountSubscriber<Tra
     }
 
     async unsubscribe(): Promise<void> {
-        if (!this.isSubscribed) {
+        if (!this.isSubscribed || !this.callbackId) {
             return;
         }
 
@@ -115,7 +115,8 @@ export class PollingTradeTokenAccountSubscriber implements AccountSubscriber<Tra
         );
         this.callbackId = undefined;
 
-        this.accountLoader.removeErrorCallbacks(this.errorCallbackId);
+        if (this.errorCallbackId)
+            this.accountLoader.removeErrorCallbacks(this.errorCallbackId);
         this.errorCallbackId = undefined;
 
         this.isSubscribed = false;
@@ -130,7 +131,7 @@ export class PollingTradeTokenAccountSubscriber implements AccountSubscriber<Tra
     }
 
     public getAccountAndSlot(): DataAndSlot<TradeToken> {
-        if (!this.doesAccountExist()) {
+        if (!this.doesAccountExist() || !this.tradeToken) {
             throw new Error(
                 'You must call `subscribe` or `fetch` before using this function'
             );

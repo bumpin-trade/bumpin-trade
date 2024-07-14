@@ -3,7 +3,7 @@ import {PublicKey} from "@solana/web3.js";
 import {BN} from "@coral-xyz/anchor";
 import {PriceData} from "@pythnetwork/client";
 import {BumpinUtils} from "./utils/utils";
-import {BumpinTokenNotFound} from "./errors";
+import {BumpinInvalidParameter, BumpinTokenNotFound} from "./errors";
 import BigNumber from "bignumber.js";
 
 
@@ -455,6 +455,7 @@ export type MarketWithIndexTradeTokenPrices = {
 
 export type PoolSummary = {
     pool: Pool;
+    netPrice: BigNumber,
     categoryTags: string[];
     markets: MarketWithIndexTradeTokenPrices[];
 }
@@ -487,7 +488,20 @@ export class TokenBalance {
     }
 
     public getTokenBalanceUsd(): BigNumber {
+        if (!this.tradeTokenPriceData.price) {
+            throw new BumpinInvalidParameter('Price data not found');
+        }
         return BumpinUtils.toUsd(this.amount, this.tradeTokenPriceData.price, this.tradeToken.decimals);
+    }
+}
+
+export class MarketUnPnlUsd {
+    longUnPnl: BigNumber;
+    shortUnPnl: BigNumber;
+
+    constructor(longUnPnl: BigNumber, shortUnPnl: BigNumber) {
+        this.longUnPnl = longUnPnl;
+        this.shortUnPnl = shortUnPnl;
     }
 }
 

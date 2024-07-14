@@ -51,7 +51,7 @@ export class BumpinAdmin {
             commitment: "confirmed", //default commitment: confirmed
             preflightCommitment: "confirmed",
             maxRetries: 0,
-            minContextSlot: null
+            minContextSlot: undefined
         };
         this.provider = new anchor.AnchorProvider(this.connection, this.wallet, opt);
         this.program = new anchor.Program(JSON.parse(JSON.stringify(idlBumpinTrade)), this.provider);
@@ -62,8 +62,8 @@ export class BumpinAdmin {
 
     public async getOnlinePriceData(priceAccountPublicKey: PublicKey): Promise<PriceData> {
         let connection = new Connection("https://solana-mainnet.g.alchemy.com/v2/F9RT25tFEPdrMzTGOzst2hOqu4agu8Zw");
-        let buffer: AccountInfo<Buffer> = await connection.getAccountInfo(priceAccountPublicKey);
-        return parsePriceData(buffer.data);
+        let buffer: AccountInfo<Buffer> | null = await connection.getAccountInfo(priceAccountPublicKey);
+        return parsePriceData(buffer!.data);
     }
 
     public async initializeAll(stateParam: InitializeStateParams, tradeTokenParams: WrappedInitializeTradeTokenParams[], poolParams: WrappedInitializePoolParams[], marketParams: WrappedInitializeMarketParams[], rewardPrams: WrappedInitializeRewardsParams[]) {
@@ -108,7 +108,7 @@ export class BumpinAdmin {
 
         //////// init markets
         for (let marketParam of marketParams) {
-            let oracleKey = new PublicKey(tradeTokenOracleMap.get(marketParam.indexMint.toString()));
+            let oracleKey = new PublicKey(tradeTokenOracleMap.get(marketParam.indexMint.toString())!);
             await this.program.methods.initializeMarket(
                 marketParam.params
             ).accounts({
@@ -148,13 +148,13 @@ export class BumpinAdmin {
         }).signers([]).rpc();
     }
 
-    public async DEV_TEST_ONLY__INIT_ORACLE(initPrice: number, confidence = undefined, expo): Promise<anchor.web3.Keypair> {
+    public async DEV_TEST_ONLY__INIT_ORACLE(initPrice: number, confidence: number, expo: number): Promise<anchor.web3.Keypair> {
         let oracleKeypair = anchor.web3.Keypair.generate();
         await BumpinUtils.manualCreateAccount(this.provider, this.wallet, oracleKeypair, 3312,
             await this.TEST_PYTH.provider.connection.getMinimumBalanceForRentExemption(
                 3312
             ), this.TEST_PYTH.programId);
-        const conf = new BN(confidence) || new BN((initPrice / 10) * 10 ** -expo);
+        const conf = new BN(confidence!) || new BN((initPrice / 10) * 10 ** -expo);
         await this.TEST_PYTH.methods.initialize(
             new anchor.BN(initPrice),
             expo,

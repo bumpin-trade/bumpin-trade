@@ -7,6 +7,11 @@ export * from './bumpinClient';
 export * from './bumpinClientConfig';
 export * from './adminClient';
 export * from './utils/utils';
+export * from './utils/user';
+export * from './utils/token';
+export * from './utils/pool';
+export * from './utils/market';
+export * from './utils/position';
 // export * from './types/bn';
 
 

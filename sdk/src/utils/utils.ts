@@ -122,7 +122,7 @@ export class BumpinUtils {
             commitment: "root", //default commitment: confirmed
             preflightCommitment: "root",
             maxRetries: 0,
-            minContextSlot: null
+            minContextSlot: undefined
         };
         return opt;
     }

@@ -2,6 +2,7 @@ import {PositionBalance, PositionStatus, TradeToken, UserAccount, UserPosition} 
 import {OracleClient} from "../oracles/types";
 import {BN} from "@coral-xyz/anchor";
 import {BumpinTokenUtils} from "./token";
+// @ts-ignore
 import {isEqual} from 'lodash';
 
 export class BumpinPositionUtils {

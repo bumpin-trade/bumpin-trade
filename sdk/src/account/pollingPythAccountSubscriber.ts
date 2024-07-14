@@ -43,6 +43,9 @@ export class PollingPythAccountSubscriber {
 
 
     async unsubscribe(): Promise<void> {
+        if (!this.isSubscribed || !this.callbackId) {
+            return;
+        }
 
         this.accountLoader.removeAccount(
             this.poolPublicKey,
@@ -50,7 +53,8 @@ export class PollingPythAccountSubscriber {
         );
         this.callbackId = undefined;
 
-        this.accountLoader.removeErrorCallbacks(this.errorCallbackId);
+        if (this.errorCallbackId)
+            this.accountLoader.removeErrorCallbacks(this.errorCallbackId);
         this.errorCallbackId = undefined;
 
         this.isSubscribed = false;
