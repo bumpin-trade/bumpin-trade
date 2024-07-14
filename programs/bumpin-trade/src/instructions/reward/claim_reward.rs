@@ -7,6 +7,7 @@ use crate::instructions::constraints::*;
 use crate::processor::user_processor;
 use crate::state::infrastructure::user_stake::UserStakeStatus;
 use crate::state::pool::Pool;
+use crate::state::rewards::Rewards;
 use crate::state::state::State;
 use crate::state::user::User;
 use crate::{utils, validate};
@@ -29,6 +30,13 @@ pub struct ClaimRewards<'info> {
     pub user: AccountLoader<'info, User>,
 
     pub authority: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"rewards".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        bump,
+    )]
+    pub rewards: AccountLoader<'info, Rewards>,
 
     #[account(
         mut,
@@ -69,10 +77,10 @@ pub struct ClaimRewards<'info> {
 
 pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, ClaimRewards<'c>>,
-    _pool_index: u16,
 ) -> Result<()> {
     let mut user = ctx.accounts.user.load_mut()?;
     let mut pool = ctx.accounts.pool.load_mut()?;
+    let mut reward = ctx.accounts.rewards.load_mut()?;
     user_processor::update_account_fee_reward(&mut pool, &mut user)?;
     let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
     validate!(
@@ -85,6 +93,8 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
 
     let pool_rewards_vault = &ctx.accounts.pool_rewards_vault;
     let user_token_account = &ctx.accounts.user_token_account;
+
+    reward.sub_pool_un_claim_rewards(user_stake.user_rewards.realised_rewards_token_amount)?;
 
     utils::token::send_from_program_vault(
         &ctx.accounts.token_program,

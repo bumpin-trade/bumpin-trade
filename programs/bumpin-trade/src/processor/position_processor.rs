@@ -1,4 +1,3 @@
-use std::os::macos::raw::stat;
 use anchor_lang::prelude::*;
 use anchor_lang::prelude::{Account, Program, Signer};
 use anchor_lang::{emit, ToAccountInfo};
