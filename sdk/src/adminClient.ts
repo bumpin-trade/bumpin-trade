@@ -137,8 +137,6 @@ export class BumpinAdmin {
             stableMintKey: BumpinUtils.encodeString(stableMint.toString()),
             poolConfig: config,
             stable: stable,
-            iconId: iconId,
-            tagsMask: tagsMask,
         }
         await this.program.methods.initializePool(
             params

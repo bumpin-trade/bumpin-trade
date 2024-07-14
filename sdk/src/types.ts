@@ -61,8 +61,6 @@ export type InitializePoolParams = {
     stableMintKey: number[];
     poolConfig: PoolConfig;
     stable: boolean;
-    iconId: number;
-    tagsMask: number
 }
 
 export type State = {
