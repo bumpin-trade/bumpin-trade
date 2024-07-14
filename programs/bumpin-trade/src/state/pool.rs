@@ -421,7 +421,7 @@ impl Pool {
                     } else {
                         0u128
                     })?;
-                    self.add_stable_balance_unsettle(if u_token_pnl > add_liability {
+                    self.add_unsettle(if u_token_pnl > add_liability {
                         add_liability
                     } else {
                         u_token_pnl
