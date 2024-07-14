@@ -25,6 +25,7 @@ use crate::state::user::User;
 use crate::state::UserTokenUpdateReason;
 use crate::utils::{pda, token};
 use crate::{get_then_update_id, position, validate};
+use crate::state::pool_map::PoolMap;
 
 #[derive(Accounts)]
 #[instruction(
@@ -368,6 +369,7 @@ pub fn handle_execute_order<'info>(
                     margin_token_price,
                     oracle_map,
                     trade_token_map,
+                    market_map,
                     state_account,
                 )?;
 
@@ -425,7 +427,7 @@ pub fn handle_execute_order<'info>(
                 )?;
                 Ok(())
             }
-        },
+        }
 
         PositionSide::DECREASE => {
             {
@@ -468,7 +470,7 @@ pub fn handle_execute_order<'info>(
                 )?;
                 Ok(())
             }
-        },
+        }
     }?;
     //delete order
     user.delete_order(order_id)?;
@@ -528,7 +530,7 @@ fn validate_place_order(
             } else {
                 Ok(true)
             }
-        },
+        }
     }
 }
 
@@ -541,12 +543,13 @@ fn execute_increase_order_margin(
     margin_token_price: u128,
     oracle_map: &mut OracleMap,
     trade_token_map: &TradeTokenMap,
+    market_map: &MarketMap,
     state: &Account<State>,
 ) -> BumpResult<(u128, u128)> {
     let order_margin;
     let order_margin_from_balance;
     if order.is_portfolio_margin {
-        let available_value = user.get_available_value(oracle_map, trade_token_map)?;
+        let available_value = user.get_available_value(trade_token_map, oracle_map, market_map, state)?;
         let order_margin_temp;
         if available_value < 0i128 {
             let fix_order_margin_in_usd =
@@ -600,7 +603,7 @@ fn get_execution_price(index_price: u128, order: &UserOrder) -> BumpResult<u128>
     if order.order_type.eq(&OrderType::STOP)
         && order.stop_type.eq(&StopType::StopLoss)
         && ((long && order.trigger_price <= index_price)
-            || (!long && order.trigger_price >= index_price))
+        || (!long && order.trigger_price >= index_price))
     {
         return Ok(index_price);
     }
