@@ -41,8 +41,6 @@ pub struct Pool {
     pub status: PoolStatus,
     pub stable: bool,
     pub market_number: u16,
-    pub icon_id: u16,   // max 65535
-    pub tags_mask: u16, // max 16
     pub padding: [u8; 6],
     pub reserve_padding: [u8; 32],
 }

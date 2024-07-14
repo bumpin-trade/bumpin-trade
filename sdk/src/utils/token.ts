@@ -4,6 +4,7 @@ import {TradeToken, TradeTokenBalance, UserAccount, UserToken, UserTokenStatus} 
 import {BumpinAccountNotFound, BumpinTokenNotFound} from "../errors";
 import {Account, getAccount, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {OracleClient} from "../oracles/types";
+// @ts-ignore
 import {isEqual} from 'lodash';
 
 export class BumpinTokenUtils {

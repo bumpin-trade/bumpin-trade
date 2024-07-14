@@ -5,6 +5,7 @@ import {BN} from '@coral-xyz/anchor';
 import {PollingPythAccountSubscriber} from "../account/pollingPythAccountSubscriber";
 import {BulkAccountLoader} from "../account/bulkAccountLoader";
 import {TEN} from "../constants/numericConstants";
+import {BumpinInvalidParameter} from "../errors";
 
 export const PRICE_PRECISION = new BN(10).pow(new BN(8));
 
@@ -53,6 +54,10 @@ export class StashedPythClient {
 
     public getOraclePriceDataFromBuffer(buffer: Buffer): OraclePriceData {
         const priceData = parsePriceData(buffer);
+        if (!priceData.confidence || !priceData.price) {
+            throw new BumpinInvalidParameter('Price data not found');
+        }
+
         const confidence = convertPythPrice(
             priceData.confidence,
             priceData.exponent,

@@ -33,7 +33,7 @@ export class PollingRewardsAccountSubscriber implements AccountSubscriber<Reward
         }
 
         if (userAccount) {
-            this.rewards = {data: userAccount, slot: undefined};
+            this.rewards = {data: userAccount, slot: 0};
         }
 
         await this.addToAccountLoader();
@@ -94,9 +94,9 @@ export class PollingRewardsAccountSubscriber implements AccountSubscriber<Reward
                     slot: dataAndContext.context.slot,
                 };
             }
-        } catch (e) {
+        } catch (e: any) {
             console.log(
-                `PollingUserAccountSubscriber.fetch() RewardsAccount does not exist: ${e.message}`
+                `PollingRewardAccountSubscriber.fetch() RewardsAccount does not exist: ${e.message}`
             );
         }
     }
@@ -106,7 +106,7 @@ export class PollingRewardsAccountSubscriber implements AccountSubscriber<Reward
     }
 
     async unsubscribe(): Promise<void> {
-        if (!this.isSubscribed) {
+        if (!this.isSubscribed || !this.callbackId) {
             return;
         }
 
@@ -116,7 +116,8 @@ export class PollingRewardsAccountSubscriber implements AccountSubscriber<Reward
         );
         this.callbackId = undefined;
 
-        this.accountLoader.removeErrorCallbacks(this.errorCallbackId);
+        if (this.errorCallbackId)
+            this.accountLoader.removeErrorCallbacks(this.errorCallbackId);
         this.errorCallbackId = undefined;
 
         this.isSubscribed = false;
@@ -131,7 +132,7 @@ export class PollingRewardsAccountSubscriber implements AccountSubscriber<Reward
     }
 
     public getAccountAndSlot(): DataAndSlot<Rewards> {
-        if (!this.doesAccountExist()) {
+        if (!this.doesAccountExist() || !this.rewards) {
             throw new Error(
                 'You must call `subscribe` or `fetch` before using this function'
             );

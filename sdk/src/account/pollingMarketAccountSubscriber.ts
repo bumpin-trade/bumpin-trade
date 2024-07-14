@@ -1,12 +1,10 @@
-import {
-    DataAndSlot,
-    AccountSubscriber,
-} from './types';
+import {AccountSubscriber, DataAndSlot,} from './types';
 import {Program} from '@coral-xyz/anchor';
 import {PublicKey} from '@solana/web3.js';
-import {Market, } from '../types';
+import {Market,} from '../types';
 import {BulkAccountLoader} from './bulkAccountLoader';
 import {BumpinTrade} from "../types/bumpin_trade";
+
 export class PollingMarketAccountSubscriber implements AccountSubscriber<Market> {
     isSubscribed: boolean;
     program: Program<BumpinTrade>;
@@ -35,7 +33,7 @@ export class PollingMarketAccountSubscriber implements AccountSubscriber<Market>
         }
 
         if (userAccount) {
-            this.market = {data: userAccount, slot: undefined};
+            this.market = {data: userAccount, slot: 0};
         }
 
         await this.addToAccountLoader();
@@ -96,9 +94,9 @@ export class PollingMarketAccountSubscriber implements AccountSubscriber<Market>
                     slot: dataAndContext.context.slot,
                 };
             }
-        } catch (e) {
+        } catch (e: any) {
             console.log(
-                `PollingUserAccountSubscriber.fetch() UserAccount does not exist: ${e.message}`
+                `PollingMarketAccountSubscriber.fetch() UserAccount does not exist: ${e.message}`
             );
         }
     }
@@ -108,7 +106,7 @@ export class PollingMarketAccountSubscriber implements AccountSubscriber<Market>
     }
 
     async unsubscribe(): Promise<void> {
-        if (!this.isSubscribed) {
+        if (!this.isSubscribed || !this.callbackId) {
             return;
         }
 
@@ -118,7 +116,8 @@ export class PollingMarketAccountSubscriber implements AccountSubscriber<Market>
         );
         this.callbackId = undefined;
 
-        this.accountLoader.removeErrorCallbacks(this.errorCallbackId);
+        if (this.errorCallbackId)
+            this.accountLoader.removeErrorCallbacks(this.errorCallbackId);
         this.errorCallbackId = undefined;
 
         this.isSubscribed = false;
@@ -133,7 +132,7 @@ export class PollingMarketAccountSubscriber implements AccountSubscriber<Market>
     }
 
     public getAccountAndSlot(): DataAndSlot<Market> {
-        if (!this.doesAccountExist()) {
+        if (!this.doesAccountExist() || !this.market) {
             throw new Error(
                 'You must call `subscribe` or `fetch` before using this function'
             );

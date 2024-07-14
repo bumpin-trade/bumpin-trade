@@ -1,7 +1,7 @@
 import {AccountSubscriber, DataAndSlot,} from './types';
 import {Program} from '@coral-xyz/anchor';
 import {PublicKey} from '@solana/web3.js';
-import {Market, State,} from '../types';
+import {State,} from '../types';
 import {BulkAccountLoader} from './bulkAccountLoader';
 import {BumpinTrade} from "../types/bumpin_trade";
 
@@ -33,7 +33,7 @@ export class PollingStateAccountSubscriber implements AccountSubscriber<State> {
         }
 
         if (userAccount) {
-            this.state = {data: userAccount, slot: undefined};
+            this.state = {data: userAccount, slot: 0};
         }
 
         await this.addToAccountLoader();
@@ -95,9 +95,9 @@ export class PollingStateAccountSubscriber implements AccountSubscriber<State> {
                     slot: dataAndContext.context.slot,
                 };
             }
-        } catch (e) {
+        } catch (e: any) {
             console.log(
-                `PollingUserAccountSubscriber.fetch() UserAccount does not exist: ${e.message}`
+                `PollingStateAccountSubscriber.fetch() UserAccount does not exist: ${e.message}`
             );
         }
     }
@@ -107,7 +107,7 @@ export class PollingStateAccountSubscriber implements AccountSubscriber<State> {
     }
 
     async unsubscribe(): Promise<void> {
-        if (!this.isSubscribed) {
+        if (!this.isSubscribed || !this.callbackId) {
             return;
         }
 
@@ -117,7 +117,8 @@ export class PollingStateAccountSubscriber implements AccountSubscriber<State> {
         );
         this.callbackId = undefined;
 
-        this.accountLoader.removeErrorCallbacks(this.errorCallbackId);
+        if (this.errorCallbackId)
+            this.accountLoader.removeErrorCallbacks(this.errorCallbackId);
         this.errorCallbackId = undefined;
 
         this.isSubscribed = false;
@@ -132,7 +133,7 @@ export class PollingStateAccountSubscriber implements AccountSubscriber<State> {
     }
 
     public getAccountAndSlot(): DataAndSlot<State> {
-        if (!this.doesAccountExist()) {
+        if (!this.doesAccountExist() || !this.state) {
             throw new Error(
                 'You must call `subscribe` or `fetch` before using this function'
             );

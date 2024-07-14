@@ -3,6 +3,7 @@ import {Connection, PublicKey} from '@solana/web3.js';
 import {OracleClient, OraclePriceData} from './types';
 import {BN} from '@coral-xyz/anchor';
 import {ONE, QUOTE_PRECISION, TEN,} from '../constants/numericConstants';
+import {BumpinInvalidParameter} from "../errors";
 
 export const PRICE_PRECISION = new BN(10).pow(new BN(8));
 
@@ -25,6 +26,9 @@ export class PythClient implements OracleClient {
         pricePublicKey: PublicKey
     ): Promise<PriceData> {
         const accountInfo = await this.connection.getAccountInfo(pricePublicKey);
+        if (!accountInfo) {
+            throw new BumpinInvalidParameter('Price account not found, pricePublicKey: ' + pricePublicKey.toString());
+        }
         return parsePriceData(accountInfo.data);
     }
 
@@ -32,12 +36,19 @@ export class PythClient implements OracleClient {
         pricePublicKey: PublicKey
     ): Promise<OraclePriceData> {
         const accountInfo = await this.connection.getAccountInfo(pricePublicKey);
+        if (!accountInfo) {
+            throw new BumpinInvalidParameter('Price account not found, pricePublicKey: ' + pricePublicKey.toString());
+        }
         return this.getOraclePriceDataFromBuffer(accountInfo.data);
     }
 
     public getOraclePriceDataFromBuffer(buffer: Buffer): OraclePriceData {
         const priceData = parsePriceData(buffer);
-        console.log('priceData', priceData);
+
+        if (!priceData.confidence || !priceData.price) {
+            throw new BumpinInvalidParameter('Price data not found');
+        }
+
         const confidence = convertPythPrice(
             priceData.confidence,
             priceData.exponent,

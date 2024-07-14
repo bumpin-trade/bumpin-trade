@@ -1146,7 +1146,7 @@
           "writable": true
         },
         {
-          "name": "keeper_signer",
+          "name": "keeper_key",
           "signer": true,
           "relations": [
             "state"
@@ -3437,8 +3437,11 @@
           }
         },
         {
-          "name": "keeper_signer",
-          "signer": true
+          "name": "keeper_key",
+          "signer": true,
+          "relations": [
+            "state"
+          ]
         }
       ],
       "args": [
