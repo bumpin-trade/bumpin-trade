@@ -61,7 +61,7 @@ pub struct CollectRewards<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool_rewards".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        seeds = [b"rewards".as_ref(), _pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub rewards: AccountLoader<'info, Rewards>,

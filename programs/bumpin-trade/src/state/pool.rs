@@ -296,7 +296,7 @@ impl Pool {
                 token_balance.amount.safe_add(token_balance.un_settle_amount)?,
                 pool_liquidity_limit,
             )?
-            .safe_sub(token_balance.hold_amount)?
+                .safe_sub(token_balance.hold_amount)?
                 >= amount)
         };
     }
@@ -345,7 +345,9 @@ impl Pool {
         let trade_token = trade_token_map.get_trade_token_by_mint_ref(&self.mint_key)?;
         let trade_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
         let mut pool_value = cal_utils::token_to_usd_i(
-            self.balance.amount.safe_add(self.balance.un_settle_amount)?.cast::<i128>()?,
+            self.balance.amount
+                .safe_add(self.balance.un_settle_amount)?
+                .safe_add(self.balance.settle_funding_fee_amount)?.cast::<i128>()?,
             trade_token.decimals,
             trade_token_price,
         )?;
@@ -366,6 +368,7 @@ impl Pool {
                 .stable_balance
                 .amount
                 .safe_add(self.stable_balance.un_settle_amount)?
+                .safe_add(self.stable_balance.settle_funding_fee_amount)?
                 .safe_sub(self.stable_balance.loss_amount)?;
             if stable_amount > 0u128 {
                 let stable_trade_token =
@@ -419,13 +422,13 @@ impl Pool {
                     } else {
                         0u128
                     })?;
-                    self.add_stable_balance_unsettle(if u_token_pnl > add_liability {
+                    self.add_unsettle(if u_token_pnl > add_liability {
                         add_liability
                     } else {
                         u_token_pnl
                     })?;
                 }
-            },
+            }
             Some(base_token_pool) => {
                 //short
                 if token_pnl < 0i128 {
@@ -448,7 +451,7 @@ impl Pool {
                         if u_token_pnl > add_liability { add_liability } else { u_token_pnl },
                     )?;
                 }
-            },
+            }
         })
     }
 }
