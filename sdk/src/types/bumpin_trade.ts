@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/bumpin_trade.json`.
  */
 export type BumpinTrade = {
-  "address": "AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca",
+  "address": "Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR",
   "metadata": {
     "name": "bumpinTrade",
     "version": "0.1.0",
@@ -913,6 +913,277 @@ export type BumpinTrade = {
       "args": [
         {
           "name": "poolIndex",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "collectRewards",
+      "discriminator": [
+        63,
+        130,
+        90,
+        197,
+        39,
+        16,
+        143,
+        176
+      ],
+      "accounts": [
+        {
+          "name": "state",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  109,
+                  112,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "poolVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "stablePoolVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "stablePoolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tradeToken",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "tradeTokenIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "stableTradeToken",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  100,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "stableTradeTokenIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rewards",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  115
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "poolRewardsVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108,
+                  95,
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  115,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
+          "name": "daoRewardsVault",
+          "writable": true
+        },
+        {
+          "name": "keeperSigner",
+          "signer": true,
+          "relations": [
+            "state"
+          ]
+        },
+        {
+          "name": "bumpSigner",
+          "relations": [
+            "state"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "poolIndex",
+          "type": "u16"
+        },
+        {
+          "name": "stablePoolIndex",
+          "type": "u16"
+        },
+        {
+          "name": "tradeTokenIndex",
+          "type": "u16"
+        },
+        {
+          "name": "stableTradeTokenIndex",
           "type": "u16"
         }
       ]
@@ -2252,10 +2523,7 @@ export type BumpinTrade = {
         },
         {
           "name": "keeperSigner",
-          "signer": true,
-          "relations": [
-            "state"
-          ]
+          "signer": true
         },
         {
           "name": "bumpSigner"
@@ -3176,10 +3444,7 @@ export type BumpinTrade = {
         },
         {
           "name": "keeperSigner",
-          "signer": true,
-          "relations": [
-            "state"
-          ]
+          "signer": true
         }
       ],
       "args": [
@@ -3363,6 +3628,9 @@ export type BumpinTrade = {
               }
             ]
           }
+        },
+        {
+          "name": "bumpSigner"
         },
         {
           "name": "user",
@@ -4478,6 +4746,15 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
+            "name": "keeperKey",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
             "name": "minOrderMarginUsd",
             "type": "u128"
           },
@@ -5460,7 +5737,7 @@ export type BumpinTrade = {
             "type": "pubkey"
           },
           {
-            "name": "keeperSigner",
+            "name": "keeperKey",
             "type": "pubkey"
           },
           {

@@ -23,8 +23,8 @@ declare_id!("Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR");
 
 #[program]
 pub mod bumpin_trade {
-    use crate::state::infrastructure::user_order::OrderSide;
     use super::*;
+    use crate::state::infrastructure::user_order::OrderSide;
 
     pub fn initialize_state<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializeState>,
@@ -62,10 +62,7 @@ pub mod bumpin_trade {
         handle_initialize_market(ctx, params)
     }
 
-    pub fn initialize_rewards(
-        ctx: Context<InitializePoolRewards>,
-        _pool_index: u16,
-    ) -> Result<()>{
+    pub fn initialize_rewards(ctx: Context<InitializePoolRewards>, _pool_index: u16) -> Result<()> {
         handle_initialize_rewards(ctx)
     }
 
@@ -160,7 +157,11 @@ pub mod bumpin_trade {
             ctx.program_id,
             &trade_token_map,
             &mut oracle_map,
-            if order.order_side.eq(&OrderSide::LONG) { &ctx.accounts.trade_token_vault } else { &ctx.accounts.stable_trade_token_vault },
+            if order.order_side.eq(&OrderSide::LONG) {
+                &ctx.accounts.trade_token_vault
+            } else {
+                &ctx.accounts.stable_trade_token_vault
+            },
             &market_map,
             &UserOrder::default(),
             order.order_id,
@@ -236,6 +237,16 @@ pub mod bumpin_trade {
         pool_index: u16,
     ) -> Result<()> {
         handle_auto_compound(ctx, pool_index)
+    }
+
+    pub fn collect_rewards<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, CollectRewards<'info>>,
+        _pool_index: u16,
+        _stable_pool_index: u16,
+        _trade_token_index: u16,
+        _stable_trade_token_index: u16,
+    ) -> Result<()> {
+        handle_collect_rewards(ctx)
     }
 }
 

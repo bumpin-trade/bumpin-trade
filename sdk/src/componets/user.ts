@@ -137,7 +137,7 @@ export class UserComponent extends Component {
         ).remainingAccounts(remainingAccounts).signers([]).rpc();
     }
 
-    public async unStake(portfolio: boolean, share: BN, tradeToken: TradeToken, wallet: PublicKey, pool: Pool): Promise<void> {
+    public async unStake(portfolio: boolean, share: BN, tradeToken: TradeToken, wallet: PublicKey, pool: Pool, allMarkets: Market[]): Promise<void> {
         let userStake = await this.findUsingStake(pool.key, false);
         if (share.gt(userStake.stakedShare)) {
             throw new BumpinValueInsufficient(userStake.stakedShare, share)
@@ -152,12 +152,39 @@ export class UserComponent extends Component {
             tradeTokenIndex: tradeToken.index
         };
 
+        let remainingAccounts = [];
+        remainingAccounts.push({
+            pubkey: tradeToken.mintKey,
+            isWritable: false,
+            isSigner: false,
+        });
+        remainingAccounts.push({
+            pubkey: tradeToken.oracleKey,
+            isWritable: false,
+            isSigner: false,
+        });
+        let pda = BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0];
+        remainingAccounts.push({
+            pubkey: pda,
+            isWritable: false,
+            isSigner: false,
+        });
+
+        let markets = BumpinMarketUtils.getMarketsByPoolKey(pool.key, allMarkets);
+        for (let market of markets) {
+            remainingAccounts.push({
+                pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
+                isWritable: true,
+                isSigner: false,
+            });
+        }
+
         if (portfolio) {
             await this.program.methods.portfolioUnStake(
                 param
             ).accounts({
                 authority: wallet,
-            }).signers([]).rpc();
+            }).remainingAccounts(remainingAccounts).signers([]).rpc();
         } else {
             let tokenAccount = await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(this.program.provider.connection, wallet, tradeToken.mintKey);
             await this.program.methods.walletUnStake(
@@ -165,7 +192,8 @@ export class UserComponent extends Component {
             ).accounts({
                 authority: wallet,
                 userTokenAccount: tokenAccount.address,
-            }).signers([]).rpc();
+                bumpSigner: (await this.getState()).bumpSigner,
+            }).remainingAccounts(remainingAccounts).signers([]).rpc();
         }
     }
 

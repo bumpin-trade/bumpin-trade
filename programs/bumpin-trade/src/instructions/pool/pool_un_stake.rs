@@ -3,18 +3,18 @@ use std::ops::DerefMut;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
-use crate::{utils, validate};
 use crate::errors::BumpErrorCode;
 use crate::instructions::constraints::*;
 use crate::instructions::Either;
 use crate::math::safe_math::SafeMath;
-use crate::processor::{fee_processor, pool_processor, user_processor};
 use crate::processor::optional_accounts::load_maps;
+use crate::processor::{fee_processor, pool_processor, user_processor};
 use crate::state::bump_events::StakeOrUnStakeEvent;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::{User, UserTokenUpdateReason};
+use crate::{utils, validate};
 
 #[derive(Accounts)]
 #[instruction(params: UnStakeParams,)]
@@ -78,6 +78,12 @@ pub struct WalletUnStake<'info> {
         bump,
     )]
     pub state: Box<Account<'info, State>>,
+
+    /// CHECK: ?
+    #[account(
+        constraint = state.bump_signer.eq(& bump_signer.key())
+    )]
+    pub bump_signer: AccountInfo<'info>,
 
     #[account(
         mut,
@@ -190,6 +196,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
                 .safe_sub(un_stake_token_amount_fee)?;
 
             let mut trade_token = ctx.accounts.trade_token.load_mut()?;
+
             utils::token::receive(
                 &ctx.accounts.token_program,
                 &ctx.accounts.pool_vault,
@@ -234,7 +241,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
                 change_supply_amount: un_stake_token_amount,
                 user_stake: user_stake.clone(),
             });
-        }
+        },
         Either::Right(ctx) => {
             let pool = &mut ctx.accounts.pool.load_mut()?;
             let user = &mut ctx.accounts.user.load_mut()?;
@@ -275,7 +282,7 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
                 &ctx.accounts.token_program,
                 &ctx.accounts.pool_vault,
                 &ctx.accounts.user_token_account,
-                &ctx.accounts.authority,
+                &ctx.accounts.bump_signer,
                 bump_signer_nonce,
                 transfer_amount,
             )?;
@@ -283,20 +290,19 @@ fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
             pool.sub_amount_and_supply(un_stake_token_amount, un_stake_params.share)?;
             pool.update_pool_borrowing_fee_rate()?;
 
-            let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
+            let staked_share = user.get_user_stake_share(&pool.key)?;
 
-            let user = &mut ctx.accounts.user.load_mut()?;
-            if user_stake.staked_share <= 0u128 {
+            if staked_share <= 0u128 {
                 user.delete_user_stake(&user_stake.pool_key)?
             }
 
             emit!(StakeOrUnStakeEvent {
-                user_key: ctx.accounts.user.load()?.key,
-                token_mint: ctx.accounts.pool.load()?.mint_key,
+                user_key: user.key.clone(),
+                token_mint: pool.mint_key.clone(),
                 change_supply_amount: un_stake_token_amount,
                 user_stake: user_stake.clone(),
             });
-        }
+        },
     }
 
     Ok(())

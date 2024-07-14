@@ -154,6 +154,12 @@ impl Pool {
         Ok(())
     }
 
+    pub fn add_stable_balance_unsettle(&mut self, amount: u128) -> BumpResult<()> {
+        self.stable_balance.un_settle_amount =
+            add_u128(self.stable_balance.un_settle_amount, amount)?;
+        Ok(())
+    }
+
     pub fn sub_unsettle(&mut self, amount: u128) -> BumpResult<()> {
         let pre_pool = self.clone();
         validate!(self.balance.un_settle_amount >= amount, PoolSubUnsettleNotEnough)?;
@@ -177,6 +183,14 @@ impl Pool {
     pub fn add_stable_amount(&mut self, amount: u128) -> BumpResult<()> {
         let pre_pool = self.clone();
         self.stable_balance.amount = add_u128(self.stable_balance.amount, amount)?;
+        self.emit_pool_update_event(&pre_pool);
+        Ok(())
+    }
+
+    pub fn sub_stable_amount(&mut self, amount: u128) -> BumpResult<()> {
+        validate!(self.stable_balance.amount >= amount, BumpErrorCode::AmountNotEnough)?;
+        let pre_pool = self.clone();
+        self.stable_balance.amount = sub_u128(self.stable_balance.amount, amount)?;
         self.emit_pool_update_event(&pre_pool);
         Ok(())
     }
@@ -394,6 +408,7 @@ impl Pool {
         self.un_hold_pool(amount)?;
 
         Ok(match base_token_pool {
+            //long
             None => {
                 if token_pnl < 0i128 {
                     if self.stable {
@@ -417,27 +432,26 @@ impl Pool {
                 }
             }
             Some(base_token_pool) => {
+                //short
                 if token_pnl < 0i128 {
                     if self.stable {
                         // need count loss on base_token_pool
-                        self.add_unsettle(token_pnl.abs().cast::<u128>()?)?;
+                        self.add_stable_balance_unsettle(token_pnl.abs().cast::<u128>()?)?;
                         base_token_pool.add_stable_loss_amount(token_pnl.abs().cast::<u128>()?)?;
                     }
-                    self.sub_amount(token_pnl.abs().cast::<u128>()?)?;
+                    self.sub_stable_amount(token_pnl.abs().cast::<u128>()?)?;
                 } else if add_liability == 0u128 {
-                    self.add_amount(token_pnl.cast::<u128>()?)?
+                    base_token_pool.add_amount(token_pnl.cast::<u128>()?)?
                 } else {
                     let u_token_pnl = token_pnl.abs().cast::<u128>()?;
-                    self.add_amount(if u_token_pnl > add_liability {
+                    base_token_pool.add_stable_amount(if u_token_pnl > add_liability {
                         u_token_pnl.safe_sub(add_liability)?
                     } else {
                         0u128
                     })?;
-                    self.add_unsettle(if u_token_pnl > add_liability {
-                        add_liability
-                    } else {
-                        u_token_pnl
-                    })?;
+                    base_token_pool.add_stable_balance_unsettle(
+                        if u_token_pnl > add_liability { add_liability } else { u_token_pnl },
+                    )?;
                 }
             }
         })

@@ -22,7 +22,7 @@ pub struct LiquidatePosition<'info> {
     #[account(
         mut,
         seeds = [b"bump_state".as_ref()],
-        has_one = keeper_signer,
+        // has_one =  keeper_key,
         bump,
     )]
     pub state: Account<'info, State>,

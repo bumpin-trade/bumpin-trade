@@ -558,7 +558,10 @@ pub fn execute_reduce_position_margin(
                 >= cal_utils::token_to_usd_u(
                     reduce_margin_amount,
                     stable_trade_token.decimals,
-                    oracle_map.get_price_data(&stable_trade_token.oracle_key).map_err(|_e|BumpErrorCode::OracleNotFound)?.price
+                    oracle_map
+                        .get_price_data(&stable_trade_token.oracle_key)
+                        .map_err(|_e| BumpErrorCode::OracleNotFound)?
+                        .price
                 )?,
             BumpErrorCode::AmountNotEnough
         )?;
@@ -986,18 +989,13 @@ pub fn increase_position(
         validate!(
             base_token_pool_value
                 >= cal_utils::token_to_usd_u(
-                    increase_margin,
+                    increase_hold,
                     stable_trade_token.decimals,
                     margin_token_price
                 )?,
             BumpErrorCode::AmountNotEnough
         )?;
-        stable_pool.hold_pool_amount(
-            increase_margin,
-            oracle_map,
-            trade_token,
-            stable_trade_token,
-        )?
+        stable_pool.hold_pool_amount(increase_hold, oracle_map, trade_token, stable_trade_token)?
     }
 
     Ok(())
