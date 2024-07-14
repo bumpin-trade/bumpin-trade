@@ -44,7 +44,11 @@ export class StashedPythClient {
     }
 
     public getLastOraclePriceData(count: number): PriceData[] {
-        return this.queue.last(count).reverse();
+        let last = this.queue.last(count).reverse();
+        if (last.length === 0) {
+            throw new BumpinInvalidParameter('Price data not found');
+        }
+        return last;
     }
 
     public getLatestOraclePriceData(): PriceData {
