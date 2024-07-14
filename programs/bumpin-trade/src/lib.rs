@@ -125,47 +125,32 @@ pub mod bumpin_trade {
 
     pub fn execute_order<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
-        order: PlaceOrderParams,
+        order_id: u64,
     ) -> Result<()> {
-        // let same_trade_token = order.trade_token_index == order.index_trade_token_index;
-        let market = &mut ctx.accounts.market.load_mut()?;
         let user = &mut ctx.accounts.user.load_mut()?;
-        let pool = &mut ctx.accounts.pool.load_mut()?;
-        let stable_pool = &mut ctx.accounts.stable_pool.load_mut()?;
-
+        let order = user.orders[user.get_user_order_index(order_id)?];
+        let remaining_accounts = ctx.remaining_accounts;
+        let AccountMaps { trade_token_map, mut oracle_map, market_map,pool_map,vault_map, .. } =
+            load_maps(remaining_accounts)?;
+        let user = &mut ctx.accounts.user.load_mut()?;
         let state_account = &ctx.accounts.state;
         let user_token_account = &ctx.accounts.user_token_account;
-        let pool_vault_account = &ctx.accounts.pool_vault;
-        let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
         let bump_signer_account_info = &ctx.accounts.bump_signer;
         let token_program = &ctx.accounts.token_program;
-        let remaining_accounts = ctx.remaining_accounts;
-        let AccountMaps { trade_token_map, mut oracle_map, market_map, .. } =
-            load_maps(remaining_accounts)?;
 
         handle_execute_order(
             user,
-            market,
-            pool,
-            stable_pool,
+            &market_map,
+            &pool_map,
             state_account,
             user_token_account,
-            pool_vault_account,
-            stable_pool_vault_account,
+            &vault_map,
             bump_signer_account_info,
             token_program,
             ctx.program_id,
             &trade_token_map,
             &mut oracle_map,
-            if order.order_side.eq(&OrderSide::LONG) {
-                &ctx.accounts.trade_token_vault
-            } else {
-                &ctx.accounts.stable_trade_token_vault
-            },
-            &market_map,
-            &UserOrder::default(),
-            order.order_id,
-            true,
+            &order,
         )
     }
 
