@@ -394,7 +394,7 @@ fn settle_cross<'info>(
             state_account.bump_signer_nonce,
             response.pool_pnl_token.abs().cast::<u128>()?,
         )
-        .map_err(|_e| BumpErrorCode::TransferFailed)?;
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
     } else if response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)? > 0i128 {
         token::receive(
             token_program,
@@ -403,7 +403,7 @@ fn settle_cross<'info>(
             bump_signer,
             response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)?.cast::<u128>()?,
         )
-        .map_err(|_e| BumpErrorCode::TransferFailed)?;
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
     }
 
     if !response.is_liquidation {
@@ -442,7 +442,7 @@ fn settle_isolate<'info>(
         state_account.bump_signer_nonce,
         response.settle_margin.abs().cast::<u128>()?,
     )
-    .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
     Ok(())
 }
 
@@ -516,7 +516,7 @@ pub fn execute_reduce_position_margin(
 
     if position.is_portfolio_margin
         && position.initial_margin_usd.safe_sub(position.initial_margin_usd_from_portfolio)?
-            < reduce_margin_amount
+        < reduce_margin_amount
     {
         position.sub_initial_margin_usd_from_portfolio(
             reduce_margin_amount
@@ -1049,7 +1049,7 @@ pub fn update_leverage<'info>(
                     0u128
                 };
                 let cross_available_value =
-                    user.get_available_value(oracle_map, trade_token_map)?;
+                    user.get_available_value(trade_token_map, oracle_map, market_map, state)?;
                 validate!(
                     add_margin_in_usd.cast::<i128>()? > cross_available_value,
                     BumpErrorCode::AmountNotEnough.into()
@@ -1109,7 +1109,7 @@ pub fn update_leverage<'info>(
                     authority,
                     params.add_margin_amount,
                 )
-                .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                    .map_err(|_e| BumpErrorCode::TransferFailed)?;
             }
         } else {
             let position = user.get_user_position_mut_ref(position_key)?;
@@ -1151,7 +1151,7 @@ pub fn update_leverage<'info>(
                     state.bump_signer_nonce,
                     reduce_margin_amount,
                 )
-                .map_err(|_e| BumpErrorCode::TransferFailed)?
+                    .map_err(|_e| BumpErrorCode::TransferFailed)?
             }
         }
     }

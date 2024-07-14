@@ -410,13 +410,13 @@ impl UserPosition {
             .safe_add(self.close_fee_in_usd.cast()?)?)
     }
 
-    pub fn get_position_value(&self, price: u128) -> BumpResult<(u128, i128, u128)> {
+    pub fn get_position_value(&self, price: u128) -> BumpResult<(u128, i128, u128, u128)> {
         if self.is_portfolio_margin {
             let position_un_pnl = self.get_position_un_pnl_usd(price)?;
 
-            Ok((self.initial_margin_usd_from_portfolio, position_un_pnl, self.mm_usd))
+            Ok((self.initial_margin_usd_from_portfolio, position_un_pnl, self.mm_usd, self.initial_margin))
         } else {
-            Ok((0u128, 0i128, 0u128))
+            Ok((0u128, 0i128, 0u128, 0u128))
         }
     }
 

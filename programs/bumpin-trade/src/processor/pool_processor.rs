@@ -5,6 +5,7 @@ use crate::state::infrastructure::user_stake::UserStake;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
+use crate::state::state::State;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 use crate::validate;
@@ -64,6 +65,7 @@ pub fn portfolio_to_stake(
     trade_token_map: &TradeTokenMap,
     oracle_map: &mut OracleMap,
     market_map: &MarketMap,
+    state: &State,
 ) -> BumpResult<(u128, UserStake)> {
     let mut supply_amount = mint_amount;
     let trade_token = trade_token_map.get_trade_token_by_mint_ref(&pool.mint_key)?;
@@ -73,7 +75,7 @@ pub fn portfolio_to_stake(
 
     user.sub_user_token_amount(&pool.mint_key, mint_amount)?;
     validate!(
-        user.get_available_value(oracle_map, trade_token_map)? > 0,
+        user.get_available_value(trade_token_map,oracle_map,market_map,state)? > 0,
         BumpErrorCode::AmountNotEnough
     )?;
     if pool.total_supply > 0 {

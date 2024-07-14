@@ -32,7 +32,7 @@ pub struct PortfolioStake<'info> {
         mut,
         seeds = [b"user", authority.key().as_ref()],
         bump,
-        constraint = can_sign_for_user(& user, & authority) ? && is_normal(&user) ?,
+        constraint = can_sign_for_user(& user, & authority) ? && is_normal(& user) ?,
     )]
     pub user: AccountLoader<'info, User>,
 
@@ -167,6 +167,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 &account_maps.trade_token_map,
                 &mut account_maps.oracle_map,
                 &account_maps.market_map,
+                &ctx.accounts.state,
             )?;
 
             utils::token::send_from_program_vault(
@@ -185,7 +186,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 change_supply_amount: supply_amount,
                 user_stake,
             });
-        },
+        }
         Either::Right(ctx) => {
             let pool = &mut ctx.accounts.pool.load_mut()?;
             let user = &mut ctx.accounts.user.load_mut()?;
@@ -226,7 +227,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 change_supply_amount: supply_amount,
                 user_stake: *user_stake,
             });
-        },
+        }
     };
 
     Ok(())

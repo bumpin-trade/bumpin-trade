@@ -233,17 +233,17 @@ impl Pool {
         if Self::get_token_amount(&self.stable_balance)? < 0i128 {
             let token_usd = cal_utils::token_to_usd_i(
                 Self::get_token_amount(&self.stable_balance)?,
-                base_trade_token.decimals,
+                stable_trade_token.decimals,
                 oracle_map
-                    .get_price_data(&base_trade_token.oracle_key)
+                    .get_price_data(&stable_trade_token.oracle_key)
                     .map_err(|_e| BumpErrorCode::OracleNotFound)?
                     .price,
             )?;
             let stable_to_base_token = cal_utils::usd_to_token_i(
                 token_usd,
-                stable_trade_token.decimals,
+                base_trade_token.decimals,
                 oracle_map
-                    .get_price_data(&stable_trade_token.oracle_key)
+                    .get_price_data(&base_trade_token.oracle_key)
                     .map_err(|_e| BumpErrorCode::OracleNotFound)?
                     .price,
             )?;

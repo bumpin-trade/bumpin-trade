@@ -119,13 +119,13 @@ pub fn settle_funding_fee(
     if !is_long {
         if fee_amount_usd <= 0i128 {
             //stable_pool should pay to user, count loss on base_token_pool
-            base_token_pool.add_stable_loss_amount(fee_amount_usd.cast::<u128>()?)?;
-            stable_pool.add_unsettle(fee_amount_usd.cast::<u128>()?)?;
+            base_token_pool.add_stable_loss_amount(fee_amount.cast::<u128>()?)?;
+            stable_pool.add_unsettle(fee_amount.cast::<u128>()?)?;
         } else if is_cross {
-            stable_pool.add_unsettle(fee_amount_usd.cast::<u128>()?)?;
+            stable_pool.add_unsettle(fee_amount.cast::<u128>()?)?;
         } else {
             //user should pay to stable_pool, count amount on base_token_pool
-            base_token_pool.add_stable_amount(fee_amount_usd.cast::<u128>()?)?;
+            base_token_pool.add_stable_amount(fee_amount.cast::<u128>()?)?;
         }
         stable_pool.update_pool_funding_fee(fee_amount, false)?;
     } else {
