@@ -378,7 +378,7 @@ pub fn handle_execute_order<'info>(
                     fee_processor::collect_long_open_position_fee(
                         &market,
                         base_token_pool,
-                        order_margin,
+                        order_margin.safe_mul_rate(cloned_order.leverage.cast()?)?,
                         cloned_order.is_portfolio_margin,
                     )?
                 } else {
@@ -387,7 +387,7 @@ pub fn handle_execute_order<'info>(
                         base_token_pool,
                         stable_pool,
                         state_account,
-                        order_margin,
+                        order_margin.safe_mul_rate(cloned_order.leverage.cast()?)?,
                         cloned_order.is_portfolio_margin,
                     )?
                 };
@@ -553,7 +553,7 @@ fn execute_increase_order_margin(
         let order_margin_temp;
         if available_value < 0i128 {
             let fix_order_margin_in_usd =
-                order.order_size.cast::<i128>()?.safe_add(available_value)?;
+                order.order_margin.cast::<i128>()?.safe_add(available_value)?;
             validate!(fix_order_margin_in_usd > 0i128, BumpErrorCode::BalanceNotEnough.into())?;
             user.sub_order_hold_in_usd(order.order_margin)?;
             order_margin_temp = fix_order_margin_in_usd.abs().cast::<u128>()?;
