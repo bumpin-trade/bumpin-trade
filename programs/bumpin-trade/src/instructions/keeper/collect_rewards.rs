@@ -10,6 +10,7 @@ use crate::state::rewards::Rewards;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::utils::token;
+use crate::validate;
 
 #[derive(Accounts)]
 #[instruction(
@@ -105,6 +106,9 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
     let stable_trade_token = ctx.accounts.trade_token.load()?;
     let total_supply = pool.total_supply;
     let fee_reward = &pool.fee_reward;
+
+    validate!(total_supply > 0u128, BumpErrorCode::PoolMintSupplyIsZero)?;
+
     let mut total_fee_amount = fee_reward.fee_amount;
     if !pool.stable {
         //need swap stable_fee_reward to amount

@@ -109,6 +109,8 @@ pub enum BumpErrorCode {
     TimestampNotFound,
     #[msg("ClaimUnqualified")]
     ClaimUnqualified,
+    #[msg("PoolMintSupplyIsZero")]
+    PoolMintSupplyIsZero,
 }
 #[macro_export]
 macro_rules! print_error {

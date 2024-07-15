@@ -19,14 +19,14 @@ use crate::state::market::Market;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
+use crate::state::pool_map::PoolMap;
 use crate::state::state::State;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
+use crate::state::vault_map::VaultMap;
 use crate::state::UserTokenUpdateReason;
 use crate::utils::{pda, token};
 use crate::{get_then_update_id, position, validate};
-use crate::state::pool_map::PoolMap;
-use crate::state::vault_map::VaultMap;
 
 #[derive(Accounts)]
 #[instruction(
@@ -87,12 +87,13 @@ pub struct PlaceOrderParams {
     pub order_id: u64, // only for execute order from keeper
 }
 
-pub fn handle_place_order<'a , 'b, 'c: 'info, 'info>(
+pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, PlaceOrder<'c>>,
     order: PlaceOrderParams,
 ) -> Result<()> {
     let remaining_accounts = ctx.remaining_accounts;
-    let AccountMaps { trade_token_map, mut oracle_map, market_map, pool_map, vault_map } = load_maps(remaining_accounts)?;
+    let AccountMaps { trade_token_map, mut oracle_map, market_map, pool_map, vault_map } =
+        load_maps(remaining_accounts)?;
     let market = market_map.get_mut_ref(&order.symbol)?;
     let user = &mut ctx.accounts.user.load_mut()?;
     let pool = pool_map.get_mut_ref(&market.pool_key)?;
@@ -127,11 +128,7 @@ pub fn handle_place_order<'a , 'b, 'c: 'info, 'info>(
         token::receive(
             &ctx.accounts.token_program,
             &ctx.accounts.user_token_account,
-            if order.order_side.eq(&OrderSide::LONG) {
-                pool_vault
-            } else {
-                stable_pool_vault
-            },
+            if order.order_side.eq(&OrderSide::LONG) { pool_vault } else { stable_pool_vault },
             &ctx.accounts.authority,
             order.order_margin,
         )?;
@@ -217,7 +214,11 @@ pub fn handle_execute_order<'info>(
     let stable_pool_vault = vault_map.get_account(&stable_pool.mint_vault_key)?;
     let mut stable_trade_token =
         trade_token_map.get_trade_token_ref_mut(&market.stable_pool_mint_key)?;
-    let token_vault = if user_order.order_side.eq(&OrderSide::LONG) { vault_map.get_account(&trade_token.vault_key)? } else { vault_map.get_account(&stable_trade_token.vault_key)? };
+    let token_vault = if user_order.order_side.eq(&OrderSide::LONG) {
+        vault_map.get_account(&trade_token.vault_key)?
+    } else {
+        vault_map.get_account(&stable_trade_token.vault_key)?
+    };
 
     //validate trade_token_vault
     validate!(
@@ -355,7 +356,7 @@ pub fn handle_execute_order<'info>(
                 )?;
                 Ok(())
             }
-        }
+        },
 
         PositionSide::DECREASE => {
             {
@@ -398,7 +399,7 @@ pub fn handle_execute_order<'info>(
                 )?;
                 Ok(())
             }
-        }
+        },
     }?;
     //delete order
     user.delete_order(user_order.order_id)?;
@@ -458,7 +459,7 @@ fn validate_place_order(
             } else {
                 Ok(true)
             }
-        }
+        },
     }
 }
 
@@ -477,7 +478,8 @@ fn execute_increase_order_margin(
     let order_margin;
     let order_margin_from_balance;
     if order.is_portfolio_margin {
-        let available_value = user.get_available_value(trade_token_map, oracle_map, market_map, state)?;
+        let available_value =
+            user.get_available_value(trade_token_map, oracle_map, market_map, state)?;
         let order_margin_temp;
         if available_value < 0i128 {
             let fix_order_margin_in_usd =
@@ -531,7 +533,7 @@ fn get_execution_price(index_price: u128, order: &UserOrder) -> BumpResult<u128>
     if order.order_type.eq(&OrderType::STOP)
         && order.stop_type.eq(&StopType::StopLoss)
         && ((long && order.trigger_price <= index_price)
-        || (!long && order.trigger_price >= index_price))
+            || (!long && order.trigger_price >= index_price))
     {
         return Ok(index_price);
     }

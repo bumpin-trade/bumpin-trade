@@ -186,7 +186,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 change_supply_amount: supply_amount,
                 user_stake,
             });
-        }
+        },
         Either::Right(ctx) => {
             let pool = &mut ctx.accounts.pool.load_mut()?;
             let user = &mut ctx.accounts.user.load_mut()?;
@@ -227,7 +227,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 change_supply_amount: supply_amount,
                 user_stake: *user_stake,
             });
-        }
+        },
     };
 
     Ok(())

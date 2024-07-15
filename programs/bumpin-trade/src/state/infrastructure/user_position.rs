@@ -414,7 +414,12 @@ impl UserPosition {
         if self.is_portfolio_margin {
             let position_un_pnl = self.get_position_un_pnl_usd(price)?;
 
-            Ok((self.initial_margin_usd_from_portfolio, position_un_pnl, self.mm_usd, self.initial_margin))
+            Ok((
+                self.initial_margin_usd_from_portfolio,
+                position_un_pnl,
+                self.mm_usd,
+                self.initial_margin,
+            ))
         } else {
             Ok((0u128, 0i128, 0u128, 0u128))
         }

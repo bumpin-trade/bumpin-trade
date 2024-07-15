@@ -472,8 +472,8 @@ impl User {
                 && user_order.symbol == symbol
                 && user_order.margin_mint_key.eq(margin_token)
                 && ((is_long_order == is_long
-                && user_order.position_side.eq(&PositionSide::INCREASE))
-                || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
+                    && user_order.position_side.eq(&PositionSide::INCREASE))
+                    || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
             {
                 user_order.set_leverage(leverage)
             }
@@ -712,7 +712,8 @@ impl User {
     ) -> BumpResult<(i128, u128, u128)> {
         let portfolio_net_value =
             self.get_portfolio_net_value(&trade_token_map, &mut oracle_map)?;
-        let (used_value, total_token_borrowing_value) = self.get_total_used_value(&trade_token_map, &mut oracle_map)?;
+        let (used_value, _total_token_borrowing_value) =
+            self.get_total_used_value(&trade_token_map, &mut oracle_map)?;
         let (total_im_usd, total_un_pnl_usd, total_position_fee, total_position_mm, total_size, _) =
             self.get_user_cross_position_value(
                 state,
@@ -741,14 +742,19 @@ impl User {
     ) -> BumpResult<i128> {
         let portfolio_net_value =
             self.get_portfolio_net_value(&trade_token_map, &mut oracle_map)?;
-        let (used_value, total_token_borrowing_value) = self.get_total_used_value(&trade_token_map, &mut oracle_map)?;
-        let (total_im_usd, total_un_pnl_usd, total_position_mm, total_size, total_im_from_portfolio_value) =
-            self.get_user_cross_position_available_value(
-                state,
-                &market_map,
-                &trade_token_map,
-                &mut oracle_map,
-            )?;
+        let (used_value, total_token_borrowing_value) =
+            self.get_total_used_value(&trade_token_map, &mut oracle_map)?;
+        let (
+            total_im_usd,
+            total_un_pnl_usd,
+            _total_position_mm,
+            _total_size,
+            total_im_from_portfolio_value,
+        ) = self.get_user_cross_position_available_value(
+            state,
+            &market_map,
+            &mut oracle_map,
+        )?;
 
         let available_value = portfolio_net_value
             .safe_add(total_im_usd)?
@@ -801,16 +807,23 @@ impl User {
             total_position_mm =
                 total_position_mm.safe_add(user_position.get_position_mm(&market, state)?)?;
             total_size = total_size.safe_add(user_position.position_size)?;
-            total_im_usd_from_portfolio = total_im_usd_from_portfolio.safe_add(user_position.initial_margin_usd_from_portfolio)?;
+            total_im_usd_from_portfolio = total_im_usd_from_portfolio
+                .safe_add(user_position.initial_margin_usd_from_portfolio)?;
         }
-        Ok((total_im_usd, total_un_pnl_usd, total_position_fee, total_position_mm, total_size, total_im_usd_from_portfolio))
+        Ok((
+            total_im_usd,
+            total_un_pnl_usd,
+            total_position_fee,
+            total_position_mm,
+            total_size,
+            total_im_usd_from_portfolio,
+        ))
     }
 
     pub fn get_user_cross_position_available_value(
         &self,
         state: &State,
         market_map: &MarketMap,
-        trade_token_map: &TradeTokenMap,
         price_map: &mut OracleMap,
     ) -> BumpResult<(u128, i128, u128, u128, u128)> {
         let mut total_im_usd = 0u128;
@@ -820,7 +833,8 @@ impl User {
         let mut total_size = 0u128;
 
         for user_position in &self.positions {
-            if user_position.status.eq(&PositionStatus::INIT) && !user_position.is_portfolio_margin {
+            if user_position.status.eq(&PositionStatus::INIT) && !user_position.is_portfolio_margin
+            {
                 continue;
             }
             let index_price = price_map.get_price_data(&user_position.index_mint_oracle)?.price;
@@ -834,9 +848,16 @@ impl User {
             total_position_mm =
                 total_position_mm.safe_add(user_position.get_position_mm(&market, state)?)?;
             total_size = total_size.safe_add(user_position.position_size)?;
-            total_im_usd_from_portfolio = total_im_usd_from_portfolio.safe_add(user_position.initial_margin_usd_from_portfolio)?;
+            total_im_usd_from_portfolio = total_im_usd_from_portfolio
+                .safe_add(user_position.initial_margin_usd_from_portfolio)?;
         }
-        Ok((total_im_usd, total_un_pnl_usd, total_position_mm, total_size, total_im_usd_from_portfolio))
+        Ok((
+            total_im_usd,
+            total_un_pnl_usd,
+            total_position_mm,
+            total_size,
+            total_im_usd_from_portfolio,
+        ))
     }
 
     pub fn get_total_used_value(
@@ -855,7 +876,8 @@ impl User {
             let oracle_price = oracle_map.get_price_data(&trade_token.oracle_key)?;
             total_used_value = total_used_value
                 .safe_add(user_token.get_token_used_value(&trade_token, &oracle_price)?)?;
-            total_token_borrowing_value = total_token_borrowing_value.safe_add(user_token.get_token_borrowing_value(&oracle_price, &trade_token)?)?;
+            total_token_borrowing_value = total_token_borrowing_value
+                .safe_add(user_token.get_token_borrowing_value(&oracle_price, &trade_token)?)?;
         }
         if self.hold > 0 {
             total_used_value = total_used_value.safe_add(self.hold)?;
@@ -895,7 +917,7 @@ impl User {
                 state.bump_signer_nonce,
                 order.order_margin,
             )
-                .map_err(|_e| BumpErrorCode::TransferFailed)?;
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
         }
         Ok(())
     }

@@ -5,7 +5,6 @@ use anchor_spl::token::{Token, TokenAccount};
 use instructions::*;
 
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
-use crate::state::infrastructure::user_order::UserOrder;
 use crate::state::user::UserStatus;
 use crate::traits::Size;
 
@@ -24,7 +23,6 @@ declare_id!("Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR");
 #[program]
 pub mod bumpin_trade {
     use super::*;
-    use crate::state::infrastructure::user_order::OrderSide;
 
     pub fn initialize_state<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializeState>,
@@ -117,21 +115,22 @@ pub mod bumpin_trade {
 
     /*-----order------*/
     pub fn place_order<'a, 'b, 'c: 'info, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
+        ctx: Context<'a, 'b, 'c, 'info, PlaceOrder<'c>>,
         order: PlaceOrderParams,
     ) -> Result<()> {
         handle_place_order(ctx, order)
     }
 
     pub fn execute_order<'a, 'b, 'c: 'info, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
+        ctx: Context<'a, 'b, 'c, 'info, PlaceOrder<'c>>,
         order_id: u64,
     ) -> Result<()> {
         let user = &mut ctx.accounts.user.load_mut()?;
         let order = user.orders[user.get_user_order_index(order_id)?];
         let remaining_accounts = ctx.remaining_accounts;
-        let AccountMaps { trade_token_map, mut oracle_map, market_map,pool_map,vault_map, .. } =
-            load_maps(remaining_accounts)?;
+        let AccountMaps {
+            trade_token_map, mut oracle_map, market_map, pool_map, vault_map, ..
+        } = load_maps(remaining_accounts)?;
         let user = &mut ctx.accounts.user.load_mut()?;
         let state_account = &ctx.accounts.state;
         let user_token_account = &ctx.accounts.user_token_account;
