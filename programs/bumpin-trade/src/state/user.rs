@@ -31,6 +31,7 @@ use crate::validate;
 #[derive(Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct User {
+    pub key: Pubkey,
     pub next_order_id: u64,
     pub next_liquidation_id: u64,
     pub hold: u128,
@@ -38,7 +39,6 @@ pub struct User {
     pub stakes: [UserStake; 10],
     pub positions: [UserPosition; 10],
     pub orders: [UserOrder; 10],
-    pub key: Pubkey,
     pub authority: Pubkey,
     pub user_status: UserStatus,
     pub padding: [u8; 15],

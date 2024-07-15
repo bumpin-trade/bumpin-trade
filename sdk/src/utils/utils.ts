@@ -23,7 +23,7 @@ export class BumpinUtils {
 
     public static size2Amount(size: BigNumber, decimals: number): BN {
         const bigNum = size.multipliedBy(new BigNumber(10).pow(Math.abs(decimals)));
-        return new BN(bigNum.toFixed(0));
+        return new BN(bigNum.toString());
     }
 
     public static amount2Size(amount: BN, decimals: number): BigNumber {
