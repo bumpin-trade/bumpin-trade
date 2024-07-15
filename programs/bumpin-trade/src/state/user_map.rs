@@ -2,9 +2,9 @@ use std::cell::{Ref, RefMut};
 use std::collections::BTreeMap;
 use std::panic::Location;
 
-use anchor_lang::Discriminator;
-use anchor_lang::prelude::*;
 use anchor_lang::prelude::AccountLoader;
+use anchor_lang::prelude::*;
+use anchor_lang::Discriminator;
 use arrayref::array_ref;
 
 use crate::errors::{BumpErrorCode, BumpResult};
@@ -23,16 +23,16 @@ impl<'a> UserMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find user {} at {}:{}", user_key, caller.file(), caller.line());
                 return Err(BumpErrorCode::UserNotFound);
-            }
+            },
             Some(loader) => loader,
         };
         match loader.load() {
             Ok(user) => Ok(user),
-            Err(e) => {
+            Err(_e) => {
                 let caller = Location::caller();
                 msg!("Could not load pool {} at {}:{}", user_key, caller.file(), caller.line());
                 Err(BumpErrorCode::CouldNotLoadUserData)
-            }
+            },
         }
     }
 
@@ -44,7 +44,7 @@ impl<'a> UserMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find user {} at {}:{}", user_key, caller.file(), caller.line());
                 return Err(BumpErrorCode::UserNotFound);
-            }
+            },
             Some(loader) => loader.clone(),
         };
         Ok(loader)
@@ -58,16 +58,16 @@ impl<'a> UserMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find user {} at {}:{}", user_key, caller.file(), caller.line());
                 return Err(BumpErrorCode::UserNotFound);
-            }
+            },
             Some(loader) => loader,
         };
         match loader.load_mut() {
             Ok(user) => Ok(user),
-            Err(e) => {
+            Err(_e) => {
                 let caller = Location::caller();
                 msg!("Could not load pool {} at {}:{}", user_key, caller.file(), caller.line());
                 Err(BumpErrorCode::CouldNotLoadUserData)
-            }
+            },
         }
     }
     pub fn load(

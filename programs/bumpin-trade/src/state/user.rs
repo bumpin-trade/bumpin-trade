@@ -750,11 +750,7 @@ impl User {
             _total_position_mm,
             _total_size,
             total_im_from_portfolio_value,
-        ) = self.get_user_cross_position_available_value(
-            state,
-            &market_map,
-            &mut oracle_map,
-        )?;
+        ) = self.get_user_cross_position_available_value(state, &market_map, &mut oracle_map)?;
 
         let available_value = portfolio_net_value
             .safe_add(total_im_usd)?

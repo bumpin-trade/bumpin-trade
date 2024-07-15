@@ -1,20 +1,21 @@
 use std::ops::{Deref, DerefMut};
 
-use anchor_lang::{emit, ToAccountInfo};
 use anchor_lang::prelude::*;
 use anchor_lang::prelude::{Account, Program, Signer};
+use anchor_lang::{emit, ToAccountInfo};
 use anchor_spl::token::{Token, TokenAccount};
 
-use crate::{position_mut, validate};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{cal_utils, UpdatePositionLeverageParams, UpdatePositionMarginParams};
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
-use crate::processor::fee_processor;
+use crate::processor::{fee_processor, position_processor};
 use crate::state::bump_events::{
     AddOrDecreaseMarginEvent, AddOrDeleteUserPositionEvent, UpdateUserPositionEvent,
 };
-use crate::state::infrastructure::user_order::{OrderSide, UserOrder};
+use crate::state::infrastructure::user_order::{
+    OrderSide, OrderType, PositionSide, StopType, UserOrder,
+};
 use crate::state::infrastructure::user_position::{PositionStatus, UserPosition};
 use crate::state::market::{Market, UpdateOIParams};
 use crate::state::market_map::MarketMap;
@@ -25,7 +26,324 @@ use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::{User, UserTokenUpdateReason};
+use crate::state::vault_map::VaultMap;
 use crate::utils::{pda, token};
+use crate::{position, position_mut, validate};
+
+pub fn handle_execute_order<'info>(
+    user: &mut User,
+    market_map: &MarketMap,
+    pool_map: &PoolMap,
+    state_account: &Account<'info, State>,
+    user_token_account: &Account<'info, TokenAccount>,
+    vault_map: &VaultMap<'info>,
+    bump_signer: &AccountInfo<'info>,
+    token_program: &Program<'info, Token>,
+    program_id: &Pubkey,
+    trade_token_map: &TradeTokenMap,
+    oracle_map: &mut OracleMap,
+    user_order: &UserOrder,
+) -> BumpResult<()> {
+    let user_key = user.key;
+    let mut market = market_map.get_mut_ref(&user_order.symbol)?;
+    let mut base_token_pool = pool_map.get_mut_ref(&market.pool_key)?;
+    let mut stable_pool = pool_map.get_mut_ref(&market.stable_pool_key)?;
+    let mut trade_token = trade_token_map.get_trade_token_ref_mut(&market.pool_mint_key)?;
+    let pool_vault = vault_map.get_account(&base_token_pool.pool_vault_key)?;
+    let stable_pool_vault = vault_map.get_account(&stable_pool.pool_vault_key)?;
+    let mut stable_trade_token =
+        trade_token_map.get_trade_token_ref_mut(&market.stable_pool_mint_key)?;
+    let token_vault = if user_order.order_side.eq(&OrderSide::LONG) {
+        vault_map.get_account(&trade_token.vault_key)?
+    } else {
+        vault_map.get_account(&stable_trade_token.vault_key)?
+    };
+
+    //validate trade_token_vault
+    validate!(
+        if user_order.order_side.eq(&OrderSide::LONG) {
+            trade_token.vault_key.eq(token_vault.to_account_info().key)
+        } else {
+            stable_trade_token.vault_key.eq(token_vault.to_account_info().key)
+        },
+        BumpErrorCode::InvalidParam
+    )?;
+
+    //validate order
+    validate_execute_order(&user_order, &market)?;
+    let is_long = OrderSide::LONG == user_order.order_side;
+    let execute_price = get_execution_price(
+        oracle_map
+            .get_price_data(&market.index_mint_oracle)
+            .map_err(|_e| BumpErrorCode::OracleNotFound)?
+            .price,
+        &user_order,
+    )?;
+
+    let margin_token_price = oracle_map
+        .get_price_data(if user_order.order_side.eq(&OrderSide::LONG) {
+            &trade_token.oracle_key
+        } else {
+            &stable_trade_token.oracle_key
+        })
+        .map_err(|_e| BumpErrorCode::OracleNotFound)?
+        .price;
+    //update funding_fee_rate and borrowing_fee_rate
+    market.deref_mut().update_market_funding_fee_rate(
+        state_account,
+        margin_token_price,
+        if user_order.order_side.eq(&OrderSide::LONG) {
+            trade_token.decimals
+        } else {
+            stable_trade_token.decimals
+        },
+    )?;
+
+    if user_order.order_side.eq(&OrderSide::LONG) {
+        base_token_pool.deref_mut().update_pool_borrowing_fee_rate()?;
+    } else {
+        stable_pool.deref_mut().update_pool_borrowing_fee_rate()?;
+    }
+    let position_key = pda::generate_position_key(
+        &user_key,
+        market.symbol,
+        user_order.is_portfolio_margin,
+        program_id,
+    )?;
+
+    // //do execute order and change position
+    match user_order.position_side {
+        PositionSide::NONE => Err(BumpErrorCode::PositionSideNotSupport),
+        PositionSide::INCREASE => {
+            {
+                let margin_token = if user_order.order_side.eq(&OrderSide::LONG) {
+                    &market.pool_mint_key
+                } else {
+                    &market.stable_pool_mint_key
+                };
+                //calculate real order_margin with validation
+                let (order_margin, order_margin_from_balance) = execute_increase_order_margin(
+                    user_token_account.to_account_info().key,
+                    &user_order,
+                    margin_token,
+                    if user_order.order_side.eq(&OrderSide::LONG) {
+                        trade_token.decimals
+                    } else {
+                        stable_trade_token.decimals
+                    },
+                    user,
+                    margin_token_price,
+                    oracle_map,
+                    trade_token_map,
+                    market_map,
+                    state_account,
+                )?;
+
+                //collect open fee
+                let fee = if user_order.order_side.eq(&OrderSide::LONG) {
+                    fee_processor::collect_long_open_position_fee(
+                        &market,
+                        base_token_pool.deref_mut(),
+                        order_margin.safe_mul_rate(user_order.leverage.cast()?)?,
+                        user_order.is_portfolio_margin,
+                    )?
+                } else {
+                    fee_processor::collect_short_open_position_fee(
+                        &market,
+                        base_token_pool.deref_mut(),
+                        stable_pool.deref_mut(),
+                        state_account,
+                        order_margin.safe_mul_rate(user_order.leverage.cast()?)?,
+                        user_order.is_portfolio_margin,
+                    )?
+                };
+
+                //record fee in user
+                if user_order.is_portfolio_margin {
+                    user.un_use_token(&user_order.margin_mint_key, fee)?;
+                    user.sub_token_with_liability(
+                        &user_order.margin_mint_key,
+                        if user_order.order_side.eq(&OrderSide::LONG) {
+                            trade_token.deref_mut()
+                        } else {
+                            stable_trade_token.deref_mut()
+                        },
+                        fee,
+                        &UserTokenUpdateReason::SettleFee,
+                    )?;
+                }
+                drop(base_token_pool);
+                drop(stable_pool);
+                drop(market);
+                drop(trade_token);
+                drop(stable_trade_token);
+                //increase position
+                position_processor::increase_position(
+                    &user_order.symbol,
+                    user,
+                    pool_map,
+                    program_id,
+                    &user_order,
+                    order_margin,
+                    order_margin_from_balance,
+                    execute_price,
+                    margin_token_price,
+                    fee,
+                    oracle_map,
+                    trade_token_map,
+                    market_map,
+                )?;
+                Ok(())
+            }
+        },
+
+        PositionSide::DECREASE => {
+            {
+                let position_side = { position!(&user.positions, &position_key)?.is_long };
+                //decrease
+                let position = user.get_user_position_ref(&position_key)?;
+                if position.position_size == 0u128 || position.status.eq(&PositionStatus::INIT) {
+                    return Err(BumpErrorCode::InvalidParam.into());
+                }
+                if position.is_long == is_long {
+                    return Err(BumpErrorCode::InvalidParam.into());
+                }
+
+                position_processor::decrease_position(
+                    DecreasePositionParams {
+                        order_id: user_order.order_id,
+                        is_liquidation: false,
+                        is_portfolio_margin: false,
+                        margin_token: user_order.margin_mint_key,
+                        decrease_size: user_order.order_size,
+                        execute_price,
+                    },
+                    user,
+                    market.deref_mut(),
+                    base_token_pool.deref_mut(),
+                    stable_pool.deref_mut(),
+                    state_account,
+                    Some(user_token_account),
+                    if position_side { pool_vault } else { stable_pool_vault },
+                    if user_order.order_side.eq(&OrderSide::LONG) {
+                        trade_token.deref_mut()
+                    } else {
+                        stable_trade_token.deref_mut()
+                    },
+                    token_vault,
+                    bump_signer,
+                    token_program,
+                    oracle_map,
+                    &position_key,
+                )?;
+                Ok(())
+            }
+        },
+    }?;
+    //delete order
+    user.delete_order(user_order.order_id)?;
+    Ok(())
+}
+
+fn execute_increase_order_margin(
+    user_token_account_key: &Pubkey,
+    order: &UserOrder,
+    margin_token: &Pubkey,
+    decimals: u16,
+    user: &mut User,
+    margin_token_price: u128,
+    oracle_map: &mut OracleMap,
+    trade_token_map: &TradeTokenMap,
+    market_map: &MarketMap,
+    state: &Account<State>,
+) -> BumpResult<(u128, u128)> {
+    let order_margin;
+    let order_margin_from_balance;
+    if order.is_portfolio_margin {
+        let available_value =
+            user.get_available_value(trade_token_map, oracle_map, market_map, state)?;
+        let order_margin_temp;
+        if available_value < 0i128 {
+            let fix_order_margin_in_usd =
+                order.order_margin.cast::<i128>()?.safe_add(available_value)?;
+            validate!(fix_order_margin_in_usd > 0i128, BumpErrorCode::BalanceNotEnough.into())?;
+            user.sub_order_hold_in_usd(order.order_margin)?;
+            order_margin_temp = fix_order_margin_in_usd.abs().cast::<u128>()?;
+        } else {
+            order_margin_temp = order.order_margin;
+            user.sub_order_hold_in_usd(order.order_margin)?;
+        }
+        order_margin = cal_utils::usd_to_token_u(order_margin_temp, decimals, margin_token_price)?;
+        order_margin_from_balance =
+            user.use_token(margin_token, order_margin, user_token_account_key, false)?;
+    } else {
+        let order_margin_in_usd =
+            cal_utils::token_to_usd_u(order.order_margin, decimals, margin_token_price)?;
+        validate!(
+            order_margin_in_usd >= state.minimum_order_margin_usd,
+            BumpErrorCode::AmountNotEnough
+        )?;
+        order_margin = order.order_margin;
+        order_margin_from_balance = order.order_margin;
+    }
+
+    Ok((order_margin, order_margin_from_balance))
+}
+
+fn get_execution_price(index_price: u128, order: &UserOrder) -> BumpResult<u128> {
+    if order.order_type.eq(&OrderType::MARKET) {
+        if order.order_side.eq(&OrderSide::LONG) && index_price >= order.acceptable_price {
+            return Err(BumpErrorCode::PriceIsNotAllowed);
+        }
+        if order.order_side.eq(&OrderSide::SHORT) && index_price <= order.acceptable_price {
+            return Err(BumpErrorCode::PriceIsNotAllowed);
+        }
+        return Ok(index_price);
+    }
+
+    let long = OrderSide::LONG == order.order_side;
+    if order.order_type.eq(&OrderType::LIMIT)
+        || (order.order_type.eq(&OrderType::STOP) && order.stop_type.eq(&StopType::TakeProfit))
+    {
+        if (long && order.trigger_price >= index_price)
+            || (!long && order.trigger_price <= index_price)
+        {
+            return Ok(index_price);
+        }
+        return Err(BumpErrorCode::PriceIsNotAllowed);
+    }
+    if order.order_type.eq(&OrderType::STOP)
+        && order.stop_type.eq(&StopType::StopLoss)
+        && ((long && order.trigger_price <= index_price)
+            || (!long && order.trigger_price >= index_price))
+    {
+        return Ok(index_price);
+    }
+
+    Err(BumpErrorCode::PriceIsNotAllowed)
+}
+
+fn validate_execute_order(order: &UserOrder, market: &Market) -> BumpResult<()> {
+    // token verify
+    if order.position_side.eq(&PositionSide::INCREASE) {
+        if order.order_side.eq(&OrderSide::LONG) && order.margin_mint_key != market.pool_mint_key {
+            return Err(BumpErrorCode::TokenNotMatch.into());
+        }
+
+        if order.order_side.eq(&OrderSide::SHORT)
+            && order.margin_mint_key != market.stable_pool_mint_key
+        {
+            return Err(BumpErrorCode::TokenNotMatch);
+        }
+    }
+
+    if order.leverage > market.config.maximum_leverage
+        || order.leverage < market.config.minimum_leverage
+    {
+        return Err(BumpErrorCode::LeverageIsNotAllowed);
+    }
+    Ok(())
+}
 
 pub fn update_funding_fee(
     position: &mut UserPosition,
@@ -397,7 +715,7 @@ fn settle_cross<'info>(
             state_account.bump_signer_nonce,
             response.pool_pnl_token.abs().cast::<u128>()?,
         )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
     } else if response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)? > 0i128 {
         token::receive(
             token_program,
@@ -406,7 +724,7 @@ fn settle_cross<'info>(
             bump_signer,
             response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)?.cast::<u128>()?,
         )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
     }
 
     if !response.is_liquidation {
@@ -445,7 +763,7 @@ fn settle_isolate<'info>(
         state_account.bump_signer_nonce,
         response.settle_margin.abs().cast::<u128>()?,
     )
-        .map_err(|_e| BumpErrorCode::TransferFailed)?;
+    .map_err(|_e| BumpErrorCode::TransferFailed)?;
     Ok(())
 }
 
@@ -519,7 +837,7 @@ pub fn execute_reduce_position_margin(
 
     if position.is_portfolio_margin
         && position.initial_margin_usd.safe_sub(position.initial_margin_usd_from_portfolio)?
-        < reduce_margin_amount
+            < reduce_margin_amount
     {
         position.sub_initial_margin_usd_from_portfolio(
             reduce_margin_amount
@@ -1004,7 +1322,7 @@ pub fn increase_position(
         let base_token_pool_value =
             base_token_pool.get_pool_usd_value(trade_token_map, oracle_map, market_map)?;
 
-        let mut market = market_map.get_mut_ref(symbol)?;
+        let market = market_map.get_mut_ref(symbol)?;
         let trade_token = trade_token_map.get_trade_token_by_mint_ref(&market.pool_mint_key)?;
         let stable_trade_token =
             trade_token_map.get_trade_token_by_mint_ref(&market.stable_pool_mint_key)?;
@@ -1136,7 +1454,7 @@ pub fn update_leverage<'info>(
                     authority,
                     params.add_margin_amount,
                 )
-                    .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                .map_err(|_e| BumpErrorCode::TransferFailed)?;
             }
         } else {
             let position = user.get_user_position_mut_ref(position_key)?;
@@ -1178,7 +1496,7 @@ pub fn update_leverage<'info>(
                     state.bump_signer_nonce,
                     reduce_margin_amount,
                 )
-                    .map_err(|_e| BumpErrorCode::TransferFailed)?
+                .map_err(|_e| BumpErrorCode::TransferFailed)?
             }
         }
     }

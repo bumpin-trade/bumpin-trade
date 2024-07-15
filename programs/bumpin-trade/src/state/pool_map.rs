@@ -2,9 +2,9 @@ use std::cell::{Ref, RefMut};
 use std::collections::BTreeMap;
 use std::panic::Location;
 
-use anchor_lang::Discriminator;
-use anchor_lang::prelude::*;
 use anchor_lang::prelude::AccountLoader;
+use anchor_lang::prelude::*;
+use anchor_lang::Discriminator;
 use arrayref::array_ref;
 
 use crate::errors::BumpErrorCode::CouldNotLoadPoolData;
@@ -32,7 +32,7 @@ impl<'a> PoolMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 return Err(CouldNotLoadPoolData);
-            }
+            },
             Some(loader) => loader,
         };
         match loader.load() {
@@ -42,7 +42,7 @@ impl<'a> PoolMap<'a> {
                 msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 Err(CouldNotLoadPoolData)
-            }
+            },
         }
     }
 
@@ -54,7 +54,7 @@ impl<'a> PoolMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 return Err(CouldNotLoadPoolData);
-            }
+            },
             Some(loader) => loader,
         };
         match loader.load_mut() {
@@ -64,7 +64,7 @@ impl<'a> PoolMap<'a> {
                 msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 Err(CouldNotLoadPoolData)
-            }
+            },
         }
     }
 
@@ -76,7 +76,7 @@ impl<'a> PoolMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 return Err(CouldNotLoadPoolData);
-            }
+            },
             Some(loader) => loader,
         };
         Ok(loader)

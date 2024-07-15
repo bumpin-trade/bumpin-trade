@@ -1,13 +1,15 @@
 use std::collections::BTreeMap;
 use std::panic::Location;
 
-use anchor_lang::Key;
-use anchor_lang::prelude::*;
 use anchor_lang::prelude::Account;
+use anchor_lang::prelude::*;
+use anchor_lang::Key;
 use anchor_spl::token;
 use anchor_spl::token::TokenAccount;
 
-use crate::errors::BumpErrorCode::{CouldNotLoadTokenAccountData, InvalidTokenAccount, TradeTokenNotFind};
+use crate::errors::BumpErrorCode::{
+    CouldNotLoadTokenAccountData, InvalidTokenAccount, TradeTokenNotFind,
+};
 use crate::errors::BumpResult;
 
 pub struct VaultMap<'a>(pub BTreeMap<Pubkey, Account<'a, TokenAccount>>);
@@ -26,7 +28,7 @@ impl<'a> VaultMap<'a> {
                     caller.line()
                 );
                 return Err(TradeTokenNotFind);
-            }
+            },
             Some(loader) => loader,
         };
         Ok(account)
