@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/bumpin_trade.json`.
  */
 export type BumpinTrade = {
-  "address": "Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR",
+  "address": "AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca",
   "metadata": {
     "name": "bumpinTrade",
     "version": "0.1.0",
@@ -816,6 +816,30 @@ export type BumpinTrade = {
           "signer": true
         },
         {
+          "name": "rewards",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  115
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poolIndex"
+              }
+            ]
+          }
+        },
+        {
           "name": "userTokenAccount",
           "writable": true
         },
@@ -1364,193 +1388,6 @@ export type BumpinTrade = {
           "signer": true
         },
         {
-          "name": "market",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  97,
-                  114,
-                  107,
-                  101,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.market_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "pool",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.pool_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "poolVault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.pool_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "stablePool",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.stable_pool_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "stablePoolVault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.stable_pool_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "tradeTokenVault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.trade_token_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "stableTradeTokenVault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.stable_trade_token_index"
-              }
-            ]
-          }
-        },
-        {
           "name": "userTokenAccount",
           "writable": true
         },
@@ -1564,12 +1401,8 @@ export type BumpinTrade = {
       ],
       "args": [
         {
-          "name": "order",
-          "type": {
-            "defined": {
-              "name": "placeOrderParams"
-            }
-          }
+          "name": "orderId",
+          "type": "u64"
         }
       ]
     },
@@ -2614,193 +2447,6 @@ export type BumpinTrade = {
         {
           "name": "authority",
           "signer": true
-        },
-        {
-          "name": "market",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  97,
-                  114,
-                  107,
-                  101,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.market_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "pool",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.pool_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "poolVault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.pool_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "stablePool",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.stable_pool_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "stablePoolVault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.stable_pool_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "tradeTokenVault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.trade_token_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "stableTradeTokenVault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.stable_trade_token_index"
-              }
-            ]
-          }
         },
         {
           "name": "userTokenAccount",
@@ -4407,6 +4053,11 @@ export type BumpinTrade = {
       "code": 6051,
       "name": "claimUnqualified",
       "msg": "claimUnqualified"
+    },
+    {
+      "code": 6052,
+      "name": "poolMintSupplyIsZero",
+      "msg": "poolMintSupplyIsZero"
     }
   ],
   "types": [

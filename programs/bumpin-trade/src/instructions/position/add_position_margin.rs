@@ -79,8 +79,10 @@ pub struct AddPositionMargin<'info> {
     #[account(
         constraint = state.bump_signer.eq(& bump_signer.key())
     )]
-    /// CHECK: forced drift_signer
+    /// CHECK: forced bump_signer
     pub bump_signer: AccountInfo<'info>,
+
+    #[account(address = Token::id())]
     pub token_program: Program<'info, Token>,
 }
 

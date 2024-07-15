@@ -59,6 +59,7 @@ pub struct AutoCompoundRewards<'info> {
     /// CHECK: ?
     pub bump_signer: AccountInfo<'info>,
 
+    #[account(address = Token::id())]
     pub token_program: Program<'info, Token>,
 }
 

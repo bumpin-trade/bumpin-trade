@@ -1,3 +1,5 @@
+use std::ops::{Deref, DerefMut};
+
 use anchor_lang::prelude::*;
 use anchor_lang::prelude::{Account, Program, Signer};
 use anchor_lang::{emit, ToAccountInfo};
@@ -17,6 +19,7 @@ use crate::state::market::{Market, UpdateOIParams};
 use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
+use crate::state::pool_map::PoolMap;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
@@ -394,7 +397,7 @@ fn settle_cross<'info>(
             state_account.bump_signer_nonce,
             response.pool_pnl_token.abs().cast::<u128>()?,
         )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
     } else if response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)? > 0i128 {
         token::receive(
             token_program,
@@ -403,7 +406,7 @@ fn settle_cross<'info>(
             bump_signer,
             response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)?.cast::<u128>()?,
         )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
     }
 
     if !response.is_liquidation {
@@ -442,7 +445,7 @@ fn settle_isolate<'info>(
         state_account.bump_signer_nonce,
         response.settle_margin.abs().cast::<u128>()?,
     )
-        .map_err(|_e| BumpErrorCode::TransferFailed)?;
+    .map_err(|_e| BumpErrorCode::TransferFailed)?;
     Ok(())
 }
 
@@ -516,7 +519,7 @@ pub fn execute_reduce_position_margin(
 
     if position.is_portfolio_margin
         && position.initial_margin_usd.safe_sub(position.initial_margin_usd_from_portfolio)?
-        < reduce_margin_amount
+            < reduce_margin_amount
     {
         position.sub_initial_margin_usd_from_portfolio(
             reduce_margin_amount
@@ -826,12 +829,9 @@ pub fn execute_add_position_margin(
 }
 
 pub fn increase_position(
+    symbol: &[u8; 32],
     user: &mut User,
-    base_token_pool: &mut Pool,
-    stable_pool: &mut Pool,
-    market: &mut Market,
-    trade_token: &TradeToken,
-    stable_trade_token: &TradeToken,
+    pool_map: &PoolMap,
     program_id: &Pubkey,
     order: &UserOrder,
     order_margin: u128,
@@ -843,6 +843,12 @@ pub fn increase_position(
     trade_token_map: &TradeTokenMap,
     market_map: &MarketMap,
 ) -> BumpResult<()> {
+    let mut market = market_map.get_mut_ref(symbol)?;
+    let mut base_token_pool = pool_map.get_mut_ref(&market.pool_key)?;
+    let mut stable_pool = pool_map.get_mut_ref(&market.stable_pool_key)?;
+    let mut trade_token = trade_token_map.get_trade_token_ref_mut(&market.pool_mint_key)?;
+    let mut stable_trade_token =
+        trade_token_map.get_trade_token_ref_mut(&market.stable_pool_mint_key)?;
     let position_key = pda::generate_position_key(
         &user.key,
         market.symbol,
@@ -925,14 +931,22 @@ pub fn increase_position(
         //increase position
         update_borrowing_fee(
             position,
-            if order.order_side.eq(&OrderSide::LONG) { base_token_pool } else { stable_pool },
+            if order.order_side.eq(&OrderSide::LONG) {
+                base_token_pool.deref_mut()
+            } else {
+                stable_pool.deref_mut()
+            },
             margin_token_price,
             &trade_token,
         )?;
         update_funding_fee(
             position,
-            market,
-            if order.order_side.eq(&OrderSide::LONG) { base_token_pool } else { stable_pool },
+            market.deref_mut(),
+            if order.order_side.eq(&OrderSide::LONG) {
+                base_token_pool.deref_mut()
+            } else {
+                stable_pool.deref_mut()
+            },
             margin_token_price,
             &trade_token,
         )?;
@@ -980,22 +994,35 @@ pub fn increase_position(
         base_token_pool.hold_pool_amount(
             increase_hold,
             oracle_map,
-            trade_token,
-            stable_trade_token,
+            trade_token.deref_mut(),
+            stable_trade_token.deref_mut(),
         )?
     } else {
+        drop(trade_token);
+        drop(stable_trade_token);
+        drop(market);
         let base_token_pool_value =
             base_token_pool.get_pool_usd_value(trade_token_map, oracle_map, market_map)?;
+
+        let mut market = market_map.get_mut_ref(symbol)?;
+        let trade_token = trade_token_map.get_trade_token_by_mint_ref(&market.pool_mint_key)?;
+        let stable_trade_token =
+            trade_token_map.get_trade_token_by_mint_ref(&market.stable_pool_mint_key)?;
         validate!(
             base_token_pool_value
                 >= cal_utils::token_to_usd_u(
                     increase_hold,
-                    stable_trade_token.decimals,
+                    trade_token.decimals,
                     margin_token_price
                 )?,
             BumpErrorCode::AmountNotEnough
         )?;
-        stable_pool.hold_pool_amount(increase_hold, oracle_map, trade_token, stable_trade_token)?
+        stable_pool.hold_pool_amount(
+            increase_hold,
+            oracle_map,
+            trade_token.deref(),
+            stable_trade_token.deref(),
+        )?
     }
 
     Ok(())
@@ -1109,7 +1136,7 @@ pub fn update_leverage<'info>(
                     authority,
                     params.add_margin_amount,
                 )
-                    .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                .map_err(|_e| BumpErrorCode::TransferFailed)?;
             }
         } else {
             let position = user.get_user_position_mut_ref(position_key)?;
@@ -1151,7 +1178,7 @@ pub fn update_leverage<'info>(
                     state.bump_signer_nonce,
                     reduce_margin_amount,
                 )
-                    .map_err(|_e| BumpErrorCode::TransferFailed)?
+                .map_err(|_e| BumpErrorCode::TransferFailed)?
             }
         }
     }

@@ -1,5 +1,5 @@
 {
-  "address": "Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR",
+  "address": "AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca",
   "metadata": {
     "name": "bumpin_trade",
     "version": "0.1.0",
@@ -810,6 +810,30 @@
           "signer": true
         },
         {
+          "name": "rewards",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  115
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "_pool_index"
+              }
+            ]
+          }
+        },
+        {
           "name": "user_token_account",
           "writable": true
         },
@@ -906,7 +930,7 @@
       ],
       "args": [
         {
-          "name": "pool_index",
+          "name": "_pool_index",
           "type": "u16"
         }
       ]
@@ -1358,193 +1382,6 @@
           "signer": true
         },
         {
-          "name": "market",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  97,
-                  114,
-                  107,
-                  101,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.market_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "pool",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.pool_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "pool_vault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.pool_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "stable_pool",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.stable_pool_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "stable_pool_vault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.stable_pool_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "trade_token_vault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.trade_token_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "stable_trade_token_vault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.stable_trade_token_index"
-              }
-            ]
-          }
-        },
-        {
           "name": "user_token_account",
           "writable": true
         },
@@ -1558,12 +1395,8 @@
       ],
       "args": [
         {
-          "name": "order",
-          "type": {
-            "defined": {
-              "name": "PlaceOrderParams"
-            }
-          }
+          "name": "order_id",
+          "type": "u64"
         }
       ]
     },
@@ -2608,193 +2441,6 @@
         {
           "name": "authority",
           "signer": true
-        },
-        {
-          "name": "market",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  97,
-                  114,
-                  107,
-                  101,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.market_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "pool",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.pool_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "pool_vault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.pool_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "stable_pool",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.stable_pool_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "stable_pool_vault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.stable_pool_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "trade_token_vault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.trade_token_index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "stable_trade_token_vault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  97,
-                  100,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110,
-                  95,
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "order.stable_trade_token_index"
-              }
-            ]
-          }
         },
         {
           "name": "user_token_account",
@@ -4401,6 +4047,11 @@
       "code": 6051,
       "name": "ClaimUnqualified",
       "msg": "ClaimUnqualified"
+    },
+    {
+      "code": 6052,
+      "name": "PoolMintSupplyIsZero",
+      "msg": "PoolMintSupplyIsZero"
     }
   ],
   "types": [

@@ -75,7 +75,7 @@ pub fn portfolio_to_stake(
 
     user.sub_user_token_amount(&pool.mint_key, mint_amount)?;
     validate!(
-        user.get_available_value(trade_token_map,oracle_map,market_map,state)? > 0,
+        user.get_available_value(trade_token_map, oracle_map, market_map, state)? > 0,
         BumpErrorCode::AmountNotEnough
     )?;
     if pool.total_supply > 0 {

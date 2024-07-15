@@ -5,7 +5,6 @@ use anchor_spl::token::{Token, TokenAccount};
 use instructions::*;
 
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
-use crate::state::infrastructure::user_order::UserOrder;
 use crate::state::user::UserStatus;
 use crate::traits::Size;
 
@@ -24,7 +23,6 @@ declare_id!("Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR");
 #[program]
 pub mod bumpin_trade {
     use super::*;
-    use crate::state::infrastructure::user_order::OrderSide;
 
     pub fn initialize_state<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializeState>,
@@ -117,55 +115,41 @@ pub mod bumpin_trade {
 
     /*-----order------*/
     pub fn place_order<'a, 'b, 'c: 'info, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
+        ctx: Context<'a, 'b, 'c, 'info, PlaceOrder<'c>>,
         order: PlaceOrderParams,
     ) -> Result<()> {
         handle_place_order(ctx, order)
     }
 
     pub fn execute_order<'a, 'b, 'c: 'info, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, PlaceOrder>,
-        order: PlaceOrderParams,
+        ctx: Context<'a, 'b, 'c, 'info, PlaceOrder<'c>>,
+        order_id: u64,
     ) -> Result<()> {
-        // let same_trade_token = order.trade_token_index == order.index_trade_token_index;
-        let market = &mut ctx.accounts.market.load_mut()?;
         let user = &mut ctx.accounts.user.load_mut()?;
-        let pool = &mut ctx.accounts.pool.load_mut()?;
-        let stable_pool = &mut ctx.accounts.stable_pool.load_mut()?;
-
+        let order = user.orders[user.get_user_order_index(order_id)?];
+        let remaining_accounts = ctx.remaining_accounts;
+        let AccountMaps {
+            trade_token_map, mut oracle_map, market_map, pool_map, vault_map, ..
+        } = load_maps(remaining_accounts)?;
+        let user = &mut ctx.accounts.user.load_mut()?;
         let state_account = &ctx.accounts.state;
         let user_token_account = &ctx.accounts.user_token_account;
-        let pool_vault_account = &ctx.accounts.pool_vault;
-        let stable_pool_vault_account = &ctx.accounts.stable_pool_vault;
         let bump_signer_account_info = &ctx.accounts.bump_signer;
         let token_program = &ctx.accounts.token_program;
-        let remaining_accounts = ctx.remaining_accounts;
-        let AccountMaps { trade_token_map, mut oracle_map, market_map, .. } =
-            load_maps(remaining_accounts)?;
 
         handle_execute_order(
             user,
-            market,
-            pool,
-            stable_pool,
+            &market_map,
+            &pool_map,
             state_account,
             user_token_account,
-            pool_vault_account,
-            stable_pool_vault_account,
+            &vault_map,
             bump_signer_account_info,
             token_program,
             ctx.program_id,
             &trade_token_map,
             &mut oracle_map,
-            if order.order_side.eq(&OrderSide::LONG) {
-                &ctx.accounts.trade_token_vault
-            } else {
-                &ctx.accounts.stable_trade_token_vault
-            },
-            &market_map,
-            &UserOrder::default(),
-            order.order_id,
-            true,
+            &order,
         )
     }
 
@@ -248,46 +232,4 @@ pub mod bumpin_trade {
     ) -> Result<()> {
         handle_collect_rewards(ctx)
     }
-}
-
-#[derive(Accounts)]
-pub struct Initialize<'info> {
-    #[account(
-        init,
-        seeds = [b"trade_token_vault".as_ref()],
-        bump,
-        payer = admin,
-        token::mint = trade_token_mint,
-        token::authority = bump_signer
-    )]
-    pub trade_token_vault: Box<Account<'info, TokenAccount>>,
-    /// CHECK: ?
-    #[account()]
-    pub bump_signer: AccountInfo<'info>,
-    pub trade_token_mint: Box<Account<'info, Mint>>,
-
-    #[account(mut)]
-    pub admin: Signer<'info>,
-    pub rent: Sysvar<'info, Rent>,
-    pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
-}
-
-#[account]
-pub struct KeyValue {
-    pub key: String,
-    pub value: String,
-}
-
-impl Size for KeyValue {
-    const SIZE: usize = std::mem::size_of::<KeyValue>() + 8;
-}
-
-#[derive(Accounts)]
-pub struct Initialize1<'info> {
-    #[account(init, payer = user, space = KeyValue::SIZE)]
-    pub key_value: Account<'info, KeyValue>,
-    #[account(mut)]
-    pub user: Signer<'info>,
-    pub system_program: Program<'info, System>,
 }
