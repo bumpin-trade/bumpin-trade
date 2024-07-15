@@ -2,6 +2,7 @@ import { BN } from '@coral-xyz/anchor';
 import { PublicKey } from '@solana/web3.js';
 
 export * from './errors';
+export * from './consts';
 export * from './types';
 export * from './bumpinClient';
 export * from './bumpinClientConfig';

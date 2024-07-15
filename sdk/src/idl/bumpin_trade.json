@@ -1085,11 +1085,6 @@
               {
                 "kind": "const",
                 "value": [
-                  112,
-                  111,
-                  111,
-                  108,
-                  95,
                   114,
                   101,
                   119,
@@ -4723,14 +4718,6 @@
             }
           },
           {
-            "name": "icon_id",
-            "type": "u16"
-          },
-          {
-            "name": "tags_mask",
-            "type": "u16"
-          },
-          {
             "name": "stable",
             "type": "bool"
           }
@@ -5344,19 +5331,11 @@
             "type": "u16"
           },
           {
-            "name": "icon_id",
-            "type": "u16"
-          },
-          {
-            "name": "tags_mask",
-            "type": "u16"
-          },
-          {
             "name": "padding",
             "type": {
               "array": [
                 "u8",
-                6
+                8
               ]
             }
           },

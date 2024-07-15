@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/bumpin_trade.json`.
  */
 export type BumpinTrade = {
-  "address": "AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca",
+  "address": "Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR",
   "metadata": {
     "name": "bumpinTrade",
     "version": "0.1.0",
@@ -1091,11 +1091,6 @@ export type BumpinTrade = {
               {
                 "kind": "const",
                 "value": [
-                  112,
-                  111,
-                  111,
-                  108,
-                  95,
                   114,
                   101,
                   119,
@@ -4729,14 +4724,6 @@ export type BumpinTrade = {
             }
           },
           {
-            "name": "iconId",
-            "type": "u16"
-          },
-          {
-            "name": "tagsMask",
-            "type": "u16"
-          },
-          {
             "name": "stable",
             "type": "bool"
           }
@@ -5350,19 +5337,11 @@ export type BumpinTrade = {
             "type": "u16"
           },
           {
-            "name": "iconId",
-            "type": "u16"
-          },
-          {
-            "name": "tagsMask",
-            "type": "u16"
-          },
-          {
             "name": "padding",
             "type": {
               "array": [
                 "u8",
-                6
+                8
               ]
             }
           },
