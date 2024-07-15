@@ -75,6 +75,8 @@ pub enum BumpErrorCode {
     UserNotEnoughValue,
     #[msg("AmountZero")]
     AmountZero,
+    #[msg("CouldNotLoadTokenAccountData")]
+    CouldNotLoadTokenAccountData,
     #[msg("CouldNotLoadTradeTokenData")]
     CouldNotLoadTradeTokenData,
     #[msg("CouldNotLoadPoolData")]
@@ -87,6 +89,8 @@ pub enum BumpErrorCode {
     InvalidPoolAccount,
     #[msg("CanNotFindTradeToken")]
     TradeTokenNotFind,
+    #[msg("CanNotFindMarket")]
+    MarketNotFind,
     #[msg("StakePaused")]
     StakePaused,
     #[msg("StakeToSmall")]

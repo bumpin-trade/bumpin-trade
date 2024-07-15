@@ -147,7 +147,7 @@ impl<'a> TradeTokenMap<'a> {
 
             let expected_data_len = TradeToken::SIZE;
             if data.len() < expected_data_len {
-                break;
+                continue;
             }
             let account_discriminator = array_ref![data, 0, 8];
             if account_discriminator != &trade_token_discriminator {

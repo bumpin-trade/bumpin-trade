@@ -1,10 +1,8 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::Mint;
-use anchor_spl::token::{Token, TokenAccount};
 
 use instructions::*;
 
-use crate::processor::optional_accounts::{load_maps, AccountMaps};
+use crate::processor::optional_accounts::{AccountMaps, load_maps};
 use crate::state::user::UserStatus;
 use crate::traits::Size;
 

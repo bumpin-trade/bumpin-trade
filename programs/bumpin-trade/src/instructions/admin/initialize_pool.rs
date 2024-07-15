@@ -72,7 +72,7 @@ pub fn handle_initialize_pool(
     let state = &mut ctx.accounts.state;
     pool.key = key;
     pool.mint_key = ctx.accounts.pool_vault.mint;
-    pool.mint_vault_key = ctx.accounts.pool_vault.key();
+    pool.pool_vault_key = ctx.accounts.pool_vault.key();
     pool.name = params.name;
     pool.index = state.pool_sequence;
     pool.stable = params.stable;

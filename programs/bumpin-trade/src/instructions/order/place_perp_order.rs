@@ -3,14 +3,15 @@ use std::ops::{Deref, DerefMut};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
+use crate::{get_then_update_id, position, validate};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::cal_utils;
 use crate::instructions::constraints::*;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
-use crate::processor::optional_accounts::{load_maps, AccountMaps};
-use crate::processor::position_processor::DecreasePositionParams;
 use crate::processor::{fee_processor, position_processor};
+use crate::processor::optional_accounts::{AccountMaps, load_maps};
+use crate::processor::position_processor::DecreasePositionParams;
 use crate::state::infrastructure::user_order::{
     OrderSide, OrderStatus, OrderType, PositionSide, StopType, UserOrder,
 };
@@ -23,10 +24,9 @@ use crate::state::pool_map::PoolMap;
 use crate::state::state::State;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
-use crate::state::vault_map::VaultMap;
 use crate::state::UserTokenUpdateReason;
+use crate::state::vault_map::VaultMap;
 use crate::utils::{pda, token};
-use crate::{get_then_update_id, position, validate};
 
 #[derive(Accounts)]
 #[instruction(
@@ -99,8 +99,8 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     let user = &mut ctx.accounts.user.load_mut()?;
     let pool = pool_map.get_mut_ref(&market.pool_key)?;
     let stable_pool = pool_map.get_mut_ref(&market.stable_pool_key)?;
-    let pool_vault = vault_map.get_account(&pool.mint_vault_key)?;
-    let stable_pool_vault = vault_map.get_account(&stable_pool.mint_vault_key)?;
+    let pool_vault = vault_map.get_account(&pool.pool_vault_key)?;
+    let stable_pool_vault = vault_map.get_account(&stable_pool.pool_vault_key)?;
     let margin_token = if order.order_side.eq(&OrderSide::LONG) {
         &market.pool_mint_key
     } else {
@@ -211,8 +211,8 @@ pub fn handle_execute_order<'info>(
     let mut base_token_pool = pool_map.get_mut_ref(&market.pool_key)?;
     let mut stable_pool = pool_map.get_mut_ref(&market.stable_pool_key)?;
     let mut trade_token = trade_token_map.get_trade_token_ref_mut(&market.pool_mint_key)?;
-    let pool_vault = vault_map.get_account(&base_token_pool.mint_vault_key)?;
-    let stable_pool_vault = vault_map.get_account(&stable_pool.mint_vault_key)?;
+    let pool_vault = vault_map.get_account(&base_token_pool.pool_vault_key)?;
+    let stable_pool_vault = vault_map.get_account(&stable_pool.pool_vault_key)?;
     let mut stable_trade_token =
         trade_token_map.get_trade_token_ref_mut(&market.stable_pool_mint_key)?;
     let token_vault = if user_order.order_side.eq(&OrderSide::LONG) {
@@ -357,7 +357,7 @@ pub fn handle_execute_order<'info>(
                 )?;
                 Ok(())
             }
-        },
+        }
 
         PositionSide::DECREASE => {
             {
@@ -400,7 +400,7 @@ pub fn handle_execute_order<'info>(
                 )?;
                 Ok(())
             }
-        },
+        }
     }?;
     //delete order
     user.delete_order(user_order.order_id)?;
@@ -460,7 +460,7 @@ fn validate_place_order(
             } else {
                 Ok(true)
             }
-        },
+        }
     }
 }
 
@@ -534,7 +534,7 @@ fn get_execution_price(index_price: u128, order: &UserOrder) -> BumpResult<u128>
     if order.order_type.eq(&OrderType::STOP)
         && order.stop_type.eq(&StopType::StopLoss)
         && ((long && order.trigger_price <= index_price)
-            || (!long && order.trigger_price >= index_price))
+        || (!long && order.trigger_price >= index_price))
     {
         return Ok(index_price);
     }

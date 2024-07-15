@@ -1,4 +1,4 @@
-import {ConfirmOptions, PublicKey, TransactionMessage, VersionedTransaction} from "@solana/web3.js";
+import {AccountMeta, ConfirmOptions, PublicKey, TransactionMessage, VersionedTransaction} from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {BN, Program, Provider, Wallet} from "@coral-xyz/anchor";
 import {Buffer} from "buffer";
@@ -125,6 +125,14 @@ export class BumpinUtils {
             minContextSlot: undefined
         };
         return opt;
+    }
+
+    public static removeDuplicateAccounts(accounts: Array<AccountMeta>): AccountMeta[] {
+        let accountMap = new Map<string, AccountMeta>();
+        for (let account of accounts) {
+            accountMap.set(account.pubkey.toString(), account);
+        }
+        return Array.from(accountMap.values());
     }
 
     public static async manualCreateAccount(provider: Provider, wallet: Wallet, newAccountPk: anchor.web3.Keypair, space: number, lamports: number, programId: PublicKey) {

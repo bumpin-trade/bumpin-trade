@@ -179,7 +179,7 @@ export type Pool = {
     feeReward: FeeReward;
     stableFeeReward: FeeReward;
     config: PoolConfig;
-    mintVaultKey: PublicKey;
+    poolVaultKey: PublicKey;
     key: PublicKey;
     stableMintKey: PublicKey;
     mintKey: PublicKey;

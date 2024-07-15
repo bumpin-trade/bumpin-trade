@@ -2,9 +2,9 @@ use std::cell::{Ref, RefMut};
 use std::collections::BTreeMap;
 use std::panic::Location;
 
-use anchor_lang::prelude::AccountLoader;
-use anchor_lang::prelude::*;
 use anchor_lang::Discriminator;
+use anchor_lang::prelude::*;
+use anchor_lang::prelude::AccountLoader;
 use arrayref::array_ref;
 
 use crate::errors::{BumpErrorCode, BumpResult};
@@ -23,17 +23,16 @@ impl<'a> UserMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find user {} at {}:{}", user_key, caller.file(), caller.line());
                 return Err(BumpErrorCode::UserNotFound);
-            },
+            }
             Some(loader) => loader,
         };
         match loader.load() {
             Ok(user) => Ok(user),
             Err(e) => {
                 let caller = Location::caller();
-                msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", user_key, caller.file(), caller.line());
                 Err(BumpErrorCode::CouldNotLoadUserData)
-            },
+            }
         }
     }
 
@@ -45,7 +44,7 @@ impl<'a> UserMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find user {} at {}:{}", user_key, caller.file(), caller.line());
                 return Err(BumpErrorCode::UserNotFound);
-            },
+            }
             Some(loader) => loader.clone(),
         };
         Ok(loader)
@@ -59,17 +58,16 @@ impl<'a> UserMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find user {} at {}:{}", user_key, caller.file(), caller.line());
                 return Err(BumpErrorCode::UserNotFound);
-            },
+            }
             Some(loader) => loader,
         };
         match loader.load_mut() {
             Ok(user) => Ok(user),
             Err(e) => {
                 let caller = Location::caller();
-                msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", user_key, caller.file(), caller.line());
                 Err(BumpErrorCode::CouldNotLoadUserData)
-            },
+            }
         }
     }
     pub fn load(
@@ -89,7 +87,7 @@ impl<'a> UserMap<'a> {
 
             let expected_data_len = User::SIZE;
             if data.len() < expected_data_len {
-                break;
+                continue;
             }
             let account_discriminator = array_ref![data, 0, 8];
             if account_discriminator != &user_discriminator {

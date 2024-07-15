@@ -3971,91 +3971,101 @@ export type BumpinTrade = {
     },
     {
       "code": 6035,
+      "name": "couldNotLoadTokenAccountData",
+      "msg": "couldNotLoadTokenAccountData"
+    },
+    {
+      "code": 6036,
       "name": "couldNotLoadTradeTokenData",
       "msg": "couldNotLoadTradeTokenData"
     },
     {
-      "code": 6036,
+      "code": 6037,
       "name": "couldNotLoadPoolData",
       "msg": "couldNotLoadPoolData"
     },
     {
-      "code": 6037,
+      "code": 6038,
       "name": "invalidTradeTokenAccount",
       "msg": "invalidTradeTokenAccount"
     },
     {
-      "code": 6038,
+      "code": 6039,
       "name": "invalidTokenAccount",
       "msg": "invalidTokenAccount"
     },
     {
-      "code": 6039,
+      "code": 6040,
       "name": "invalidPoolAccount",
       "msg": "invalidPoolAccount"
     },
     {
-      "code": 6040,
+      "code": 6041,
       "name": "tradeTokenNotFind",
       "msg": "canNotFindTradeToken"
     },
     {
-      "code": 6041,
+      "code": 6042,
+      "name": "marketNotFind",
+      "msg": "canNotFindMarket"
+    },
+    {
+      "code": 6043,
       "name": "stakePaused",
       "msg": "stakePaused"
     },
     {
-      "code": 6042,
+      "code": 6044,
       "name": "stakeToSmall",
       "msg": "stakeToSmall"
     },
     {
-      "code": 6043,
+      "code": 6045,
       "name": "unStakeTooSmall",
       "msg": "unStakeTooSmall"
     },
     {
-      "code": 6044,
+      "code": 6046,
       "name": "unStakeTooLarge",
       "msg": "unStakeTooLarge"
     },
     {
-      "code": 6045,
+      "code": 6047,
       "name": "positionSideNotSupport",
       "msg": "positionSideNotSupport"
     },
     {
-      "code": 6046,
+      "code": 6048,
       "name": "rewardsNotFound",
       "msg": "rewardsNotFound"
     },
     {
-      "code": 6047,
+      "code": 6049,
       "name": "userNotFound",
       "msg": "userNotFound"
     },
     {
-      "code": 6048,
+      "code": 6050,
       "name": "couldNotLoadUserData",
       "msg": "couldNotLoadUserData"
     },
     {
-      "code": 6049,
+      "code": 6051,
       "name": "poolSubUnsettleNotEnough",
       "msg": "poolSubUnsettleNotEnough"
     },
     {
-      "code": 6050,
+      "code": 6052,
       "name": "timestampNotFound",
       "msg": "timestampNotFound"
     },
     {
-      "code": 6051,
+      "code": 6053,
       "name": "claimUnqualified",
       "msg": "claimUnqualified"
     },
     {
-      "code": 6052,
+      "code": 6054,
       "name": "poolMintSupplyIsZero",
       "msg": "poolMintSupplyIsZero"
     }
@@ -4879,6 +4889,10 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
+            "name": "key",
+            "type": "pubkey"
+          },
+          {
             "name": "name",
             "type": {
               "array": [
@@ -4952,11 +4966,7 @@ export type BumpinTrade = {
             }
           },
           {
-            "name": "mintVaultKey",
-            "type": "pubkey"
-          },
-          {
-            "name": "key",
+            "name": "poolVaultKey",
             "type": "pubkey"
           },
           {

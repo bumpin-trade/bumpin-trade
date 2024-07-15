@@ -1,12 +1,12 @@
 use std::cell::{Ref, RefMut};
 use std::collections::BTreeMap;
 
-use anchor_lang::prelude::*;
 use anchor_lang::Discriminator;
+use anchor_lang::prelude::*;
 use arrayref::array_ref;
 
-use crate::errors::BumpErrorCode::{CouldNotLoadTradeTokenData, TradeTokenNotFind};
 use crate::errors::{BumpErrorCode, BumpResult};
+use crate::errors::BumpErrorCode::{CouldNotLoadMarketData, CouldNotLoadTradeTokenData, MarketNotFind, TradeTokenNotFind};
 use crate::state::market::Market;
 use crate::traits::Size;
 use crate::validate;
@@ -30,16 +30,16 @@ impl<'a> MarketMap<'a> {
     pub fn get_mut_ref(&self, symbol: &[u8; 32]) -> BumpResult<RefMut<Market>> {
         let loader = match self.0.get(symbol) {
             None => {
-                return Err(TradeTokenNotFind);
-            },
+                return Err(MarketNotFind);
+            }
             Some(loader) => loader,
         };
         match loader.load_mut() {
             Ok(market) => Ok(market),
             Err(e) => {
                 msg!("{:?}", e);
-                Err(CouldNotLoadTradeTokenData)
-            },
+                Err(CouldNotLoadMarketData)
+            }
         }
     }
 
@@ -48,8 +48,8 @@ impl<'a> MarketMap<'a> {
     pub fn get_account_loader(&self, symbol: &[u8; 32]) -> BumpResult<&AccountLoader<'a, Market>> {
         let loader = match self.0.get(symbol) {
             None => {
-                return Err(TradeTokenNotFind);
-            },
+                return Err(MarketNotFind);
+            }
             Some(loader) => loader,
         };
         Ok(loader)
@@ -60,13 +60,13 @@ impl<'a> MarketMap<'a> {
     pub fn get_ref(&self, symbol: &[u8; 32]) -> BumpResult<Ref<Market>> {
         let loader = match self.0.get(symbol) {
             None => {
-                return Err(TradeTokenNotFind);
-            },
+                return Err(MarketNotFind);
+            }
             Some(loader) => loader,
         };
         match loader.load() {
             Ok(market) => Ok(market),
-            Err(_e) => Err(CouldNotLoadTradeTokenData),
+            Err(_e) => Err(CouldNotLoadMarketData),
         }
     }
 }

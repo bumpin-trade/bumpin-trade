@@ -18,11 +18,10 @@ export type BumpinClientConfig = {
 }
 
 export class BumpinClientConfigBuilder {
-    private config: BumpinClientConfig;
+    private readonly config: BumpinClientConfig;
 
     private constructor(netType: NetType, endpoint: string) {
-        let fakeKeyPair = anchor.web3.Keypair.fromSecretKey(new Uint8Array([159, 222, 136, 96, 224, 28, 2, 126, 96, 31, 178, 12, 1, 194, 40, 140, 68, 226, 121, 253, 223, 156, 185, 179, 63, 203, 243, 26, 171, 54, 23, 240, 118, 96, 247, 225, 72, 140, 201, 40, 48, 149, 165, 42, 37, 180, 230, 21, 181, 53, 23, 130, 102, 124, 222, 172, 189, 57, 125, 39, 250, 96, 144, 120]));
-        this.config = {netType, endpoint, wallet: new KeypairWallet(fakeKeyPair), pollingFrequency: 1000};
+        this.config = {netType, endpoint, wallet: new NoneWallet(), pollingFrequency: 1000};
     }
 
     public static mainnet_beta(): BumpinClientConfigBuilder {
@@ -59,6 +58,26 @@ class BumpinSigner implements anchor.web3.Signer {
     constructor(publicKey: PublicKey, secretKey: Uint8Array) {
         this.publicKey = publicKey;
         this.secretKey = secretKey;
+    }
+}
+
+export class NoneWallet implements anchor.Wallet {
+    payer: anchor.web3.Keypair = anchor.web3.Keypair.generate();
+
+    constructor() {
+
+    }
+
+    async signTransaction<T extends anchor.web3.Transaction | anchor.web3.VersionedTransaction>(tx: T): Promise<T> {
+        throw new Error('NoneWallet does not support signing transactions');
+    }
+
+    async signAllTransactions<T extends anchor.web3.Transaction | anchor.web3.VersionedTransaction>(txs: T[]): Promise<T[]> {
+        throw new Error('NoneWallet does not support signing transactions');
+    }
+
+    get publicKey(): PublicKey {
+        throw new Error('NoneWallet does not have a public key');
     }
 }
 

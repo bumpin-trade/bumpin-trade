@@ -45,12 +45,12 @@ export class PythClient implements OracleClient {
     public getOraclePriceDataFromBuffer(buffer: Buffer): OraclePriceData {
         const priceData = parsePriceData(buffer);
 
-        if (!priceData.confidence || !priceData.price) {
+        if (!priceData.price) {
             throw new BumpinInvalidParameter('Price data not found');
         }
 
         const confidence = convertPythPrice(
-            priceData.confidence,
+            priceData.confidence ?? 0,
             priceData.exponent,
             this.multiple
         );

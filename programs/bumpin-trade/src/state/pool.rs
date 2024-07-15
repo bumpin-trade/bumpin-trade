@@ -22,6 +22,7 @@ use crate::validate;
 #[derive(Eq, PartialEq, Default, Debug)]
 #[repr(C)]
 pub struct Pool {
+    pub key: Pubkey,
     pub name: [u8; 32],
     pub pnl: i128,
     pub apr: u128,
@@ -33,8 +34,7 @@ pub struct Pool {
     pub fee_reward: FeeReward,
     pub stable_fee_reward: FeeReward,
     pub config: PoolConfig,
-    pub mint_vault_key: Pubkey,
-    pub key: Pubkey,
+    pub pool_vault_key: Pubkey,
     pub stable_mint_key: Pubkey,
     pub mint_key: Pubkey,
     pub index: u16,

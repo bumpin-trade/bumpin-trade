@@ -2,9 +2,9 @@ use std::cell::{Ref, RefMut};
 use std::collections::BTreeMap;
 use std::panic::Location;
 
-use anchor_lang::prelude::AccountLoader;
-use anchor_lang::prelude::*;
 use anchor_lang::Discriminator;
+use anchor_lang::prelude::*;
+use anchor_lang::prelude::AccountLoader;
 use arrayref::array_ref;
 
 use crate::errors::BumpErrorCode::CouldNotLoadPoolData;
@@ -32,7 +32,7 @@ impl<'a> PoolMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 return Err(CouldNotLoadPoolData);
-            },
+            }
             Some(loader) => loader,
         };
         match loader.load() {
@@ -42,7 +42,7 @@ impl<'a> PoolMap<'a> {
                 msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 Err(CouldNotLoadPoolData)
-            },
+            }
         }
     }
 
@@ -54,7 +54,7 @@ impl<'a> PoolMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 return Err(CouldNotLoadPoolData);
-            },
+            }
             Some(loader) => loader,
         };
         match loader.load_mut() {
@@ -64,7 +64,7 @@ impl<'a> PoolMap<'a> {
                 msg!("{:?}", e);
                 msg!("Could not load pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 Err(CouldNotLoadPoolData)
-            },
+            }
         }
     }
 
@@ -76,7 +76,7 @@ impl<'a> PoolMap<'a> {
                 let caller = Location::caller();
                 msg!("Could not find pool {} at {}:{}", pool_key, caller.file(), caller.line());
                 return Err(CouldNotLoadPoolData);
-            },
+            }
             Some(loader) => loader,
         };
         Ok(loader)
@@ -93,7 +93,7 @@ impl<'a> PoolMap<'a> {
 
             let expected_data_len = Pool::SIZE;
             if data.len() < expected_data_len {
-                break;
+                continue;
             }
             let account_discriminator = array_ref![data, 0, 8];
             if account_discriminator != &pool_discriminator {
@@ -101,7 +101,6 @@ impl<'a> PoolMap<'a> {
             }
 
             let pool_key = Pubkey::from(*array_ref![data, 8, 32]);
-            // let account_info = account_info_iter.next().safe_unwrap()?;
             let account_loader: AccountLoader<'a, Pool> =
                 AccountLoader::try_from(account_info).or(Err(CouldNotLoadPoolData))?;
 

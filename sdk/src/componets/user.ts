@@ -227,16 +227,19 @@ export class UserComponent extends Component {
             uta = tokenAccount.address;
         }
 
-        let remainingAccounts = this.getUserRemainingAccounts(user, tradeTokens);
-        remainingAccounts.push({
-            pubkey: BumpinUtils.getTradeTokenPda(this.program, stablePool.index)[0],
-            isWritable: true,
-            isSigner: false,
-        });
+        let remainingAccounts = this.getUserRemainingAccounts(user, tradeTokens, true);
+
+        for (let market of markets) {
+            remainingAccounts.push({
+                pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
+                isWritable: true,
+                isSigner: false,
+            });
+        }
 
         remainingAccounts.push({
             pubkey: markets[marketIndex].indexMintOracle,
-            isWritable: false,
+            isWritable: true,
             isSigner: false,
         });
 
@@ -247,7 +250,66 @@ export class UserComponent extends Component {
         });
         remainingAccounts.push({
             pubkey: tradeToken.oracleKey,
+            isWritable: true,
+            isSigner: false,
+        });
+
+        remainingAccounts.push({
+            pubkey: BumpinUtils.getPoolPda(this.program, pool.index)[0],
+            isWritable: true,
+            isSigner: false,
+        });
+
+        remainingAccounts.push({
+            pubkey: BumpinUtils.getPoolPda(this.program, stablePool.index)[0],
+            isWritable: true,
+            isSigner: false,
+        });
+
+        remainingAccounts.push({
+            pubkey: pool.poolVaultKey,
+            isWritable: true,
+            isSigner: false,
+        });
+
+        remainingAccounts.push({
+            pubkey: stablePool.poolVaultKey,
+            isWritable: true,
+            isSigner: false,
+        });
+
+        remainingAccounts.push({
+            pubkey: tradeToken.vaultKey,
+            isWritable: true,
+            isSigner: false,
+        });
+
+        remainingAccounts.push({
+            pubkey: stableTradeToken.vaultKey,
+            isWritable: true,
+            isSigner: false,
+        });
+
+        remainingAccounts.push({
+            pubkey: BumpinUtils.getTradeTokenPda(this.program, stableTradeToken.index)[0],
+            isWritable: true,
+            isSigner: false,
+        });
+        remainingAccounts.push({
+            pubkey: stableTradeToken.oracleKey,
             isWritable: false,
+            isSigner: false,
+        });
+
+        remainingAccounts.push({
+            pubkey: markets[marketIndex].poolMintKey,
+            isWritable: true,
+            isSigner: false,
+        });
+
+        remainingAccounts.push({
+            pubkey: markets[marketIndex].stablePoolKey,
+            isWritable: true,
             isSigner: false,
         });
 
@@ -271,7 +333,7 @@ export class UserComponent extends Component {
             userTokenAccount: uta,
             authority: wallet,
             bumpSigner: (await this.getState()).bumpSigner,
-        }).remainingAccounts(remainingAccounts)
+        }).remainingAccounts(BumpinUtils.removeDuplicateAccounts(remainingAccounts))
             .signers([]).rpc();
     }
 
@@ -356,6 +418,7 @@ export class UserComponent extends Component {
                 });
             }
         }
+
         return remainingAccounts;
     }
 
