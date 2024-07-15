@@ -1,10 +1,11 @@
 use std::ops::{Deref, DerefMut};
 
+use anchor_lang::{emit, ToAccountInfo};
 use anchor_lang::prelude::*;
 use anchor_lang::prelude::{Account, Program, Signer};
-use anchor_lang::{emit, ToAccountInfo};
 use anchor_spl::token::{Token, TokenAccount};
 
+use crate::{position_mut, validate};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{cal_utils, UpdatePositionLeverageParams, UpdatePositionMarginParams};
 use crate::math::casting::Cast;
@@ -25,7 +26,6 @@ use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::{User, UserTokenUpdateReason};
 use crate::utils::{pda, token};
-use crate::{position_mut, validate};
 
 pub fn update_funding_fee(
     position: &mut UserPosition,
@@ -397,7 +397,7 @@ fn settle_cross<'info>(
             state_account.bump_signer_nonce,
             response.pool_pnl_token.abs().cast::<u128>()?,
         )
-        .map_err(|_e| BumpErrorCode::TransferFailed)?;
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
     } else if response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)? > 0i128 {
         token::receive(
             token_program,
@@ -406,7 +406,7 @@ fn settle_cross<'info>(
             bump_signer,
             response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)?.cast::<u128>()?,
         )
-        .map_err(|_e| BumpErrorCode::TransferFailed)?;
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
     }
 
     if !response.is_liquidation {
@@ -445,7 +445,7 @@ fn settle_isolate<'info>(
         state_account.bump_signer_nonce,
         response.settle_margin.abs().cast::<u128>()?,
     )
-    .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
     Ok(())
 }
 
@@ -519,7 +519,7 @@ pub fn execute_reduce_position_margin(
 
     if position.is_portfolio_margin
         && position.initial_margin_usd.safe_sub(position.initial_margin_usd_from_portfolio)?
-            < reduce_margin_amount
+        < reduce_margin_amount
     {
         position.sub_initial_margin_usd_from_portfolio(
             reduce_margin_amount
@@ -1136,7 +1136,7 @@ pub fn update_leverage<'info>(
                     authority,
                     params.add_margin_amount,
                 )
-                .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                    .map_err(|_e| BumpErrorCode::TransferFailed)?;
             }
         } else {
             let position = user.get_user_position_mut_ref(position_key)?;
@@ -1178,7 +1178,7 @@ pub fn update_leverage<'info>(
                     state.bump_signer_nonce,
                     reduce_margin_amount,
                 )
-                .map_err(|_e| BumpErrorCode::TransferFailed)?
+                    .map_err(|_e| BumpErrorCode::TransferFailed)?
             }
         }
     }
