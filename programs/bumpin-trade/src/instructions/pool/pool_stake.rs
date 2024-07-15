@@ -61,6 +61,8 @@ pub struct PortfolioStake<'info> {
     )]
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
     pub authority: Signer<'info>,
+
+    #[account(address = Token::id())]
     pub token_program: Program<'info, Token>,
 }
 
@@ -105,6 +107,8 @@ pub struct WalletStake<'info> {
     pub pool_vault: Box<Account<'info, TokenAccount>>,
 
     pub authority: Signer<'info>,
+
+    #[account(address = Token::id())]
     pub token_program: Program<'info, Token>,
 }
 

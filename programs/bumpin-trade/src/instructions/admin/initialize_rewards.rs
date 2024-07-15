@@ -64,6 +64,7 @@ pub struct InitializePoolRewards<'info> {
 
     pub system_program: Program<'info, System>,
 
+    #[account(address = Token::id())]
     pub token_program: Program<'info, Token>,
 }
 

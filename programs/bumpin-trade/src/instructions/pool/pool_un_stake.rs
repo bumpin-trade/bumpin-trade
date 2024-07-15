@@ -67,6 +67,8 @@ pub struct PortfolioUnStake<'info> {
     pub pool_rewards_vault: Box<Account<'info, TokenAccount>>,
 
     pub authority: Signer<'info>,
+
+    #[account(address = Token::id())]
     pub token_program: Program<'info, Token>,
 }
 
@@ -128,6 +130,8 @@ pub struct WalletUnStake<'info> {
     pub user_token_account: Box<Account<'info, TokenAccount>>,
 
     pub authority: Signer<'info>,
+
+    #[account(address = Token::id())]
     pub token_program: Program<'info, Token>,
 }
 

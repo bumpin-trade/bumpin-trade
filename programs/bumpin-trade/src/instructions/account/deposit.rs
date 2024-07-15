@@ -40,6 +40,8 @@ pub struct Deposit<'info> {
         bump,
     )]
     pub trade_token_vault: Account<'info, TokenAccount>,
+
+    #[account(address = Token::id())]
     pub token_program: Program<'info, Token>,
 }
 
