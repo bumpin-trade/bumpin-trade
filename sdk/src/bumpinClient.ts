@@ -465,7 +465,7 @@ export class BumpinClient {
             ));
     }
 
-    public async getUserRewards(): Promise<UserClaimResult> {
+    public async claimUserRewards(): Promise<UserClaimResult> {
         this.checkInitialization(true);
         let user = await this.getUser();
         let claimResult: UserClaimResult = {
@@ -481,8 +481,8 @@ export class BumpinClient {
                 let unRealisedRewards = pool.feeReward.cumulativeRewardsPerStakeToken.sub(stake.userRewards.openRewardsPerStakeToken)
                     .mulSmallRate(stake.stakedShare).downSmallRate();
 
-                claimResult.total = claimResult.total.add(unRealisedRewards.add(stake.userRewards.total_claim_rewards_amount.downSmallRate()).mul(oraclePriceData.price).downPrice());
-                claimResult.claimed = claimResult.claimed.add(stake.userRewards.total_claim_rewards_amount.downSmallRate().mul(oraclePriceData.price).downPrice());
+                claimResult.total = claimResult.total.add(unRealisedRewards.add(stake.userRewards.totalClaimRewardsAmount.downSmallRate()).mul(oraclePriceData.price).downPrice());
+                claimResult.claimed = claimResult.claimed.add(stake.userRewards.totalClaimRewardsAmount.downSmallRate().mul(oraclePriceData.price).downPrice());
                 claimResult.unClaim = claimResult.unClaim.add(unRealisedRewards.mul(oraclePriceData.price).downPrice());
                 let userClaimRewardsResult: UserClaimRewardsResult = {
                     pool: pool.name,

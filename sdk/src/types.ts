@@ -219,7 +219,7 @@ export class UserStakeStatus {
 
 
 export type UserRewards = {
-    total_claim_rewards_amount: BN;
+    totalClaimRewardsAmount: BN;
     realisedRewardsTokenAmount: BN;
     openRewardsPerStakeToken: BN;
     tokenKey: PublicKey;
