@@ -44,7 +44,7 @@ pub fn handle_initialize_user(ctx: Context<InitializeUser>) -> Result<()> {
     user.key = *ctx.accounts.user.to_account_info().key;
     user.authority = *ctx.accounts.authority.to_account_info().key;
 
-    // drop(user);
+    drop(user);
     let init_fee = ctx.accounts.state.init_fee;
     if init_fee > 0 {
         let payer_lamports = ctx.accounts.payer.to_account_info().try_lamports()?;
@@ -61,7 +61,7 @@ pub fn handle_initialize_user(ctx: Context<InitializeUser>) -> Result<()> {
                 ctx.accounts.system_program.to_account_info().clone(),
             ],
         )
-        .unwrap();
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
         emit!(InitUserEvent {
             user_key: *ctx.accounts.user.to_account_info().key,
             authority: *ctx.accounts.authority.to_account_info().key
