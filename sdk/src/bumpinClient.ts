@@ -78,7 +78,7 @@ export class BumpinClient {
 
     constructor(config: BumpinClientConfig) {
         this.netType = config.netType;
-        this.connection = new Connection(config.endpoint);
+        this.connection = new Connection(config.endpoint, config.connectionConfig);
         this.wallet = config.wallet;
         let opt: ConfirmOptions = {
             skipPreflight: false,

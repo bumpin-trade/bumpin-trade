@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/bumpin_trade.json`.
  */
 export type BumpinTrade = {
-  "address": "AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca",
+  "address": "Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR",
   "metadata": {
     "name": "bumpinTrade",
     "version": "0.1.0",
@@ -1377,19 +1377,19 @@ export type BumpinTrade = {
                 ]
               },
               {
-                "kind": "account",
-                "path": "authority"
+                "kind": "arg",
+                "path": "userKey"
               }
             ]
           }
         },
         {
-          "name": "authority",
-          "signer": true
-        },
-        {
           "name": "userTokenAccount",
           "writable": true
+        },
+        {
+          "name": "keeperKey",
+          "signer": true
         },
         {
           "name": "bumpSigner"
@@ -1403,6 +1403,10 @@ export type BumpinTrade = {
         {
           "name": "orderId",
           "type": "u64"
+        },
+        {
+          "name": "userKey",
+          "type": "pubkey"
         }
       ]
     },
@@ -5674,6 +5678,10 @@ export type BumpinTrade = {
         "kind": "struct",
         "fields": [
           {
+            "name": "key",
+            "type": "pubkey"
+          },
+          {
             "name": "nextOrderId",
             "type": "u64"
           },
@@ -5736,10 +5744,6 @@ export type BumpinTrade = {
                 10
               ]
             }
-          },
-          {
-            "name": "key",
-            "type": "pubkey"
           },
           {
             "name": "authority",

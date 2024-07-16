@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import {Wallet} from "@coral-xyz/anchor";
-import {PublicKey} from "@solana/web3.js";
+import {ConnectionConfig, PublicKey} from "@solana/web3.js";
 
 export enum NetType {
     MAINNET_BETA = 'mainnet_beta',
@@ -14,14 +14,15 @@ export type BumpinClientConfig = {
     netType: NetType;
     endpoint: string;
     wallet: Wallet;
+    connectionConfig?: ConnectionConfig;
     pollingFrequency: number
 }
 
 export class BumpinClientConfigBuilder {
     private readonly config: BumpinClientConfig;
 
-    private constructor(netType: NetType, endpoint: string) {
-        this.config = {netType, endpoint, wallet: new NoneWallet(), pollingFrequency: 1000};
+    private constructor(netType: NetType, endpoint: string, connectionConfig?: ConnectionConfig) {
+        this.config = {netType, endpoint, wallet: new NoneWallet(), pollingFrequency: 1000, connectionConfig};
     }
 
     public static mainnet_beta(): BumpinClientConfigBuilder {
@@ -32,8 +33,8 @@ export class BumpinClientConfigBuilder {
         return new BumpinClientConfigBuilder(NetType.LOCALNET, 'http://127.0.0.1:8899');
     }
 
-    public static customNet(endpoint: string): BumpinClientConfigBuilder {
-        return new BumpinClientConfigBuilder(NetType.CUSTOM, endpoint);
+    public static customNet(endpoint: string, connectionConfig?: ConnectionConfig): BumpinClientConfigBuilder {
+        return new BumpinClientConfigBuilder(NetType.CUSTOM, endpoint, connectionConfig);
     }
 
     public wallet(wallet: Wallet): BumpinClientConfigBuilder {

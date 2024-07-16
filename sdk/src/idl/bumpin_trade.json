@@ -1371,19 +1371,19 @@
                 ]
               },
               {
-                "kind": "account",
-                "path": "authority"
+                "kind": "arg",
+                "path": "user_key"
               }
             ]
           }
         },
         {
-          "name": "authority",
-          "signer": true
-        },
-        {
           "name": "user_token_account",
           "writable": true
+        },
+        {
+          "name": "keeper_key",
+          "signer": true
         },
         {
           "name": "bump_signer"
@@ -1397,6 +1397,10 @@
         {
           "name": "order_id",
           "type": "u64"
+        },
+        {
+          "name": "_user_key",
+          "type": "pubkey"
         }
       ]
     },
@@ -5668,6 +5672,10 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "key",
+            "type": "pubkey"
+          },
+          {
             "name": "next_order_id",
             "type": "u64"
           },
@@ -5730,10 +5738,6 @@
                 10
               ]
             }
-          },
-          {
-            "name": "key",
-            "type": "pubkey"
           },
           {
             "name": "authority",

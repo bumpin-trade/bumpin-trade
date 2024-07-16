@@ -36,14 +36,16 @@ solana airdrop 100000 "$player4_pubkey" --url localhost > /dev/null
 solana airdrop 100000 "$player5_pubkey" --url localhost > /dev/null
 
 
-# SOL USDC WBTC WHETH BONK
+# SOL USDC WBTC WHETH BONK BNB
 decimals=(9 6 8 8 8 5)
+mint_amounts=(1000 1000000 10 100 1000000000 1000)
 
 results="================================================\n"
 
 for ((i=1; i<=num_loops; i++))
 do
   decimals_value=${decimals[$((i-1))]}
+  mint_amount_value=${mint_amounts[$((i-1))]}
 
   # Step 2: Create a new SPL token and extract the token address
 token=$(spl-token create-token --decimals "$decimals_value" --output json --url localhost | jq -r .commandOutput.address)
@@ -72,14 +74,14 @@ token=$(spl-token create-token --decimals "$decimals_value" --output json --url 
   account_reward=$(echo "$account_reward_output" | sed -n 's/Creating account \(.*\)/\1/p')
 
   # Step 4: Mint tokens to the created account
-  mint_amount=$((i * 10000000))
-  spl-token mint "$token" "$mint_amount" "$account" --url localhost> /dev/null
-  spl-token mint "$token" "$mint_amount" "$account2" --url localhost> /dev/null
-  spl-token mint "$token" "$mint_amount" "$account3" --url localhost> /dev/null
-  spl-token mint "$token" "$mint_amount" "$account4" --url localhost> /dev/null
-  spl-token mint "$token" "$mint_amount" "$account5" --url localhost> /dev/null
+#  mint_amount=$((i * 100000))
+  spl-token mint "$token" "$mint_amount_value" "$account" --url localhost> /dev/null
+  spl-token mint "$token" "$mint_amount_value" "$account2" --url localhost> /dev/null
+  spl-token mint "$token" "$mint_amount_value" "$account3" --url localhost> /dev/null
+  spl-token mint "$token" "$mint_amount_value" "$account4" --url localhost> /dev/null
+  spl-token mint "$token" "$mint_amount_value" "$account5" --url localhost> /dev/null
 
-  results+="Token Mint: $token\nToken Account PublicKey: $account\nAmount: $mint_amount\nDecimals: $decimals_value\nReward Token Account: $account_reward\n================================================\n"
+  results+="Token Mint: $token\nToken Account PublicKey: $account\nAmount: $mint_amount_value\nDecimals: $decimals_value\nReward Token Account: $account_reward\n================================================\n"
 
 done
 
