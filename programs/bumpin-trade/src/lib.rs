@@ -83,14 +83,16 @@ pub mod bumpin_trade {
         ctx: Context<'a, 'b, 'c, 'info, PortfolioUnStake>,
         params: UnStakeParams,
     ) -> Result<()> {
-        handle_portfolio_un_stake(ctx, params)
+        handle_portfolio_un_stake(ctx, params).unwrap();
+        Ok(())
     }
 
     pub fn wallet_un_stake<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, WalletUnStake>,
         params: UnStakeParams,
     ) -> Result<()> {
-        handle_wallet_un_stake(ctx, params)
+        handle_wallet_un_stake(ctx, params).unwrap();
+        Ok(())
     }
 
     /*-----account------*/
