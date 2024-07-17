@@ -8,7 +8,7 @@ use anchor_spl::token::{Token, TokenAccount};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{cal_utils, UpdatePositionLeverageParams, UpdatePositionMarginParams};
 use crate::math::casting::Cast;
-use crate::math::constants::{RATE_PRECISION, SMALL_RATE_PRECISION};
+use crate::math::constants::RATE_PRECISION;
 use crate::math::safe_math::SafeMath;
 use crate::processor::fee_processor;
 use crate::state::bump_events::{
@@ -118,15 +118,16 @@ pub fn handle_execute_order<'info>(
         PositionSide::INCREASE => {
             {
                 let margin_token = if user_order.order_side.eq(&OrderSide::LONG) {
-                    &market.pool_mint_key
+                    market.pool_mint_key
                 } else {
-                    &market.stable_pool_mint_key
+                    market.stable_pool_mint_key
                 };
+                drop(market);
                 //calculate real order_margin with validation
                 let (order_margin, order_margin_from_balance) = execute_increase_order_margin(
                     user_token_account.to_account_info().key,
                     &user_order,
-                    margin_token,
+                    &margin_token,
                     if user_order.order_side.eq(&OrderSide::LONG) {
                         trade_token.decimals
                     } else {
@@ -140,6 +141,7 @@ pub fn handle_execute_order<'info>(
                     state_account,
                 )?;
 
+                let market = market_map.get_mut_ref(&user_order.symbol)?;
                 //collect open fee
                 let fee = if user_order.order_side.eq(&OrderSide::LONG) {
                     fee_processor::collect_long_open_position_fee(
@@ -385,16 +387,15 @@ pub fn update_borrowing_fee(
     token_price: u128,
     token: &TradeToken,
 ) -> BumpResult<()> {
-    let realized_borrowing_fee = position
-        .initial_margin
-        .safe_mul_rate(
-            (position.leverage as u128).safe_sub(1u128.safe_mul(SMALL_RATE_PRECISION)?)?,
-        )?
-        .safe_mul_rate(
-            pool.borrowing_fee
-                .cumulative_borrowing_fee_per_token
-                .safe_sub(position.open_borrowing_fee_per_token)?,
-        )?;
+    let realized_borrowing_fee = cal_utils::mul_small_rate_u(
+        cal_utils::mul_rate_u(
+            position.initial_margin,
+            (position.leverage as u128).safe_sub(1u128.safe_mul(RATE_PRECISION)?)?,
+        )?,
+        pool.borrowing_fee
+            .cumulative_borrowing_fee_per_token
+            .safe_sub(position.open_borrowing_fee_per_token)?,
+    )?;
 
     position.add_realized_borrowing_fee(realized_borrowing_fee)?;
     position.add_realized_borrowing_fee_in_usd(cal_utils::token_to_usd_u(
@@ -1322,7 +1323,6 @@ pub fn increase_position(
         position.set_mm_usd(position.get_position_mm(market.deref(), state)?)?;
         emit!(UpdateUserPositionEvent { pre_position, position: position.clone() });
     }
-
     // update market io
     market.update_oi(
         true,
@@ -1353,15 +1353,15 @@ pub fn increase_position(
         let trade_token = trade_token_map.get_trade_token_by_mint_ref(&market.pool_mint_key)?;
         let stable_trade_token =
             trade_token_map.get_trade_token_by_mint_ref(&market.stable_pool_mint_key)?;
-        validate!(
-            base_token_pool_value
-                >= cal_utils::token_to_usd_u(
-                    increase_hold,
-                    trade_token.decimals,
-                    margin_token_price
-                )?,
-            BumpErrorCode::AmountNotEnough
+        let increase_hold_value = cal_utils::token_to_usd_u(
+            increase_hold,
+            stable_trade_token.decimals,
+            oracle_map
+                .get_price_data(&stable_trade_token.oracle_key)
+                .map_err(|_e| BumpErrorCode::OracleNotFound)?
+                .price,
         )?;
+        validate!(base_token_pool_value >= increase_hold_value, BumpErrorCode::AmountNotEnough)?;
         stable_pool.hold_pool_amount(
             increase_hold,
             oracle_map,

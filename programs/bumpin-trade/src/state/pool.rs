@@ -340,7 +340,7 @@ impl Pool {
         &self,
         trade_token_map: &TradeTokenMap,
         oracle_map: &mut OracleMap,
-        market_vec: &MarketMap,
+        market_map: &MarketMap,
     ) -> BumpResult<u128> {
         let trade_token = trade_token_map.get_trade_token_by_mint_ref(&self.mint_key)?;
         let trade_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
@@ -354,11 +354,12 @@ impl Pool {
             trade_token_price,
         )?;
         if !self.stable {
-            let markets = market_vec.get_all_market(self.market_number)?;
+            let markets = market_map.get_all_market(self.market_number)?;
             for market_loader in markets {
-                let market =
-                    market_loader.load().map_err(|_e| BumpErrorCode::CouldNotLoadMarketData)?;
-                validate!(self.key.eq(&market.pool_key), BumpErrorCode::MarketWrongMutability)?;
+                let market = market_loader.load().map_err(|_e| {
+                    BumpErrorCode::CouldNotLoadMarketData
+                })?;
+                validate!(self.key.eq(&market.pool_key), BumpErrorCode::CouldNotFindMarket)?;
                 let long_market_un_pnl = market.get_market_un_pnl(true, oracle_map)?;
                 pool_value = add_i128(pool_value, long_market_un_pnl)?;
 

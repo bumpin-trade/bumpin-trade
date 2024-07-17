@@ -20,25 +20,24 @@ pub struct BorrowingFee {
 impl BorrowingFee {
     pub fn update_pool_borrowing_fee(
         &mut self,
-        pool: &PoolBalance,
+        pool_balance: &PoolBalance,
         borrowing_interest_rate: u128,
     ) -> BumpResult<()> {
-        if pool.amount == 0 && pool.un_settle_amount == 0 {
+        if pool_balance.amount == 0 && pool_balance.un_settle_amount == 0 {
             self.cumulative_borrowing_fee_per_token = 0;
         } else {
             let time_diff = self.get_pool_borrowing_fee_durations()?;
-            let total_amount = pool.amount.safe_add(pool.un_settle_amount)?;
+            let total_amount = pool_balance.amount.safe_add(pool_balance.un_settle_amount)?;
             let hold_rate = cal_utils::div_to_precision_u(
-                pool.hold_amount,
+                pool_balance.hold_amount,
                 total_amount,
                 SMALL_RATE_PRECISION,
             )?;
             self.cumulative_borrowing_fee_per_token =
-                self.cumulative_borrowing_fee_per_token.safe_add(
-                    hold_rate
-                        .safe_mul_small_rate(borrowing_interest_rate)?
-                        .safe_mul(time_diff as u128)?,
-                )?;
+                self.cumulative_borrowing_fee_per_token.safe_add(cal_utils::mul_small_rate_u(
+                    hold_rate.safe_mul(time_diff as u128)?,
+                    borrowing_interest_rate,
+                )?)?;
         }
         self.updated_at = Clock::get().unwrap().unix_timestamp;
         Ok(())

@@ -118,7 +118,7 @@ impl Market {
                         .cast::<i128>()?
                         .safe_add(short.open_interest.cast::<i128>()?)?,
                 )?
-                .safe_mul(state.funding_fee_base_rate.cast()?)?;
+                .safe_mul_small_rate(state.funding_fee_base_rate.cast()?)?;
 
             let funding_fee = long
                 .open_interest

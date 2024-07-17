@@ -65,10 +65,14 @@ pub enum BumpErrorCode {
     CastingFailure,
     #[msg("CouldNotLoadMarketData")]
     CouldNotLoadMarketData,
+    #[msg("CouldNotFindMarket")]
+    CouldNotFindMarket,
     #[msg("InvalidMarketAccount")]
     InvalidMarketAccount,
     #[msg("MarketWrongMutability")]
     MarketWrongMutability,
+    #[msg("MarketNumberNotEqual2Pool")]
+    MarketNumberNotEqual2Pool,
     #[msg("Failed Unwrap")]
     FailedUnwrap,
     #[msg("User Not Enough Value")]

@@ -182,7 +182,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 ctx.accounts.state.bump_signer_nonce,
                 stake_params.request_token_amount,
             )?;
-            pool.add_amount_and_supply(stake_params.request_token_amount, supply_amount)?;
+            pool.add_amount_and_supply(base_mint_amount, supply_amount)?;
             pool.update_pool_borrowing_fee_rate()?;
             emit!(StakeOrUnStakeEvent {
                 user_key: user.key,
@@ -223,7 +223,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
                 &ctx.accounts.authority,
                 stake_params.request_token_amount,
             )?;
-            pool.add_amount_and_supply(stake_params.request_token_amount, supply_amount)?;
+            pool.add_amount_and_supply(base_mint_amount, supply_amount)?;
             pool.update_pool_borrowing_fee_rate()?;
             emit!(StakeOrUnStakeEvent {
                 user_key,

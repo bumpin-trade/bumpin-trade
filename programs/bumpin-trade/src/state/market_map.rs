@@ -21,7 +21,7 @@ impl<'a> MarketMap<'a> {
         for market_loader in self.0.values() {
             markets.push(market_loader);
         }
-        validate!(markets.len() as u16 == size, BumpErrorCode::MarketWrongMutability)?;
+        validate!(markets.len() as u16 == size, BumpErrorCode::MarketNumberNotEqual2Pool)?;
         Ok(markets)
     }
 
