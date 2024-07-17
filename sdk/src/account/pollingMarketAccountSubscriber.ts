@@ -70,10 +70,53 @@ export class PollingMarketAccountSubscriber
           buffer
         );
         this.market = { data: account, slot };
+        console.log("MarketAccount updated start =====================");
+        this.printMarket(this.market);
+        console.log("MarketAccount updated end   =====================");
+
       }
     );
 
     this.errorCallbackId = this.accountLoader.addErrorCallbacks((error) => {});
+  }
+
+  async printMarket(marketData:DataAndSlot<Market>):Promise<void>{
+    let market = marketData.data;
+    console.log(`Pool Key: ${market.poolKey.toString()}`);
+    console.log(`Pool Mint Key: ${market.poolMintKey.toString()}`);
+    console.log(`Index Mint Oracle: ${market.indexMintOracle.toString()}`);
+    console.log(`Stable Pool Key: ${market.stablePoolKey.toString()}`);
+    console.log(`Stable Pool Mint Key: ${market.stablePoolMintKey.toString()}`);
+    console.log(`Index: ${market.index}`);
+    console.log(`Symbol: ${market.symbol.join(', ')}`);
+
+    console.log('Long Open Interest:');
+    console.log(`  Open Interest: ${market.longOpenInterest.openInterest.toString()}`);
+    console.log(`  Entry Price: ${market.longOpenInterest.entryPrice.toString()}`);
+
+    console.log('Short Open Interest:');
+    console.log(`  Open Interest: ${market.shortOpenInterest.openInterest.toString()}`);
+    console.log(`  Entry Price: ${market.shortOpenInterest.entryPrice.toString()}`);
+
+    console.log('Funding Fee:');
+    console.log(`  Long Funding Fee Amount Per Size: ${market.fundingFee.longFundingFeeAmountPerSize.toString()}`);
+    console.log(`  Short Funding Fee Amount Per Size: ${market.fundingFee.shortFundingFeeAmountPerSize.toString()}`);
+    console.log(`  Total Long Funding Fee: ${market.fundingFee.totalLongFundingFee.toString()}`);
+    console.log(`  Total Short Funding Fee: ${market.fundingFee.totalShortFundingFee.toString()}`);
+    console.log(`  Long Funding Fee Rate: ${market.fundingFee.longFundingFeeRate.toString()}`);
+    console.log(`  Short Funding Fee Rate: ${market.fundingFee.shortFundingFeeRate.toString()}`);
+    console.log(`  Updated At: ${market.fundingFee.updatedAt.toString()}`);
+
+    console.log('Config:');
+    console.log(`  Tick Size: ${market.config.tickSize.toString()}`);
+    console.log(`  Open Fee Rate: ${market.config.openFeeRate.toString()}`);
+    console.log(`  Close Fee Rate: ${market.config.closeFeeRate.toString()}`);
+    console.log(`  Maximum Long Open Interest Cap: ${market.config.maximumLongOpenInterestCap.toString()}`);
+    console.log(`  Maximum Short Open Interest Cap: ${market.config.maximumShortOpenInterestCap.toString()}`);
+    console.log(`  Long Short Ratio Limit: ${market.config.longShortRatioLimit.toString()}`);
+    console.log(`  Long Short OI Bottom Limit: ${market.config.longShortOiBottomLimit.toString()}`);
+    console.log(`  Maximum Leverage: ${market.config.maximumLeverage}`);
+    console.log(`  Minimum Leverage: ${market.config.minimumLeverage}`);
   }
 
   async fetchIfUnloaded(): Promise<void> {

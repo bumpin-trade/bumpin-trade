@@ -61,7 +61,7 @@ pub fn handle_initialize_user(ctx: Context<InitializeUser>) -> Result<()> {
                 ctx.accounts.system_program.to_account_info().clone(),
             ],
         )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
         emit!(InitUserEvent {
             user_key: *ctx.accounts.user.to_account_info().key,
             authority: *ctx.accounts.authority.to_account_info().key

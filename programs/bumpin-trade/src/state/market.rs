@@ -101,7 +101,12 @@ impl Market {
     ) -> BumpResult<()> {
         let long = &self.long_open_interest;
         let short = &self.short_open_interest;
-
+        if (long.open_interest == 0u128 && short.open_interest == 0u128)
+            || long.open_interest == short.open_interest
+        {
+            self.funding_fee.update_last_update()?;
+            return Ok(());
+        }
         let fee_durations = self.funding_fee.get_market_funding_fee_durations()?;
         if fee_durations > 0 {
             let funding_rate_per_second = long

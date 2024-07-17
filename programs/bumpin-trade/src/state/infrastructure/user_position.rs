@@ -73,6 +73,21 @@ impl UserPosition {
         Ok(())
     }
 
+    pub fn set_open_fee(&mut self, open_fee: u128) -> BumpResult {
+        self.open_fee = open_fee;
+        Ok(())
+    }
+
+    pub fn add_open_fee(&mut self, open_fee: u128) -> BumpResult {
+        self.open_fee = self.open_fee.safe_add(open_fee)?;
+        Ok(())
+    }
+
+    pub fn add_open_fee_in_usd(&mut self, open_fee_in_usd: u128) -> BumpResult {
+        self.open_fee_in_usd = self.open_fee_in_usd.safe_add(open_fee_in_usd)?;
+        Ok(())
+    }
+
     pub fn set_initial_margin_usd(&mut self, initial_margin_usd: u128) -> BumpResult {
         self.initial_margin_usd = initial_margin_usd;
         Ok(())
@@ -80,6 +95,11 @@ impl UserPosition {
 
     pub fn set_leverage(&mut self, leverage: u32) -> BumpResult {
         self.leverage = leverage;
+        Ok(())
+    }
+
+    pub fn set_mm_usd(&mut self, mm_usd: u128) -> BumpResult {
+        self.mm_usd = mm_usd;
         Ok(())
     }
 
@@ -179,8 +199,8 @@ impl UserPosition {
         Ok(())
     }
 
-    pub fn set_close_fee_in_usd(&mut self, close_fee_in_usd: u128) -> BumpResult {
-        self.close_fee_in_usd = close_fee_in_usd;
+    pub fn add_close_fee_in_usd(&mut self, close_fee_in_usd: u128) -> BumpResult {
+        self.close_fee_in_usd = self.close_fee_in_usd.safe_add(close_fee_in_usd)?;
         Ok(())
     }
 
@@ -390,9 +410,9 @@ impl UserPosition {
             funding_fee_total_usd = funding_fee_total_usd.safe_add(funding_fee)?;
         }
 
-        let initial_margin_leverage = cal_utils::mul_small_rate_u(
+        let initial_margin_leverage = cal_utils::mul_rate_u(
             self.initial_margin,
-            (self.leverage as u128).safe_sub(RATE_PRECISION)?, //TODO: why sub?
+            (self.leverage as u128).safe_sub(1u128.safe_mul(RATE_PRECISION)?)?,
         )?;
         let borrowing_fee = cal_utils::mul_small_rate_u(
             pool.borrowing_fee

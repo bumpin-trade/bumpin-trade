@@ -121,6 +121,7 @@ export type Market = {
 };
 
 export type PoolBalance = {
+  settleFundingFee: BN;
   amount: BN;
   holdAmount: BN;
   unSettleAmount: BN;
@@ -165,7 +166,6 @@ export type Pool = {
   apr: BN;
   insuranceFundAmount: BN;
   totalSupply: BN;
-  settleFundingFee: BN;
   balance: PoolBalance;
   stableBalance: PoolBalance;
   borrowingFee: BorrowingFee;
@@ -389,11 +389,11 @@ export type PlaceOrderParams = {
   positionSide: PositionSideValue;
   orderType: OrderTypeValue;
   stopType: StopTypeValue;
-  size: BN;
-  orderMargin: BN;
+  size: number;
+  orderMargin: number;
   leverage: number;
-  triggerPrice: BN;
-  acceptablePrice: BN;
+  triggerPrice: number;
+  acceptablePrice: number;
 };
 
 export type InnerPlaceOrderParams = {

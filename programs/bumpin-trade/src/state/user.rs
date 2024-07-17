@@ -388,11 +388,17 @@ impl User {
     }
 
     pub fn delete_order(&mut self, order_id: u64) -> BumpResult {
-        let order_index = self.get_user_order_index(order_id)?;
-        let user_key = self.key;
-        let order = self.orders[order_index];
-        self.orders[order_index] = UserOrder::default();
-        emit!(AddOrDeleteUserOrderEvent { user_key, order, is_add: false });
+        match self.get_user_order_index(order_id) {
+            Ok(order_index) => {
+                let user_key = self.key;
+                let order = self.orders[order_index];
+                self.orders[order_index] = UserOrder::default();
+                emit!(AddOrDeleteUserOrderEvent { user_key, order, is_add: false });
+            },
+            Err(_e) => {
+                //order not exist, do nothing
+            },
+        }
         Ok(())
     }
 

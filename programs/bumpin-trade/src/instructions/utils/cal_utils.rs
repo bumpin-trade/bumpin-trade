@@ -119,7 +119,7 @@ pub fn compute_avg_entry_price(
     let origin_entry_price = amount
         .safe_mul(entry_price)?
         .safe_add(increase_amount.safe_mul(token_price)?)?
-        .safe_mul(amount.safe_add(increase_amount)?)?;
+        .safe_div(amount.safe_add(increase_amount)?)?;
     format_to_ticker_size(origin_entry_price, ticker_size, up)
 }
 

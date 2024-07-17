@@ -39,6 +39,7 @@ import { BumpinPoolUtils } from "../utils/pool";
 import { Account } from "@solana/spl-token";
 import BigNumber from "bignumber.js";
 import { BumpinMarketUtils } from "../utils/market";
+import { BumpinConstants } from "../consts";
 
 export class UserComponent extends Component {
   publicKey: PublicKey;
@@ -419,7 +420,6 @@ export class UserComponent extends Component {
     });
 
     let order: InnerPlaceOrderParams = {
-      ...param,
       symbol,
       placeTime: new BN(Date.now()),
       marketIndex: marketIndex,
@@ -428,6 +428,26 @@ export class UserComponent extends Component {
       tradeTokenIndex: tradeToken.index,
       stableTradeTokenIndex: stableTradeToken.index,
       orderId: new BN(0),
+      isPortfolioMargin: false,
+      isNativeToken: false,
+      orderSide: param.orderSide,
+      positionSide: param.positionSide,
+      orderType: param.orderType,
+      stopType: param.stopType,
+      size: BumpinUtils.number2Precision(param.size, tradeToken.decimals),
+      orderMargin: BumpinUtils.number2Precision(
+        param.orderMargin,
+        tradeToken.decimals
+      ),
+      leverage: param.leverage * BumpinConstants.RATE_MULTIPLIER,
+      triggerPrice: BumpinUtils.number2Precision(
+        param.triggerPrice,
+        BumpinConstants.PRICE_EXPONENT_NUMBER
+      ),
+      acceptablePrice: BumpinUtils.number2Precision(
+        param.acceptablePrice,
+        BumpinConstants.PRICE_EXPONENT_NUMBER
+      ),
     };
 
     let tradeTokenPrice = await BumpinTokenUtils.getTradeTokenPrice(

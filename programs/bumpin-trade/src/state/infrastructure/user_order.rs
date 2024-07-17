@@ -67,4 +67,29 @@ impl UserOrder {
     pub fn set_leverage(&mut self, leverage: u32) {
         self.leverage = leverage;
     }
+
+    pub fn print(&self) {
+        let symbol_str = std::str::from_utf8(&self.symbol).unwrap_or("Invalid UTF-8");
+        msg!(
+            "Order Margin: {}, Order Size: {}, Trigger Price: {}, Acceptable Price: {}, Created At: {}, Order ID: {}, Margin Mint Key: {}, Authority: {}, Symbol: {}, Leverage: {}, Order Side: {:?}, Position Side: {:?}, Order Type: {:?}, Stop Type: {:?}, Status: {:?}, Is Portfolio Margin: {}, Padding: {:?}, Reserve Padding: {:?}",
+            self.order_margin,
+            self.order_size,
+            self.trigger_price,
+            self.acceptable_price,
+            self.created_at,
+            self.order_id,
+            self.margin_mint_key,
+            self.authority,
+            symbol_str,
+            self.leverage,
+            self.order_side,
+            self.position_side,
+            self.order_type,
+            self.stop_type,
+            self.status,
+            self.is_portfolio_margin,
+            self.padding,
+            self.reserve_padding,
+        );
+    }
 }

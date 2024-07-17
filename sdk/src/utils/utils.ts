@@ -45,6 +45,14 @@ export class BumpinUtils {
     );
   }
 
+  public static number2Precision(amount: number, decimals: number): BN {
+    return new BN(
+      BigNumber(amount)
+        .multipliedBy(new BigNumber(10).pow(Math.abs(decimals)))
+        .toString()
+    );
+  }
+
   public static decodeString(bytes: number[]): string {
     const buffer = Buffer.from(bytes);
     return buffer.toString("utf8").trim();

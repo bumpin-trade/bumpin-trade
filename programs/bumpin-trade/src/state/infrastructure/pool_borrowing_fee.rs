@@ -4,6 +4,7 @@ use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
 use crate::errors::BumpResult;
 use crate::instructions::cal_utils;
+use crate::math::constants::SMALL_RATE_PRECISION;
 use crate::math::safe_math::SafeMath;
 use crate::state::pool::PoolBalance;
 
@@ -27,10 +28,17 @@ impl BorrowingFee {
         } else {
             let time_diff = self.get_pool_borrowing_fee_durations()?;
             let total_amount = pool.amount.safe_add(pool.un_settle_amount)?;
-            let utilization = pool.hold_amount.safe_div_small_rate(total_amount)?;
-            self.cumulative_borrowing_fee_per_token = utilization
-                .safe_mul_small_rate(borrowing_interest_rate)?
-                .safe_mul(time_diff as u128)?;
+            let hold_rate = cal_utils::div_to_precision_u(
+                pool.hold_amount,
+                total_amount,
+                SMALL_RATE_PRECISION,
+            )?;
+            self.cumulative_borrowing_fee_per_token =
+                self.cumulative_borrowing_fee_per_token.safe_add(
+                    hold_rate
+                        .safe_mul_small_rate(borrowing_interest_rate)?
+                        .safe_mul(time_diff as u128)?,
+                )?;
         }
         self.updated_at = Clock::get().unwrap().unix_timestamp;
         Ok(())

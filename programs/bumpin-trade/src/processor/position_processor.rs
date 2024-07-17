@@ -8,8 +8,9 @@ use anchor_spl::token::{Token, TokenAccount};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{cal_utils, UpdatePositionLeverageParams, UpdatePositionMarginParams};
 use crate::math::casting::Cast;
+use crate::math::constants::{RATE_PRECISION, SMALL_RATE_PRECISION};
 use crate::math::safe_math::SafeMath;
-use crate::processor::{fee_processor, position_processor};
+use crate::processor::fee_processor;
 use crate::state::bump_events::{
     AddOrDecreaseMarginEvent, AddOrDeleteUserPositionEvent, UpdateUserPositionEvent,
 };
@@ -178,7 +179,7 @@ pub fn handle_execute_order<'info>(
                 drop(trade_token);
                 drop(stable_trade_token);
                 //increase position
-                position_processor::increase_position(
+                increase_position(
                     &user_order.symbol,
                     user,
                     pool_map,
@@ -192,6 +193,7 @@ pub fn handle_execute_order<'info>(
                     oracle_map,
                     trade_token_map,
                     market_map,
+                    state_account,
                 )?;
                 Ok(())
             }
@@ -209,7 +211,7 @@ pub fn handle_execute_order<'info>(
                     return Err(BumpErrorCode::InvalidParam.into());
                 }
 
-                position_processor::decrease_position(
+                decrease_position(
                     DecreasePositionParams {
                         order_id: user_order.order_id,
                         is_liquidation: false,
@@ -383,8 +385,12 @@ pub fn update_borrowing_fee(
     token_price: u128,
     token: &TradeToken,
 ) -> BumpResult<()> {
-    let realized_borrowing_fee =
-        position.initial_margin.safe_mul(position.leverage as u128)?.safe_mul(
+    let realized_borrowing_fee = position
+        .initial_margin
+        .safe_mul_rate(
+            (position.leverage as u128).safe_sub(1u128.safe_mul(SMALL_RATE_PRECISION)?)?,
+        )?
+        .safe_mul_rate(
             pool.borrowing_fee
                 .cumulative_borrowing_fee_per_token
                 .safe_sub(position.open_borrowing_fee_per_token)?,
@@ -1160,6 +1166,7 @@ pub fn increase_position(
     oracle_map: &mut OracleMap,
     trade_token_map: &TradeTokenMap,
     market_map: &MarketMap,
+    state: &Account<State>,
 ) -> BumpResult<()> {
     let mut market = market_map.get_mut_ref(symbol)?;
     let mut base_token_pool = pool_map.get_mut_ref(&market.pool_key)?;
@@ -1180,7 +1187,7 @@ pub fn increase_position(
     let position = &mut user.positions[position_index];
 
     let is_long = order.order_side.eq(&OrderSide::LONG);
-    if position.leverage != order.leverage {
+    if position.position_size != 0u128 && position.leverage != order.leverage {
         return Err(BumpErrorCode::LeverageIsNotAllowed.into());
     }
 
@@ -1192,13 +1199,13 @@ pub fn increase_position(
     };
     let decimal = trade_token.decimals;
     let increase_size = cal_utils::token_to_usd_u(
-        cal_utils::mul_u128(increase_margin, order.leverage as u128)?,
+        cal_utils::mul_rate_u(increase_margin, order.leverage as u128)?,
         decimal,
         margin_token_price,
     )?;
     let increase_hold = cal_utils::mul_rate_u(
         increase_margin,
-        cal_utils::sub_u128(order.leverage as u128, 1u128)?,
+        cal_utils::sub_u128(order.leverage as u128, 1u128.safe_mul(RATE_PRECISION)?)?,
     )?;
 
     if position.position_size == 0u128 {
@@ -1222,15 +1229,23 @@ pub fn increase_position(
             decimal,
             margin_token_price,
         )?)?;
-        position.set_close_fee_in_usd(cal_utils::mul_rate_u(
+        position.add_close_fee_in_usd(cal_utils::mul_rate_u(
             increase_size,
             market.config.close_fee_rate,
         )?)?;
-        position.set_position_size(increase_size)?;
+        position.add_open_fee(fee)?;
+        position.add_open_fee_in_usd(cal_utils::token_to_usd_u(
+            fee,
+            decimal,
+            margin_token_price,
+        )?)?;
+        position.add_position_size(increase_size)?;
         position.set_leverage(order.leverage)?;
-        position.set_realized_pnl(
-            -cal_utils::token_to_usd_u(fee, decimal, margin_token_price)?.cast::<i128>()?,
-        )?;
+        position.set_realized_pnl(-cal_utils::token_to_usd_i(
+            fee.cast::<i128>()?,
+            decimal,
+            margin_token_price,
+        )?)?;
         position.set_open_borrowing_fee_per_token(if order.order_side.eq(&OrderSide::LONG) {
             base_token_pool.borrowing_fee.cumulative_borrowing_fee_per_token
         } else {
@@ -1243,6 +1258,7 @@ pub fn increase_position(
         })?;
         position.set_last_update(cal_utils::current_time())?;
         position.add_hold_pool_amount(increase_hold)?;
+        position.set_mm_usd(position.get_position_mm(market.deref(), state)?)?;
         emit!(AddOrDeleteUserPositionEvent { position: position.clone(), is_add: true });
     } else {
         let pre_position = position.clone();
@@ -1288,11 +1304,22 @@ pub fn increase_position(
             margin_token_price,
         )?)?;
         position.add_position_size(increase_size)?;
+        position.add_close_fee_in_usd(cal_utils::mul_rate_u(
+            increase_size,
+            market.config.close_fee_rate,
+        )?)?;
+        position.add_open_fee(fee)?;
+        position.add_open_fee_in_usd(cal_utils::token_to_usd_u(
+            fee,
+            decimal,
+            margin_token_price,
+        )?)?;
         position.add_realized_pnl(
             -cal_utils::token_to_usd_u(fee, decimal, margin_token_price)?.cast::<i128>()?,
         )?;
         position.set_last_update(cal_utils::current_time())?;
         position.add_hold_pool_amount(increase_hold)?;
+        position.set_mm_usd(position.get_position_mm(market.deref(), state)?)?;
         emit!(UpdateUserPositionEvent { pre_position, position: position.clone() });
     }
 
