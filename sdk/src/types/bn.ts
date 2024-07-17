@@ -1,8 +1,11 @@
 import { BN } from "@coral-xyz/anchor";
 import { FIVE, TEN } from "../constants/numericConstants";
+import BigNumber from "bignumber.js";
 
 declare module "@coral-xyz/anchor" {
   interface BN {
+    toBigNumber(): BigNumber;
+
     toUsd(tokenPrice: BN, decimals: number): BN;
 
     toToken(tokenPrice: BN, decimals: number): BN;
@@ -26,6 +29,10 @@ declare module "@coral-xyz/anchor" {
     downPrice(): BN;
   }
 }
+
+BN.prototype.toBigNumber = function (): BigNumber {
+  return new BigNumber(this.toString());
+};
 
 BN.prototype.toUsd = function (tokenPrice: BN, decimals: number): BN {
   return this.mul(tokenPrice)
