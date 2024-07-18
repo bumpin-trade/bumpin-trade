@@ -425,7 +425,6 @@ export class BumpinClient {
     public async placePerpOrder(
         marketIndex: number,
         param: PlaceOrderParams,
-        userTokenAccount: anchor.web3.PublicKey,
         sync: boolean = false
     ) {
         this.checkInitialization(true);
@@ -442,7 +441,6 @@ export class BumpinClient {
             await this.poolComponent!.getPools(sync),
             await this.marketComponent!.getMarkets(),
             await this.tradeTokenComponent!.getTradeTokens(sync),
-            userTokenAccount
         );
     }
 
@@ -564,14 +562,26 @@ export class BumpinClient {
         return this.marketComponent!.getMarketWithSlot(marketKey, sync);
     }
 
-    public async getFundingRate(marketKey: PublicKey, sync: boolean = false): Promise<number> {
+    public async getFundingFeeRate(marketKey: PublicKey, sync: boolean = false): Promise<number> {
         this.checkInitialization();
-        let market = await this.getMarket(marketKey, sync);
-        let state = await this.getState(sync);
-        let long = market.longOpenInterest.openInterest.toBigNumber();
-        let short = market.shortOpenInterest.openInterest.toBigNumber();
-        let baseRate = state.fundingFeeBaseRate.toBigNumber();
+        const market = await this.getMarket(marketKey, sync);
+        const state = await this.getState(sync);
+        const long = market.longOpenInterest.openInterest.toBigNumber();
+        const short = market.shortOpenInterest.openInterest.toBigNumber();
+        const baseRate = state.fundingFeeBaseRate.toBigNumber();
         return long.minus(short).div(long.plus(short)).multipliedBy(baseRate).toNumber();
+    }
+
+    public async getBorrowingFeeRate(marketKey: PublicKey, sync: boolean = false): Promise<number> {
+        this.checkInitialization();
+        const timestamp = BigNumber(Math.floor(Date.now() / 1000));
+        const market = await this.getMarket(marketKey, sync);
+        const pool = await this.getPool(market.poolKey, sync);
+        const timePassed = timestamp.minus(pool.borrowingFee.updatedAt.toBigNumber());
+
+        return pool.balance.holdAmount.toBigNumber().div((pool.balance.amount.toBigNumber().plus(pool.balance.unSettleAmount.toBigNumber())))
+            .multipliedBy(pool.config.borrowingInterestRate.toBigNumber()).multipliedBy(timePassed)
+            .div(timePassed).toNumber();
     }
 
     public async getPoolNetPrice(poolKey: PublicKey, sync: boolean = false) {
@@ -706,6 +716,7 @@ export class BumpinClient {
             )
         );
     }
+
 
     public async claimUserRewards(): Promise<UserClaimResult> {
         this.checkInitialization(true);
