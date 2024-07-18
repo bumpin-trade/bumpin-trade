@@ -565,18 +565,6 @@ export class BumpinClient {
     }
 
     public async getFundingRate(marketKey: PublicKey, sync: boolean = false): Promise<number> {
-        /**
-         *  let funding_rate_per_second = long
-         *                 .open_interest
-         *                 .cast::<i128>()?
-         *                 .safe_sub(short.open_interest.cast()?)?
-         *                 .safe_div(
-         *                     long.open_interest
-         *                         .cast::<i128>()?
-         *                         .safe_add(short.open_interest.cast::<i128>()?)?,
-         *                 )?
-         *                 .safe_mul_small_rate(state.funding_fee_base_rate.cast()?)?;
-         */
         this.checkInitialization();
         let market = await this.getMarket(marketKey, sync);
         let state = await this.getState(sync);
