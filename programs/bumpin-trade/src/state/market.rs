@@ -66,8 +66,11 @@ impl Market {
     }
 
     fn add_oi(&mut self, params: UpdateOIParams) -> BumpResult<()> {
-        let mut market_position =
-            if params.is_long { self.long_open_interest } else { self.short_open_interest };
+        let market_position = if params.is_long {
+            &mut self.long_open_interest
+        } else {
+            &mut self.short_open_interest
+        };
         if market_position.open_interest == 0u128 {
             market_position.add_open_interest(params.size, params.entry_price)?;
         } else {
@@ -86,8 +89,11 @@ impl Market {
     }
 
     fn sub_oi(&mut self, params: UpdateOIParams) -> BumpResult<()> {
-        let mut market_position =
-            if params.is_long { self.long_open_interest } else { self.short_open_interest };
+        let market_position = if params.is_long {
+            &mut self.long_open_interest
+        } else {
+            &mut self.short_open_interest
+        };
 
         market_position.sub_open_interest(params.size, params.entry_price)?;
         Ok(())
@@ -99,63 +105,95 @@ impl Market {
         price: u128,
         decimals: u16,
     ) -> BumpResult<()> {
-        let long = &self.long_open_interest;
-        let short = &self.short_open_interest;
-        if (long.open_interest == 0u128 && short.open_interest == 0u128)
-            || long.open_interest == short.open_interest
-        {
+        let (
+            update_time_only,
+            long_funding_fee_per_qty_delta,
+            short_funding_fee_per_qty_delta,
+            funding_fee_duration_in_seconds,
+        ) = {
+            let funding_fee_duration_in_seconds =
+                self.funding_fee.get_market_funding_fee_durations()?;
+            let mut long_funding_fee_per_qty_delta = 0i128;
+            let mut short_funding_fee_per_qty_delta = 0i128;
+            let long = &self.long_open_interest;
+            let short = &self.short_open_interest;
+            if (long.open_interest == 0u128 && short.open_interest == 0u128)
+                || long.open_interest == short.open_interest
+                || funding_fee_duration_in_seconds == 0
+            {
+                (
+                    true,
+                    long_funding_fee_per_qty_delta,
+                    short_funding_fee_per_qty_delta,
+                    funding_fee_duration_in_seconds,
+                )
+            } else {
+                let long_pay_short = long.open_interest > short.open_interest;
+                let funding_rate_per_second = {
+                    let long_position_interest = long.open_interest;
+                    let short_position_interest = short.open_interest;
+                    let diff = cal_utils::diff_u(long_position_interest, short_position_interest)?;
+                    let open_interest = long_position_interest.safe_add(short_position_interest)?;
+                    if diff == 0u128 || open_interest == 0u128 {
+                        0u128;
+                    }
+                    cal_utils::mul_div_u(diff, state.funding_fee_base_rate, open_interest)?
+                };
+                let total_funding_fee = long
+                    .open_interest
+                    .max(short.open_interest)
+                    .safe_mul(funding_fee_duration_in_seconds.abs().cast::<u128>()?)?
+                    .safe_mul(funding_rate_per_second)?;
+                if long.open_interest > 0 {
+                    let current_long_funding_fee_per_qty = if long_pay_short {
+                        total_funding_fee.safe_div(long.open_interest)?
+                    } else {
+                        state
+                            .maximum_funding_base_rate
+                            .safe_mul(funding_fee_duration_in_seconds.abs().cast::<u128>()?)?
+                            .min(total_funding_fee.safe_div(long.open_interest)?)
+                    };
+                    long_funding_fee_per_qty_delta = cal_utils::usd_to_token_u(
+                        current_long_funding_fee_per_qty,
+                        decimals,
+                        price,
+                    )?
+                    .cast::<i128>()?;
+                    long_funding_fee_per_qty_delta = if long_pay_short {
+                        long_funding_fee_per_qty_delta
+                    } else {
+                        -long_funding_fee_per_qty_delta
+                    };
+                }
+                if short.open_interest > 0 {
+                    short_funding_fee_per_qty_delta = if long_pay_short {
+                        -state
+                            .maximum_funding_base_rate
+                            .safe_mul(funding_fee_duration_in_seconds.abs().cast::<u128>()?)?
+                            .min(total_funding_fee.safe_div(short.open_interest)?)
+                            .cast::<i128>()?
+                    } else {
+                        total_funding_fee.safe_div(short.open_interest)?.cast::<i128>()?
+                    }
+                }
+                (
+                    false,
+                    long_funding_fee_per_qty_delta,
+                    short_funding_fee_per_qty_delta,
+                    funding_fee_duration_in_seconds,
+                )
+            }
+        };
+        if update_time_only {
             self.funding_fee.update_last_update()?;
             return Ok(());
         }
-        let fee_durations = self.funding_fee.get_market_funding_fee_durations()?;
-        if fee_durations > 0 {
-            let funding_rate_per_second = long
-                .open_interest
-                .cast::<i128>()?
-                .safe_sub(short.open_interest.cast()?)?
-                .safe_div(
-                    long.open_interest
-                        .cast::<i128>()?
-                        .safe_add(short.open_interest.cast::<i128>()?)?,
-                )?
-                .safe_mul_small_rate(state.funding_fee_base_rate.cast()?)?;
 
-            let funding_fee = long
-                .open_interest
-                .cast::<i128>()?
-                .max(short.open_interest.cast::<i128>()?)
-                .safe_mul(funding_rate_per_second)?
-                .safe_mul(fee_durations.cast()?)?;
-
-            let mut long_funding_fee_amount_per_size_delta = cal_utils::usd_to_token_i(
-                funding_fee.safe_div(long.open_interest.cast::<i128>()?)?,
-                decimals,
-                price.cast()?,
-            )?;
-
-            long_funding_fee_amount_per_size_delta = long_funding_fee_amount_per_size_delta.min(
-                state
-                    .maximum_funding_base_rate
-                    .cast::<i128>()?
-                    .safe_mul(funding_rate_per_second.cast()?)?,
-            );
-
-            let mut short_funding_fee_amount_per_size_delta =
-                funding_fee.safe_div(short.open_interest.cast::<i128>()?)?.safe_mul(-1i128)?;
-
-            short_funding_fee_amount_per_size_delta = short_funding_fee_amount_per_size_delta.min(
-                state
-                    .maximum_funding_base_rate
-                    .cast::<i128>()?
-                    .safe_mul(funding_rate_per_second)?,
-            );
-
-            self.funding_fee.update_market_funding_fee_rate(
-                short_funding_fee_amount_per_size_delta,
-                long_funding_fee_amount_per_size_delta,
-                fee_durations,
-            )?;
-        }
+        self.funding_fee.update_market_funding_fee_rate(
+            short_funding_fee_per_qty_delta,
+            long_funding_fee_per_qty_delta,
+            funding_fee_duration_in_seconds,
+        )?;
         self.funding_fee.update_last_update()
     }
 
@@ -232,7 +270,7 @@ pub struct MarketConfig {
     pub padding: [u8; 8],
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default, Copy)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Default, Copy)]
 pub struct UpdateOIParams {
     pub margin_token: Pubkey,
     pub size: u128,

@@ -2,7 +2,7 @@ import { AccountMeta, PublicKey } from "@solana/web3.js";
 import {
   InnerPlaceOrderParams,
   Market,
-  OrderSide,
+  OrderSide, OrderSideValue,
   OrderType,
   PlaceOrderParams,
   Pool,
@@ -437,10 +437,10 @@ export class UserComponent extends Component {
       positionSide: param.positionSide,
       orderType: param.orderType,
       stopType: param.stopType,
-      size: BumpinUtils.number2Precision(param.size, tradeToken.decimals),
+      size: BumpinUtils.number2Precision(param.size, isEqual(param.orderSide, OrderSide.LONG)?tradeToken.decimals:stableTradeToken.decimals),
       orderMargin: BumpinUtils.number2Precision(
         param.orderMargin,
-        tradeToken.decimals
+        isEqual(param.orderSide, OrderSide.LONG)?tradeToken.decimals:stableTradeToken.decimals
       ),
       leverage: param.leverage * BumpinConstants.RATE_MULTIPLIER,
       triggerPrice: BumpinUtils.number2Precision(

@@ -25,6 +25,8 @@ pub enum BumpErrorCode {
     LeverageIsNotAllowed,
     #[msg("PriceIsNotAllowed")]
     PriceIsNotAllowed,
+    #[msg("OnlyOneDirectionPositionIsAllowed")]
+    OnlyOneDirectionPositionIsAllowed,
     #[msg("BalanceNotEnough")]
     BalanceNotEnough,
     #[msg("PythOffline")]

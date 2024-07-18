@@ -1191,14 +1191,13 @@ pub fn increase_position(
     if position.position_size != 0u128 && position.leverage != order.leverage {
         return Err(BumpErrorCode::LeverageIsNotAllowed.into());
     }
-
     let increase_margin = cal_utils::sub_u128(order_margin, fee)?;
     let increase_margin_from_balance = if order_margin_from_balance > fee {
         cal_utils::sub_u128(order_margin_from_balance, fee)?
     } else {
         0u128
     };
-    let decimal = trade_token.decimals;
+    let decimal = if is_long { trade_token.decimals } else { stable_trade_token.decimals };
     let increase_size = cal_utils::token_to_usd_u(
         cal_utils::mul_rate_u(increase_margin, order.leverage as u128)?,
         decimal,
@@ -1262,26 +1261,19 @@ pub fn increase_position(
         position.set_mm_usd(position.get_position_mm(market.deref(), state)?)?;
         emit!(AddOrDeleteUserPositionEvent { position: position.clone(), is_add: true });
     } else {
-        let pre_position = position.clone();
+        validate!(is_long.eq(&position.is_long), BumpErrorCode::OnlyOneDirectionPositionIsAllowed)?;
         //increase position
+        let pre_position = position.clone();
         update_borrowing_fee(
             position,
-            if order.order_side.eq(&OrderSide::LONG) {
-                base_token_pool.deref_mut()
-            } else {
-                stable_pool.deref_mut()
-            },
+            if is_long { base_token_pool.deref_mut() } else { stable_pool.deref_mut() },
             margin_token_price,
             &trade_token,
         )?;
         update_funding_fee(
             position,
             market.deref_mut(),
-            if order.order_side.eq(&OrderSide::LONG) {
-                base_token_pool.deref_mut()
-            } else {
-                stable_pool.deref_mut()
-            },
+            if is_long { base_token_pool.deref_mut() } else { stable_pool.deref_mut() },
             margin_token_price,
             &trade_token,
         )?;
@@ -1335,7 +1327,7 @@ pub fn increase_position(
     )?;
 
     //lock pool amount
-    if order.order_side.eq(&OrderSide::LONG) {
+    if is_long {
         base_token_pool.hold_pool_amount(
             increase_hold,
             oracle_map,
@@ -1350,7 +1342,6 @@ pub fn increase_position(
             base_token_pool.get_pool_usd_value(trade_token_map, oracle_map, market_map)?;
 
         let market = market_map.get_mut_ref(symbol)?;
-        let trade_token = trade_token_map.get_trade_token_by_mint_ref(&market.pool_mint_key)?;
         let stable_trade_token =
             trade_token_map.get_trade_token_by_mint_ref(&market.stable_pool_mint_key)?;
         let increase_hold_value = cal_utils::token_to_usd_u(
@@ -1365,7 +1356,7 @@ pub fn increase_position(
         stable_pool.hold_pool_amount(
             increase_hold,
             oracle_map,
-            trade_token.deref(),
+            stable_trade_token.deref(),
             stable_trade_token.deref(),
         )?
     }

@@ -45,7 +45,7 @@ do
   spl-token mint $token $mint_amount $account4 > /dev/null
   spl-token mint $token $mint_amount $account5 > /dev/null
 
-  results+="Token Mint: $token\nToken Account PublicKey: $account\nAmount: $mint_amount\nDecimals: $decimals_value\nReward Token Account: $account_reward\n================================================\n"
+  results+="Token Mint: $token  Amount: $mint_amount  Decimals: $decimals_value  Reward Token Account: $account_reward\n"
 done
 
 echo  "$results"

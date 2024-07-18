@@ -73,6 +73,17 @@ pub fn div_u128(x: u128, y: u128) -> BumpResult<u128> {
     x.safe_div(y)
 }
 
+pub fn diff_u(x: u128, y: u128) -> BumpResult<u128> {
+    if x == y {
+        return Ok(0u128);
+    }
+    if x > y {
+        Ok(x.safe_sub(y)?)
+    } else {
+        Ok(y.safe_sub(x)?)
+    }
+}
+
 pub fn usd_to_token_u(usd_value: u128, decimals: u16, token_price: u128) -> BumpResult<u128> {
     mul_div_u(
         usd_value,
