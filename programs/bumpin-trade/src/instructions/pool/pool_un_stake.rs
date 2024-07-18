@@ -156,7 +156,6 @@ pub fn handle_wallet_un_stake<'a, 'b, 'c: 'info, 'info>(
     handle_pool_un_stake0(Either::Right(ctx), param)
 }
 
-//TODO: Refactor this function to use the same logic as the stake function
 fn handle_pool_un_stake0<'a, 'b, 'c: 'info, 'info>(
     ctx: Either<
         Context<'a, 'b, 'c, 'info, PortfolioUnStake>,

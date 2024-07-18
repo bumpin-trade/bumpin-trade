@@ -1,15 +1,16 @@
-use crate::errors::BumpErrorCode;
-use crate::errors::BumpErrorCode::CantPayUserInitFee;
-use crate::state::bump_events::InitUserEvent;
-use crate::state::state::State;
-use crate::state::traits::Size;
-use crate::state::user::User;
 use anchor_lang::error;
 use anchor_lang::prelude::Pubkey;
 use anchor_lang::prelude::*;
 use anchor_lang::require_keys_neq;
 use anchor_lang::solana_program::program::invoke;
 use anchor_lang::solana_program::system_instruction::transfer;
+
+use crate::errors::BumpErrorCode;
+use crate::errors::BumpErrorCode::CantPayUserInitFee;
+use crate::state::bump_events::InitUserEvent;
+use crate::state::state::State;
+use crate::state::traits::Size;
+use crate::state::user::User;
 
 #[derive(Accounts)]
 pub struct InitializeUser<'info> {
@@ -44,12 +45,12 @@ pub fn handle_initialize_user(ctx: Context<InitializeUser>) -> Result<()> {
     user.key = *ctx.accounts.user.to_account_info().key;
     user.authority = *ctx.accounts.authority.to_account_info().key;
 
+    //drop user for transfer use.
     drop(user);
     let init_fee = ctx.accounts.state.init_fee;
     if init_fee > 0 {
         let payer_lamports = ctx.accounts.payer.to_account_info().try_lamports()?;
         if payer_lamports < init_fee {
-            msg!("payer lamports {} init fee {}", payer_lamports, init_fee);
             return Err(CantPayUserInitFee.into());
         }
 

@@ -40,8 +40,9 @@ pub struct User {
     pub positions: [UserPosition; 10],
     pub orders: [UserOrder; 10],
     pub authority: Pubkey,
+    pub created_at: i64,
     pub user_status: UserStatus,
-    pub padding: [u8; 15],
+    pub padding: [u8; 7],
     pub reserve_padding: [u8; 288],
 }
 
@@ -57,8 +58,9 @@ impl Default for User {
             orders: [UserOrder::default(); 10],
             key: Pubkey::default(),
             authority: Pubkey::default(),
+            created_at: cal_utils::current_time(),
             user_status: UserStatus::NORMAL,
-            padding: [0u8; 15],
+            padding: [0u8; 7],
             reserve_padding: [0u8; 288],
         }
     }

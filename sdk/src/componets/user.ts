@@ -334,7 +334,7 @@ export class UserComponent extends Component {
 
     for (let market of markets) {
       //append all markets which base token is pool.mint
-      if (market.poolKey.equals(pool.key)){
+      if (market.poolKey.equals(pool.key)) {
         remainingAccounts.push({
           pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
           isWritable: true,

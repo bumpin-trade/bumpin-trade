@@ -564,6 +564,28 @@ export class BumpinClient {
         return this.marketComponent!.getMarketWithSlot(marketKey, sync);
     }
 
+    public async getFundingRate(marketKey: PublicKey, sync: boolean = false): Promise<number> {
+        /**
+         *  let funding_rate_per_second = long
+         *                 .open_interest
+         *                 .cast::<i128>()?
+         *                 .safe_sub(short.open_interest.cast()?)?
+         *                 .safe_div(
+         *                     long.open_interest
+         *                         .cast::<i128>()?
+         *                         .safe_add(short.open_interest.cast::<i128>()?)?,
+         *                 )?
+         *                 .safe_mul_small_rate(state.funding_fee_base_rate.cast()?)?;
+         */
+        this.checkInitialization();
+        let market = await this.getMarket(marketKey, sync);
+        let state = await this.getState(sync);
+        let long = market.longOpenInterest.openInterest.toBigNumber();
+        let short = market.shortOpenInterest.openInterest.toBigNumber();
+        let baseRate = state.fundingFeeBaseRate.toBigNumber();
+        return long.minus(short).div(long.plus(short)).multipliedBy(baseRate).toNumber();
+    }
+
     public async getPoolNetPrice(poolKey: PublicKey, sync: boolean = false) {
         this.checkInitialization();
         const pool = await this.getPool(poolKey, sync);
@@ -578,7 +600,7 @@ export class BumpinClient {
         }
     }
 
-    public async getPoolValueUsd(poolKey: PublicKey, sync: boolean = false) {
+    public async getPoolValueUsd(poolKey: PublicKey, sync: boolean = false): Promise<BigNumber> {
         this.checkInitialization();
         const pool = await this.getPool(poolKey, sync);
         const tradeToken = await this.getTradeTokenByMintKey(pool.mintKey, sync);
@@ -644,7 +666,7 @@ export class BumpinClient {
         return rawValue;
     }
 
-    public async getMarketUnPnlUsd(market: Market) {
+    public async getMarketUnPnlUsd(market: Market): Promise<MarketUnPnlUsd> {
         this.checkInitialization();
         let longUnPnl = ZERO;
         let shortUnPnl = ZERO;

@@ -69,10 +69,10 @@ pub fn rebalance_pool_unsettle<'a>(
 }
 
 pub fn rebalance_stable_pool<'a>(
-    state: &Account<'a, State>,
+    _state: &Account<'a, State>,
     pool_account_loader: &AccountLoader<'a, Pool>,
-    pool_vault: &Account<'a, TokenAccount>,
-    stable_pool_vault: &Account<'a, TokenAccount>,
+    _pool_vault: &Account<'a, TokenAccount>,
+    _stable_pool_vault: &Account<'a, TokenAccount>,
     _bump_signer: &AccountInfo<'a>,
     _token_program: &Program<'a, Token>,
 ) -> BumpResult {
