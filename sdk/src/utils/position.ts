@@ -4,7 +4,7 @@ import {
   TradeToken,
   UserAccount,
   UserPosition,
-} from "../types";
+} from "../typedef";
 import { OracleClient } from "../oracles/types";
 import { BN } from "@coral-xyz/anchor";
 import { BumpinTokenUtils } from "./token";

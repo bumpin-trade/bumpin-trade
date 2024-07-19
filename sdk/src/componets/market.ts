@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { Market } from "../types";
+import { Market } from "../typedef";
 import { BulkAccountLoader } from "../account/bulkAccountLoader";
 import { Program } from "@coral-xyz/anchor";
 import { BumpinUtils } from "../utils/utils";

@@ -1,6 +1,6 @@
 import { BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { OracleSource } from "../types";
+import { OracleSource } from "../typedef";
 import { PriceData } from "@pythnetwork/client";
 
 export type OraclePriceData = {

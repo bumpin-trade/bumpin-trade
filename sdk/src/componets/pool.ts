@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { Pool } from "../types";
+import { Pool } from "../typedef";
 import { PollingPoolAccountSubscriber } from "../account/pollingPoolAccountSubscriber";
 import { BulkAccountLoader } from "../account/bulkAccountLoader";
 import { Program } from "@coral-xyz/anchor";

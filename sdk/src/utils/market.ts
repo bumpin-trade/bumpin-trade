@@ -1,4 +1,4 @@
-import { Market } from "../types";
+import { Market } from "../typedef";
 import { BumpinAccountNotFound } from "../errors";
 import { PublicKey } from "@solana/web3.js";
 

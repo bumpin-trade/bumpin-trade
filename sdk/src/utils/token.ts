@@ -6,7 +6,7 @@ import {
   UserAccount,
   UserToken,
   UserTokenStatus,
-} from "../types";
+} from "../typedef";
 import { BumpinAccountNotFound, BumpinTokenNotFound } from "../errors";
 import { Account, getAccount, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { OracleClient } from "../oracles/types";

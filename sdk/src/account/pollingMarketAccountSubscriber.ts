@@ -1,7 +1,7 @@
 import { AccountSubscriber, DataAndSlot } from "./types";
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { Market } from "../types";
+import { Market } from "../typedef";
 import { BulkAccountLoader } from "./bulkAccountLoader";
 import { BumpinTrade } from "../types/bumpin_trade";
 

@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { Pool } from "../types";
+import { Pool } from "../typedef";
 import { BumpinPoolNotFound } from "../errors";
 
 export class BumpinPoolUtils {

@@ -21,7 +21,7 @@ import {
   PoolConfig,
   State,
   TradeToken,
-} from "./types";
+} from "./typedef";
 import { BumpinAdminConfig } from "./bumpinAdminConfig";
 import { BumpinUtils } from "./utils/utils";
 import { Pyth } from "./types/pyth";

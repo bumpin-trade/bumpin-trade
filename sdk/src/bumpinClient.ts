@@ -22,7 +22,7 @@ import {
     UserClaimRewardsResult,
     UserStakeStatus,
     WalletBalance,
-} from "./types";
+} from "./typedef";
 import {
     BumpinAccountNotFound,
     BumpinClientNotInitialized,
@@ -48,6 +48,7 @@ import {PriceData} from "@pythnetwork/client";
 import BigNumber from "bignumber.js";
 import {AccountLayout, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {RewardsComponent} from "./componets/rewards";
+import './types/bnExt';
 
 export class BumpinClient {
     netType: NetType;
@@ -490,6 +491,14 @@ export class BumpinClient {
         return this.poolComponent!.getPool(poolKey, sync);
     }
 
+    public async getPoolByIndex(
+        poolIndex: number,
+        sync: boolean = false
+    ): Promise<Pool> {
+        this.checkInitialization();
+        return this.poolComponent!.getPool(BumpinUtils.getPoolPda(this.program, poolIndex)[0], sync);
+    }
+
     public async getPoolWithSlot(
         poolKey: PublicKey,
         sync: boolean = false
@@ -516,6 +525,14 @@ export class BumpinClient {
     ): Promise<TradeToken> {
         this.checkInitialization();
         return this.tradeTokenComponent!.getTradeToken(tradeTokenKey, sync);
+    }
+
+    public async getTradeTokenByIndex(
+        tradeTokenIndex: number,
+        sync: boolean = false
+    ): Promise<TradeToken> {
+        this.checkInitialization();
+        return this.tradeTokenComponent!.getTradeToken(BumpinUtils.getTradeTokenPda(this.program, tradeTokenIndex)[0], sync);
     }
 
     public async getTradeTokenByMintKey(
@@ -554,6 +571,14 @@ export class BumpinClient {
         return this.marketComponent!.getMarket(marketKey, sync);
     }
 
+    public async getMarketByIndex(
+        marketIndex: number,
+        sync: boolean = false
+    ): Promise<Market> {
+        this.checkInitialization();
+        return this.marketComponent!.getMarket(BumpinUtils.getMarketPda(this.program, marketIndex)[0], sync);
+    }
+
     public async getMarketWithSlot(
         marketKey: PublicKey,
         sync: boolean = false
@@ -562,8 +587,9 @@ export class BumpinClient {
         return this.marketComponent!.getMarketWithSlot(marketKey, sync);
     }
 
-    public async getFundingFeeRate(marketKey: PublicKey, sync: boolean = false): Promise<number> {
+    public async getFundingFeeRate(marketIndex: number, sync: boolean = false): Promise<number> {
         this.checkInitialization();
+        const marketKey = BumpinUtils.getMarketPda(this.program, marketIndex)[0];
         const market = await this.getMarket(marketKey, sync);
         const state = await this.getState(sync);
         const long = market.longOpenInterest.openInterest.toBigNumber();
@@ -572,8 +598,9 @@ export class BumpinClient {
         return long.minus(short).div(long.plus(short)).multipliedBy(baseRate).toNumber();
     }
 
-    public async getBorrowingFeeRate(marketKey: PublicKey, sync: boolean = false): Promise<number> {
+    public async getBorrowingFeeRate(marketIndex: number, sync: boolean = false): Promise<number> {
         this.checkInitialization();
+        const marketKey = BumpinUtils.getMarketPda(this.program, marketIndex)[0];
         const timestamp = BigNumber(Math.floor(Date.now() / 1000));
         const market = await this.getMarket(marketKey, sync);
         const pool = await this.getPool(market.poolKey, sync);

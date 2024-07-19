@@ -8,7 +8,7 @@ import {
   UserStakeStatus,
   UserToken,
   UserTokenStatus,
-} from "../types";
+} from "../typedef";
 // @ts-ignore
 import { isEqual } from "lodash";
 

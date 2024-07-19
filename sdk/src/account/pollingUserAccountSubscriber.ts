@@ -7,7 +7,7 @@ import {
   UserAccount,
   UserStakeStatus,
   UserTokenStatus,
-} from "../types";
+} from "../typedef";
 import { BulkAccountLoader } from "./bulkAccountLoader";
 import { BumpinTrade } from "../types/bumpin_trade";
 // @ts-ignore

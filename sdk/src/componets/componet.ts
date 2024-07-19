@@ -1,5 +1,5 @@
 import { DataAndSlot } from "../account/types";
-import { State } from "../types";
+import { State } from "../typedef";
 import { Program } from "@coral-xyz/anchor";
 import { BumpinTrade } from "../types/bumpin_trade";
 import { PollingStateAccountSubscriber } from "../account/pollingStateAccountSubscriber";

@@ -12,7 +12,7 @@ import {
     UserAccount,
     UserStakeStatus,
     UserTokenStatus,
-} from "../types";
+} from "../typedef";
 import {BulkAccountLoader} from "../account/bulkAccountLoader";
 import {BN, Program} from "@coral-xyz/anchor";
 import {BumpinUtils} from "../utils/utils";

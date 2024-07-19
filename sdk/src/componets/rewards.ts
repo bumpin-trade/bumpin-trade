@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { Rewards } from "../types";
+import { Rewards } from "../typedef";
 import { BulkAccountLoader } from "../account/bulkAccountLoader";
 import { Program } from "@coral-xyz/anchor";
 import { BumpinUtils } from "../utils/utils";
