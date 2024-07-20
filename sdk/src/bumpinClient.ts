@@ -278,6 +278,18 @@ export class BumpinClient {
         return res[0];
     }
 
+    public async getTradeTokenPriceByOracleKey(
+        oracleKey: PublicKey
+    ): Promise<PriceData> {
+        this.checkInitialization();
+        let res = this.tradeTokenComponent!.getTradeTokenPricesByOracleKey(
+            oracleKey,
+            1
+        );
+        return res[0];
+    }
+
+
     public async getPoolSummary(
         stashedPrice: number = 2,
         sync: boolean = false
@@ -587,15 +599,25 @@ export class BumpinClient {
         return this.marketComponent!.getMarketWithSlot(marketKey, sync);
     }
 
-    public async getFundingFeeRate(marketIndex: number, sync: boolean = false): Promise<number> {
+    public async getFundingFeeRate(marketIndex: number, sync: boolean = false): Promise<{
+        long: number,
+        short: number
+    }> {
         this.checkInitialization();
         const marketKey = BumpinUtils.getMarketPda(this.program, marketIndex)[0];
         const market = await this.getMarket(marketKey, sync);
-        const state = await this.getState(sync);
-        const long = market.longOpenInterest.openInterest.toBigNumber();
-        const short = market.shortOpenInterest.openInterest.toBigNumber();
-        const baseRate = state.fundingFeeBaseRate.toBigNumber();
-        return long.minus(short).div(long.plus(short)).multipliedBy(baseRate).toNumber();
+        let long = market.fundingFee.longFundingFeeRate.toBigNumber().div(10 ** 10);
+        let short = market.fundingFee.shortFundingFeeRate.toBigNumber().div(10 ** 10);
+        if (long.isNaN()) {
+            long = new BigNumber(0);
+        }
+        if (short.isNaN()) {
+            short = new BigNumber(0);
+        }
+        return {
+            long: long.toNumber(),
+            short: short.toNumber()
+        }
     }
 
     public async getBorrowingFeeRate(marketIndex: number, sync: boolean = false): Promise<number> {
@@ -744,6 +766,27 @@ export class BumpinClient {
         );
     }
 
+    public async getUserAccountNetValue(
+        sync: boolean = false
+    ): Promise<BigNumber> {
+        this.checkInitialization(true);
+        const user = await this.getUser(sync);
+        return BumpinUtils.amount2Size(await this.userComponent!.getUserAccountNetValue(user, await this.getTradeTokens()), 8);
+    }
+
+    public async getUserAvailableValue(
+        sync: boolean = false
+    ): Promise<BigNumber> {
+        this.checkInitialization(true);
+        const user = await this.getUser(sync);
+        return BumpinUtils.amount2Size(await this.userComponent!.getUserAvailableValue(user, await this.getTradeTokens()), 8);
+    }
+
+    public async getUserCrossAccountHealth(sync: boolean = false): Promise<BigNumber> {
+        this.checkInitialization(true);
+        const user = await this.getUser(sync);
+        return await this.userComponent!.getUserCrossAccountHealth(user, await this.getTradeTokens());
+    }
 
     public async claimUserRewards(): Promise<UserClaimResult> {
         this.checkInitialization(true);

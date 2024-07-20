@@ -377,10 +377,15 @@ export type TradeTokenBalance = {
 };
 
 export type PositionBalance = {
+    // total_im_usd
     initialMarginUsd: BN;
+    // total_im_usd_from_portfolio
     initialMarginUsdFromPortfolio: BN;
+    // total_un_pnl_usd
     positionUnPnl: BN;
+    // total_position_mm
     mmUsd: BN;
+    positionFee: BN;
 };
 
 export type PlaceOrderParams = {
@@ -394,7 +399,6 @@ export type PlaceOrderParams = {
     orderMargin: number;
     leverage: number;
     triggerPrice: number;
-    acceptablePrice: number;
 };
 
 export type InnerPlaceOrderParams = {

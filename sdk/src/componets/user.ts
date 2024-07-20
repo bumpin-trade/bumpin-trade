@@ -39,6 +39,7 @@ import {Account, AccountLayout} from "@solana/spl-token";
 import BigNumber from "bignumber.js";
 import {BumpinMarketUtils} from "../utils/market";
 import {BumpinConstants} from "../consts";
+import {ZERO} from "../constants/numericConstants";
 
 export class UserComponent extends Component {
     publicKey: PublicKey;
@@ -431,6 +432,11 @@ export class UserComponent extends Component {
             isSigner: false,
         });
 
+        let tradeTokenPrice = await BumpinTokenUtils.getTradeTokenPrice(
+            this.oracleClient,
+            tradeToken
+        );
+
         let order: InnerPlaceOrderParams = {
             symbol,
             placeTime: new BN(Date.now()),
@@ -456,16 +462,11 @@ export class UserComponent extends Component {
                 param.triggerPrice,
                 BumpinConstants.PRICE_EXPONENT_NUMBER
             ),
-            acceptablePrice: BumpinUtils.number2Precision(
-                param.acceptablePrice,
-                BumpinConstants.PRICE_EXPONENT_NUMBER
-            ),
+            //TODO: recheck this
+            acceptablePrice: ZERO,
         };
 
-        let tradeTokenPrice = await BumpinTokenUtils.getTradeTokenPrice(
-            this.oracleClient,
-            tradeToken
-        );
+
         await this.placePerpOrderValidation(
             order,
             tradeTokenPrice,
@@ -587,6 +588,52 @@ export class UserComponent extends Component {
             user,
             tradeTokens
         );
+        return (await this.getUserAccountNetValue(user, tradeTokens))
+            .sub(balanceOfUserPositions.initialMarginUsdFromPortfolio)
+            .sub(user.hold)
+            .sub(balanceOfUserTradeTokens.tokenBorrowingValue);
+    }
+
+    public async getUserCrossAccountHealth(
+        user: UserAccount,
+        tradeTokens: TradeToken[]
+    ): Promise<BigNumber> {
+        let balanceOfUserTradeTokens =
+            await BumpinTokenUtils.getUserTradeTokenBalance(
+                this.oracleClient,
+                user,
+                tradeTokens
+            );
+        let balanceOfUserPositions = await BumpinPositionUtils.getUserPositionValue(
+            this.oracleClient,
+            user,
+            tradeTokens
+        );
+        const crossNetValue: BigNumber = balanceOfUserTradeTokens.tokenNetValue
+            .sub(balanceOfUserPositions.initialMarginUsd)
+            .add(user.hold).toBigNumber()
+            .plus(balanceOfUserPositions.positionUnPnl.toBigNumber())
+            .minus(balanceOfUserTradeTokens.tokenUsedValue.toBigNumber())
+            .minus(balanceOfUserPositions.positionFee.toBigNumber());
+
+        return crossNetValue.div(balanceOfUserPositions.mmUsd.toBigNumber());
+    }
+
+    public async getUserAccountNetValue(
+        user: UserAccount,
+        tradeTokens: TradeToken[]
+    ): Promise<BN> {
+        let balanceOfUserTradeTokens =
+            await BumpinTokenUtils.getUserTradeTokenBalance(
+                this.oracleClient,
+                user,
+                tradeTokens
+            );
+        let balanceOfUserPositions = await BumpinPositionUtils.getUserPositionValue(
+            this.oracleClient,
+            user,
+            tradeTokens
+        );
         return balanceOfUserTradeTokens.tokenNetValue
             .add(balanceOfUserPositions.initialMarginUsd)
             .add(user.hold)
@@ -595,10 +642,7 @@ export class UserComponent extends Component {
                 balanceOfUserPositions.positionUnPnl.gt(new BN(0))
                     ? new BN(0)
                     : balanceOfUserPositions.positionUnPnl
-            )
-            .sub(balanceOfUserPositions.initialMarginUsdFromPortfolio)
-            .sub(user.hold)
-            .sub(balanceOfUserTradeTokens.tokenBorrowingValue);
+            );
     }
 
     public getUserRemainingAccounts(
