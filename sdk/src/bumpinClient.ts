@@ -345,6 +345,25 @@ export class BumpinClient {
         return poolSummaries;
     }
 
+    public async getUserSummary(sync: boolean = false) {
+        this.checkInitialization(true);
+        let user = await this.getUser(sync);
+        let tradeTokens = await this.getTradeTokens();
+        let markets = await this.getMarkets(sync);
+        let pools = await this.getPools();
+
+        const poolMap: Map<PublicKey, Pool> = new Map();
+        pools.forEach(pool => {
+            poolMap.set(pool.key, pool);
+        });
+
+        const marketMap: Map<number[], Market> = new Map();
+        markets.forEach(market => {
+            marketMap.set(market.symbol, market);
+        });
+        let availableValue = await this.userComponent!.getUserAccountNetValue(user, tradeTokens, marketMap, poolMap);
+    }
+
     public async stake(
         fromPortfolio: boolean,
         size: number,
