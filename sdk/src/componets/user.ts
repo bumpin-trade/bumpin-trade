@@ -1,5 +1,6 @@
 import {AccountMeta, PublicKey} from "@solana/web3.js";
 import {
+    AccountNetValue,
     InnerPlaceOrderParams,
     Market,
     OrderSide,
@@ -82,7 +83,8 @@ export class UserComponent extends Component {
         tradeToken: TradeToken,
         allTradeTokens: TradeToken[],
         pool: Pool,
-        allMarkets: Market[],
+        allMarkets: Map<number[], Market>,
+        poolMap: Map<PublicKey, Pool>,
         sync: boolean = false
     ): Promise<void> {
         let user = await this.getUser(sync);
@@ -95,7 +97,7 @@ export class UserComponent extends Component {
             tradeToken,
             pool
         );
-        let availableValue = await this.getUserAvailableValue(user, allTradeTokens);
+        let availableValue = await this.getUserAvailableValue(user, allTradeTokens, allMarkets, poolMap);
         if (!availableValue.gt(stake_value)) {
             throw new BumpinValueInsufficient(amount, availableValue);
         }
@@ -104,8 +106,8 @@ export class UserComponent extends Component {
             await this.getUser(),
             allTradeTokens
         );
-        let markets = BumpinMarketUtils.getMarketsByPoolKey(pool.key, allMarkets);
-        for (let market of markets) {
+        let markets = BumpinMarketUtils.getMarketsByPoolKey(pool.key, Array.from(allMarkets.values()));
+        for (let market of markets.values()) {
             remainingAccounts.push({
                 pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
                 isWritable: true,
@@ -573,55 +575,46 @@ export class UserComponent extends Component {
         }
     }
 
-    public async getUserAvailableValue(
-        user: UserAccount,
-        tradeTokens: TradeToken[]
-    ) {
-        let balanceOfUserTradeTokens =
-            await BumpinTokenUtils.getUserTradeTokenBalance(
-                this.oracleClient,
-                user,
-                tradeTokens
-            );
-        let balanceOfUserPositions = await BumpinPositionUtils.getUserPositionValue(
-            this.oracleClient,
-            user,
-            tradeTokens
-        );
-        return (await this.getUserAccountNetValue(user, tradeTokens))
-            .sub(balanceOfUserPositions.initialMarginUsdFromPortfolio)
-            .sub(user.hold)
-            .sub(balanceOfUserTradeTokens.tokenBorrowingValue);
-    }
-
-    public async getUserCrossAccountHealth(
-        user: UserAccount,
-        tradeTokens: TradeToken[]
-    ): Promise<BigNumber> {
-        let balanceOfUserTradeTokens =
-            await BumpinTokenUtils.getUserTradeTokenBalance(
-                this.oracleClient,
-                user,
-                tradeTokens
-            );
-        let balanceOfUserPositions = await BumpinPositionUtils.getUserPositionValue(
-            this.oracleClient,
-            user,
-            tradeTokens
-        );
-        const crossNetValue: BigNumber = balanceOfUserTradeTokens.tokenNetValue
-            .sub(balanceOfUserPositions.initialMarginUsd)
-            .add(user.hold).toBigNumber()
-            .plus(balanceOfUserPositions.positionUnPnl.toBigNumber())
-            .minus(balanceOfUserTradeTokens.tokenUsedValue.toBigNumber())
-            .minus(balanceOfUserPositions.positionFee.toBigNumber());
-
-        return crossNetValue.div(balanceOfUserPositions.mmUsd.toBigNumber());
-    }
-
     public async getUserAccountNetValue(
         user: UserAccount,
-        tradeTokens: TradeToken[]
+        tradeTokens: TradeToken[],
+        market: Map<number[], Market>,
+        pool: Map<PublicKey, Pool>
+    ): Promise<AccountNetValue> {
+        let accountNetValue = {
+            accountNetValue: new BN(0),
+            totalMM: new BN(0),
+        };
+        let balanceOfUserTradeTokens =
+            await BumpinTokenUtils.getUserTradeTokenBalance(
+                this.oracleClient,
+                user,
+                tradeTokens
+            );
+        let balanceOfUserPositions = await BumpinPositionUtils.getUserPositionValue(
+            this.oracleClient,
+            user,
+            tradeTokens, market, pool
+        );
+        accountNetValue.accountNetValue = balanceOfUserTradeTokens.tokenNetValue
+            .add(balanceOfUserPositions.initialMarginUsd)
+            .add(user.hold)
+            .sub(balanceOfUserTradeTokens.tokenUsedValue)
+            .add(
+                balanceOfUserPositions.positionUnPnl.gt(new BN(0))
+                    ? new BN(0)
+                    : balanceOfUserPositions.positionUnPnl
+            ).sub(balanceOfUserPositions.positionFee);
+        accountNetValue.totalMM = balanceOfUserPositions.mmUsd;
+        return accountNetValue;
+    }
+
+
+    public async getUserAvailableValue(
+        user: UserAccount,
+        tradeTokens: TradeToken[],
+        market: Map<number[], Market>,
+        pool: Map<PublicKey, Pool>
     ): Promise<BN> {
         let balanceOfUserTradeTokens =
             await BumpinTokenUtils.getUserTradeTokenBalance(
@@ -632,7 +625,7 @@ export class UserComponent extends Component {
         let balanceOfUserPositions = await BumpinPositionUtils.getUserPositionValue(
             this.oracleClient,
             user,
-            tradeTokens
+            tradeTokens, market, pool
         );
         return balanceOfUserTradeTokens.tokenNetValue
             .add(balanceOfUserPositions.initialMarginUsd)
@@ -642,7 +635,7 @@ export class UserComponent extends Component {
                 balanceOfUserPositions.positionUnPnl.gt(new BN(0))
                     ? new BN(0)
                     : balanceOfUserPositions.positionUnPnl
-            );
+            ).sub(balanceOfUserTradeTokens.tokenBorrowingValue.add(balanceOfUserPositions.initialMarginUsdFromPortfolio));
     }
 
     public getUserRemainingAccounts(

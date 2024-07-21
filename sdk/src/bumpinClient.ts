@@ -7,6 +7,7 @@ import {BumpinClientConfig, NetType} from "./bumpinClientConfig";
 import {BumpinUtils} from "./utils/utils";
 import {BumpinTrade} from "./types/bumpin_trade";
 import {
+    AccountNetValue, AccountValue,
     Market,
     MarketUnPnlUsd,
     MarketWithIndexTradeTokenPrices,
@@ -353,6 +354,18 @@ export class BumpinClient {
         this.checkInitialization(true);
 
         let markets = await this.getMarkets(sync);
+
+        let pools = await this.getPools();
+        const poolMap: Map<PublicKey, Pool> = new Map();
+        pools.forEach(pool => {
+            poolMap.set(pool.key, pool);
+        });
+
+        const marketMap: Map<number[], Market> = new Map();
+        markets.forEach(market => {
+            marketMap.set(market.symbol, market);
+        });
+
         let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
             mint,
             await this.getTradeTokens()
@@ -367,7 +380,7 @@ export class BumpinClient {
                 targetTradeToken,
                 await this.getTradeTokens(),
                 targetPool,
-                markets,
+                marketMap, poolMap,
                 sync
             );
         } else {
@@ -768,10 +781,28 @@ export class BumpinClient {
 
     public async getUserAccountNetValue(
         sync: boolean = false
-    ): Promise<BigNumber> {
+    ): Promise<AccountValue> {
         this.checkInitialization(true);
+        let accountValue = {
+            netValue: new BigNumber(0),
+            totalMM: new BigNumber(0),
+        };
         const user = await this.getUser(sync);
-        return BumpinUtils.amount2Size(await this.userComponent!.getUserAccountNetValue(user, await this.getTradeTokens()), 8);
+        let pools = await this.getPools();
+        const poolMap: Map<PublicKey, Pool> = new Map();
+        pools.forEach(pool => {
+            poolMap.set(pool.key, pool);
+        });
+
+        let markets = await this.getMarkets();
+        const marketMap: Map<number[], Market> = new Map();
+        markets.forEach(market => {
+            marketMap.set(market.symbol, market);
+        });
+        let accountNetValue = await this.userComponent!.getUserAccountNetValue(user, await this.getTradeTokens(), marketMap, poolMap);
+        accountValue.netValue = BumpinUtils.amount2Size(accountNetValue.accountNetValue, 8);
+        accountValue.totalMM = BumpinUtils.amount2Size(accountNetValue.totalMM, 8);
+        return accountValue;
     }
 
     public async getUserAvailableValue(
@@ -779,13 +810,18 @@ export class BumpinClient {
     ): Promise<BigNumber> {
         this.checkInitialization(true);
         const user = await this.getUser(sync);
-        return BumpinUtils.amount2Size(await this.userComponent!.getUserAvailableValue(user, await this.getTradeTokens()), 8);
-    }
+        let pools = await this.getPools();
+        const poolMap: Map<PublicKey, Pool> = new Map();
+        pools.forEach(pool => {
+            poolMap.set(pool.key, pool);
+        });
 
-    public async getUserCrossAccountHealth(sync: boolean = false): Promise<BigNumber> {
-        this.checkInitialization(true);
-        const user = await this.getUser(sync);
-        return await this.userComponent!.getUserCrossAccountHealth(user, await this.getTradeTokens());
+        let markets = await this.getMarkets();
+        const marketMap: Map<number[], Market> = new Map();
+        markets.forEach(market => {
+            marketMap.set(market.symbol, market);
+        });
+        return BumpinUtils.amount2Size(await this.userComponent!.getUserAvailableValue(user, await this.getTradeTokens(), marketMap, poolMap), 8);
     }
 
     public async claimUserRewards(): Promise<UserClaimResult> {

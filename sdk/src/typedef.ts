@@ -375,7 +375,10 @@ export type TradeTokenBalance = {
     tokenUsedValue: BN;
     tokenBorrowingValue: BN;
 };
-
+export type AccountNetValue = {
+    accountNetValue: BN;
+    totalMM: BN;
+}
 export type PositionBalance = {
     // total_im_usd
     initialMarginUsd: BN;
@@ -386,6 +389,15 @@ export type PositionBalance = {
     // total_position_mm
     mmUsd: BN;
     positionFee: BN;
+};
+
+export type PositionFee = {
+    fundingFee: BN;
+    fundingFeeUsd: BN;
+    borrowingFee: BN;
+    borrowingFeeUsd: BN;
+    closeFeeUsd: BN;
+    totalUsd: BN;
 };
 
 export type PlaceOrderParams = {
@@ -484,6 +496,16 @@ export class TokenBalance {
             this.tradeTokenPriceData.price,
             this.tradeToken.decimals
         );
+    }
+}
+
+export class AccountValue {
+    netValue: BigNumber;
+    totalMM: BigNumber;
+
+    constructor(netValue: BigNumber, totalMM: BigNumber) {
+        this.netValue = netValue;
+        this.totalMM = totalMM;
     }
 }
 
