@@ -92,11 +92,11 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     let stable_pool = pool_map.get_mut_ref(&market.stable_pool_key)?;
     let pool_vault = vault_map.get_account(&pool.pool_vault_key)?;
     let stable_pool_vault = vault_map.get_account(&stable_pool.pool_vault_key)?;
-    let margin_token = if order.order_side.eq(&OrderSide::LONG) {
-        &market.pool_mint_key
-    } else {
-        &market.stable_pool_mint_key
-    };
+    let margin_token =
+        match position_processor::use_base_token(&order.position_side, &order.order_side)? {
+            true => &market.pool_mint_key,
+            false => &market.stable_pool_mint_key,
+        };
     validate!(ctx.accounts.user_token_account.mint.eq(margin_token), BumpErrorCode::InvalidParam)?;
 
     let token_price = oracle_map
@@ -154,10 +154,11 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         status: OrderStatus::USING,
         ..Default::default()
     };
-    drop(market);
-    drop(pool);
-    drop(stable_pool);
     if order.order_type.eq(&OrderType::MARKET) {
+        //execute order immediately
+        drop(market);
+        drop(pool);
+        drop(stable_pool);
         let state_account = &ctx.accounts.state;
         let bump_signer_account_info = &ctx.accounts.bump_signer;
         let token_program = &ctx.accounts.token_program;

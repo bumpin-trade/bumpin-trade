@@ -8,4 +8,5 @@ export class BumpinConstants {
   public static readonly PRICE_EXPONENT_BN: BN = new BN(8);
   public static readonly PRICE_EXPONENT: number = 100000000;
   public static readonly PRICE_EXPONENT_NUMBER: number = 8;
+  public static readonly USD_EXPONENT_NUMBER: number = 10;
 }

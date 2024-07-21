@@ -1,9 +1,10 @@
 import {AccountMeta, PublicKey} from "@solana/web3.js";
 import {
     AccountNetValue,
-    InnerPlaceOrderParams,
-    Market,
-    OrderSide,
+  InnerPlaceOrderParams,
+  Market,
+  OrderSide,
+
     OrderType,
     PlaceOrderParams,
     Pool,
@@ -299,40 +300,51 @@ export class UserComponent extends Component {
             this.program.provider.connection, wallet, tradeToken.mintKey
         )).address;
 
-        if (isEqual(param.orderSide, OrderSide.SHORT)) {
+        if ((isEqual(param.positionSide, PositionSide.DECREASE) &&isEqual(param.orderSide, OrderSide.LONG)) || isEqual(param.positionSide, PositionSide.INCREASE) &&isEqual(param.orderSide, OrderSide.SHORT) ) {
             // When the order side is short, the userTokenAccount is the stable token.
             userTokenAccount = (await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(
                 this.program.provider.connection, wallet, markets[marketIndex].stablePoolMintKey
             )).address;
+        }// When trading position by position (Isolated position), userTokenAccount is determined based on the order direction.
+    let uta = userTokenAccount;
+    if (!param.isPortfolioMargin) {
+      let tokenAccount: Account =
+        await BumpinTokenUtils.getTokenAccountFromWalletAndKey(
+          this.program.provider.connection,
+          wallet,
+          userTokenAccount
+        );
+      if (isEqual(param.positionSide, PositionSide.INCREASE)){
+        if (isEqual(param.orderSide, OrderSide.LONG)){
+          if (!tokenAccount.mint.equals(pool.mintKey)) {
+            throw new BumpinTokenAccountUnexpected(
+                "Pool mint key: " + pool.mintKey.toString(),
+                "Token account mint key: " + tokenAccount.mint.toString()
+            );
+          }
+        }else {
+          if (!tokenAccount.mint.equals(stablePool.mintKey)) {
+            throw new BumpinTokenAccountUnexpected(
+                "Stable Pool mint key: " + stablePool.mintKey.toString(),
+                "Token account mint key: " + tokenAccount.mint.toString()
+            );
+          }
         }
-
-        // When trading position by position (Isolated position), userTokenAccount is determined based on the order direction.
-        let uta = userTokenAccount;
-        if (!param.isPortfolioMargin) {
-            let tokenAccount: Account;
-            if (isEqual(param.orderSide, OrderSide.LONG)) {
-                tokenAccount = await BumpinTokenUtils.getTokenAccountFromWalletAndKey(
-                    this.program.provider.connection,
-                    wallet,
-                    userTokenAccount
-                );
-                if (!tokenAccount.mint.equals(pool.mintKey)) {
-                    throw new BumpinTokenAccountUnexpected(
-                        "Pool mint key: " + pool.mintKey.toString(),
-                        "Token account mint key: " + tokenAccount.mint.toString()
-                    );
-                }
-            } else {
-                tokenAccount = await BumpinTokenUtils.getTokenAccountFromWalletAndKey(
-                    this.program.provider.connection,
-                    wallet,
-                    userTokenAccount
-                );
-                if (!tokenAccount.mint.equals(stablePool.mintKey)) {
-                    throw new BumpinTokenAccountUnexpected(
-                        "Stable pool mint key: " + stablePool.mintKey.toString(),
-                        "Token account mint key: " + tokenAccount.mint.toString()
-                    );
+      }else {
+                if (isEqual(param.orderSide, OrderSide.LONG)){
+          if (!tokenAccount.mint.equals(stablePool.mintKey)) {
+            throw new BumpinTokenAccountUnexpected(
+                "Stable Pool mint key: " + stablePool.mintKey.toString(),
+                "Token account mint key: " + tokenAccount.mint.toString()
+            );
+          }
+        }else {
+          if (!tokenAccount.mint.equals(pool.mintKey)) {
+            throw new BumpinTokenAccountUnexpected(
+                "Pool mint key: " + pool.mintKey.toString(),
+                "Token account mint key: " + tokenAccount.mint.toString()
+            );
+                    }
                 }
             }
             uta = tokenAccount.address;
@@ -439,33 +451,42 @@ export class UserComponent extends Component {
             tradeToken
         );
 
-        let order: InnerPlaceOrderParams = {
-            symbol,
-            placeTime: new BN(Date.now()),
-            marketIndex: marketIndex,
-            poolIndex: pool.index,
-            stablePoolIndex: stablePool.index,
-            tradeTokenIndex: tradeToken.index,
-            stableTradeTokenIndex: stableTradeToken.index,
-            orderId: new BN(0),
-            isPortfolioMargin: false,
-            isNativeToken: false,
-            orderSide: param.orderSide,
-            positionSide: param.positionSide,
-            orderType: param.orderType,
-            stopType: param.stopType,
-            size: BumpinUtils.number2Precision(param.size, isEqual(param.orderSide, OrderSide.LONG) ? tradeToken.decimals : stableTradeToken.decimals),
-            orderMargin: BumpinUtils.number2Precision(
-                param.orderMargin,
-                isEqual(param.orderSide, OrderSide.LONG) ? tradeToken.decimals : stableTradeToken.decimals
+    let order: InnerPlaceOrderParams = {
+      symbol,
+      placeTime: new BN(Date.now()),
+      marketIndex: marketIndex,
+      poolIndex: pool.index,
+      stablePoolIndex: stablePool.index,
+      tradeTokenIndex: tradeToken.index,
+      stableTradeTokenIndex: stableTradeToken.index,
+      orderId: new BN(0),
+      isPortfolioMargin: false,
+      isNativeToken: false,
+      orderSide: param.orderSide,
+      positionSide: param.positionSide,
+      orderType: param.orderType,
+      stopType: param.stopType,
+      size: BumpinUtils.number2Precision(
+        param.size,
+        BumpinConstants.USD_EXPONENT_NUMBER
+      ),
+      orderMargin: BumpinUtils.number2Precision(
+        param.orderMargin,
+        isEqual(param.positionSide, PositionSide.INCREASE)
+          ? isEqual(param.orderSide, OrderSide.LONG)
+            ? tradeToken.decimals
+            : stableTradeToken.decimals
+          : isEqual(param.orderSide, OrderSide.LONG)
+          ? stableTradeToken.decimals
+          : tradeToken.decimals
             ),
-            leverage: param.leverage * BumpinConstants.RATE_MULTIPLIER,
-            triggerPrice: BumpinUtils.number2Precision(
-                param.triggerPrice,
-                BumpinConstants.PRICE_EXPONENT_NUMBER
-            ),
-            //TODO: recheck this
-            acceptablePrice: ZERO,
+        leverage: param.leverage * BumpinConstants.RATE_MULTIPLIER,
+        triggerPrice: BumpinUtils.number2Precision(
+            param.triggerPrice,
+            BumpinConstants.PRICE_EXPONENT_NUMBER
+        ),
+        //TODO: recheck this
+        acceptablePrice: ZERO,
         };
 
 
