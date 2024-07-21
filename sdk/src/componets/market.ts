@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { Market } from "../typedef";
+import { MarketAccount } from "../typedef";
 import { BulkAccountLoader } from "../account/bulkAccountLoader";
 import { Program } from "@coral-xyz/anchor";
 import { BumpinUtils } from "../utils/utils";
@@ -46,15 +46,15 @@ export class MarketComponent extends Component {
     }
   }
 
-  public async getMarkets(sync: boolean = false): Promise<Market[]> {
+  public async getMarkets(sync: boolean = false): Promise<MarketAccount[]> {
     let markets = await this.getMarketsWithSlot(sync);
     return markets.map((dataAndSlot) => dataAndSlot.data);
   }
 
   public async getMarketsWithSlot(
     sync: boolean = false
-  ): Promise<DataAndSlot<Market>[]> {
-    let marketsWithSlot: DataAndSlot<Market>[] = [];
+  ): Promise<DataAndSlot<MarketAccount>[]> {
+    let marketsWithSlot: DataAndSlot<MarketAccount>[] = [];
     for (let marketAccountSubscriber of this.markets.values()) {
       if (sync) {
         await marketAccountSubscriber.fetch();
@@ -67,7 +67,7 @@ export class MarketComponent extends Component {
   public async getMarket(
     marketPublicKey: PublicKey,
     sync: boolean = false
-  ): Promise<Market> {
+  ): Promise<MarketAccount> {
     let marketWithSlot = await this.getMarketWithSlot(marketPublicKey, sync);
     return marketWithSlot.data;
   }
@@ -75,7 +75,7 @@ export class MarketComponent extends Component {
   public async getMarketWithSlot(
     marketPublicKey: PublicKey,
     sync: boolean = false
-  ): Promise<DataAndSlot<Market>> {
+  ): Promise<DataAndSlot<MarketAccount>> {
     const marketAccountSubscriber: PollingMarketAccountSubscriber | undefined =
       this.markets.get(marketPublicKey.toString());
     if (marketAccountSubscriber === undefined) {

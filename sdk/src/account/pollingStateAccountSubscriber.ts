@@ -5,7 +5,9 @@ import { StateAccount } from "../typedef";
 import { BulkAccountLoader } from "./bulkAccountLoader";
 import { BumpinTrade } from "../types/bumpin_trade";
 
-export class PollingStateAccountSubscriber implements AccountSubscriber<StateAccount> {
+export class PollingStateAccountSubscriber
+  implements AccountSubscriber<StateAccount>
+{
   isSubscribed: boolean;
   program: Program<BumpinTrade>;
   userAccountPublicKey: PublicKey;

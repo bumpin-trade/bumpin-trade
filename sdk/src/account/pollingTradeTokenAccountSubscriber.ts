@@ -1,12 +1,12 @@
 import { AccountSubscriber, DataAndSlot } from "./types";
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { TradeToken } from "../typedef";
+import { TradeTokenAccount } from "../typedef";
 import { BulkAccountLoader } from "./bulkAccountLoader";
 import { BumpinTrade } from "../types/bumpin_trade";
 
 export class PollingTradeTokenAccountSubscriber
-  implements AccountSubscriber<TradeToken>
+  implements AccountSubscriber<TradeTokenAccount>
 {
   isSubscribed: boolean;
   program: Program<BumpinTrade>;
@@ -16,7 +16,7 @@ export class PollingTradeTokenAccountSubscriber
   callbackId?: string;
   errorCallbackId?: string;
 
-  tradeToken?: DataAndSlot<TradeToken>;
+  tradeToken?: DataAndSlot<TradeTokenAccount>;
 
   public constructor(
     program: Program<BumpinTrade>,
@@ -29,7 +29,7 @@ export class PollingTradeTokenAccountSubscriber
     this.tradeTokenPublicKey = tradeTokenPublicKey;
   }
 
-  async subscribe(userAccount?: TradeToken): Promise<boolean> {
+  async subscribe(userAccount?: TradeTokenAccount): Promise<boolean> {
     if (this.isSubscribed) {
       return true;
     }
@@ -90,7 +90,7 @@ export class PollingTradeTokenAccountSubscriber
         );
       if (dataAndContext.context.slot > (this.tradeToken?.slot ?? 0)) {
         this.tradeToken = {
-          data: dataAndContext.data as any as TradeToken,
+          data: dataAndContext.data as any as TradeTokenAccount,
           slot: dataAndContext.context.slot,
         };
       }
@@ -126,7 +126,7 @@ export class PollingTradeTokenAccountSubscriber
     }
   }
 
-  public getAccountAndSlot(): DataAndSlot<TradeToken> {
+  public getAccountAndSlot(): DataAndSlot<TradeTokenAccount> {
     if (!this.doesAccountExist() || !this.tradeToken) {
       throw new Error(
         "You must call `subscribe` or `fetch` before using this function"
@@ -135,7 +135,7 @@ export class PollingTradeTokenAccountSubscriber
     return this.tradeToken;
   }
 
-  public updateData(userAccount: TradeToken, slot: number): void {
+  public updateData(userAccount: TradeTokenAccount, slot: number): void {
     if (!this.tradeToken || this.tradeToken.slot < slot) {
       this.tradeToken = { data: userAccount, slot };
     }

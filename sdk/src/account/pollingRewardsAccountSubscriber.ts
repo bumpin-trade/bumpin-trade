@@ -1,12 +1,12 @@
 import { AccountSubscriber, DataAndSlot } from "./types";
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { Rewards } from "../typedef";
+import { RewardsAccount } from "../typedef";
 import { BulkAccountLoader } from "./bulkAccountLoader";
 import { BumpinTrade } from "../types/bumpin_trade";
 
 export class PollingRewardsAccountSubscriber
-  implements AccountSubscriber<Rewards>
+  implements AccountSubscriber<RewardsAccount>
 {
   isSubscribed: boolean;
   program: Program<BumpinTrade>;
@@ -16,7 +16,7 @@ export class PollingRewardsAccountSubscriber
   callbackId?: string;
   errorCallbackId?: string;
 
-  rewards?: DataAndSlot<Rewards>;
+  rewards?: DataAndSlot<RewardsAccount>;
 
   public constructor(
     program: Program<BumpinTrade>,
@@ -29,7 +29,7 @@ export class PollingRewardsAccountSubscriber
     this.rewardsPublicKey = poolPublicKey;
   }
 
-  async subscribe(userAccount?: Rewards): Promise<boolean> {
+  async subscribe(userAccount?: RewardsAccount): Promise<boolean> {
     if (this.isSubscribed) {
       return true;
     }
@@ -89,7 +89,7 @@ export class PollingRewardsAccountSubscriber
       );
       if (dataAndContext.context.slot > (this.rewards?.slot ?? 0)) {
         this.rewards = {
-          data: dataAndContext.data as any as Rewards,
+          data: dataAndContext.data as any as RewardsAccount,
           slot: dataAndContext.context.slot,
         };
       }
@@ -125,7 +125,7 @@ export class PollingRewardsAccountSubscriber
     }
   }
 
-  public getAccountAndSlot(): DataAndSlot<Rewards> {
+  public getAccountAndSlot(): DataAndSlot<RewardsAccount> {
     if (!this.doesAccountExist() || !this.rewards) {
       throw new Error(
         "You must call `subscribe` or `fetch` before using this function"
@@ -134,7 +134,7 @@ export class PollingRewardsAccountSubscriber
     return this.rewards;
   }
 
-  public updateData(userAccount: Rewards, slot: number): void {
+  public updateData(userAccount: RewardsAccount, slot: number): void {
     if (!this.rewards || this.rewards.slot < slot) {
       this.rewards = { data: userAccount, slot };
       /*

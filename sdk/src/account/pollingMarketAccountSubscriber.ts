@@ -1,12 +1,12 @@
 import { AccountSubscriber, DataAndSlot } from "./types";
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { Market } from "../typedef";
+import { MarketAccount } from "../typedef";
 import { BulkAccountLoader } from "./bulkAccountLoader";
 import { BumpinTrade } from "../types/bumpin_trade";
 
 export class PollingMarketAccountSubscriber
-  implements AccountSubscriber<Market>
+  implements AccountSubscriber<MarketAccount>
 {
   isSubscribed: boolean;
   program: Program<BumpinTrade>;
@@ -16,7 +16,7 @@ export class PollingMarketAccountSubscriber
   callbackId?: string;
   errorCallbackId?: string;
 
-  market?: DataAndSlot<Market>;
+  market?: DataAndSlot<MarketAccount>;
 
   public constructor(
     program: Program<BumpinTrade>,
@@ -29,7 +29,7 @@ export class PollingMarketAccountSubscriber
     this.userAccountPublicKey = userAccountPublicKey;
   }
 
-  async subscribe(userAccount?: Market): Promise<boolean> {
+  async subscribe(userAccount?: MarketAccount): Promise<boolean> {
     if (this.isSubscribed) {
       return true;
     }
@@ -79,7 +79,7 @@ export class PollingMarketAccountSubscriber
     this.errorCallbackId = this.accountLoader.addErrorCallbacks((error) => {});
   }
 
-  async printMarket(marketData: DataAndSlot<Market>): Promise<void> {
+  async printMarket(marketData: DataAndSlot<MarketAccount>): Promise<void> {
     let market = marketData.data;
     console.log(`Pool Key: ${market.poolKey.toString()}`);
     console.log(`Pool Mint Key: ${market.poolMintKey.toString()}`);
@@ -160,7 +160,7 @@ export class PollingMarketAccountSubscriber
       );
       if (dataAndContext.context.slot > (this.market?.slot ?? 0)) {
         this.market = {
-          data: dataAndContext.data as any as Market,
+          data: dataAndContext.data as any as MarketAccount,
           slot: dataAndContext.context.slot,
         };
       }
@@ -199,7 +199,7 @@ export class PollingMarketAccountSubscriber
     }
   }
 
-  public getAccountAndSlot(): DataAndSlot<Market> {
+  public getAccountAndSlot(): DataAndSlot<MarketAccount> {
     if (!this.doesAccountExist() || !this.market) {
       throw new Error(
         "You must call `subscribe` or `fetch` before using this function"
@@ -208,7 +208,7 @@ export class PollingMarketAccountSubscriber
     return this.market;
   }
 
-  public updateData(userAccount: Market, slot: number): void {
+  public updateData(userAccount: MarketAccount, slot: number): void {
     if (!this.market || this.market.slot < slot) {
       this.market = { data: userAccount, slot };
       /*

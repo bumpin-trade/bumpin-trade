@@ -1,10 +1,13 @@
-import { Market } from "../typedef";
+import { MarketAccount } from "../typedef";
 import { BumpinAccountNotFound } from "../errors";
 import { PublicKey } from "@solana/web3.js";
-import {BumpinUtils} from "./utils";
+import { BumpinUtils } from "./utils";
 
 export class BumpinMarketUtils {
-  public static getMarketByIndex(index: number, markets: Market[]): Market {
+  public static getMarketByIndex(
+    index: number,
+    markets: MarketAccount[]
+  ): MarketAccount {
     let market = markets.find((market) => {
       return market.index === index;
     });
@@ -16,19 +19,27 @@ export class BumpinMarketUtils {
 
   public static getMarketsByPoolKey(
     poolKey: PublicKey,
-    markets: Market[]
-  ): Market[] {
+    markets: MarketAccount[]
+  ): MarketAccount[] {
     return markets.filter((market) => {
       return market.poolKey.equals(poolKey);
     });
   }
 
-  public static getMarketBySymbol(symbol: number[], markets: Market[]): Market {
+  public static getMarketBySymbol(
+    symbol: number[],
+    markets: MarketAccount[]
+  ): MarketAccount {
     let market = markets.find((market) => {
-      return BumpinUtils.decodeString(market.symbol) === BumpinUtils.decodeString(symbol);
+      return (
+        BumpinUtils.decodeString(market.symbol) ===
+        BumpinUtils.decodeString(symbol)
+      );
     });
     if (market === undefined) {
-      throw new BumpinAccountNotFound("Market: " + BumpinUtils.decodeString(symbol));
+      throw new BumpinAccountNotFound(
+        "Market: " + BumpinUtils.decodeString(symbol)
+      );
     }
     return market;
   }

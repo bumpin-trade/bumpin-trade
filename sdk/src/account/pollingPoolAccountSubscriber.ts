@@ -1,11 +1,13 @@
 import { AccountSubscriber, DataAndSlot } from "./types";
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { Pool } from "../typedef";
+import { PoolAccount } from "../typedef";
 import { BulkAccountLoader } from "./bulkAccountLoader";
 import { BumpinTrade } from "../types/bumpin_trade";
 
-export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
+export class PollingPoolAccountSubscriber
+  implements AccountSubscriber<PoolAccount>
+{
   isSubscribed: boolean;
   program: Program<BumpinTrade>;
   poolPublicKey: PublicKey;
@@ -14,7 +16,7 @@ export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
   callbackId?: string;
   errorCallbackId?: string;
 
-  pool?: DataAndSlot<Pool>;
+  pool?: DataAndSlot<PoolAccount>;
 
   public constructor(
     program: Program<BumpinTrade>,
@@ -27,7 +29,7 @@ export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
     this.poolPublicKey = poolPublicKey;
   }
 
-  async subscribe(userAccount?: Pool): Promise<boolean> {
+  async subscribe(userAccount?: PoolAccount): Promise<boolean> {
     if (this.isSubscribed) {
       return true;
     }
@@ -91,7 +93,7 @@ export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
       );
       if (dataAndContext.context.slot > (this.pool?.slot ?? 0)) {
         this.pool = {
-          data: dataAndContext.data as any as Pool,
+          data: dataAndContext.data as any as PoolAccount,
           slot: dataAndContext.context.slot,
         };
       }
@@ -127,7 +129,7 @@ export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
     }
   }
 
-  public getAccountAndSlot(): DataAndSlot<Pool> {
+  public getAccountAndSlot(): DataAndSlot<PoolAccount> {
     if (!this.doesAccountExist() || !this.pool) {
       throw new Error(
         "You must call `subscribe` or `fetch` before using this function"
@@ -136,7 +138,7 @@ export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
     return this.pool;
   }
 
-  public updateData(userAccount: Pool, slot: number): void {
+  public updateData(userAccount: PoolAccount, slot: number): void {
     if (!this.pool || this.pool.slot < slot) {
       this.pool = { data: userAccount, slot };
       /*
@@ -145,7 +147,7 @@ export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
     }
   }
 
-  private printPool(pool_data: DataAndSlot<Pool>) {
+  private printPool(pool_data: DataAndSlot<PoolAccount>) {
     console.log(`Pool Info: ${pool_data.data}`);
     let pool = pool_data.data;
     console.log(`Name: ${pool.name.join(", ")}`);

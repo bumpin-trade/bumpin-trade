@@ -2,11 +2,11 @@ import { AccountSubscriber, DataAndSlot } from "./types";
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import {
-  OrderStatus,
-  PositionStatus,
+  OrderStatusAccount,
+  PositionStatusAccount,
   UserAccount,
-  UserStakeStatus,
-  UserTokenStatus,
+  UserStakeStatusAccount,
+  UserTokenStatusAccount,
 } from "../typedef";
 import { BulkAccountLoader } from "./bulkAccountLoader";
 import { BumpinTrade } from "../types/bumpin_trade";
@@ -98,7 +98,7 @@ export class PollingUserAccountSubscriber
 
     console.log("Tokens:");
     user.tokens.forEach((token, index) => {
-      if (isEqual(token.userTokenStatus, UserTokenStatus.INIT)) {
+      if (isEqual(token.userTokenStatus, UserTokenStatusAccount.INIT)) {
         return;
       }
       console.log(`  Token ${index + 1}:`);
@@ -113,7 +113,7 @@ export class PollingUserAccountSubscriber
 
     console.log("Stakes:");
     user.stakes.forEach((stake, index) => {
-      if (isEqual(stake.userStakeStatus, UserStakeStatus.INIT)) {
+      if (isEqual(stake.userStakeStatus, UserStakeStatusAccount.INIT)) {
         return;
       }
       console.log(`  Stake ${index + 1}:`);
@@ -130,7 +130,7 @@ export class PollingUserAccountSubscriber
 
     console.log("Positions:");
     user.positions.forEach((position, index) => {
-      if (isEqual(position.status, PositionStatus.INIT)) {
+      if (isEqual(position.status, PositionStatusAccount.INIT)) {
         return;
       }
       console.log(`  Position ${index + 1}:`);
@@ -180,7 +180,7 @@ export class PollingUserAccountSubscriber
 
     console.log("Orders:");
     user.orders.forEach((order, index) => {
-      if (isEqual(order.status, OrderStatus.INIT)) {
+      if (isEqual(order.status, OrderStatusAccount.INIT)) {
         return;
       }
       console.log(`  Order ${index + 1}:`);
