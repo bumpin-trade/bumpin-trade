@@ -29,7 +29,7 @@ export class BumpinPoolNotFound extends Error {
     mint: PublicKey;
 
     constructor(mint: PublicKey) {
-        super(`Pool not found: ${mint}`);
+        super(`Pool not found: ${mint.toString()}`);
         this.mint = mint;
         Object.setPrototypeOf(this, BumpinPoolNotFound.prototype);
     }
