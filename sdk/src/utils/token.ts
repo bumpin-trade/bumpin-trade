@@ -121,6 +121,19 @@ export class BumpinTokenUtils {
         return tradeToken;
     }
 
+    public static getTradeTokenByOraclePublicKey(
+        oracle: PublicKey,
+        tradeTokens: TradeToken[]
+    ): TradeToken {
+        let tradeToken = tradeTokens.find((tradeToken) => {
+            return tradeToken.oracleKey.equals(oracle);
+        });
+        if (tradeToken === undefined) {
+            throw new BumpinAccountNotFound("TradeToken: " + oracle);
+        }
+        return tradeToken;
+    }
+
     public static async getTokenAccountFromWalletAndKey(
         connection: Connection,
         walletPublicKey: PublicKey,

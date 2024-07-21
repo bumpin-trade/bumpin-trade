@@ -15,7 +15,7 @@ import {
     Pool,
     PoolSummary,
     Rewards,
-    State,
+    StateAccount,
     TokenBalance,
     TradeToken,
     UserAccount,
@@ -475,7 +475,7 @@ export class BumpinClient {
         return this.userComponent!.getUser(sync);
     }
 
-    public async getState(sync: boolean = false): Promise<State> {
+    public async getState(sync: boolean = false): Promise<StateAccount> {
         if (!this.stateSubscriber || !this.stateSubscriber.isSubscribed) {
             throw new BumpinSubscriptionFailed("State", 0);
         }

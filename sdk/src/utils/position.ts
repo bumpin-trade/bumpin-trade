@@ -55,8 +55,8 @@ export class BumpinPositionUtils {
             if (isEqual(userPosition.status, PositionStatus.INIT)) {
                 continue;
             }
-            let indexTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
-                userPosition.indexMintKey,
+            let indexTradeToken = BumpinTokenUtils.getTradeTokenByOraclePublicKey(
+                userPosition.indexMintOracle,
                 tradeTokens
             );
             let marginTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(

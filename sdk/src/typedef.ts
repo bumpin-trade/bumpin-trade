@@ -61,7 +61,7 @@ export type InitializePoolParams = {
     stable: boolean;
 };
 
-export type State = {
+export type StateAccount = {
     admin: PublicKey;
     bumpSigner: PublicKey;
     keeperSigner: PublicKey;
@@ -262,7 +262,7 @@ export type UserPosition = {
     realizedPnl: BN;
     userKey: PublicKey;
     marginMintKey: PublicKey;
-    indexMintKey: PublicKey;
+    indexMintOracle: PublicKey;
     positionKey: PublicKey;
     symbol: number[];
     updatedAt: BN;
