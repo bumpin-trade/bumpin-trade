@@ -1,11 +1,11 @@
 import { AccountSubscriber, DataAndSlot } from "./types";
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { State } from "../typedef";
+import { StateAccount } from "../typedef";
 import { BulkAccountLoader } from "./bulkAccountLoader";
 import { BumpinTrade } from "../types/bumpin_trade";
 
-export class PollingStateAccountSubscriber implements AccountSubscriber<State> {
+export class PollingStateAccountSubscriber implements AccountSubscriber<StateAccount> {
   isSubscribed: boolean;
   program: Program<BumpinTrade>;
   userAccountPublicKey: PublicKey;
@@ -14,7 +14,7 @@ export class PollingStateAccountSubscriber implements AccountSubscriber<State> {
   callbackId?: string;
   errorCallbackId?: string;
 
-  state?: DataAndSlot<State>;
+  state?: DataAndSlot<StateAccount>;
 
   public constructor(
     program: Program<BumpinTrade>,
@@ -27,7 +27,7 @@ export class PollingStateAccountSubscriber implements AccountSubscriber<State> {
     this.userAccountPublicKey = publicKey;
   }
 
-  async subscribe(userAccount?: State): Promise<boolean> {
+  async subscribe(userAccount?: StateAccount): Promise<boolean> {
     if (this.isSubscribed) {
       return true;
     }
@@ -88,7 +88,7 @@ export class PollingStateAccountSubscriber implements AccountSubscriber<State> {
       );
       if (dataAndContext.context.slot > (this.state?.slot ?? 0)) {
         this.state = {
-          data: dataAndContext.data as any as State,
+          data: dataAndContext.data as any as StateAccount,
           slot: dataAndContext.context.slot,
         };
       }
@@ -127,7 +127,7 @@ export class PollingStateAccountSubscriber implements AccountSubscriber<State> {
     }
   }
 
-  public getAccountAndSlot(): DataAndSlot<State> {
+  public getAccountAndSlot(): DataAndSlot<StateAccount> {
     if (!this.doesAccountExist() || !this.state) {
       throw new Error(
         "You must call `subscribe` or `fetch` before using this function"
@@ -136,7 +136,7 @@ export class PollingStateAccountSubscriber implements AccountSubscriber<State> {
     return this.state;
   }
 
-  public updateData(userAccount: State, slot: number): void {
+  public updateData(userAccount: StateAccount, slot: number): void {
     if (!this.state || this.state.slot < slot) {
       this.state = { data: userAccount, slot };
     }

@@ -1,11 +1,9 @@
 use std::ops::{Deref, DerefMut};
 
-use anchor_lang::{emit, ToAccountInfo};
 use anchor_lang::prelude::*;
-use anchor_lang::prelude::{Account, Program, Signer};
+use anchor_lang::{emit, ToAccountInfo};
 use anchor_spl::token::{Token, TokenAccount};
 
-use crate::{position, position_mut, validate};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{cal_utils, UpdatePositionLeverageParams, UpdatePositionMarginParams};
 use crate::math::casting::Cast;
@@ -18,7 +16,7 @@ use crate::state::bump_events::{
 use crate::state::infrastructure::user_order::{
     OrderSide, OrderType, PositionSide, StopType, UserOrder,
 };
-use crate::state::infrastructure::user_position::{PositionStatus, UserPosition};
+use crate::state::infrastructure::user_position::UserPosition;
 use crate::state::market::{Market, UpdateOIParams};
 use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
@@ -30,6 +28,7 @@ use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::{User, UserTokenUpdateReason};
 use crate::state::vault_map::VaultMap;
 use crate::utils::{pda, token};
+use crate::validate;
 
 pub fn handle_execute_order<'info>(
     user: &mut User,
@@ -54,21 +53,10 @@ pub fn handle_execute_order<'info>(
     let stable_pool_vault = vault_map.get_account(&stable_pool.pool_vault_key)?;
     let mut stable_trade_token =
         trade_token_map.get_trade_token_ref_mut(&market.stable_pool_mint_key)?;
-    let token_vault = if user_order.order_side.eq(&OrderSide::LONG) {
-        vault_map.get_account(&trade_token.vault_key)?
-    } else {
-        vault_map.get_account(&stable_trade_token.vault_key)?
+    let token_vault = match use_base_token(&user_order.position_side, &user_order.order_side)? {
+        true => vault_map.get_account(&trade_token.vault_key)?,
+        false => vault_map.get_account(&stable_trade_token.vault_key)?,
     };
-
-    //validate trade_token_vault
-    validate!(
-        if user_order.order_side.eq(&OrderSide::LONG) {
-            trade_token.vault_key.eq(token_vault.to_account_info().key)
-        } else {
-            stable_trade_token.vault_key.eq(token_vault.to_account_info().key)
-        },
-        BumpErrorCode::InvalidParam
-    )?;
 
     //validate order
     validate_execute_order(&user_order, &market)?;
@@ -82,10 +70,9 @@ pub fn handle_execute_order<'info>(
     )?;
 
     let margin_token_price = oracle_map
-        .get_price_data(if user_order.order_side.eq(&OrderSide::LONG) {
-            &trade_token.oracle_key
-        } else {
-            &stable_trade_token.oracle_key
+        .get_price_data(match use_base_token(&user_order.position_side, &user_order.order_side)? {
+            true => &trade_token.oracle_key,
+            false => &stable_trade_token.oracle_key,
         })
         .map_err(|_e| BumpErrorCode::OracleNotFound)?
         .price;
@@ -93,18 +80,16 @@ pub fn handle_execute_order<'info>(
     market.deref_mut().update_market_funding_fee_rate(
         state_account,
         margin_token_price,
-        if user_order.order_side.eq(&OrderSide::LONG) {
-            trade_token.decimals
-        } else {
-            stable_trade_token.decimals
+        match use_base_token(&user_order.position_side, &user_order.order_side)? {
+            true => trade_token.decimals,
+            false => stable_trade_token.decimals,
         },
     )?;
-
-    if user_order.order_side.eq(&OrderSide::LONG) {
-        base_token_pool.deref_mut().update_pool_borrowing_fee_rate()?;
-    } else {
-        stable_pool.deref_mut().update_pool_borrowing_fee_rate()?;
+    match use_base_token(&user_order.position_side, &user_order.order_side)? {
+        true => base_token_pool.deref_mut().update_pool_borrowing_fee_rate()?,
+        false => stable_pool.deref_mut().update_pool_borrowing_fee_rate()?,
     }
+
     let position_key = pda::generate_position_key(
         &user_key,
         market.symbol,
@@ -112,26 +97,26 @@ pub fn handle_execute_order<'info>(
         program_id,
     )?;
 
+    user_order.print();
     // //do execute order and change position
     match user_order.position_side {
         PositionSide::NONE => Err(BumpErrorCode::PositionSideNotSupport),
         PositionSide::INCREASE => {
             {
-                let margin_token = if user_order.order_side.eq(&OrderSide::LONG) {
-                    market.pool_mint_key
-                } else {
-                    market.stable_pool_mint_key
-                };
+                let margin_token =
+                    match use_base_token(&user_order.position_side, &user_order.order_side)? {
+                        true => market.pool_mint_key,
+                        false => market.stable_pool_mint_key,
+                    };
                 drop(market);
                 //calculate real order_margin with validation
                 let (order_margin, order_margin_from_balance) = execute_increase_order_margin(
                     user_token_account.to_account_info().key,
                     &user_order,
                     &margin_token,
-                    if user_order.order_side.eq(&OrderSide::LONG) {
-                        trade_token.decimals
-                    } else {
-                        stable_trade_token.decimals
+                    match use_base_token(&user_order.position_side, &user_order.order_side)? {
+                        true => trade_token.decimals,
+                        false => stable_trade_token.decimals,
                     },
                     user,
                     margin_token_price,
@@ -203,23 +188,26 @@ pub fn handle_execute_order<'info>(
 
         PositionSide::DECREASE => {
             {
-                let position_side = { position!(&user.positions, &position_key)?.is_long };
                 //decrease
                 let position = user.get_user_position_ref(&position_key)?;
-                if position.position_size == 0u128 || position.status.eq(&PositionStatus::INIT) {
+                let position_side = position.is_long;
+                if position.position_size == 0u128 {
+                    return Err(BumpErrorCode::CouldNotFindUserPosition.into());
+                }
+                if position_side == is_long {
                     return Err(BumpErrorCode::InvalidParam.into());
                 }
-                if position.is_long == is_long {
-                    return Err(BumpErrorCode::InvalidParam.into());
-                }
-
                 decrease_position(
                     DecreasePositionParams {
                         order_id: user_order.order_id,
                         is_liquidation: false,
                         is_portfolio_margin: false,
                         margin_token: user_order.margin_mint_key,
-                        decrease_size: user_order.order_size,
+                        decrease_size: if position.position_size < user_order.order_size {
+                            position.position_size
+                        } else {
+                            user_order.order_size
+                        },
                         execute_price,
                     },
                     user,
@@ -228,11 +216,13 @@ pub fn handle_execute_order<'info>(
                     stable_pool.deref_mut(),
                     state_account,
                     Some(user_token_account),
-                    if position_side { pool_vault } else { stable_pool_vault },
-                    if user_order.order_side.eq(&OrderSide::LONG) {
-                        trade_token.deref_mut()
-                    } else {
-                        stable_trade_token.deref_mut()
+                    match use_base_token(&user_order.position_side, &user_order.order_side)? {
+                        true => { pool_vault }
+                        false => { stable_pool_vault }
+                    },
+                    match use_base_token(&user_order.position_side, &user_order.order_side)? {
+                        true => trade_token.deref_mut(),
+                        false => stable_trade_token.deref_mut(),
                     },
                     token_vault,
                     bump_signer,
@@ -247,6 +237,16 @@ pub fn handle_execute_order<'info>(
     //delete order
     user.delete_order(user_order.order_id)?;
     Ok(())
+}
+
+pub fn use_base_token(position_side: &PositionSide, order_side: &OrderSide) -> BumpResult<bool> {
+    match (position_side, order_side) {
+        (PositionSide::INCREASE, OrderSide::LONG) => Ok(true),
+        (PositionSide::INCREASE, OrderSide::SHORT) => Ok(false),
+        (PositionSide::DECREASE, OrderSide::LONG) => Ok(false),
+        (PositionSide::DECREASE, OrderSide::SHORT) => Ok(true),
+        _ => return Err(BumpErrorCode::InvalidParam),
+    }
 }
 
 fn execute_increase_order_margin(
@@ -330,19 +330,6 @@ fn get_execution_price(index_price: u128, order: &UserOrder) -> BumpResult<u128>
 }
 
 fn validate_execute_order(order: &UserOrder, market: &Market) -> BumpResult<()> {
-    // token verify
-    if order.position_side.eq(&PositionSide::INCREASE) {
-        if order.order_side.eq(&OrderSide::LONG) && order.margin_mint_key != market.pool_mint_key {
-            return Err(BumpErrorCode::TokenNotMatch.into());
-        }
-
-        if order.order_side.eq(&OrderSide::SHORT)
-            && order.margin_mint_key != market.stable_pool_mint_key
-        {
-            return Err(BumpErrorCode::TokenNotMatch);
-        }
-    }
-
     if order.leverage > market.config.maximum_leverage
         || order.leverage < market.config.minimum_leverage
     {
@@ -364,22 +351,29 @@ pub fn update_funding_fee(
         market.funding_fee.short_funding_fee_amount_per_size
     };
 
-    let realized_funding_fee = cal_utils::mul_small_rate_i(
+    let realized_funding_fee_delta = cal_utils::mul_small_rate_i(
         position.position_size.cast::<i128>()?,
         market_funding_fee_per_size
             .cast::<i128>()?
             .safe_sub(position.open_funding_fee_amount_per_size.cast::<i128>()?)?,
     )?;
+    if position.is_long {
+        position.add_realized_funding_fee(realized_funding_fee_delta)?;
+        position.add_realized_funding_fee_in_usd(cal_utils::token_to_usd_i(
+            realized_funding_fee_delta,
+            token.decimals,
+            token_price,
+        )?)?;
+    } else {
+        let realized_funding_fee =
+            cal_utils::usd_to_token_i(realized_funding_fee_delta, token.decimals, token_price)?;
+        position.add_realized_funding_fee(realized_funding_fee)?;
+        position.add_realized_funding_fee_in_usd(realized_funding_fee_delta)?
+    }
 
-    position.add_realized_funding_fee(realized_funding_fee)?;
-    position.add_realized_funding_fee_in_usd(cal_utils::token_to_usd_i(
-        realized_funding_fee,
-        token.decimals,
-        token_price,
-    )?)?;
     position.set_open_funding_fee_amount_per_size(market_funding_fee_per_size)?;
-    market.update_market_total_funding_fee(realized_funding_fee, position.is_long)?;
-    pool.update_pool_funding_fee(realized_funding_fee, true)?;
+    market.update_market_total_funding_fee(realized_funding_fee_delta, position.is_long)?;
+    pool.update_pool_funding_fee(realized_funding_fee_delta, true)?;
     Ok(())
 }
 
@@ -427,8 +421,9 @@ pub fn decrease_position<'info>(
     oracle_map: &mut OracleMap,
     position_key: &Pubkey,
 ) -> BumpResult<()> {
+    msg!("===========decrease_position");
     let (is_long, position_deletion, pre_position, response) = {
-        let position = position_mut!(&mut user.positions, position_key)?;
+        let position = user.get_user_position_mut_ref(position_key)?;
         let pre_position = *position;
         let position_un_pnl_usd = position.get_position_un_pnl_usd(params.execute_price)?;
         let margin_mint_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
@@ -451,7 +446,6 @@ pub fn decrease_position<'info>(
             params.is_liquidation,
             params.is_portfolio_margin,
             position_un_pnl_usd,
-            trade_token.decimals,
             margin_mint_token_price,
             market,
             state_account,
@@ -464,9 +458,9 @@ pub fn decrease_position<'info>(
             return Err(BumpErrorCode::AmountNotEnough);
         }
         let position_deletion = if params.decrease_size != position.position_size {
+            update_decrease_position(position, params.decrease_size, &response)?;
             false
         } else {
-            update_decrease_position(position, params.decrease_size, &response)?;
             true
         };
         (position.is_long, position_deletion, pre_position, response)
@@ -475,7 +469,6 @@ pub fn decrease_position<'info>(
     if position_deletion {
         user.delete_position(position_key)?;
     }
-
     //collect fee
     collect_decrease_fee(
         stake_token_pool,
@@ -911,7 +904,6 @@ pub fn calculate_decrease_position(
     is_liquidation: bool,
     is_portfolio_margin: bool,
     pnl: i128,
-    decimals: u16,
     margin_mint_token_price: u128,
     market: &Market,
     state: &State,
@@ -968,7 +960,7 @@ pub fn calculate_decrease_position(
                     )?)?
                     .safe_add(pnl)?
                     .safe_sub(position.get_position_mm(market, state)?.cast::<i128>()?)?,
-                decimals,
+                trade_token.decimals,
                 margin_mint_token_price,
             )?
         } else {
@@ -988,7 +980,7 @@ pub fn calculate_decrease_position(
                     settle_borrowing_fee_in_usd,
                     settle_close_fee_in_usd,
                 )?)?,
-            decimals,
+            trade_token.decimals,
             margin_mint_token_price,
         )?;
     }
@@ -1004,7 +996,7 @@ pub fn calculate_decrease_position(
     //(settle_margin - decrease_margin) * price / decimal
     response.user_realized_pnl = cal_utils::token_to_usd_i(
         response.user_realized_pnl_token,
-        decimals,
+        trade_token.decimals,
         margin_mint_token_price,
     )?;
     response.decrease_margin_in_usd_from_portfolio = if cal_utils::add_u128(
@@ -1030,10 +1022,10 @@ fn get_pos_fee_in_usd(
     borrowing_fee_in_usd: u128,
     close_fee_in_usd: u128,
 ) -> BumpResult<i128> {
-    funding_fee_in_usd
+    let result = funding_fee_in_usd
         .safe_add(borrowing_fee_in_usd.cast::<i128>()?)?
-        .safe_add(close_fee_in_usd.cast::<i128>()?)?
-        .cast::<i128>()
+        .safe_add(close_fee_in_usd.cast::<i128>()?)?;
+    Ok(result)
 }
 
 fn cal_decrease_borrowing_fee(
@@ -1220,13 +1212,13 @@ pub fn increase_position(
         position.set_portfolio_margin(order.is_portfolio_margin)?;
         position.set_margin_mint(order.margin_mint_key)?;
         position.set_entry_price(execute_price)?;
-        position.set_initial_margin(increase_margin)?;
-        position.set_initial_margin_usd(cal_utils::token_to_usd_u(
+        position.add_initial_margin(increase_margin)?;
+        position.add_initial_margin_usd(cal_utils::token_to_usd_u(
             increase_margin,
             decimal,
             margin_token_price,
         )?)?;
-        position.set_initial_margin_usd_from_portfolio(cal_utils::token_to_usd_u(
+        position.add_initial_margin_usd_from_portfolio(cal_utils::token_to_usd_u(
             increase_margin_from_balance,
             decimal,
             margin_token_price,
@@ -1265,37 +1257,37 @@ pub fn increase_position(
     } else {
         validate!(is_long.eq(&position.is_long), BumpErrorCode::OnlyOneDirectionPositionIsAllowed)?;
         //increase position
-        let pre_position = position.clone();
+        let pre_position = *position;
         update_borrowing_fee(
             position,
             if is_long { base_token_pool.deref_mut() } else { stable_pool.deref_mut() },
             margin_token_price,
-            &trade_token,
+            if is_long { &trade_token } else { &stable_trade_token },
         )?;
         update_funding_fee(
             position,
             market.deref_mut(),
             if is_long { base_token_pool.deref_mut() } else { stable_pool.deref_mut() },
             margin_token_price,
-            &trade_token,
+            if is_long { &trade_token } else { &stable_trade_token },
         )?;
         position.set_entry_price(cal_utils::compute_avg_entry_price(
             position.position_size,
             position.entry_price,
             increase_size,
-            margin_token_price,
+            execute_price,
             market.config.tick_size,
             position.is_long,
         )?)?;
         position.add_initial_margin(increase_margin)?;
         position.add_initial_margin_usd(cal_utils::token_to_usd_u(
             increase_margin,
-            trade_token.decimals,
+            decimal,
             margin_token_price,
         )?)?;
         position.add_initial_margin_usd_from_portfolio(cal_utils::token_to_usd_u(
             increase_margin_from_balance,
-            trade_token.decimals,
+            decimal,
             margin_token_price,
         )?)?;
         position.add_position_size(increase_size)?;

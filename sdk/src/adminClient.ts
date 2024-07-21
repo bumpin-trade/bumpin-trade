@@ -19,7 +19,7 @@ import {
   Market,
   Pool,
   PoolConfig,
-  State,
+  StateAccount,
   TradeToken,
 } from "./typedef";
 import { BumpinAdminConfig } from "./bumpinAdminConfig";
@@ -37,7 +37,7 @@ export class BumpinAdmin {
 
   isInitialized: boolean = false;
 
-  state: State | null = null;
+  state: StateAccount | null = null;
   tradeTokens: TradeToken[] = [];
   pools: Pool[] = [];
   market: Market[] = [];

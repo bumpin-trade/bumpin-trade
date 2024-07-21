@@ -5,6 +5,7 @@ import {PriceData} from "@pythnetwork/client";
 import {BumpinUtils} from "./utils/utils";
 import {BumpinInvalidParameter, BumpinTokenNotFound} from "./errors";
 import BigNumber from "bignumber.js";
+import {isEqual} from "lodash";
 
 export class OracleSource {
     static readonly PYTH = {pyth: {}};
@@ -60,7 +61,7 @@ export type InitializePoolParams = {
     stable: boolean;
 };
 
-export type State = {
+export type StateAccount = {
     admin: PublicKey;
     bumpSigner: PublicKey;
     keeperSigner: PublicKey;
@@ -261,7 +262,7 @@ export type UserPosition = {
     realizedPnl: BN;
     userKey: PublicKey;
     marginMintKey: PublicKey;
-    indexMintKey: PublicKey;
+    indexMintOracle: PublicKey;
     positionKey: PublicKey;
     symbol: number[];
     updatedAt: BN;
@@ -275,6 +276,10 @@ export class OrderSide {
     static readonly NONE = {none: {}};
     static readonly LONG = {long: {}};
     static readonly SHORT = {short: {}};
+
+    toString() {
+        return isEqual(this, OrderSide.NONE) ? "None" : isEqual(this, OrderSide.LONG) ? "Long" : "Short";
+    }
 }
 
 export class OrderStatus {
@@ -286,6 +291,10 @@ export class PositionSide {
     static readonly NONE = {none: {}};
     static readonly INCREASE = {increase: {}};
     static readonly DECREASE = {decrease: {}};
+
+    toString() {
+        return isEqual(this, PositionSide.NONE) ? "None" : isEqual(this, PositionSide.INCREASE) ? "Increase" : "Decrease";
+    }
 }
 
 export class OrderType {
@@ -293,12 +302,20 @@ export class OrderType {
     static readonly MARKET = {market: {}};
     static readonly LIMIT = {limit: {}};
     static readonly STOP = {stop: {}};
+
+    toString() {
+        return isEqual(this, OrderType.NONE) ? "None" : isEqual(this, OrderType.MARKET) ? "Market" : isEqual(this, OrderType.LIMIT) ? "Limit" : "Stop";
+    }
 }
 
 export class StopType {
     static readonly NONE = {none: {}};
     static readonly StopLoss = {stopLoss: {}};
     static readonly TakeProfit = {takeProfit: {}};
+
+    toString() {
+        return isEqual(this, StopType.NONE) ? "None" : isEqual(this, StopType.StopLoss) ? "StopLoss" : "TakeProfit";
+    }
 }
 
 export type OrderSideValue =
