@@ -149,6 +149,7 @@ export class UserComponent extends Component {
                 tradeToken.mintKey
             );
 
+
         let remainingAccounts = [];
         remainingAccounts.push({
             pubkey: tradeToken.mintKey,

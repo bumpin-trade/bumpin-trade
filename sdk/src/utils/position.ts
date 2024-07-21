@@ -13,7 +13,6 @@ import {BN} from "@coral-xyz/anchor";
 import {BumpinTokenUtils} from "./token";
 // @ts-ignore
 import {isEqual} from "lodash";
-import {PublicKey} from "@solana/web3.js";
 import {BumpinMarketNotFound, BumpinPoolNotFound} from "../errors";
 import {BumpinMarketUtils} from "./market";
 import {BumpinPoolUtils} from "./pool";
@@ -57,15 +56,15 @@ export class BumpinPositionUtils {
             if (isEqual(userPosition.status, PositionStatus.INIT)) {
                 continue;
             }
-            let indexTradeToken = BumpinTokenUtils.getTradeTokenByOraclePublicKey(
+            const indexTradeToken = BumpinTokenUtils.getTradeTokenByOraclePublicKey(
                 userPosition.indexMintOracle,
                 tradeTokens
             );
-            let marginTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+            const marginTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
                 userPosition.marginMintKey,
                 tradeTokens
             );
-            let unPnlValue = await BumpinPositionUtils.getPositionUnPnlValue(
+            const unPnlValue = await BumpinPositionUtils.getPositionUnPnlValue(
                 oracle,
                 indexTradeToken,
                 marginTradeToken,
@@ -75,11 +74,11 @@ export class BumpinPositionUtils {
             if (!market) {
                 throw new BumpinMarketNotFound(userPosition.symbol);
             }
-            const pool = BumpinPoolUtils.getPoolByMintPublicKey(userPosition.isLong ? market.poolKey : market.stablePoolKey, pools);
+            const pool = BumpinPoolUtils.getPoolByPublicKey(userPosition.isLong ? market.poolKey : market.stablePoolKey, pools);
             if (!pool) {
                 throw new BumpinPoolNotFound(userPosition.isLong ? market.poolKey : market.stablePoolKey);
             }
-            let posFee = await BumpinPositionUtils.getPositionFee(oracle,
+            const posFee = await BumpinPositionUtils.getPositionFee(oracle,
                 userPosition, market, pool, marginTradeToken
             );
 
