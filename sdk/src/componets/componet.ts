@@ -8,6 +8,7 @@ import {
   BumpinClientInternalError,
   BumpinSubscriptionFailed,
 } from "../errors";
+import { State } from "../beans/beans";
 
 export abstract class Component {
   stateSubscriber: PollingStateAccountSubscriber;
@@ -24,7 +25,7 @@ export abstract class Component {
     this.program = program;
   }
 
-  protected getStateWithSlotSync(): DataAndSlot<StateAccount> {
+  protected getStateWithSlotSync(): DataAndSlot<State> {
     let stateAccount = this.stateSubscriber.state;
     if (!stateAccount) {
       throw new BumpinAccountNotFound("State");
@@ -32,19 +33,19 @@ export abstract class Component {
     return stateAccount;
   }
 
-  protected getStateSync(): StateAccount {
+  protected getStateSync(): State {
     let stateAccount = this.stateSubscriber.getAccountAndSlot();
     return stateAccount.data;
   }
 
-  protected async getState(sync: boolean = false): Promise<StateAccount> {
+  protected async getState(sync: boolean = false): Promise<State> {
     let stateWithSlot = await this.getStateWithSlot(sync);
     return stateWithSlot.data;
   }
 
   protected async getStateWithSlot(
     sync: boolean = false
-  ): Promise<DataAndSlot<StateAccount>> {
+  ): Promise<DataAndSlot<State>> {
     if (!this.stateSubscriber || !this.stateSubscriber.isSubscribed) {
       throw new BumpinSubscriptionFailed("State");
     }

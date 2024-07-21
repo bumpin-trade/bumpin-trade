@@ -1,5 +1,6 @@
 import { BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
+import BigNumber from "bignumber.js";
 
 export class BumpinClientNotInitialized extends Error {
   whichComponent: string;
@@ -40,15 +41,15 @@ export class BumpinPoolNotFound extends Error {
 }
 
 export class BumpinMarketNotFound extends Error {
-  symbol: number[];
+  symbol: string;
 
-  constructor(symbol: number[]) {
+  constructor(symbol: string) {
     super(`Pool not found: ${symbol}`);
     this.symbol = symbol;
     Object.setPrototypeOf(this, BumpinPoolNotFound.prototype);
   }
 
-  public getSymbol(): number[] {
+  public getSymbol(): string {
     return this.symbol;
   }
 }
@@ -75,10 +76,10 @@ export class BumpinInvalidParameter extends Error {
 }
 
 export class BumpinSupplyInsufficient extends Error {
-  minimalExpected: BN;
-  actualValue: BN;
+  minimalExpected: BigNumber;
+  actualValue: BigNumber;
 
-  constructor(minimalExpected: BN, actualValue: BN) {
+  constructor(minimalExpected: BigNumber, actualValue: BigNumber) {
     super(
       `Supply is insufficient: ${actualValue}  < ${minimalExpected} (expected)`
     );
@@ -87,20 +88,20 @@ export class BumpinSupplyInsufficient extends Error {
     Object.setPrototypeOf(this, BumpinSupplyInsufficient.prototype);
   }
 
-  public getMinimalExpected(): BN {
+  public getMinimalExpected(): BigNumber {
     return this.minimalExpected;
   }
 
-  public getActualValue(): BN {
+  public getActualValue(): BigNumber {
     return this.actualValue;
   }
 }
 
 export class BumpinValueInsufficient extends Error {
-  minimalExpected: BN;
-  actualValue: BN;
+  minimalExpected: BigNumber;
+  actualValue: BigNumber;
 
-  constructor(minimalExpected: BN, actualValue: BN) {
+  constructor(minimalExpected: BigNumber, actualValue: BigNumber) {
     super(
       `Value is insufficient: ${actualValue}  < ${minimalExpected} (expected)`
     );
@@ -109,11 +110,11 @@ export class BumpinValueInsufficient extends Error {
     Object.setPrototypeOf(this, BumpinValueInsufficient.prototype);
   }
 
-  public getMinimalExpected(): BN {
+  public getMinimalExpected(): BigNumber {
     return this.minimalExpected;
   }
 
-  public getActualValue(): BN {
+  public getActualValue(): BigNumber {
     return this.actualValue;
   }
 }

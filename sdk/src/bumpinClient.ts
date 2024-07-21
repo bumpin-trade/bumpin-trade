@@ -15,9 +15,7 @@ import {
   PoolAccount,
   PoolSummary,
   RewardsAccount,
-  StateAccount,
   TokenBalance,
-  TradeTokenAccount,
   UserAccount,
   UserClaimResult,
   UserClaimRewardsResult,
@@ -37,7 +35,6 @@ import { DataAndSlot } from "./account/types";
 import { PollingStateAccountSubscriber } from "./account/pollingStateAccountSubscriber";
 import { PoolComponent } from "./componets/pool";
 import { Pyth } from "./types/pyth";
-import { PythClient } from "./oracles/pythClient";
 import { UserComponent } from "./componets/user";
 import { TradeTokenComponent } from "./componets/tradeToken";
 import { MarketComponent } from "./componets/market";
@@ -50,6 +47,15 @@ import BigNumber from "bignumber.js";
 import { AccountLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { RewardsComponent } from "./componets/rewards";
 import "./types/bnExt";
+import {
+  Market,
+  Pool,
+  State,
+  TradeToken,
+  User,
+  UserStakeStatus,
+} from "./beans/beans";
+import { isEqual } from "lodash";
 
 export class BumpinClient {
   netType: NetType;
@@ -62,7 +68,6 @@ export class BumpinClient {
   bulkAccountLoader: BulkAccountLoader;
 
   programPyth: Program<Pyth> | undefined;
-  pythClient: PythClient;
 
   // Systems subscriptions
   stateSubscriber: PollingStateAccountSubscriber;
@@ -113,9 +118,6 @@ export class BumpinClient {
         JSON.parse(JSON.stringify(idlPyth)),
         this.provider
       );
-      this.pythClient = new PythClient(this.programPyth.provider.connection);
-    } else {
-      this.pythClient = new PythClient(this.connection);
     }
   }
 
@@ -130,35 +132,37 @@ export class BumpinClient {
 
     await this.stateSubscriber.subscribe();
 
-    this.poolComponent = new PoolComponent(
-      this.bulkAccountLoader,
-      this.stateSubscriber,
-      this.program
-    );
-    const p1 = this.poolComponent.subscribe();
-
     this.tradeTokenComponent = new TradeTokenComponent(
       this.bulkAccountLoader,
       this.stateSubscriber,
       this.program
     );
-    const p2 = this.tradeTokenComponent.subscribe();
+    await this.tradeTokenComponent.subscribe();
+
+    this.poolComponent = new PoolComponent(
+      this.bulkAccountLoader,
+      this.stateSubscriber,
+      this.tradeTokenComponent,
+      this.program
+    );
+    await this.poolComponent.subscribe();
 
     this.marketComponent = new MarketComponent(
       this.bulkAccountLoader,
       this.stateSubscriber,
+      this.tradeTokenComponent,
       this.program
     );
-    const p3 = this.marketComponent.subscribe();
+    const p1 = this.marketComponent.subscribe();
 
     this.rewardComponent = new RewardsComponent(
       this.bulkAccountLoader,
       this.stateSubscriber,
       this.program
     );
-    const p4 = this.rewardComponent.subscribe();
+    const p2 = this.rewardComponent.subscribe();
 
-    await Promise.all([p1, p2, p3, p4]);
+    await Promise.all([p1, p2]);
     this.isInitialized = true;
     console.log("BumpinClient initialized");
   }
@@ -176,9 +180,10 @@ export class BumpinClient {
       if (me) {
         this.userComponent = new UserComponent(
           this.wallet.publicKey,
-          this.pythClient,
           this.bulkAccountLoader,
           this.stateSubscriber,
+          this.tradeTokenComponent!,
+          this.poolComponent!,
           this.program
         );
         await this.userComponent.subscribe();
@@ -265,18 +270,16 @@ export class BumpinClient {
 
   public getTradeTokenPrice(tradeTokenKey: PublicKey): PriceData {
     this.checkInitialization();
-    return this.tradeTokenComponent!.getTradeTokenPrices(tradeTokenKey, 1)[0];
+    return this.tradeTokenComponent!.getTradeTokenPrices(tradeTokenKey);
   }
 
   public async getTradeTokenPriceByMintKey(
     mintKey: PublicKey
   ): Promise<PriceData> {
     this.checkInitialization();
-    let res = await this.tradeTokenComponent!.getTradeTokenPricesByMintKey(
-      mintKey,
-      1
+    return await this.tradeTokenComponent!.getTradeTokenPricesByMintKey(
+      mintKey
     );
-    return res[0];
   }
 
   public async getTradeTokenPriceByOracleKey(
@@ -384,7 +387,7 @@ export class BumpinClient {
 
   public async unStake(
     toPortfolio: boolean,
-    share: BN,
+    share: BigNumber,
     mint: PublicKey,
     sync: boolean = false
   ) {
@@ -456,12 +459,12 @@ export class BumpinClient {
     );
   }
 
-  public async getUser(sync: boolean = false): Promise<UserAccount> {
+  public async getUser(sync: boolean = false): Promise<User> {
     this.checkInitialization(true);
     return this.userComponent!.getUser(sync);
   }
 
-  public async getState(sync: boolean = false): Promise<StateAccount> {
+  public async getState(sync: boolean = false): Promise<State> {
     if (!this.stateSubscriber || !this.stateSubscriber.isSubscribed) {
       throw new BumpinSubscriptionFailed("State", 0);
     }
@@ -477,7 +480,7 @@ export class BumpinClient {
     return state.data;
   }
 
-  public async getPools(sync: boolean = false): Promise<PoolAccount[]> {
+  public async getPools(sync: boolean = false): Promise<Pool[]> {
     this.checkInitialization();
     return this.poolComponent!.getPools(sync);
   }
@@ -489,7 +492,7 @@ export class BumpinClient {
 
   public async getPoolsWithSlot(
     sync: boolean = false
-  ): Promise<DataAndSlot<PoolAccount>[]> {
+  ): Promise<DataAndSlot<Pool>[]> {
     this.checkInitialization();
     return this.poolComponent!.getPoolsWithSlot(sync);
   }
@@ -497,7 +500,7 @@ export class BumpinClient {
   public async getPool(
     poolKey: PublicKey,
     sync: boolean = false
-  ): Promise<PoolAccount> {
+  ): Promise<Pool> {
     this.checkInitialization();
     return this.poolComponent!.getPool(poolKey, sync);
   }
@@ -505,7 +508,7 @@ export class BumpinClient {
   public async getPoolByIndex(
     poolIndex: number,
     sync: boolean = false
-  ): Promise<PoolAccount> {
+  ): Promise<Pool> {
     this.checkInitialization();
     return this.poolComponent!.getPool(
       BumpinUtils.getPoolPda(this.program, poolIndex)[0],
@@ -516,21 +519,19 @@ export class BumpinClient {
   public async getPoolWithSlot(
     poolKey: PublicKey,
     sync: boolean = false
-  ): Promise<DataAndSlot<PoolAccount>> {
+  ): Promise<DataAndSlot<Pool>> {
     this.checkInitialization();
     return this.poolComponent!.getPoolWithSlot(poolKey, sync);
   }
 
-  public async getTradeTokens(
-    sync: boolean = false
-  ): Promise<TradeTokenAccount[]> {
+  public async getTradeTokens(sync: boolean = false): Promise<TradeToken[]> {
     this.checkInitialization();
     return this.tradeTokenComponent!.getTradeTokens(sync);
   }
 
   public async getTradeTokensWithSlot(
     sync: boolean = false
-  ): Promise<DataAndSlot<TradeTokenAccount>[]> {
+  ): Promise<DataAndSlot<TradeToken>[]> {
     this.checkInitialization();
     return this.tradeTokenComponent!.getTradeTokensWithSlot(sync);
   }
@@ -538,7 +539,7 @@ export class BumpinClient {
   public async getTradeToken(
     tradeTokenKey: PublicKey,
     sync: boolean = false
-  ): Promise<TradeTokenAccount> {
+  ): Promise<TradeToken> {
     this.checkInitialization();
     return this.tradeTokenComponent!.getTradeToken(tradeTokenKey, sync);
   }
@@ -546,7 +547,7 @@ export class BumpinClient {
   public async getTradeTokenByIndex(
     tradeTokenIndex: number,
     sync: boolean = false
-  ): Promise<TradeTokenAccount> {
+  ): Promise<TradeToken> {
     this.checkInitialization();
     return this.tradeTokenComponent!.getTradeToken(
       BumpinUtils.getTradeTokenPda(this.program, tradeTokenIndex)[0],
@@ -557,7 +558,7 @@ export class BumpinClient {
   public async getTradeTokenByMintKey(
     mintKey: PublicKey,
     sync: boolean = false
-  ): Promise<TradeTokenAccount> {
+  ): Promise<TradeToken> {
     this.checkInitialization();
     return this.tradeTokenComponent!.getTradeTokenByMintKey(mintKey, sync);
   }
@@ -565,7 +566,7 @@ export class BumpinClient {
   public async getTradeTokenByOracleKey(
     oracleKey: PublicKey,
     sync: boolean = false
-  ): Promise<TradeTokenAccount> {
+  ): Promise<TradeToken> {
     this.checkInitialization();
     return this.tradeTokenComponent!.getTradeTokenByOracleKey(oracleKey, sync);
   }
@@ -573,19 +574,19 @@ export class BumpinClient {
   public async getTradeTokenWithSlot(
     tradeTokenKey: PublicKey,
     sync: boolean = false
-  ): Promise<DataAndSlot<TradeTokenAccount>> {
+  ): Promise<DataAndSlot<TradeToken>> {
     this.checkInitialization();
     return this.tradeTokenComponent!.getTradeTokenWithSlot(tradeTokenKey, sync);
   }
 
-  public async getMarkets(sync: boolean = false): Promise<MarketAccount[]> {
+  public async getMarkets(sync: boolean = false): Promise<Market[]> {
     this.checkInitialization();
     return this.marketComponent!.getMarkets(sync);
   }
 
   public async getMarketsWithSlot(
     sync: boolean = false
-  ): Promise<DataAndSlot<MarketAccount>[]> {
+  ): Promise<DataAndSlot<Market>[]> {
     this.checkInitialization();
     return this.marketComponent!.getMarketsWithSlot(sync);
   }
@@ -593,7 +594,7 @@ export class BumpinClient {
   public async getMarket(
     marketKey: PublicKey,
     sync: boolean = false
-  ): Promise<MarketAccount> {
+  ): Promise<Market> {
     this.checkInitialization();
     return this.marketComponent!.getMarket(marketKey, sync);
   }
@@ -601,7 +602,7 @@ export class BumpinClient {
   public async getMarketByIndex(
     marketIndex: number,
     sync: boolean = false
-  ): Promise<MarketAccount> {
+  ): Promise<Market> {
     this.checkInitialization();
     return this.marketComponent!.getMarket(
       BumpinUtils.getMarketPda(this.program, marketIndex)[0],
@@ -612,7 +613,7 @@ export class BumpinClient {
   public async getMarketWithSlot(
     marketKey: PublicKey,
     sync: boolean = false
-  ): Promise<DataAndSlot<MarketAccount>> {
+  ): Promise<DataAndSlot<Market>> {
     this.checkInitialization();
     return this.marketComponent!.getMarketWithSlot(marketKey, sync);
   }
@@ -627,10 +628,8 @@ export class BumpinClient {
     this.checkInitialization();
     const marketKey = BumpinUtils.getMarketPda(this.program, marketIndex)[0];
     const market = await this.getMarket(marketKey, sync);
-    let long = market.fundingFee.longFundingFeeRate.toBigNumber().div(10 ** 10);
-    let short = market.fundingFee.shortFundingFeeRate
-      .toBigNumber()
-      .div(10 ** 10);
+    let long = market.fundingFee.longFundingFeeRate.div(10 ** 10);
+    let short = market.fundingFee.shortFundingFeeRate.div(10 ** 10);
     if (long.isNaN()) {
       long = new BigNumber(0);
     }
@@ -652,18 +651,11 @@ export class BumpinClient {
     const timestamp = BigNumber(Math.floor(Date.now() / 1000));
     const market = await this.getMarket(marketKey, sync);
     const pool = await this.getPool(market.poolKey, sync);
-    const timePassed = timestamp.minus(
-      pool.borrowingFee.updatedAt.toBigNumber()
-    );
+    const timePassed = timestamp.minus(pool.borrowingFee.updatedAt);
 
     return pool.balance.holdAmount
-      .toBigNumber()
-      .div(
-        pool.balance.amount
-          .toBigNumber()
-          .plus(pool.balance.unSettleAmount.toBigNumber())
-      )
-      .multipliedBy(pool.config.borrowingInterestRate.toBigNumber())
+      .div(pool.balance.amount.plus(pool.balance.unSettleAmount))
+      .multipliedBy(pool.config.borrowingInterestRate)
       .multipliedBy(timePassed)
       .div(timePassed)
       .toNumber();
@@ -678,13 +670,12 @@ export class BumpinClient {
       return new BigNumber(0);
     } else {
       return poolValueUsd.div(
-        pool.totalSupply
-          .toBigNumber()
-          .div(BigNumber(10).pow(BigNumber(tradeToken.decimals)))
+        pool.totalSupply.div(BigNumber(10).pow(BigNumber(tradeToken.decimals)))
       );
     }
   }
 
+  //TODO: Dean, check this
   public async getPoolValueUsd(
     poolKey: PublicKey,
     sync: boolean = false
@@ -692,13 +683,10 @@ export class BumpinClient {
     this.checkInitialization();
     const pool = await this.getPool(poolKey, sync);
     const tradeToken = await this.getTradeTokenByMintKey(pool.mintKey, sync);
-    const price = (
-      await this.tradeTokenComponent!.getTradeTokenPricesByMintKey(
-        pool.mintKey,
-        1,
-        sync
-      )
-    )[0];
+    const price = await this.tradeTokenComponent!.getTradeTokenPricesByMintKey(
+      pool.mintKey,
+      sync
+    );
     if (!price.price) {
       throw new BumpinInvalidParameter(
         "Price not found(undefined) for mint: " + pool.mintKey.toString()
@@ -709,12 +697,9 @@ export class BumpinClient {
       await this.getMarkets(sync)
     );
     // self usd value
-    let rawValue = BumpinUtils.toUsd(
-      pool.balance.amount.add(pool.balance.unSettleAmount),
-      price.price,
-      tradeToken.decimals
-    );
-
+    let rawValue = pool.balance.amount
+      .plus(pool.balance.unSettleAmount)
+      .multipliedBy(price.price!);
     if (!pool.stable) {
       // relative market unpnl usd value
       for (let relativeMarket of relativeMarkets) {
@@ -725,41 +710,32 @@ export class BumpinClient {
       }
       // relative stable pool gain and loss
       const stableAmount = pool.stableBalance.amount
-        .add(pool.stableBalance.unSettleAmount)
-        .sub(pool.stableBalance.lossAmount);
-      if (stableAmount.gt(ZERO)) {
-        const stablePrice = (
+        .plus(pool.stableBalance.unSettleAmount)
+        .minus(pool.stableBalance.lossAmount);
+      if (stableAmount.gt(BigNumber(0))) {
+        const stablePrice =
           await this.tradeTokenComponent!.getTradeTokenPricesByMintKey(
             pool.stableMintKey,
-            1,
             sync
-          )
-        )[0];
+          );
         if (!stablePrice.price) {
           throw new BumpinInvalidParameter(
             "Stable Price not found(undefined) for mint: " +
               pool.mintKey.toString()
           );
         }
-        rawValue = rawValue.plus(
-          BumpinUtils.toUsd(
-            stableAmount,
-            stablePrice.price,
-            tradeToken.decimals
-          )
-        );
+        rawValue = rawValue.plus(stableAmount.multipliedBy(stablePrice.price));
       }
     }
 
     return rawValue;
   }
 
-  public async getMarketUnPnlUsd(
-    market: MarketAccount
-  ): Promise<MarketUnPnlUsd> {
+  //TODO: Dean, check this
+  public async getMarketUnPnlUsd(market: Market): Promise<MarketUnPnlUsd> {
     this.checkInitialization();
-    let longUnPnl = ZERO;
-    let shortUnPnl = ZERO;
+    let longUnPnl = BigNumber(0);
+    let shortUnPnl = BigNumber(0);
 
     const longPosition = market.longOpenInterest;
     const shortPosition = market.shortOpenInterest;
@@ -778,37 +754,23 @@ export class BumpinClient {
     // cal long:
     if (!longPosition.entryPrice.isZero()) {
       longUnPnl = longPosition.openInterest
-        .mul(
-          new BN(price.price)
-            .mul(TEN.pow(new BN(Math.abs(price.exponent))))
-            .sub(longPosition.entryPrice)
-        )
+        .multipliedBy(BigNumber(price.price).minus(longPosition.entryPrice))
         .div(longPosition.entryPrice)
-        .mul(new BN(-1));
+        .multipliedBy(BigNumber(-1));
     }
 
     // cal short:
     if (!shortPosition.entryPrice.isZero()) {
       shortUnPnl = shortPosition.openInterest
-        .mul(
-          shortPosition.entryPrice.sub(
-            new BN(price.price).mul(TEN.pow(new BN(Math.abs(price.exponent))))
-          )
-        )
+        .multipliedBy(shortPosition.entryPrice.minus(price.price))
         .div(shortPosition.entryPrice)
-        .mul(new BN(-1));
+        .multipliedBy(BigNumber(-1));
     }
 
-    return new MarketUnPnlUsd(
-      new BigNumber(longUnPnl.toString()).dividedBy(
-        new BigNumber(10).pow(Math.abs(price.exponent))
-      ),
-      new BigNumber(shortUnPnl.toString()).dividedBy(
-        new BigNumber(10).pow(Math.abs(price.exponent))
-      )
-    );
+    return new MarketUnPnlUsd(longUnPnl, shortUnPnl);
   }
 
+  //TODO: Dean, check this
   public async getUserAccountNetValue(
     sync: boolean = false
   ): Promise<AccountValue> {
@@ -825,84 +787,62 @@ export class BumpinClient {
       await this.getMarkets(),
       await this.getPools()
     );
-    accountValue.netValue = BumpinUtils.amount2Size(
-      accountNetValue.accountNetValue,
-      8
-    );
-    accountValue.totalMM = BumpinUtils.amount2Size(accountNetValue.totalMM, 8);
+    accountValue.netValue = accountNetValue.accountNetValue;
+    accountValue.totalMM = accountNetValue.totalMM;
     return accountValue;
   }
 
+  //TODO: Dean, check this
   public async getUserAvailableValue(
     sync: boolean = false
   ): Promise<BigNumber> {
     this.checkInitialization(true);
     const user = await this.getUser(sync);
-    let pools = await this.getPools();
-    const poolMap: Map<PublicKey, PoolAccount> = new Map();
-    pools.forEach((pool) => {
-      poolMap.set(pool.key, pool);
-    });
-
-    let markets = await this.getMarkets();
-    const marketMap: Map<number[], MarketAccount> = new Map();
-    markets.forEach((market) => {
-      marketMap.set(market.symbol, market);
-    });
-    return BumpinUtils.amount2Size(
-      await this.userComponent!.getUserAvailableValue(
-        user,
-        await this.getTradeTokens(),
-        await this.getMarkets(),
-        await this.getPools()
-      ),
-      8
+    return await this.userComponent!.getUserAvailableValue(
+      user,
+      await this.getTradeTokens(),
+      await this.getMarkets(),
+      await this.getPools()
     );
   }
 
+  //TODO: Dean, check this
   public async claimUserRewards(): Promise<UserClaimResult> {
     this.checkInitialization(true);
     let user = await this.getUser();
     let claimResult: UserClaimResult = {
-      claimed: new BN(0),
-      unClaim: new BN(0),
-      total: new BN(0),
+      claimed: BigNumber(0),
+      unClaim: BigNumber(0),
+      total: BigNumber(0),
       rewards: [],
     };
     for (const stake of user.stakes) {
       if (
-        stake.userStakeStatus == UserStakeStatusAccount.USING &&
-        stake.userRewards.openRewardsPerStakeToken.gt(ZERO)
+        isEqual(stake.userStakeStatus, UserStakeStatus.USING) &&
+        stake.userRewards.openRewardsPerStakeToken.gt(BigNumber(0))
       ) {
         let pool = await this.getPool(stake.poolKey);
-        let oraclePriceData = await this.pythClient.getOraclePriceData(
+        const price = this.tradeTokenComponent!.getTradeTokenPrices(
           stake.userRewards.tokenKey
-        );
+        ).price!;
         let unRealisedRewards = pool.feeReward.cumulativeRewardsPerStakeToken
-          .sub(stake.userRewards.openRewardsPerStakeToken)
-          .mulSmallRate(stake.stakedShare)
-          .downSmallRate();
+          .minus(stake.userRewards.openRewardsPerStakeToken)
+          .multipliedBy(stake.stakedShare);
 
-        claimResult.total = claimResult.total.add(
+        claimResult.total = claimResult.total.plus(
           unRealisedRewards
-            .add(stake.userRewards.totalClaimRewardsAmount.downSmallRate())
-            .mul(oraclePriceData.price)
-            .downPrice()
+            .plus(stake.userRewards.totalClaimRewardsAmount)
+            .multipliedBy(price)
         );
-        claimResult.claimed = claimResult.claimed.add(
-          stake.userRewards.totalClaimRewardsAmount
-            .downSmallRate()
-            .mul(oraclePriceData.price)
-            .downPrice()
+        claimResult.claimed = claimResult.claimed.plus(
+          stake.userRewards.totalClaimRewardsAmount.multipliedBy(price)
         );
-        claimResult.unClaim = claimResult.unClaim.add(
-          unRealisedRewards.mul(oraclePriceData.price).downPrice()
+        claimResult.unClaim = claimResult.unClaim.plus(
+          unRealisedRewards.multipliedBy(price)
         );
         let userClaimRewardsResult: UserClaimRewardsResult = {
           pool: pool.name,
-          rewardsAmount: unRealisedRewards
-            .mul(oraclePriceData.price)
-            .downPrice(),
+          rewardsAmount: unRealisedRewards.multipliedBy(price),
         };
         claimResult.rewards.push(userClaimRewardsResult);
       }

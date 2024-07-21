@@ -10,6 +10,8 @@ import { PollingStateAccountSubscriber } from "../account/pollingStateAccountSub
 import { BumpinSubscriptionFailed } from "../errors";
 import { DataAndSlot } from "../account/types";
 import { PollingMarketAccountSubscriber } from "../account/pollingMarketAccountSubscriber";
+import { TradeTokenComponent } from "./tradeToken";
+import { Market } from "../beans/beans";
 
 export class MarketComponent extends Component {
   program: Program<BumpinTrade>;
@@ -18,6 +20,7 @@ export class MarketComponent extends Component {
   constructor(
     bulkAccountLoader: BulkAccountLoader,
     stateSubscriber: PollingStateAccountSubscriber,
+    tradeTokenComponent: TradeTokenComponent,
     program: Program<BumpinTrade>
   ) {
     super(stateSubscriber, program);
@@ -28,7 +31,8 @@ export class MarketComponent extends Component {
       let marketAccountSubscriber = new PollingMarketAccountSubscriber(
         program,
         pda,
-        bulkAccountLoader
+        bulkAccountLoader,
+        tradeTokenComponent
       );
       this.markets.set(pda.toString(), marketAccountSubscriber);
     }
@@ -46,15 +50,15 @@ export class MarketComponent extends Component {
     }
   }
 
-  public async getMarkets(sync: boolean = false): Promise<MarketAccount[]> {
+  public async getMarkets(sync: boolean = false): Promise<Market[]> {
     let markets = await this.getMarketsWithSlot(sync);
     return markets.map((dataAndSlot) => dataAndSlot.data);
   }
 
   public async getMarketsWithSlot(
     sync: boolean = false
-  ): Promise<DataAndSlot<MarketAccount>[]> {
-    let marketsWithSlot: DataAndSlot<MarketAccount>[] = [];
+  ): Promise<DataAndSlot<Market>[]> {
+    let marketsWithSlot: DataAndSlot<Market>[] = [];
     for (let marketAccountSubscriber of this.markets.values()) {
       if (sync) {
         await marketAccountSubscriber.fetch();
@@ -67,7 +71,7 @@ export class MarketComponent extends Component {
   public async getMarket(
     marketPublicKey: PublicKey,
     sync: boolean = false
-  ): Promise<MarketAccount> {
+  ): Promise<Market> {
     let marketWithSlot = await this.getMarketWithSlot(marketPublicKey, sync);
     return marketWithSlot.data;
   }
@@ -75,7 +79,7 @@ export class MarketComponent extends Component {
   public async getMarketWithSlot(
     marketPublicKey: PublicKey,
     sync: boolean = false
-  ): Promise<DataAndSlot<MarketAccount>> {
+  ): Promise<DataAndSlot<Market>> {
     const marketAccountSubscriber: PollingMarketAccountSubscriber | undefined =
       this.markets.get(marketPublicKey.toString());
     if (marketAccountSubscriber === undefined) {

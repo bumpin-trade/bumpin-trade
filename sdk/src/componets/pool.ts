@@ -1,5 +1,4 @@
 import { PublicKey } from "@solana/web3.js";
-import { PoolAccount } from "../typedef";
 import { PollingPoolAccountSubscriber } from "../account/pollingPoolAccountSubscriber";
 import { BulkAccountLoader } from "../account/bulkAccountLoader";
 import { Program } from "@coral-xyz/anchor";
@@ -10,6 +9,8 @@ import { Component } from "./componet";
 import { PollingStateAccountSubscriber } from "../account/pollingStateAccountSubscriber";
 import { BumpinSubscriptionFailed } from "../errors";
 import { DataAndSlot } from "../account/types";
+import { TradeTokenComponent } from "./tradeToken";
+import { Pool } from "../beans/beans";
 
 export class PoolComponent extends Component {
   program: Program<BumpinTrade>;
@@ -18,6 +19,7 @@ export class PoolComponent extends Component {
   constructor(
     bulkAccountLoader: BulkAccountLoader,
     stateSubscriber: PollingStateAccountSubscriber,
+    tradeTokenComponent: TradeTokenComponent,
     program: Program<BumpinTrade>
   ) {
     super(stateSubscriber, program);
@@ -28,7 +30,8 @@ export class PoolComponent extends Component {
       let poolAccountSubscriber = new PollingPoolAccountSubscriber(
         program,
         pda,
-        bulkAccountLoader
+        bulkAccountLoader,
+        tradeTokenComponent
       );
       this.pools.set(pda.toString(), poolAccountSubscriber);
     }
@@ -46,23 +49,28 @@ export class PoolComponent extends Component {
     }
   }
 
-  public async getPools(sync: boolean = false): Promise<PoolAccount[]> {
+  public async getPools(sync: boolean = false): Promise<Pool[]> {
     let pools = await this.getPoolsWithSlot(sync);
+    return pools.map((dataAndSlot) => dataAndSlot.data);
+  }
+
+  public getPoolsSync(): Pool[] {
+    let pools = this.getPoolsWithSlotSync();
     return pools.map((dataAndSlot) => dataAndSlot.data);
   }
 
   public async getPool(
     poolKey: PublicKey,
     sync: boolean = false
-  ): Promise<PoolAccount> {
+  ): Promise<Pool> {
     let poolWithSlot = await this.getPoolWithSlot(poolKey, sync);
     return poolWithSlot.data;
   }
 
   public async getPoolsWithSlot(
     sync: boolean = false
-  ): Promise<DataAndSlot<PoolAccount>[]> {
-    let poolsWithSlot: DataAndSlot<PoolAccount>[] = [];
+  ): Promise<DataAndSlot<Pool>[]> {
+    let poolsWithSlot: DataAndSlot<Pool>[] = [];
     for (let poolAccountSubscriber of this.pools.values()) {
       if (sync) {
         await poolAccountSubscriber.fetch();
@@ -72,10 +80,18 @@ export class PoolComponent extends Component {
     return poolsWithSlot;
   }
 
+  public getPoolsWithSlotSync(): DataAndSlot<Pool>[] {
+    let poolsWithSlot: DataAndSlot<Pool>[] = [];
+    for (let poolAccountSubscriber of this.pools.values()) {
+      poolsWithSlot.push(poolAccountSubscriber.getAccountAndSlot());
+    }
+    return poolsWithSlot;
+  }
+
   public async getPoolWithSlot(
     poolKey: PublicKey,
     sync: boolean = false
-  ): Promise<DataAndSlot<PoolAccount>> {
+  ): Promise<DataAndSlot<Pool>> {
     const poolAccountSubscriber: PollingPoolAccountSubscriber | undefined =
       this.pools.get(poolKey.toString());
     if (poolAccountSubscriber === undefined) {

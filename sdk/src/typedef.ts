@@ -6,6 +6,13 @@ import { BumpinUtils } from "./utils/utils";
 import { BumpinInvalidParameter, BumpinTokenNotFound } from "./errors";
 import BigNumber from "bignumber.js";
 import { isEqual } from "lodash";
+import {
+  MarketConfig,
+  MarketFundingFee,
+  MarketPosition,
+  Pool,
+  TradeToken,
+} from "./beans/beans";
 
 export class OracleSource {
   static readonly PYTH = { pyth: {} };
@@ -406,33 +413,33 @@ export type UserAccount = {
 };
 
 export type TradeTokenBalance = {
-  tokenNetValue: BN;
-  tokenUsedValue: BN;
-  tokenBorrowingValue: BN;
+  tokenNetValue: BigNumber;
+  tokenUsedValue: BigNumber;
+  tokenBorrowingValue: BigNumber;
 };
 export type AccountNetValue = {
-  accountNetValue: BN;
-  totalMM: BN;
+  accountNetValue: BigNumber;
+  totalMM: BigNumber;
 };
 export type PositionBalance = {
   // total_im_usd
-  initialMarginUsd: BN;
+  initialMarginUsd: BigNumber;
   // total_im_usd_from_portfolio
-  initialMarginUsdFromPortfolio: BN;
+  initialMarginUsdFromPortfolio: BigNumber;
   // total_un_pnl_usd
-  positionUnPnl: BN;
+  positionUnPnl: BigNumber;
   // total_position_mm
-  mmUsd: BN;
-  positionFee: BN;
+  mmUsd: BigNumber;
+  positionFee: BigNumber;
 };
 
 export type PositionFee = {
-  fundingFee: BN;
-  fundingFeeUsd: BN;
-  borrowingFee: BN;
-  borrowingFeeUsd: BN;
-  closeFeeUsd: BN;
-  totalUsd: BN;
+  fundingFee: BigNumber;
+  fundingFeeUsd: BigNumber;
+  borrowingFee: BigNumber;
+  borrowingFeeUsd: BigNumber;
+  closeFeeUsd: BigNumber;
+  totalUsd: BigNumber;
 };
 
 export type PlaceOrderParams = {
@@ -471,45 +478,45 @@ export type InnerPlaceOrderParams = {
 };
 
 export type MarketWithIndexTradeTokenPrices = {
-  longOpenInterest: MarketPositionAccount;
-  shortOpenInterest: MarketPositionAccount;
-  fundingFee: MarketFundingFeeAccount;
-  config: MarketConfigAccount;
+  longOpenInterest: MarketPosition;
+  shortOpenInterest: MarketPosition;
+  fundingFee: MarketFundingFee;
+  config: MarketConfig;
   poolKey: PublicKey;
   poolMintKey: PublicKey;
   indexMintOracle: PublicKey;
   stablePoolKey: PublicKey;
   stablePoolMintKey: PublicKey;
   index: number;
-  symbol: number[];
+  symbol: string;
   indexTradeTokenPrices: PriceData[];
 };
 
 export type PoolSummary = {
-  pool: PoolAccount;
+  pool: Pool;
   netPrice: BigNumber;
   categoryTags: string[];
   markets: MarketWithIndexTradeTokenPrices[];
 };
 
 export type UserClaimResult = {
-  total: BN;
-  claimed: BN;
-  unClaim: BN;
+  total: BigNumber;
+  claimed: BigNumber;
+  unClaim: BigNumber;
   rewards: Array<UserClaimRewardsResult>;
 };
 export type UserClaimRewardsResult = {
-  pool: number[];
-  rewardsAmount: BN;
+  pool: string;
+  rewardsAmount: BigNumber;
 };
 
 export class TokenBalance {
-  tradeToken: TradeTokenAccount;
+  tradeToken: TradeToken;
   amount: BN;
   tradeTokenPriceData: PriceData;
 
   constructor(
-    tradeToken: TradeTokenAccount,
+    tradeToken: TradeToken,
     amount: bigint,
     tradeTokenPriceData: PriceData
   ) {
@@ -519,7 +526,7 @@ export class TokenBalance {
   }
 
   public getTokenName(): string {
-    return BumpinUtils.decodeString(this.tradeToken.name);
+    return this.tradeToken.name;
   }
 
   public getTokenBalanceUsd(): BigNumber {

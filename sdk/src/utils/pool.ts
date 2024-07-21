@@ -1,12 +1,10 @@
 import { PublicKey } from "@solana/web3.js";
 import { PoolAccount } from "../typedef";
 import { BumpinPoolNotFound } from "../errors";
+import { Pool } from "../beans/beans";
 
 export class BumpinPoolUtils {
-  public static getPoolByMintPublicKey(
-    mint: PublicKey,
-    pools: PoolAccount[]
-  ): PoolAccount {
+  public static getPoolByMintPublicKey(mint: PublicKey, pools: Pool[]): Pool {
     let pool = pools.find((pool) => {
       return pool.mintKey.equals(mint);
     });
@@ -16,10 +14,7 @@ export class BumpinPoolUtils {
     return pool;
   }
 
-  public static getPoolByIndex(
-    index: number,
-    pools: PoolAccount[]
-  ): PoolAccount {
+  public static getPoolByIndex(index: number, pools: Pool[]): Pool {
     let pool = pools.find((pool) => {
       return pool.index === index;
     });
@@ -29,10 +24,7 @@ export class BumpinPoolUtils {
     return pool;
   }
 
-  public static getPoolByPublicKey(
-    poolKey: PublicKey,
-    pools: PoolAccount[]
-  ): PoolAccount {
+  public static getPoolByPublicKey(poolKey: PublicKey, pools: Pool[]): Pool {
     let pool = pools.find((pool) => {
       return pool.key.equals(poolKey);
     });

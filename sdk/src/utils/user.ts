@@ -1,27 +1,29 @@
 import {
-  OrderStatusAccount,
-  PositionStatusAccount,
   UserAccount,
   UserOrderAccount,
   UserPositionAccount,
   UserStakeAccount,
-  UserStakeStatusAccount,
   UserTokenAccount,
-  UserTokenStatusAccount,
 } from "../typedef";
 // @ts-ignore
 import { isEqual } from "lodash";
+import {
+  OrderStatus,
+  PositionStatus,
+  UserStakeStatus,
+  UserTokenStatus,
+} from "../beans/beans";
 
 export class BumpinUserUtils {
   public static getMyStake(me: UserAccount): UserStakeAccount[] {
     return me.stakes.filter((stake) => {
-      return isEqual(stake.userStakeStatus, UserStakeStatusAccount.USING);
+      return isEqual(stake.userStakeStatus, UserStakeStatus.USING);
     });
   }
 
   public static getMyToken(me: UserAccount): UserTokenAccount[] {
     return me.tokens.filter((token) => {
-      return isEqual(token.userTokenStatus, UserTokenStatusAccount.USING);
+      return isEqual(token.userTokenStatus, UserTokenStatus.USING);
     });
   }
 
@@ -30,7 +32,7 @@ export class BumpinUserUtils {
     isPortfolioMargin?: boolean
   ): UserPositionAccount[] {
     return me.positions.filter((position) => {
-      if (!isEqual(position.status, PositionStatusAccount.USING)) {
+      if (!isEqual(position.status, PositionStatus.USING)) {
         return false;
       }
       if (isPortfolioMargin) {
@@ -45,7 +47,7 @@ export class BumpinUserUtils {
     isPortfolioMargin?: boolean
   ): UserOrderAccount[] {
     return me.orders.filter((order) => {
-      if (!isEqual(order.status, OrderStatusAccount.USING)) {
+      if (!isEqual(order.status, OrderStatus.USING)) {
         return false;
       }
       if (isPortfolioMargin) {

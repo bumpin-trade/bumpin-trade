@@ -4,9 +4,10 @@ import { PublicKey } from "@solana/web3.js";
 import { TradeTokenAccount } from "../typedef";
 import { BulkAccountLoader } from "./bulkAccountLoader";
 import { BumpinTrade } from "../types/bumpin_trade";
+import { TradeToken } from "../beans/beans";
 
 export class PollingTradeTokenAccountSubscriber
-  implements AccountSubscriber<TradeTokenAccount>
+  implements AccountSubscriber<TradeToken>
 {
   isSubscribed: boolean;
   program: Program<BumpinTrade>;
@@ -16,7 +17,7 @@ export class PollingTradeTokenAccountSubscriber
   callbackId?: string;
   errorCallbackId?: string;
 
-  tradeToken?: DataAndSlot<TradeTokenAccount>;
+  tradeToken?: DataAndSlot<TradeToken>;
 
   public constructor(
     program: Program<BumpinTrade>,
@@ -29,7 +30,7 @@ export class PollingTradeTokenAccountSubscriber
     this.tradeTokenPublicKey = tradeTokenPublicKey;
   }
 
-  async subscribe(userAccount?: TradeTokenAccount): Promise<boolean> {
+  async subscribe(userAccount?: TradeToken): Promise<boolean> {
     if (this.isSubscribed) {
       return true;
     }
@@ -68,7 +69,7 @@ export class PollingTradeTokenAccountSubscriber
           "tradeToken",
           buffer
         );
-        this.tradeToken = { data: account, slot };
+        this.tradeToken = { data: this.convert(account), slot };
       }
     );
 
@@ -90,7 +91,7 @@ export class PollingTradeTokenAccountSubscriber
         );
       if (dataAndContext.context.slot > (this.tradeToken?.slot ?? 0)) {
         this.tradeToken = {
-          data: dataAndContext.data as any as TradeTokenAccount,
+          data: this.convert(dataAndContext.data as any as TradeTokenAccount),
           slot: dataAndContext.context.slot,
         };
       }
@@ -126,7 +127,7 @@ export class PollingTradeTokenAccountSubscriber
     }
   }
 
-  public getAccountAndSlot(): DataAndSlot<TradeTokenAccount> {
+  public getAccountAndSlot(): DataAndSlot<TradeToken> {
     if (!this.doesAccountExist() || !this.tradeToken) {
       throw new Error(
         "You must call `subscribe` or `fetch` before using this function"
@@ -135,9 +136,13 @@ export class PollingTradeTokenAccountSubscriber
     return this.tradeToken;
   }
 
-  public updateData(userAccount: TradeTokenAccount, slot: number): void {
+  public updateData(userAccount: TradeToken, slot: number): void {
     if (!this.tradeToken || this.tradeToken.slot < slot) {
       this.tradeToken = { data: userAccount, slot };
     }
+  }
+
+  private convert(data: TradeTokenAccount): TradeToken {
+    return new TradeToken(data);
   }
 }

@@ -1,14 +1,9 @@
 import {
-  MarketAccount,
-  PoolAccount,
   PositionBalance,
   PositionFee,
   PositionStatusAccount,
-  TradeTokenAccount,
-  UserAccount,
   UserPositionAccount,
 } from "../typedef";
-import { OracleClient } from "../oracles/types";
 import { BN } from "@coral-xyz/anchor";
 import { BumpinTokenUtils } from "./token";
 // @ts-ignore
@@ -16,6 +11,16 @@ import { isEqual } from "lodash";
 import { BumpinMarketNotFound, BumpinPoolNotFound } from "../errors";
 import { BumpinMarketUtils } from "./market";
 import { BumpinPoolUtils } from "./pool";
+import {
+  Market,
+  Pool,
+  PositionStatus,
+  TradeToken,
+  User,
+  UserPosition,
+} from "../beans/beans";
+import BigNumber from "bignumber.js";
+import { TradeTokenComponent } from "../componets/tradeToken";
 
 export class BumpinPositionUtils {
   public static async reducePositionPortfolioBalance(
@@ -38,22 +43,22 @@ export class BumpinPositionUtils {
   }
 
   public static async getUserPositionValue(
-    oracle: OracleClient,
-    user: UserAccount,
-    tradeTokens: TradeTokenAccount[],
-    markets: MarketAccount[],
-    pools: PoolAccount[]
+    tradeTokenComponent: TradeTokenComponent,
+    user: User,
+    tradeTokens: TradeToken[],
+    markets: Market[],
+    pools: Pool[]
   ): Promise<PositionBalance> {
     let totalBalance = {
-      initialMarginUsd: new BN(0),
-      positionUnPnl: new BN(0),
-      mmUsd: new BN(0),
-      initialMarginUsdFromPortfolio: new BN(0),
-      positionFee: new BN(0),
+      initialMarginUsd: BigNumber(0),
+      positionUnPnl: BigNumber(0),
+      mmUsd: BigNumber(0),
+      initialMarginUsdFromPortfolio: BigNumber(0),
+      positionFee: BigNumber(0),
     };
 
     for (let userPosition of user.positions) {
-      if (isEqual(userPosition.status, PositionStatusAccount.INIT)) {
+      if (isEqual(userPosition.status, PositionStatus.INIT)) {
         continue;
       }
       const indexTradeToken = BumpinTokenUtils.getTradeTokenByOraclePublicKey(
@@ -65,7 +70,7 @@ export class BumpinPositionUtils {
         tradeTokens
       );
       const unPnlValue = await BumpinPositionUtils.getPositionUnPnlValue(
-        oracle,
+        tradeTokenComponent,
         indexTradeToken,
         marginTradeToken,
         userPosition
@@ -87,22 +92,22 @@ export class BumpinPositionUtils {
         );
       }
       const posFee = await BumpinPositionUtils.getPositionFee(
-        oracle,
+        tradeTokenComponent,
         userPosition,
         market,
         pool,
         marginTradeToken
       );
 
-      totalBalance.positionUnPnl = totalBalance.positionUnPnl.add(unPnlValue);
-      totalBalance.positionFee = totalBalance.positionFee.add(posFee.totalUsd);
+      totalBalance.positionUnPnl = totalBalance.positionUnPnl.plus(unPnlValue);
+      totalBalance.positionFee = totalBalance.positionFee.plus(posFee.totalUsd);
 
-      totalBalance.mmUsd = totalBalance.mmUsd.add(userPosition.mmUsd);
-      totalBalance.initialMarginUsd = totalBalance.initialMarginUsd.add(
+      totalBalance.mmUsd = totalBalance.mmUsd.plus(userPosition.mmUsd);
+      totalBalance.initialMarginUsd = totalBalance.initialMarginUsd.plus(
         userPosition.initialMarginUsd
       );
       totalBalance.initialMarginUsdFromPortfolio =
-        totalBalance.initialMarginUsdFromPortfolio.add(
+        totalBalance.initialMarginUsdFromPortfolio.plus(
           userPosition.initialMarginUsdFromPortfolio
         );
     }
@@ -110,81 +115,79 @@ export class BumpinPositionUtils {
     return totalBalance;
   }
 
+  //TODO, Dean: check this
   public static async getPositionUnPnlValue(
-    oracle: OracleClient,
-    indexTradeToken: TradeTokenAccount,
-    marginTradeToken: TradeTokenAccount,
-    position: UserPositionAccount
-  ): Promise<BN> {
-    let priceData = await oracle.getOraclePriceData(indexTradeToken.oracleKey);
-    let unPnl = new BN(0);
+    tradeTokenComponent: TradeTokenComponent,
+    indexTradeToken: TradeToken,
+    marginTradeToken: TradeToken,
+    position: UserPosition
+  ): Promise<BigNumber> {
+    const price = tradeTokenComponent.getTradeTokenPricesByOracleKey(
+      indexTradeToken.oracleKey,
+      1
+    )[0].price!;
+    let unPnl = BigNumber(0);
     if (!position.positionSize.isZero()) {
       if (position.isLong) {
         unPnl = position.positionSize
-          .mul(priceData.price.sub(position.entryPrice))
+          .multipliedBy(price - position.entryPrice.toNumber())
           .div(position.entryPrice);
       } else {
         unPnl = position.positionSize
-          .mul(position.entryPrice.sub(priceData.price))
+          .multipliedBy(position.entryPrice.toNumber() - price)
           .div(position.entryPrice);
       }
-      if (unPnl.gt(new BN(0))) {
-        unPnl = unPnl.mulRate(new BN(marginTradeToken.discount));
+      if (unPnl.gt(BigNumber(0))) {
+        unPnl = unPnl.multipliedBy(marginTradeToken.discount);
       } else {
-        unPnl = unPnl.mulRate(
-          new BN(marginTradeToken.liquidationFactor).add(new BN(1))
-        );
+        unPnl = unPnl.multipliedBy(marginTradeToken.liquidationFactor + 1);
       }
     }
     return unPnl;
   }
 
+  //TODO: Dean: check this
   public static async getPositionFee(
-    oracle: OracleClient,
-    position: UserPositionAccount,
-    market: MarketAccount,
-    pool: PoolAccount,
-    marginTradeToken: TradeTokenAccount
+    tradeTokenComponent: TradeTokenComponent,
+    position: UserPosition,
+    market: Market,
+    pool: Pool,
+    marginTradeToken: TradeToken
   ): Promise<PositionFee> {
     let positionFee = {
-      fundingFee: new BN(0),
-      fundingFeeUsd: new BN(0),
-      borrowingFee: new BN(0),
-      borrowingFeeUsd: new BN(0),
-      closeFeeUsd: new BN(0),
-      totalUsd: new BN(0),
+      fundingFee: BigNumber(0),
+      fundingFeeUsd: BigNumber(0),
+      borrowingFee: BigNumber(0),
+      borrowingFeeUsd: BigNumber(0),
+      closeFeeUsd: BigNumber(0),
+      totalUsd: BigNumber(0),
     };
-    let priceData = await oracle.getOraclePriceData(position.marginMintKey);
+
+    const price = tradeTokenComponent.getTradeTokenPricesByOracleKey(
+      position.marginMintKey,
+      1
+    )[0].price!;
 
     if (position.isLong) {
       positionFee.fundingFee = market.fundingFee.longFundingFeeAmountPerSize
-        .sub(position.openFundingFeeAmountPerSize)
-        .mulSmallRate(position.positionSize);
-      positionFee.fundingFeeUsd = positionFee.fundingFee.toUsd(
-        priceData.price,
-        marginTradeToken.decimals
-      );
+        .minus(position.openFundingFeeAmountPerSize)
+        .multipliedBy(position.positionSize);
+      positionFee.fundingFeeUsd = positionFee.fundingFee.multipliedBy(price);
     } else {
       positionFee.fundingFeeUsd = market.fundingFee.shortFundingFeeAmountPerSize
-        .sub(position.openFundingFeeAmountPerSize)
-        .mulSmallRate(position.positionSize);
-      positionFee.fundingFee = positionFee.fundingFeeUsd.toToken(
-        priceData.price,
-        marginTradeToken.decimals
-      );
+        .minus(position.openFundingFeeAmountPerSize)
+        .multipliedBy(position.positionSize);
+      positionFee.fundingFee = positionFee.fundingFeeUsd.multipliedBy(price);
     }
 
     positionFee.borrowingFee = pool.borrowingFee.cumulativeBorrowingFeePerToken
-      .sub(position.openBorrowingFeePerToken)
-      .mulSmallRate(position.holdPoolAmount);
-    positionFee.borrowingFeeUsd = positionFee.borrowingFee.toUsd(
-      priceData.price,
-      marginTradeToken.decimals
-    );
+      .minus(position.openBorrowingFeePerToken)
+      .multipliedBy(position.holdPoolAmount);
+    positionFee.borrowingFeeUsd = positionFee.borrowingFee.multipliedBy(price);
     positionFee.closeFeeUsd = position.closeFeeInUsd;
     positionFee.totalUsd = positionFee.fundingFeeUsd
-      .add(positionFee.borrowingFeeUsd)
-      .add(positionFee.closeFeeUsd);
+      .plus(positionFee.borrowingFeeUsd)
+      .plus(positionFee.closeFeeUsd);
     return positionFee;
   }
 }

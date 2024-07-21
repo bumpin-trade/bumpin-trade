@@ -1,40 +1,35 @@
 import { Connection, PublicKey } from "@solana/web3.js";
-import { BN } from "@coral-xyz/anchor";
-import {
-  TradeTokenAccount,
-  TradeTokenBalance,
-  UserAccount,
-  UserTokenAccount,
-  UserTokenStatusAccount,
-} from "../typedef";
+import { TradeTokenBalance, UserTokenAccount } from "../typedef";
 import { BumpinAccountNotFound, BumpinTokenNotFound } from "../errors";
 import { Account, getAccount, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { OracleClient , OraclePriceData} from "../oracles/types";
+import { OracleClient, OraclePriceData } from "../oracles/types";
 // @ts-ignore
 import { isEqual } from "lodash";
+import { TradeToken, User, UserToken, UserTokenStatus } from "../beans/beans";
+import { TradeTokenComponent } from "../componets/tradeToken";
+import BigNumber from "bignumber.js";
 
 export class BumpinTokenUtils {
   public static async getTradeTokenPrice(
     oracle: OracleClient,
-    tradeToken: TradeTokenAccount
+    tradeToken: TradeToken
   ): Promise<OraclePriceData> {
     return await oracle.getOraclePriceData(tradeToken.oracleKey);
-
   }
 
   public static async getUserTradeTokenBalance(
-    oracle: OracleClient,
-    user: UserAccount,
-    tradeTokens: TradeTokenAccount[]
+    tradeTokenComponent: TradeTokenComponent,
+    user: User,
+    tradeTokens: TradeToken[]
   ): Promise<TradeTokenBalance> {
     let totalBalance = {
-      tokenNetValue: new BN(0),
-      tokenUsedValue: new BN(0),
-      tokenBorrowingValue: new BN(0),
+      tokenNetValue: BigNumber(0),
+      tokenUsedValue: BigNumber(0),
+      tokenBorrowingValue: BigNumber(0),
     };
 
     for (let userToken of user.tokens) {
-      if (isEqual(userToken.userTokenStatus, UserTokenStatusAccount.INIT)) {
+      if (isEqual(userToken.userTokenStatus, UserTokenStatus.INIT)) {
         continue;
       }
       let tradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
@@ -42,54 +37,57 @@ export class BumpinTokenUtils {
         tradeTokens
       );
       let tokenBalance = await BumpinTokenUtils.getTradeTokenBalance(
-        oracle,
+        tradeTokenComponent,
         userToken,
         tradeToken
       );
-      totalBalance.tokenNetValue = totalBalance.tokenNetValue.add(
+      totalBalance.tokenNetValue = totalBalance.tokenNetValue.plus(
         tokenBalance.tokenNetValue
       );
-      totalBalance.tokenUsedValue = totalBalance.tokenUsedValue.add(
+      totalBalance.tokenUsedValue = totalBalance.tokenUsedValue.plus(
         tokenBalance.tokenUsedValue
       );
-      totalBalance.tokenBorrowingValue = totalBalance.tokenBorrowingValue.add(
+      totalBalance.tokenBorrowingValue = totalBalance.tokenBorrowingValue.plus(
         tokenBalance.tokenBorrowingValue
       );
     }
-    totalBalance.tokenUsedValue = totalBalance.tokenUsedValue.add(user.hold);
-    totalBalance.tokenBorrowingValue = totalBalance.tokenBorrowingValue.add(
+    totalBalance.tokenUsedValue = totalBalance.tokenUsedValue.plus(user.hold);
+    totalBalance.tokenBorrowingValue = totalBalance.tokenBorrowingValue.plus(
       user.hold
     );
     return totalBalance;
   }
 
   public static async getTradeTokenBalance(
-    oracle: OracleClient,
-    userToken: UserTokenAccount,
-    tradeToken: TradeTokenAccount
+    tradeTokenComponent: TradeTokenComponent,
+    userToken: UserToken,
+    tradeToken: TradeToken
   ): Promise<TradeTokenBalance> {
-    let priceData = await oracle.getOraclePriceData(tradeToken.oracleKey);
-    let tokenNetValue = new BN(0);
+    const price = tradeTokenComponent.getTradeTokenPricesByOracleKey(
+      tradeToken.oracleKey,
+      1
+    )[0].price!;
+    let tokenNetValue = BigNumber(0);
     if (userToken.amount.gt(userToken.usedAmount)) {
       tokenNetValue = userToken.amount
-        .sub(userToken.usedAmount)
-        .toUsd(priceData.price, tradeToken.decimals)
-        .mulRate(new BN(tradeToken.discount));
+        .minus(userToken.usedAmount)
+        .multipliedBy(price)
+        .multipliedBy(tradeToken.discount);
     }
 
-    let tokenBorrowingValue = new BN(0);
-    let tokenUsedValue = new BN(0);
+    let tokenBorrowingValue = BigNumber(0);
+    let tokenUsedValue = BigNumber(0);
 
     if (userToken.usedAmount.gt(userToken.amount)) {
       tokenBorrowingValue = userToken.usedAmount
-        .sub(userToken.amount)
-        .sub(userToken.liabilityAmount)
-        .mul(priceData.price);
+        .minus(userToken.amount)
+        .minus(userToken.liabilityAmount)
+        .multipliedBy(price);
 
       tokenUsedValue = userToken.usedAmount
-        .sub(userToken.amount)
-        .mul(priceData.price)
-        .mul(new BN(tradeToken.liquidationFactor).add(new BN(1)));
+        .minus(userToken.amount)
+        .multipliedBy(price)
+        .multipliedBy(tradeToken.liquidationFactor + 1); //TODO, Dean: check this
     }
     return {
       tokenNetValue: tokenNetValue,
@@ -113,8 +111,8 @@ export class BumpinTokenUtils {
 
   public static getTradeTokenByMintPublicKey(
     mint: PublicKey,
-    tradeTokens: TradeTokenAccount[]
-  ): TradeTokenAccount {
+    tradeTokens: TradeToken[]
+  ): TradeToken {
     let tradeToken = tradeTokens.find((tradeToken) => {
       return tradeToken.mintKey.equals(mint);
     });
@@ -126,8 +124,8 @@ export class BumpinTokenUtils {
 
   public static getTradeTokenByOraclePublicKey(
     oracle: PublicKey,
-    tradeTokens: TradeTokenAccount[]
-  ): TradeTokenAccount {
+    tradeTokens: TradeToken[]
+  ): TradeToken {
     let tradeToken = tradeTokens.find((tradeToken) => {
       return tradeToken.oracleKey.equals(oracle);
     });

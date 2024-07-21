@@ -29,7 +29,7 @@ import { isEqual } from "lodash";
 import { BumpinTokenUtils } from "../utils/token";
 import { BumpinPoolUtils } from "../utils/pool";
 
-export class Beans {
+export class State {
   public admin: PublicKey;
   public bumpSigner: PublicKey;
   public keeperSigner: PublicKey;
@@ -450,7 +450,8 @@ export class TradeToken {
     this.oracleKey = tradeToken.oracleKey;
     this.vaultKey = tradeToken.vaultKey;
     this.name = BumpinUtils.decodeString(tradeToken.name);
-    this.discount = tradeToken.discount;
+    this.discount =
+      tradeToken.discount / BumpinConstants.RATE_MULTIPLIER_NUMBER;
     this.liquidationFactor =
       tradeToken.liquidationFactor / BumpinConstants.RATE_MULTIPLIER_NUMBER;
     this.index = tradeToken.index;
@@ -800,11 +801,7 @@ export class User {
   public createdAt: BigNumber;
   public status: UserStatus;
 
-  constructor(
-    user: UserAccount,
-    pools: PoolAccount[],
-    tradeTokens: TradeTokenAccount[]
-  ) {
+  constructor(user: UserAccount, pools: Pool[], tradeTokens: TradeToken[]) {
     this.nextOrderId = user.nextOrderId.toBigNumber();
     this.nextLiquidationId = user.nextLiquidationId.toBigNumber();
     this.hold = user.hold.toBigNumberWithDecimals(
