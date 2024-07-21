@@ -1,10 +1,9 @@
 import {AccountMeta, PublicKey} from "@solana/web3.js";
 import {
     AccountNetValue,
-  InnerPlaceOrderParams,
-  Market,
-  OrderSide,
-
+    InnerPlaceOrderParams,
+    Market,
+    OrderSide,
     OrderType,
     PlaceOrderParams,
     Pool,
@@ -84,8 +83,8 @@ export class UserComponent extends Component {
         tradeToken: TradeToken,
         allTradeTokens: TradeToken[],
         pool: Pool,
-        allMarkets: Map<number[], Market>,
-        poolMap: Map<PublicKey, Pool>,
+        allMarkets: Market[],
+        pools: Pool[],
         sync: boolean = false
     ): Promise<void> {
         let user = await this.getUser(sync);
@@ -98,7 +97,7 @@ export class UserComponent extends Component {
             tradeToken,
             pool
         );
-        let availableValue = await this.getUserAvailableValue(user, allTradeTokens, allMarkets, poolMap);
+        let availableValue = await this.getUserAvailableValue(user, allTradeTokens, allMarkets, pools);
         if (!availableValue.gt(stake_value)) {
             throw new BumpinValueInsufficient(amount, availableValue);
         }
@@ -107,7 +106,7 @@ export class UserComponent extends Component {
             await this.getUser(),
             allTradeTokens
         );
-        let markets = BumpinMarketUtils.getMarketsByPoolKey(pool.key, Array.from(allMarkets.values()));
+        let markets = BumpinMarketUtils.getMarketsByPoolKey(pool.key, allMarkets);
         for (let market of markets.values()) {
             remainingAccounts.push({
                 pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
@@ -300,50 +299,50 @@ export class UserComponent extends Component {
             this.program.provider.connection, wallet, tradeToken.mintKey
         )).address;
 
-        if ((isEqual(param.positionSide, PositionSide.DECREASE) &&isEqual(param.orderSide, OrderSide.LONG)) || isEqual(param.positionSide, PositionSide.INCREASE) &&isEqual(param.orderSide, OrderSide.SHORT) ) {
+        if ((isEqual(param.positionSide, PositionSide.DECREASE) && isEqual(param.orderSide, OrderSide.LONG)) || isEqual(param.positionSide, PositionSide.INCREASE) && isEqual(param.orderSide, OrderSide.SHORT)) {
             // When the order side is short, the userTokenAccount is the stable token.
             userTokenAccount = (await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(
                 this.program.provider.connection, wallet, markets[marketIndex].stablePoolMintKey
             )).address;
         }// When trading position by position (Isolated position), userTokenAccount is determined based on the order direction.
-    let uta = userTokenAccount;
-    if (!param.isPortfolioMargin) {
-      let tokenAccount: Account =
-        await BumpinTokenUtils.getTokenAccountFromWalletAndKey(
-          this.program.provider.connection,
-          wallet,
-          userTokenAccount
-        );
-      if (isEqual(param.positionSide, PositionSide.INCREASE)){
-        if (isEqual(param.orderSide, OrderSide.LONG)){
-          if (!tokenAccount.mint.equals(pool.mintKey)) {
-            throw new BumpinTokenAccountUnexpected(
-                "Pool mint key: " + pool.mintKey.toString(),
-                "Token account mint key: " + tokenAccount.mint.toString()
-            );
-          }
-        }else {
-          if (!tokenAccount.mint.equals(stablePool.mintKey)) {
-            throw new BumpinTokenAccountUnexpected(
-                "Stable Pool mint key: " + stablePool.mintKey.toString(),
-                "Token account mint key: " + tokenAccount.mint.toString()
-            );
-          }
-        }
-      }else {
-                if (isEqual(param.orderSide, OrderSide.LONG)){
-          if (!tokenAccount.mint.equals(stablePool.mintKey)) {
-            throw new BumpinTokenAccountUnexpected(
-                "Stable Pool mint key: " + stablePool.mintKey.toString(),
-                "Token account mint key: " + tokenAccount.mint.toString()
-            );
-          }
-        }else {
-          if (!tokenAccount.mint.equals(pool.mintKey)) {
-            throw new BumpinTokenAccountUnexpected(
-                "Pool mint key: " + pool.mintKey.toString(),
-                "Token account mint key: " + tokenAccount.mint.toString()
-            );
+        let uta = userTokenAccount;
+        if (!param.isPortfolioMargin) {
+            let tokenAccount: Account =
+                await BumpinTokenUtils.getTokenAccountFromWalletAndKey(
+                    this.program.provider.connection,
+                    wallet,
+                    userTokenAccount
+                );
+            if (isEqual(param.positionSide, PositionSide.INCREASE)) {
+                if (isEqual(param.orderSide, OrderSide.LONG)) {
+                    if (!tokenAccount.mint.equals(pool.mintKey)) {
+                        throw new BumpinTokenAccountUnexpected(
+                            "Pool mint key: " + pool.mintKey.toString(),
+                            "Token account mint key: " + tokenAccount.mint.toString()
+                        );
+                    }
+                } else {
+                    if (!tokenAccount.mint.equals(stablePool.mintKey)) {
+                        throw new BumpinTokenAccountUnexpected(
+                            "Stable Pool mint key: " + stablePool.mintKey.toString(),
+                            "Token account mint key: " + tokenAccount.mint.toString()
+                        );
+                    }
+                }
+            } else {
+                if (isEqual(param.orderSide, OrderSide.LONG)) {
+                    if (!tokenAccount.mint.equals(stablePool.mintKey)) {
+                        throw new BumpinTokenAccountUnexpected(
+                            "Stable Pool mint key: " + stablePool.mintKey.toString(),
+                            "Token account mint key: " + tokenAccount.mint.toString()
+                        );
+                    }
+                } else {
+                    if (!tokenAccount.mint.equals(pool.mintKey)) {
+                        throw new BumpinTokenAccountUnexpected(
+                            "Pool mint key: " + pool.mintKey.toString(),
+                            "Token account mint key: " + tokenAccount.mint.toString()
+                        );
                     }
                 }
             }
@@ -451,42 +450,42 @@ export class UserComponent extends Component {
             tradeToken
         );
 
-    let order: InnerPlaceOrderParams = {
-      symbol,
-      placeTime: new BN(Date.now()),
-      marketIndex: marketIndex,
-      poolIndex: pool.index,
-      stablePoolIndex: stablePool.index,
-      tradeTokenIndex: tradeToken.index,
-      stableTradeTokenIndex: stableTradeToken.index,
-      orderId: new BN(0),
-      isPortfolioMargin: false,
-      isNativeToken: false,
-      orderSide: param.orderSide,
-      positionSide: param.positionSide,
-      orderType: param.orderType,
-      stopType: param.stopType,
-      size: BumpinUtils.number2Precision(
-        param.size,
-        BumpinConstants.USD_EXPONENT_NUMBER
-      ),
-      orderMargin: BumpinUtils.number2Precision(
-        param.orderMargin,
-        isEqual(param.positionSide, PositionSide.INCREASE)
-          ? isEqual(param.orderSide, OrderSide.LONG)
-            ? tradeToken.decimals
-            : stableTradeToken.decimals
-          : isEqual(param.orderSide, OrderSide.LONG)
-          ? stableTradeToken.decimals
-          : tradeToken.decimals
+        let order: InnerPlaceOrderParams = {
+            symbol,
+            placeTime: new BN(Date.now()),
+            marketIndex: marketIndex,
+            poolIndex: pool.index,
+            stablePoolIndex: stablePool.index,
+            tradeTokenIndex: tradeToken.index,
+            stableTradeTokenIndex: stableTradeToken.index,
+            orderId: new BN(0),
+            isPortfolioMargin: false,
+            isNativeToken: false,
+            orderSide: param.orderSide,
+            positionSide: param.positionSide,
+            orderType: param.orderType,
+            stopType: param.stopType,
+            size: BumpinUtils.number2Precision(
+                param.size,
+                BumpinConstants.USD_EXPONENT_NUMBER
             ),
-        leverage: param.leverage * BumpinConstants.RATE_MULTIPLIER,
-        triggerPrice: BumpinUtils.number2Precision(
-            param.triggerPrice,
-            BumpinConstants.PRICE_EXPONENT_NUMBER
-        ),
-        //TODO: recheck this
-        acceptablePrice: ZERO,
+            orderMargin: BumpinUtils.number2Precision(
+                param.orderMargin,
+                isEqual(param.positionSide, PositionSide.INCREASE)
+                    ? isEqual(param.orderSide, OrderSide.LONG)
+                        ? tradeToken.decimals
+                        : stableTradeToken.decimals
+                    : isEqual(param.orderSide, OrderSide.LONG)
+                        ? stableTradeToken.decimals
+                        : tradeToken.decimals
+            ),
+            leverage: param.leverage * BumpinConstants.RATE_MULTIPLIER,
+            triggerPrice: BumpinUtils.number2Precision(
+                param.triggerPrice,
+                BumpinConstants.PRICE_EXPONENT_NUMBER
+            ),
+            //TODO: recheck this
+            acceptablePrice: ZERO,
         };
 
 
@@ -599,8 +598,8 @@ export class UserComponent extends Component {
     public async getUserAccountNetValue(
         user: UserAccount,
         tradeTokens: TradeToken[],
-        market: Map<number[], Market>,
-        pool: Map<PublicKey, Pool>
+        markets: Market[],
+        pools: Pool[]
     ): Promise<AccountNetValue> {
         let accountNetValue = {
             accountNetValue: new BN(0),
@@ -615,7 +614,7 @@ export class UserComponent extends Component {
         let balanceOfUserPositions = await BumpinPositionUtils.getUserPositionValue(
             this.oracleClient,
             user,
-            tradeTokens, market, pool
+            tradeTokens, markets, pools
         );
         accountNetValue.accountNetValue = balanceOfUserTradeTokens.tokenNetValue
             .add(balanceOfUserPositions.initialMarginUsd)
@@ -634,8 +633,8 @@ export class UserComponent extends Component {
     public async getUserAvailableValue(
         user: UserAccount,
         tradeTokens: TradeToken[],
-        market: Map<number[], Market>,
-        pool: Map<PublicKey, Pool>
+        markets: Market[],
+        pools: Pool[]
     ): Promise<BN> {
         let balanceOfUserTradeTokens =
             await BumpinTokenUtils.getUserTradeTokenBalance(
@@ -646,7 +645,7 @@ export class UserComponent extends Component {
         let balanceOfUserPositions = await BumpinPositionUtils.getUserPositionValue(
             this.oracleClient,
             user,
-            tradeTokens, market, pool
+            tradeTokens, markets, pools
         );
         return balanceOfUserTradeTokens.tokenNetValue
             .add(balanceOfUserPositions.initialMarginUsd)

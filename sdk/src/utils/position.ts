@@ -15,6 +15,8 @@ import {BumpinTokenUtils} from "./token";
 import {isEqual} from "lodash";
 import {PublicKey} from "@solana/web3.js";
 import {BumpinMarketNotFound, BumpinPoolNotFound} from "../errors";
+import {BumpinMarketUtils} from "./market";
+import {BumpinPoolUtils} from "./pool";
 
 export class BumpinPositionUtils {
     public static async reducePositionPortfolioBalance(
@@ -40,8 +42,8 @@ export class BumpinPositionUtils {
         oracle: OracleClient,
         user: UserAccount,
         tradeTokens: TradeToken[],
-        marketMap: Map<number[], Market>,
-        poolMap: Map<PublicKey, Pool>
+        markets: Market[],
+        pools: Pool[]
     ): Promise<PositionBalance> {
         let totalBalance = {
             initialMarginUsd: new BN(0),
@@ -69,11 +71,11 @@ export class BumpinPositionUtils {
                 marginTradeToken,
                 userPosition
             );
-            let market = marketMap.get(userPosition.symbol);
+            const market = BumpinMarketUtils.getMarketBySymbol(userPosition.symbol, markets);
             if (!market) {
                 throw new BumpinMarketNotFound(userPosition.symbol);
             }
-            let pool = poolMap.get(userPosition.isLong ? market.poolKey : market.stablePoolKey);
+            const pool = BumpinPoolUtils.getPoolByMintPublicKey(userPosition.isLong ? market.poolKey : market.stablePoolKey, pools);
             if (!pool) {
                 throw new BumpinPoolNotFound(userPosition.isLong ? market.poolKey : market.stablePoolKey);
             }
