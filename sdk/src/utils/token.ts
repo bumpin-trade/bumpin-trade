@@ -9,7 +9,7 @@ import {
 } from "../typedef";
 import { BumpinAccountNotFound, BumpinTokenNotFound } from "../errors";
 import { Account, getAccount, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { OracleClient } from "../oracles/types";
+import { OracleClient , OraclePriceData} from "../oracles/types";
 // @ts-ignore
 import { isEqual } from "lodash";
 
@@ -17,9 +17,9 @@ export class BumpinTokenUtils {
   public static async getTradeTokenPrice(
     oracle: OracleClient,
     tradeToken: TradeTokenAccount
-  ): Promise<BN> {
-    let priceData = await oracle.getOraclePriceData(tradeToken.oracleKey);
-    return priceData.price;
+  ): Promise<OraclePriceData> {
+    return await oracle.getOraclePriceData(tradeToken.oracleKey);
+
   }
 
   public static async getUserTradeTokenBalance(

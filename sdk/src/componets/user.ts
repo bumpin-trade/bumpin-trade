@@ -111,7 +111,10 @@ export class UserComponent extends Component {
       await this.getUser(),
       allTradeTokens
     );
-    let markets = BumpinMarketUtils.getMarketsByPoolKey(pool.key, allMarkets);
+    let markets = BumpinMarketUtils.getMarketsByPoolKey(
+      pool.key,
+      allMarkets
+    );
     for (let market of markets.values()) {
       remainingAccounts.push({
         pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
@@ -319,9 +322,9 @@ export class UserComponent extends Component {
         await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(
           this.program.provider.connection,
           wallet,
-          markets[marketIndex].stablePoolMintKey
+          markets[marketIndex].stablePoolMintKey)
         )
-      ).address;
+      .address;
     } // When trading position by position (Isolated position), userTokenAccount is determined based on the order direction.
     let uta = userTokenAccount;
     if (!param.isPortfolioMargin) {
@@ -381,14 +384,14 @@ export class UserComponent extends Component {
           isWritable: true,
           isSigner: false,
         });
-      }
-    }
+
 
     remainingAccounts.push({
-      pubkey: markets[marketIndex].indexMintOracle,
+      pubkey: market.indexMintOracle,
       isWritable: true,
       isSigner: false,
-    });
+    });}
+    }
 
     remainingAccounts.push({
       pubkey: BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0],
@@ -487,7 +490,8 @@ export class UserComponent extends Component {
         param.size,
         BumpinConstants.USD_EXPONENT_NUMBER
       ),
-      orderMargin: BumpinUtils.number2Precision(
+      orderMargin: !param.isPortfolioMargin
+        ?BumpinUtils.number2Precision(
         param.orderMargin,
         isEqual(param.positionSide, PositionSideAccount.INCREASE)
           ? isEqual(param.orderSide, OrderSideAccount.LONG)
@@ -495,7 +499,10 @@ export class UserComponent extends Component {
             : stableTradeToken.decimals
           : isEqual(param.orderSide, OrderSideAccount.LONG)
           ? stableTradeToken.decimals
-          : tradeToken.decimals
+          : tradeToken.decimals)
+        : BumpinUtils.number2Precision(
+            param.orderMargin, //todo, portfolio_margin use order_margin * token_price get usd value, convert usd value to precision
+            BumpinConstants.USD_EXPONENT_NUMBER
       ),
       leverage: param.leverage * BumpinConstants.RATE_MULTIPLIER,
       triggerPrice: BumpinUtils.number2Precision(
@@ -508,7 +515,7 @@ export class UserComponent extends Component {
 
     await this.placePerpOrderValidation(
       order,
-      tradeTokenPrice,
+      tradeTokenPrice.price,
       markets[marketIndex]
     );
     await this.program.methods
