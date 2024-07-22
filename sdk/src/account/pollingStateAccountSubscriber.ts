@@ -4,8 +4,9 @@ import { PublicKey } from "@solana/web3.js";
 import { StateAccount } from "../typedef";
 import { BulkAccountLoader } from "./bulkAccountLoader";
 import { BumpinTrade } from "../types/bumpin_trade";
+import { State } from "../beans/beans";
 
-export class PollingStateAccountSubscriber implements AccountSubscriber<StateAccount> {
+export class PollingStateAccountSubscriber implements AccountSubscriber<State> {
   isSubscribed: boolean;
   program: Program<BumpinTrade>;
   userAccountPublicKey: PublicKey;
@@ -14,7 +15,7 @@ export class PollingStateAccountSubscriber implements AccountSubscriber<StateAcc
   callbackId?: string;
   errorCallbackId?: string;
 
-  state?: DataAndSlot<StateAccount>;
+  state?: DataAndSlot<State>;
 
   public constructor(
     program: Program<BumpinTrade>,
@@ -27,7 +28,7 @@ export class PollingStateAccountSubscriber implements AccountSubscriber<StateAcc
     this.userAccountPublicKey = publicKey;
   }
 
-  async subscribe(userAccount?: StateAccount): Promise<boolean> {
+  async subscribe(userAccount?: State): Promise<boolean> {
     if (this.isSubscribed) {
       return true;
     }
@@ -67,7 +68,7 @@ export class PollingStateAccountSubscriber implements AccountSubscriber<StateAcc
           "state",
           buffer
         );
-        this.state = { data: account, slot };
+        this.state = { data: this.convert(account), slot };
       }
     );
 
@@ -88,7 +89,7 @@ export class PollingStateAccountSubscriber implements AccountSubscriber<StateAcc
       );
       if (dataAndContext.context.slot > (this.state?.slot ?? 0)) {
         this.state = {
-          data: dataAndContext.data as any as StateAccount,
+          data: this.convert(dataAndContext.data as any as StateAccount),
           slot: dataAndContext.context.slot,
         };
       }
@@ -127,7 +128,7 @@ export class PollingStateAccountSubscriber implements AccountSubscriber<StateAcc
     }
   }
 
-  public getAccountAndSlot(): DataAndSlot<StateAccount> {
+  public getAccountAndSlot(): DataAndSlot<State> {
     if (!this.doesAccountExist() || !this.state) {
       throw new Error(
         "You must call `subscribe` or `fetch` before using this function"
@@ -136,9 +137,13 @@ export class PollingStateAccountSubscriber implements AccountSubscriber<StateAcc
     return this.state;
   }
 
-  public updateData(userAccount: StateAccount, slot: number): void {
+  public updateData(userAccount: State, slot: number): void {
     if (!this.state || this.state.slot < slot) {
       this.state = { data: userAccount, slot };
     }
+  }
+
+  private convert(data: StateAccount): State {
+    return new State(data);
   }
 }

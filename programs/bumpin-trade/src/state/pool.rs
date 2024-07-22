@@ -4,7 +4,7 @@ use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
 use crate::errors::BumpErrorCode::PoolSubUnsettleNotEnough;
 use crate::errors::{BumpErrorCode, BumpResult};
-use crate::instructions::{add_i128, add_u128, cal_utils, sub_u128};
+use crate::instructions::{add_i128, add_u128, calculator, sub_u128};
 use crate::math::casting::Cast;
 use crate::math::constants::PRICE_PRECISION;
 use crate::math::safe_math::SafeMath;
@@ -231,7 +231,7 @@ impl Pool {
             return Ok(0u128);
         }
         if Self::get_token_amount(&self.stable_balance)? < 0i128 {
-            let token_usd = cal_utils::token_to_usd_i(
+            let token_usd = calculator::token_to_usd_i(
                 Self::get_token_amount(&self.stable_balance)?,
                 stable_trade_token.decimals,
                 oracle_map
@@ -239,7 +239,7 @@ impl Pool {
                     .map_err(|_e| BumpErrorCode::OracleNotFound)?
                     .price,
             )?;
-            let stable_to_base_token = cal_utils::usd_to_token_i(
+            let stable_to_base_token = calculator::usd_to_token_i(
                 token_usd,
                 base_trade_token.decimals,
                 oracle_map
@@ -253,7 +253,7 @@ impl Pool {
                 base_token_amount = 0i128
             }
         }
-        let available_token_amount = cal_utils::mul_rate_i(
+        let available_token_amount = calculator::mul_rate_i(
             base_token_amount,
             self.config.pool_liquidity_limit.cast::<i128>()?,
         )?;
@@ -292,7 +292,7 @@ impl Pool {
                 .safe_sub(token_balance.hold_amount)?
                 >= amount)
         } else {
-            Ok(cal_utils::mul_rate_u(
+            Ok(calculator::mul_rate_u(
                 token_balance.amount.safe_add(token_balance.un_settle_amount)?,
                 pool_liquidity_limit,
             )?
@@ -344,7 +344,7 @@ impl Pool {
     ) -> BumpResult<u128> {
         let trade_token = trade_token_map.get_trade_token_by_mint_ref(&self.mint_key)?;
         let trade_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
-        let mut pool_value = cal_utils::token_to_usd_i(
+        let mut pool_value = calculator::token_to_usd_i(
             self.balance
                 .amount
                 .safe_add(self.balance.un_settle_amount)?
@@ -377,7 +377,7 @@ impl Pool {
                     trade_token_map.get_trade_token_by_mint_ref(&self.stable_mint_key)?;
                 let stable_trade_token_price =
                     oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
-                let stable_usd_value = cal_utils::token_to_usd_i(
+                let stable_usd_value = calculator::token_to_usd_i(
                     stable_amount.cast::<i128>()?,
                     stable_trade_token.decimals,
                     stable_trade_token_price,
@@ -395,7 +395,7 @@ impl Pool {
         market_vec: &MarketMap,
     ) -> BumpResult<u128> {
         let pool_value = self.get_pool_usd_value(trade_token_map, oracle_map, market_vec)?;
-        cal_utils::div_to_precision_u(pool_value, self.total_supply, PRICE_PRECISION)
+        calculator::div_to_precision_u(pool_value, self.total_supply, PRICE_PRECISION)
     }
 
     pub fn update_pnl_and_un_hold_pool_amount(

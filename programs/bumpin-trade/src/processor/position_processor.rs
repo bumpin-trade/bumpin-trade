@@ -5,7 +5,7 @@ use anchor_lang::{emit, ToAccountInfo};
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::errors::{BumpErrorCode, BumpResult};
-use crate::instructions::{cal_utils, UpdatePositionLeverageParams, UpdatePositionMarginParams};
+use crate::instructions::{calculator, UpdatePositionLeverageParams, UpdatePositionMarginParams};
 use crate::math::casting::Cast;
 use crate::math::constants::RATE_PRECISION;
 use crate::math::safe_math::SafeMath;
@@ -184,7 +184,7 @@ pub fn handle_execute_order<'info>(
                 )?;
                 Ok(())
             }
-        }
+        },
 
         PositionSide::DECREASE => {
             {
@@ -217,8 +217,8 @@ pub fn handle_execute_order<'info>(
                     state_account,
                     Some(user_token_account),
                     match use_base_token(&user_order.position_side, &user_order.order_side)? {
-                        true => { pool_vault }
-                        false => { stable_pool_vault }
+                        true => pool_vault,
+                        false => stable_pool_vault,
                     },
                     match use_base_token(&user_order.position_side, &user_order.order_side)? {
                         true => trade_token.deref_mut(),
@@ -232,7 +232,7 @@ pub fn handle_execute_order<'info>(
                 )?;
                 Ok(())
             }
-        }
+        },
     }?;
     //delete order
     user.delete_order(user_order.order_id)?;
@@ -277,12 +277,12 @@ fn execute_increase_order_margin(
             order_margin_temp = order.order_margin;
             user.sub_order_hold_in_usd(order.order_margin)?;
         }
-        order_margin = cal_utils::usd_to_token_u(order_margin_temp, decimals, margin_token_price)?;
+        order_margin = calculator::usd_to_token_u(order_margin_temp, decimals, margin_token_price)?;
         order_margin_from_balance =
             user.use_token(margin_token, order_margin, user_token_account_key, false)?;
     } else {
         let order_margin_in_usd =
-            cal_utils::token_to_usd_u(order.order_margin, decimals, margin_token_price)?;
+            calculator::token_value_in_usd(order.order_margin, decimals, margin_token_price)?;
         validate!(
             order_margin_in_usd >= state.minimum_order_margin_usd,
             BumpErrorCode::AmountNotEnough
@@ -321,7 +321,7 @@ fn get_execution_price(index_price: u128, order: &UserOrder) -> BumpResult<u128>
     if order.order_type.eq(&OrderType::STOP)
         && order.stop_type.eq(&StopType::StopLoss)
         && ((long && order.trigger_price <= index_price)
-        || (!long && order.trigger_price >= index_price))
+            || (!long && order.trigger_price >= index_price))
     {
         return Ok(index_price);
     }
@@ -351,7 +351,7 @@ pub fn update_funding_fee(
         market.funding_fee.short_funding_fee_amount_per_size
     };
 
-    let realized_funding_fee_delta = cal_utils::mul_small_rate_i(
+    let realized_funding_fee_delta = calculator::mul_small_rate_i(
         position.position_size.cast::<i128>()?,
         market_funding_fee_per_size
             .cast::<i128>()?
@@ -359,14 +359,14 @@ pub fn update_funding_fee(
     )?;
     if position.is_long {
         position.add_realized_funding_fee(realized_funding_fee_delta)?;
-        position.add_realized_funding_fee_in_usd(cal_utils::token_to_usd_i(
+        position.add_realized_funding_fee_in_usd(calculator::token_to_usd_i(
             realized_funding_fee_delta,
             token.decimals,
             token_price,
         )?)?;
     } else {
         let realized_funding_fee =
-            cal_utils::usd_to_token_i(realized_funding_fee_delta, token.decimals, token_price)?;
+            calculator::usd_to_token_i(realized_funding_fee_delta, token.decimals, token_price)?;
         position.add_realized_funding_fee(realized_funding_fee)?;
         position.add_realized_funding_fee_in_usd(realized_funding_fee_delta)?
     }
@@ -383,8 +383,8 @@ pub fn update_borrowing_fee(
     token_price: u128,
     token: &TradeToken,
 ) -> BumpResult<()> {
-    let realized_borrowing_fee = cal_utils::mul_small_rate_u(
-        cal_utils::mul_rate_u(
+    let realized_borrowing_fee = calculator::mul_small_rate_u(
+        calculator::mul_rate_u(
             position.initial_margin,
             (position.leverage as u128).safe_sub(1u128.safe_mul(RATE_PRECISION)?)?,
         )?,
@@ -394,7 +394,7 @@ pub fn update_borrowing_fee(
     )?;
 
     position.add_realized_borrowing_fee(realized_borrowing_fee)?;
-    position.add_realized_borrowing_fee_in_usd(cal_utils::token_to_usd_u(
+    position.add_realized_borrowing_fee_in_usd(calculator::token_value_in_usd(
         realized_borrowing_fee,
         token.decimals,
         token_price,
@@ -590,7 +590,7 @@ fn update_decrease_position(
     position.sub_realized_funding_fee(response.settle_funding_fee)?;
     position.sub_realized_funding_fee_usd(response.settle_funding_fee_in_usd)?;
     position.sub_close_fee_usd(response.settle_close_fee_in_usd)?;
-    position.set_last_update(cal_utils::current_time())?;
+    position.set_last_update(calculator::current_time())?;
     emit!(UpdateUserPositionEvent { pre_position, position: *position });
     Ok(())
 }
@@ -717,7 +717,7 @@ fn settle_cross<'info>(
             state_account.bump_signer_nonce,
             response.pool_pnl_token.abs().cast::<u128>()?,
         )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
     } else if response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)? > 0i128 {
         token::receive(
             token_program,
@@ -726,7 +726,7 @@ fn settle_cross<'info>(
             bump_signer,
             response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)?.cast::<u128>()?,
         )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
     }
 
     if !response.is_liquidation {
@@ -765,7 +765,7 @@ fn settle_isolate<'info>(
         state_account.bump_signer_nonce,
         response.settle_margin.abs().cast::<u128>()?,
     )
-        .map_err(|_e| BumpErrorCode::TransferFailed)?;
+    .map_err(|_e| BumpErrorCode::TransferFailed)?;
     Ok(())
 }
 
@@ -778,7 +778,7 @@ fn add_insurance_fund(
     position: &UserPosition,
 ) -> BumpResult<()> {
     if position.is_portfolio_margin {
-        pool.add_insurance_fund(cal_utils::usd_to_token_u(
+        pool.add_insurance_fund(calculator::usd_to_token_u(
             position.get_position_mm(market, state)?,
             trade_token.decimals,
             response.margin_token_price,
@@ -822,7 +822,7 @@ pub fn execute_reduce_position_margin(
     market_map: &MarketMap,
 ) -> BumpResult<u128> {
     let max_reduce_margin_in_usd = position.initial_margin_usd.safe_sub(
-        cal_utils::div_rate_u(position.position_size, market.config.maximum_leverage as u128)?
+        calculator::div_rate_u(position.position_size, market.config.maximum_leverage as u128)?
             .max(state.minimum_order_margin_usd),
     )?;
     validate!(
@@ -831,7 +831,7 @@ pub fn execute_reduce_position_margin(
     )?;
     let user_key = position.user_key;
     let pre_position = *position;
-    let reduce_margin_amount = cal_utils::usd_to_token_u(
+    let reduce_margin_amount = calculator::usd_to_token_u(
         params.update_margin_amount,
         if position.is_long { base_trade_token.decimals } else { stable_trade_token.decimals },
         position.entry_price,
@@ -839,7 +839,7 @@ pub fn execute_reduce_position_margin(
 
     if position.is_portfolio_margin
         && position.initial_margin_usd.safe_sub(position.initial_margin_usd_from_portfolio)?
-        < reduce_margin_amount
+            < reduce_margin_amount
     {
         position.sub_initial_margin_usd_from_portfolio(
             reduce_margin_amount
@@ -855,7 +855,7 @@ pub fn execute_reduce_position_margin(
     position.sub_initial_margin_usd(params.update_margin_amount)?;
 
     if need_update_leverage {
-        position.set_leverage(cal_utils::div_rate_u(
+        position.set_leverage(calculator::div_rate_u(
             position.position_size,
             position.initial_margin_usd,
         )? as u32)?; //TODO: Precision loss?
@@ -878,7 +878,7 @@ pub fn execute_reduce_position_margin(
             base_token_pool.get_pool_usd_value(trade_token_map, oracle_map, market_map)?;
         validate!(
             base_token_pool_value
-                >= cal_utils::token_to_usd_u(
+                >= calculator::token_value_in_usd(
                     reduce_margin_amount,
                     stable_trade_token.decimals,
                     oracle_map
@@ -949,7 +949,7 @@ pub fn calculate_decrease_position(
     if position.position_size == decrease_size && is_liquidation {
         response.settle_margin = if is_portfolio_margin {
             //(initial_margin_usd - pos_fee_usd + pnl - mm) * decimals / price
-            cal_utils::usd_to_token_i(
+            calculator::usd_to_token_i(
                 position
                     .initial_margin_usd
                     .cast::<i128>()?
@@ -968,7 +968,7 @@ pub fn calculate_decrease_position(
         };
     } else {
         //(initial_margin_usd - pos_fee + pnl) * decrease_percent * decimals / price
-        response.settle_margin = cal_utils::usd_to_token_i(
+        response.settle_margin = calculator::usd_to_token_i(
             position
                 .initial_margin_usd
                 .cast::<i128>()?
@@ -994,18 +994,18 @@ pub fn calculate_decrease_position(
         .safe_sub(response.settle_margin)?
         .safe_sub(response.settle_fee)?;
     //(settle_margin - decrease_margin) * price / decimal
-    response.user_realized_pnl = cal_utils::token_to_usd_i(
+    response.user_realized_pnl = calculator::token_to_usd_i(
         response.user_realized_pnl_token,
         trade_token.decimals,
         margin_mint_token_price,
     )?;
-    response.decrease_margin_in_usd_from_portfolio = if cal_utils::add_u128(
+    response.decrease_margin_in_usd_from_portfolio = if calculator::add_u128(
         response.decrease_margin_in_usd,
         position.initial_margin_usd_from_portfolio,
     )? > position.initial_margin_usd
     {
-        cal_utils::sub_u128(
-            cal_utils::add_u128(
+        calculator::sub_u128(
+            calculator::add_u128(
                 response.decrease_margin_in_usd,
                 position.initial_margin_usd_from_portfolio,
             )?,
@@ -1075,19 +1075,19 @@ fn cal_decrease_close_fee(
 ) -> BumpResult<(u128, u128)> {
     if position.position_size == decrease_size {
         return Ok((
-            cal_utils::usd_to_token_u(position.close_fee_in_usd, trade_token.decimals, token_price)
+            calculator::usd_to_token_u(position.close_fee_in_usd, trade_token.decimals, token_price)
                 .unwrap(),
             position.close_fee_in_usd,
         ));
     }
 
-    let mut close_fee_in_usd = cal_utils::mul_rate_u(decrease_size, close_fee_rate).unwrap();
+    let mut close_fee_in_usd = calculator::mul_rate_u(decrease_size, close_fee_rate).unwrap();
     if close_fee_in_usd > position.close_fee_in_usd {
         close_fee_in_usd = position.close_fee_in_usd;
     }
 
     Ok((
-        cal_utils::usd_to_token_u(close_fee_in_usd, trade_token.decimals, token_price)?
+        calculator::usd_to_token_u(close_fee_in_usd, trade_token.decimals, token_price)?
             .safe_mul(decrease_size)?
             .safe_div(position.position_size)?,
         close_fee_in_usd.safe_mul(decrease_size)?.safe_div(position.position_size)?,
@@ -1103,7 +1103,7 @@ pub fn execute_add_position_margin(
     let user_key = position.user_key;
     validate!(
         params.update_margin_amount
-            < cal_utils::usd_to_token_u(
+            < calculator::usd_to_token_u(
                 position.position_size.safe_sub(position.initial_margin_usd)?,
                 trade_token.decimals,
                 position.entry_price
@@ -1120,18 +1120,18 @@ pub fn execute_add_position_margin(
 
     position.add_initial_margin(params.update_margin_amount)?;
     if position.is_portfolio_margin {
-        position.set_initial_margin_usd(cal_utils::div_rate_u(
+        position.set_initial_margin_usd(calculator::div_rate_u(
             position.position_size,
             position.leverage as u128,
         )?)?;
         position.add_initial_margin_usd_from_portfolio(params.add_initial_margin_from_portfolio)?;
     } else {
-        position.add_initial_margin_usd(cal_utils::token_to_usd_u(
+        position.add_initial_margin_usd(calculator::token_value_in_usd(
             params.update_margin_amount,
             trade_token.decimals,
             position.entry_price,
         )?)?;
-        position.set_leverage(cal_utils::div_rate_u(
+        position.set_leverage(calculator::div_rate_u(
             position.position_size,
             position.initial_margin_usd,
         )? as u32)?; // TODO: Precision loss?
@@ -1185,21 +1185,21 @@ pub fn increase_position(
     if position.position_size != 0u128 && position.leverage != order.leverage {
         return Err(BumpErrorCode::LeverageIsNotAllowed.into());
     }
-    let increase_margin = cal_utils::sub_u128(order_margin, fee)?;
+    let increase_margin = calculator::sub_u128(order_margin, fee)?;
     let increase_margin_from_balance = if order_margin_from_balance > fee {
-        cal_utils::sub_u128(order_margin_from_balance, fee)?
+        calculator::sub_u128(order_margin_from_balance, fee)?
     } else {
         0u128
     };
     let decimal = if is_long { trade_token.decimals } else { stable_trade_token.decimals };
-    let increase_size = cal_utils::token_to_usd_u(
-        cal_utils::mul_rate_u(increase_margin, order.leverage as u128)?,
+    let increase_size = calculator::token_value_in_usd(
+        calculator::mul_rate_u(increase_margin, order.leverage as u128)?,
         decimal,
         margin_token_price,
     )?;
-    let increase_hold = cal_utils::mul_rate_u(
+    let increase_hold = calculator::mul_rate_u(
         increase_margin,
-        cal_utils::sub_u128(order.leverage as u128, 1u128.safe_mul(RATE_PRECISION)?)?,
+        calculator::sub_u128(order.leverage as u128, 1u128.safe_mul(RATE_PRECISION)?)?,
     )?;
 
     if position.position_size == 0u128 {
@@ -1213,29 +1213,29 @@ pub fn increase_position(
         position.set_margin_mint(order.margin_mint_key)?;
         position.set_entry_price(execute_price)?;
         position.add_initial_margin(increase_margin)?;
-        position.add_initial_margin_usd(cal_utils::token_to_usd_u(
+        position.add_initial_margin_usd(calculator::token_value_in_usd(
             increase_margin,
             decimal,
             margin_token_price,
         )?)?;
-        position.add_initial_margin_usd_from_portfolio(cal_utils::token_to_usd_u(
+        position.add_initial_margin_usd_from_portfolio(calculator::token_value_in_usd(
             increase_margin_from_balance,
             decimal,
             margin_token_price,
         )?)?;
-        position.add_close_fee_in_usd(cal_utils::mul_rate_u(
+        position.add_close_fee_in_usd(calculator::mul_rate_u(
             increase_size,
             market.config.close_fee_rate,
         )?)?;
         position.add_open_fee(fee)?;
-        position.add_open_fee_in_usd(cal_utils::token_to_usd_u(
+        position.add_open_fee_in_usd(calculator::token_value_in_usd(
             fee,
             decimal,
             margin_token_price,
         )?)?;
         position.add_position_size(increase_size)?;
         position.set_leverage(order.leverage)?;
-        position.set_realized_pnl(-cal_utils::token_to_usd_i(
+        position.set_realized_pnl(-calculator::token_to_usd_i(
             fee.cast::<i128>()?,
             decimal,
             margin_token_price,
@@ -1250,7 +1250,7 @@ pub fn increase_position(
         } else {
             market.funding_fee.short_funding_fee_amount_per_size
         })?;
-        position.set_last_update(cal_utils::current_time())?;
+        position.set_last_update(calculator::current_time())?;
         position.add_hold_pool_amount(increase_hold)?;
         position.set_mm_usd(position.get_position_mm(market.deref(), state)?)?;
         emit!(AddOrDeleteUserPositionEvent { position: position.clone(), is_add: true });
@@ -1271,7 +1271,7 @@ pub fn increase_position(
             margin_token_price,
             if is_long { &trade_token } else { &stable_trade_token },
         )?;
-        position.set_entry_price(cal_utils::compute_avg_entry_price(
+        position.set_entry_price(calculator::compute_avg_entry_price(
             position.position_size,
             position.entry_price,
             increase_size,
@@ -1280,31 +1280,31 @@ pub fn increase_position(
             position.is_long,
         )?)?;
         position.add_initial_margin(increase_margin)?;
-        position.add_initial_margin_usd(cal_utils::token_to_usd_u(
+        position.add_initial_margin_usd(calculator::token_value_in_usd(
             increase_margin,
             decimal,
             margin_token_price,
         )?)?;
-        position.add_initial_margin_usd_from_portfolio(cal_utils::token_to_usd_u(
+        position.add_initial_margin_usd_from_portfolio(calculator::token_value_in_usd(
             increase_margin_from_balance,
             decimal,
             margin_token_price,
         )?)?;
         position.add_position_size(increase_size)?;
-        position.add_close_fee_in_usd(cal_utils::mul_rate_u(
+        position.add_close_fee_in_usd(calculator::mul_rate_u(
             increase_size,
             market.config.close_fee_rate,
         )?)?;
         position.add_open_fee(fee)?;
-        position.add_open_fee_in_usd(cal_utils::token_to_usd_u(
+        position.add_open_fee_in_usd(calculator::token_value_in_usd(
             fee,
             decimal,
             margin_token_price,
         )?)?;
         position.add_realized_pnl(
-            -cal_utils::token_to_usd_u(fee, decimal, margin_token_price)?.cast::<i128>()?,
+            -calculator::token_value_in_usd(fee, decimal, margin_token_price)?.cast::<i128>()?,
         )?;
-        position.set_last_update(cal_utils::current_time())?;
+        position.set_last_update(calculator::current_time())?;
         position.add_hold_pool_amount(increase_hold)?;
         position.set_mm_usd(position.get_position_mm(market.deref(), state)?)?;
         emit!(UpdateUserPositionEvent { pre_position, position: position.clone() });
@@ -1338,7 +1338,7 @@ pub fn increase_position(
         let market = market_map.get_mut_ref(symbol)?;
         let stable_trade_token =
             trade_token_map.get_trade_token_by_mint_ref(&market.stable_pool_mint_key)?;
-        let increase_hold_value = cal_utils::token_to_usd_u(
+        let increase_hold_value = calculator::token_value_in_usd(
             increase_hold,
             stable_trade_token.decimals,
             oracle_map
@@ -1399,7 +1399,7 @@ pub fn update_leverage<'info>(
                     })?
                     .get_token_available_amount()?;
                 let new_initial_margin_in_usd =
-                    cal_utils::div_rate_u(position_size, position_leverage as u128)?;
+                    calculator::div_rate_u(position_size, position_leverage as u128)?;
                 let add_margin_in_usd = if new_initial_margin_in_usd > position.initial_margin_usd {
                     new_initial_margin_in_usd.safe_sub(position.initial_margin_usd)?
                 } else {
@@ -1412,7 +1412,7 @@ pub fn update_leverage<'info>(
                     BumpErrorCode::AmountNotEnough.into()
                 )?;
 
-                add_margin_amount = cal_utils::usd_to_token_u(
+                add_margin_amount = calculator::usd_to_token_u(
                     add_margin_in_usd,
                     if position.is_long {
                         base_trade_token.decimals
@@ -1421,7 +1421,7 @@ pub fn update_leverage<'info>(
                     },
                     position_entry_price,
                 )?;
-                add_initial_margin_from_portfolio = cal_utils::token_to_usd_u(
+                add_initial_margin_from_portfolio = calculator::token_value_in_usd(
                     add_margin_amount.min(available_amount),
                     if position.is_long {
                         base_trade_token.decimals
@@ -1466,12 +1466,12 @@ pub fn update_leverage<'info>(
                     authority,
                     params.add_margin_amount,
                 )
-                    .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                .map_err(|_e| BumpErrorCode::TransferFailed)?;
             }
         } else {
             let position = user.get_user_position_mut_ref(position_key)?;
             position.set_leverage(params.leverage)?;
-            let reduce_margin = position.initial_margin_usd.safe_sub(cal_utils::div_rate_u(
+            let reduce_margin = position.initial_margin_usd.safe_sub(calculator::div_rate_u(
                 position.position_size,
                 position.leverage as u128,
             )?)?;
@@ -1508,7 +1508,7 @@ pub fn update_leverage<'info>(
                     state.bump_signer_nonce,
                     reduce_margin_amount,
                 )
-                    .map_err(|_e| BumpErrorCode::TransferFailed)?
+                .map_err(|_e| BumpErrorCode::TransferFailed)?
             }
         }
     }

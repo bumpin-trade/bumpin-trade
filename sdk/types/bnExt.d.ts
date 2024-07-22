@@ -4,6 +4,8 @@ export declare module "@coral-xyz/anchor" {
   interface BN {
     toBigNumber(): BigNumber;
 
+    toBigNumberWithDecimals(decimals: number): BigNumber;
+
     toUsd(tokenPrice: BN, decimals: number): BN;
 
     toToken(tokenPrice: BN, decimals: number): BN;

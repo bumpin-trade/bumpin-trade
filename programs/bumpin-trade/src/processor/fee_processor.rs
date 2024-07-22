@@ -5,7 +5,7 @@ use crate::state::market::Market;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 
-pub fn collect_stake_fee(stake_pool: &mut Pool, amount: u128) -> BumpResult<u128> {
+pub fn charge_staking_fee(stake_pool: &mut Pool, amount: u128) -> BumpResult<u128> {
     let fee_amount = amount.safe_mul_rate(stake_pool.config.stake_fee_rate.into())?;
     stake_pool.fee_reward.add_fee_amount(fee_amount)?;
 

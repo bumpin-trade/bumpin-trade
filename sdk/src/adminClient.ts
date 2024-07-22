@@ -16,11 +16,11 @@ import {
   InitializeMarketParams,
   InitializePoolParams,
   InitializeStateParams,
-  Market,
-  Pool,
-  PoolConfig,
+  MarketAccount,
+  PoolAccount,
+  PoolConfigAccount,
   StateAccount,
-  TradeToken,
+  TradeTokenAccount,
 } from "./typedef";
 import { BumpinAdminConfig } from "./bumpinAdminConfig";
 import { BumpinUtils } from "./utils/utils";
@@ -38,9 +38,9 @@ export class BumpinAdmin {
   isInitialized: boolean = false;
 
   state: StateAccount | null = null;
-  tradeTokens: TradeToken[] = [];
-  pools: Pool[] = [];
-  market: Market[] = [];
+  tradeTokens: TradeTokenAccount[] = [];
+  pools: PoolAccount[] = [];
+  market: MarketAccount[] = [];
 
   constructor(config: BumpinAdminConfig) {
     this.connection = new Connection(config.endpoint);
@@ -183,7 +183,7 @@ export class BumpinAdmin {
     stableMint: PublicKey,
     iconId: number,
     tagsMask: number,
-    config: PoolConfig
+    config: PoolConfigAccount
   ) {
     const [pda, _] = BumpinUtils.getBumpinStatePda(this.program);
     let params: InitializePoolParams = {

@@ -8,16 +8,7 @@
   "instructions": [
     {
       "name": "initialize",
-      "discriminator": [
-        175,
-        175,
-        109,
-        31,
-        13,
-        152,
-        155,
-        237
-      ],
+      "discriminator": [175, 175, 109, 31, 13, 152, 155, 237],
       "accounts": [
         {
           "name": "price",
@@ -41,16 +32,7 @@
     },
     {
       "name": "set_price",
-      "discriminator": [
-        16,
-        19,
-        182,
-        8,
-        149,
-        83,
-        72,
-        181
-      ],
+      "discriminator": [16, 19, 182, 8, 149, 83, 72, 181],
       "accounts": [
         {
           "name": "price",

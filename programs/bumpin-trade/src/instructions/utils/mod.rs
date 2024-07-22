@@ -1,7 +1,7 @@
-pub mod cal_utils;
+pub mod calculator;
 pub mod swap;
 
-pub use cal_utils::*;
+pub use calculator::*;
 
 pub enum Either<A, B> {
     Left(A),

@@ -1,5 +1,4 @@
 import { PublicKey } from "@solana/web3.js";
-import { Pool } from "../typedef";
 import { PollingPoolAccountSubscriber } from "../account/pollingPoolAccountSubscriber";
 import { BulkAccountLoader } from "../account/bulkAccountLoader";
 import { Program } from "@coral-xyz/anchor";
@@ -10,6 +9,8 @@ import { Component } from "./componet";
 import { PollingStateAccountSubscriber } from "../account/pollingStateAccountSubscriber";
 import { BumpinSubscriptionFailed } from "../errors";
 import { DataAndSlot } from "../account/types";
+import { TradeTokenComponent } from "./tradeToken";
+import { Pool } from "../beans/beans";
 
 export class PoolComponent extends Component {
   program: Program<BumpinTrade>;
@@ -18,6 +19,7 @@ export class PoolComponent extends Component {
   constructor(
     bulkAccountLoader: BulkAccountLoader,
     stateSubscriber: PollingStateAccountSubscriber,
+    tradeTokenComponent: TradeTokenComponent,
     program: Program<BumpinTrade>
   ) {
     super(stateSubscriber, program);
@@ -28,7 +30,8 @@ export class PoolComponent extends Component {
       let poolAccountSubscriber = new PollingPoolAccountSubscriber(
         program,
         pda,
-        bulkAccountLoader
+        bulkAccountLoader,
+        tradeTokenComponent
       );
       this.pools.set(pda.toString(), poolAccountSubscriber);
     }
@@ -51,6 +54,11 @@ export class PoolComponent extends Component {
     return pools.map((dataAndSlot) => dataAndSlot.data);
   }
 
+  public getPoolsSync(): Pool[] {
+    let pools = this.getPoolsWithSlotSync();
+    return pools.map((dataAndSlot) => dataAndSlot.data);
+  }
+
   public async getPool(
     poolKey: PublicKey,
     sync: boolean = false
@@ -67,6 +75,14 @@ export class PoolComponent extends Component {
       if (sync) {
         await poolAccountSubscriber.fetch();
       }
+      poolsWithSlot.push(poolAccountSubscriber.getAccountAndSlot());
+    }
+    return poolsWithSlot;
+  }
+
+  public getPoolsWithSlotSync(): DataAndSlot<Pool>[] {
+    let poolsWithSlot: DataAndSlot<Pool>[] = [];
+    for (let poolAccountSubscriber of this.pools.values()) {
       poolsWithSlot.push(poolAccountSubscriber.getAccountAndSlot());
     }
     return poolsWithSlot;

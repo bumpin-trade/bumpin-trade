@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { Market } from "../typedef";
+import { MarketAccount } from "../typedef";
 import { BulkAccountLoader } from "../account/bulkAccountLoader";
 import { Program } from "@coral-xyz/anchor";
 import { BumpinUtils } from "../utils/utils";
@@ -10,6 +10,8 @@ import { PollingStateAccountSubscriber } from "../account/pollingStateAccountSub
 import { BumpinSubscriptionFailed } from "../errors";
 import { DataAndSlot } from "../account/types";
 import { PollingMarketAccountSubscriber } from "../account/pollingMarketAccountSubscriber";
+import { TradeTokenComponent } from "./tradeToken";
+import { Market } from "../beans/beans";
 
 export class MarketComponent extends Component {
   program: Program<BumpinTrade>;
@@ -18,6 +20,7 @@ export class MarketComponent extends Component {
   constructor(
     bulkAccountLoader: BulkAccountLoader,
     stateSubscriber: PollingStateAccountSubscriber,
+    tradeTokenComponent: TradeTokenComponent,
     program: Program<BumpinTrade>
   ) {
     super(stateSubscriber, program);
@@ -28,7 +31,8 @@ export class MarketComponent extends Component {
       let marketAccountSubscriber = new PollingMarketAccountSubscriber(
         program,
         pda,
-        bulkAccountLoader
+        bulkAccountLoader,
+        tradeTokenComponent
       );
       this.markets.set(pda.toString(), marketAccountSubscriber);
     }

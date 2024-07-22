@@ -1,5 +1,5 @@
 use crate::errors::{BumpErrorCode, BumpResult};
-use crate::instructions::cal_utils;
+use crate::instructions::calculator;
 use crate::math::safe_math::SafeMath;
 use crate::state::infrastructure::user_stake::UserStake;
 use crate::state::market_map::MarketMap;
@@ -21,9 +21,9 @@ pub fn un_stake(
     let trade_token = trade_token_map.get_trade_token_by_mint_ref(&pool.mint_key)?;
     let pool_value = pool.get_pool_usd_value(trade_token_map, oracle_map, market_map)?;
 
-    let un_stake_usd = cal_utils::mul_div_u(un_stake_amount, pool_value, pool.total_supply)?;
+    let un_stake_usd = calculator::mul_div_u(un_stake_amount, pool_value, pool.total_supply)?;
     let pool_price = oracle_map.get_price_data(&trade_token.oracle_key)?;
-    let token_amount = cal_utils::div_u128(un_stake_usd, pool_price.price)?;
+    let token_amount = calculator::div_u128(un_stake_usd, pool_price.price)?;
     validate!(token_amount > pool.config.minimum_un_stake_amount, BumpErrorCode::UnStakeTooSmall)?;
 
     let max_un_stake_amount = pool.get_current_max_un_stake()?;
@@ -48,7 +48,7 @@ pub fn stake(
         let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle_key)?;
 
         supply_amount =
-            cal_utils::token_to_usd_u(mint_amount, trade_token.decimals, oracle_price_data.price)?
+            calculator::token_value_in_usd(mint_amount, trade_token.decimals, oracle_price_data.price)?
                 .safe_div_small_rate(pool.get_pool_net_price(
                     trade_token_map,
                     oracle_map,
@@ -82,7 +82,7 @@ pub fn portfolio_to_stake(
         let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle_key)?;
 
         supply_amount =
-            cal_utils::token_to_usd_u(mint_amount, trade_token.decimals, oracle_price_data.price)?
+            calculator::token_value_in_usd(mint_amount, trade_token.decimals, oracle_price_data.price)?
                 .safe_div_small_rate(pool.get_pool_net_price(
                     trade_token_map,
                     oracle_map,

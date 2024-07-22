@@ -1,4 +1,4 @@
-import {BN} from "@coral-xyz/anchor";
+import { BN } from "@coral-xyz/anchor";
 
 export * from "./errors";
 export * from "./consts";
@@ -12,5 +12,6 @@ export * from "./utils/token";
 export * from "./utils/pool";
 export * from "./utils/market";
 export * from "./utils/position";
+export * from "./beans/beans";
 
-export {BN};
+export { BN };

@@ -1,9 +1,10 @@
 import { AccountSubscriber, DataAndSlot } from "./types";
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { TradeToken } from "../typedef";
+import { TradeTokenAccount } from "../typedef";
 import { BulkAccountLoader } from "./bulkAccountLoader";
 import { BumpinTrade } from "../types/bumpin_trade";
+import { TradeToken } from "../beans/beans";
 
 export class PollingTradeTokenAccountSubscriber
   implements AccountSubscriber<TradeToken>
@@ -68,7 +69,7 @@ export class PollingTradeTokenAccountSubscriber
           "tradeToken",
           buffer
         );
-        this.tradeToken = { data: account, slot };
+        this.tradeToken = { data: this.convert(account), slot };
       }
     );
 
@@ -90,7 +91,7 @@ export class PollingTradeTokenAccountSubscriber
         );
       if (dataAndContext.context.slot > (this.tradeToken?.slot ?? 0)) {
         this.tradeToken = {
-          data: dataAndContext.data as any as TradeToken,
+          data: this.convert(dataAndContext.data as any as TradeTokenAccount),
           slot: dataAndContext.context.slot,
         };
       }
@@ -139,5 +140,9 @@ export class PollingTradeTokenAccountSubscriber
     if (!this.tradeToken || this.tradeToken.slot < slot) {
       this.tradeToken = { data: userAccount, slot };
     }
+  }
+
+  private convert(data: TradeTokenAccount): TradeToken {
+    return new TradeToken(data);
   }
 }

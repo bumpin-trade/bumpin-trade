@@ -5,13 +5,26 @@ use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 use crate::math::safe_math::SafeMath;
 use crate::validate;
 
+/// Represents a user's staking information
+///
+/// When a user stakes in an asset pool [`Pool`], a [`UserStake`] object is created to record the user's staking information.
+/// Like other user information, it is a reusable object. See: [`UserStakeStatus::INIT`]
 #[bumpin_zero_copy_unsafe]
 pub struct UserStake {
+    /// User's staking shares
+    ///
+    /// This value represents the user's staking shares (in USD), calculated as:
+    /// ((amount of staked tokens - fees) * current token value) / current net value of the pool
     pub staked_share: u128,
+    /// Rewards earned by the user from staking
     pub user_rewards: UserRewards,
+    /// The pool in which the user has staked
     pub pool_key: Pubkey,
+    /// The status of the user's stake
     pub user_stake_status: UserStakeStatus,
+    /// Padding for alignment
     pub padding: [u8; 15],
+    /// Reserved for future use
     pub reserve_padding: [u8; 16],
 }
 

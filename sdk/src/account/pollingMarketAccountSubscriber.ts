@@ -1,9 +1,12 @@
 import { AccountSubscriber, DataAndSlot } from "./types";
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { Market } from "../typedef";
+import { MarketAccount } from "../typedef";
 import { BulkAccountLoader } from "./bulkAccountLoader";
 import { BumpinTrade } from "../types/bumpin_trade";
+import { Market } from "../beans/beans";
+import { TradeTokenComponent } from "../componets/tradeToken";
+import { BumpinTokenUtils } from "../utils/token";
 
 export class PollingMarketAccountSubscriber
   implements AccountSubscriber<Market>
@@ -17,16 +20,19 @@ export class PollingMarketAccountSubscriber
   errorCallbackId?: string;
 
   market?: DataAndSlot<Market>;
+  tradeTokenComponent: TradeTokenComponent;
 
   public constructor(
     program: Program<BumpinTrade>,
     userAccountPublicKey: PublicKey,
-    accountLoader: BulkAccountLoader
+    accountLoader: BulkAccountLoader,
+    tradeTokenComponent: TradeTokenComponent
   ) {
     this.isSubscribed = false;
     this.program = program;
     this.accountLoader = accountLoader;
     this.userAccountPublicKey = userAccountPublicKey;
+    this.tradeTokenComponent = tradeTokenComponent;
   }
 
   async subscribe(userAccount?: Market): Promise<boolean> {
@@ -69,81 +75,11 @@ export class PollingMarketAccountSubscriber
           "market",
           buffer
         );
-        this.market = { data: account, slot };
-        console.log("MarketAccount updated start =====================");
-        this.printMarket(this.market);
-        console.log("MarketAccount updated end   =====================");
+        this.market = { data: this.convert(account), slot };
       }
     );
 
     this.errorCallbackId = this.accountLoader.addErrorCallbacks((error) => {});
-  }
-
-  async printMarket(marketData: DataAndSlot<Market>): Promise<void> {
-    let market = marketData.data;
-    console.log(`Pool Key: ${market.poolKey.toString()}`);
-    console.log(`Pool Mint Key: ${market.poolMintKey.toString()}`);
-    console.log(`Index Mint Oracle: ${market.indexMintOracle.toString()}`);
-    console.log(`Stable Pool Key: ${market.stablePoolKey.toString()}`);
-    console.log(`Stable Pool Mint Key: ${market.stablePoolMintKey.toString()}`);
-    console.log(`Index: ${market.index}`);
-    console.log(`Symbol: ${market.symbol.join(", ")}`);
-
-    console.log("Long Open Interest:");
-    console.log(
-      `  Open Interest: ${market.longOpenInterest.openInterest.toString()}`
-    );
-    console.log(
-      `  Entry Price: ${market.longOpenInterest.entryPrice.toString()}`
-    );
-
-    console.log("Short Open Interest:");
-    console.log(
-      `  Open Interest: ${market.shortOpenInterest.openInterest.toString()}`
-    );
-    console.log(
-      `  Entry Price: ${market.shortOpenInterest.entryPrice.toString()}`
-    );
-
-    console.log("Funding Fee:");
-    console.log(
-      `  Long Funding Fee Amount Per Size: ${market.fundingFee.longFundingFeeAmountPerSize.toString()}`
-    );
-    console.log(
-      `  Short Funding Fee Amount Per Size: ${market.fundingFee.shortFundingFeeAmountPerSize.toString()}`
-    );
-    console.log(
-      `  Total Long Funding Fee: ${market.fundingFee.totalLongFundingFee.toString()}`
-    );
-    console.log(
-      `  Total Short Funding Fee: ${market.fundingFee.totalShortFundingFee.toString()}`
-    );
-    console.log(
-      `  Long Funding Fee Rate: ${market.fundingFee.longFundingFeeRate.toString()}`
-    );
-    console.log(
-      `  Short Funding Fee Rate: ${market.fundingFee.shortFundingFeeRate.toString()}`
-    );
-    console.log(`  Updated At: ${market.fundingFee.updatedAt.toString()}`);
-
-    console.log("Config:");
-    console.log(`  Tick Size: ${market.config.tickSize.toString()}`);
-    console.log(`  Open Fee Rate: ${market.config.openFeeRate.toString()}`);
-    console.log(`  Close Fee Rate: ${market.config.closeFeeRate.toString()}`);
-    console.log(
-      `  Maximum Long Open Interest Cap: ${market.config.maximumLongOpenInterestCap.toString()}`
-    );
-    console.log(
-      `  Maximum Short Open Interest Cap: ${market.config.maximumShortOpenInterestCap.toString()}`
-    );
-    console.log(
-      `  Long Short Ratio Limit: ${market.config.longShortRatioLimit.toString()}`
-    );
-    console.log(
-      `  Long Short OI Bottom Limit: ${market.config.longShortOiBottomLimit.toString()}`
-    );
-    console.log(`  Maximum Leverage: ${market.config.maximumLeverage}`);
-    console.log(`  Minimum Leverage: ${market.config.minimumLeverage}`);
   }
 
   async fetchIfUnloaded(): Promise<void> {
@@ -160,7 +96,7 @@ export class PollingMarketAccountSubscriber
       );
       if (dataAndContext.context.slot > (this.market?.slot ?? 0)) {
         this.market = {
-          data: dataAndContext.data as any as Market,
+          data: this.convert(dataAndContext.data as any as MarketAccount),
           slot: dataAndContext.context.slot,
         };
       }
@@ -211,9 +147,21 @@ export class PollingMarketAccountSubscriber
   public updateData(userAccount: Market, slot: number): void {
     if (!this.market || this.market.slot < slot) {
       this.market = { data: userAccount, slot };
-      /*
-            this.eventEmitter.emit('userAccountUpdate', userAccount);
-            this.eventEmitter.emit('update');*/
     }
+  }
+
+  private convert(market: MarketAccount): Market {
+    const tradeTokens = this.tradeTokenComponent.getTradeTokensSync();
+    return new Market(
+      market,
+      BumpinTokenUtils.getTradeTokenByMintPublicKey(
+        market.poolMintKey,
+        tradeTokens
+      ).decimals,
+      BumpinTokenUtils.getTradeTokenByMintPublicKey(
+        market.stablePoolMintKey,
+        tradeTokens
+      ).decimals
+    );
   }
 }

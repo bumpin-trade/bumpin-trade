@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { Rewards } from "../typedef";
+import { RewardsAccount } from "../typedef";
 import { BulkAccountLoader } from "../account/bulkAccountLoader";
 import { Program } from "@coral-xyz/anchor";
 import { BumpinUtils } from "../utils/utils";
@@ -46,7 +46,7 @@ export class RewardsComponent extends Component {
     }
   }
 
-  public async getRewards(sync: boolean = false): Promise<Rewards[]> {
+  public async getRewards(sync: boolean = false): Promise<RewardsAccount[]> {
     let rewards = await this.getRewardsWithSlot(sync);
     return rewards.map((dataAndSlot) => dataAndSlot.data);
   }
@@ -54,15 +54,15 @@ export class RewardsComponent extends Component {
   public async getReward(
     rewardsKey: PublicKey,
     sync: boolean = false
-  ): Promise<Rewards> {
+  ): Promise<RewardsAccount> {
     let rewardsWithSlot = await this.getRewardWithSlot(rewardsKey, sync);
     return rewardsWithSlot.data;
   }
 
   public async getRewardsWithSlot(
     sync: boolean = false
-  ): Promise<DataAndSlot<Rewards>[]> {
-    let rewardsWithSlot: DataAndSlot<Rewards>[] = [];
+  ): Promise<DataAndSlot<RewardsAccount>[]> {
+    let rewardsWithSlot: DataAndSlot<RewardsAccount>[] = [];
     for (let rewardsAccountSubscriber of this.rewards.values()) {
       if (sync) {
         await rewardsAccountSubscriber.fetch();
@@ -75,7 +75,7 @@ export class RewardsComponent extends Component {
   public async getRewardWithSlot(
     rewardKey: PublicKey,
     sync: boolean = false
-  ): Promise<DataAndSlot<Rewards>> {
+  ): Promise<DataAndSlot<RewardsAccount>> {
     const rewardsAccountSubscriber:
       | PollingRewardsAccountSubscriber
       | undefined = this.rewards.get(rewardKey.toString());
