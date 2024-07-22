@@ -228,7 +228,7 @@ export class UserComponent extends Component {
     }
 
     let param = {
-      share: new BN(share.toString()),
+      share: BumpinUtils.size2Amount(share, tradeToken.decimals),
       poolIndex: pool.index,
       tradeTokenIndex: tradeToken.index,
     };
