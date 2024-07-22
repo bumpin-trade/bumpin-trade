@@ -47,6 +47,8 @@ import {
   StopType,
   TradeToken,
   User,
+  UserStakeStatus,
+  UserTokenStatus,
 } from "../beans/beans";
 import { TradeTokenComponent } from "./tradeToken";
 import { PoolComponent } from "./pool";
@@ -323,10 +325,10 @@ export class UserComponent extends Component {
     ).address;
 
     if (
-      (isEqual(param.positionSide, PositionSideAccount.DECREASE) &&
-        isEqual(param.orderSide, OrderSideAccount.LONG)) ||
-      (isEqual(param.positionSide, PositionSideAccount.INCREASE) &&
-        isEqual(param.orderSide, OrderSideAccount.SHORT))
+      (isEqual(param.positionSide, PositionSide.DECREASE) &&
+        isEqual(param.orderSide, OrderSide.LONG)) ||
+      (isEqual(param.positionSide, PositionSide.INCREASE) &&
+        isEqual(param.orderSide, OrderSide.SHORT))
     ) {
       // When the order side is short, the userTokenAccount is the stable token.
       userTokenAccount = (
@@ -345,8 +347,8 @@ export class UserComponent extends Component {
           wallet,
           userTokenAccount
         );
-      if (isEqual(param.positionSide, PositionSideAccount.INCREASE)) {
-        if (isEqual(param.orderSide, OrderSideAccount.LONG)) {
+      if (isEqual(param.positionSide, PositionSide.INCREASE)) {
+        if (isEqual(param.orderSide, OrderSide.LONG)) {
           if (!tokenAccount.mint.equals(pool.mintKey)) {
             throw new BumpinTokenAccountUnexpected(
               "Pool mint key: " + pool.mintKey.toString(),
@@ -362,7 +364,7 @@ export class UserComponent extends Component {
           }
         }
       } else {
-        if (isEqual(param.orderSide, OrderSideAccount.LONG)) {
+        if (isEqual(param.orderSide, OrderSide.LONG)) {
           if (!tokenAccount.mint.equals(stablePool.mintKey)) {
             throw new BumpinTokenAccountUnexpected(
               "Stable Pool mint key: " + stablePool.mintKey.toString(),
@@ -500,11 +502,11 @@ export class UserComponent extends Component {
       orderMargin: !param.isPortfolioMargin
         ? BumpinUtils.number2Precision(
             param.orderMargin,
-            isEqual(param.positionSide, PositionSideAccount.INCREASE)
-              ? isEqual(param.orderSide, OrderSideAccount.LONG)
+            isEqual(param.positionSide, PositionSide.INCREASE)
+              ? isEqual(param.orderSide, OrderSide.LONG)
                 ? tradeToken.decimals
                 : stableTradeToken.decimals
-              : isEqual(param.orderSide, OrderSideAccount.LONG)
+              : isEqual(param.orderSide, OrderSide.LONG)
               ? stableTradeToken.decimals
               : tradeToken.decimals
           )
@@ -549,30 +551,27 @@ export class UserComponent extends Component {
     sync: boolean = false
   ) {
     let state = await this.getState(sync);
-    if (isEqual(order.orderType, OrderTypeAccount.NONE)) {
+    if (isEqual(order.orderType, OrderType.NONE)) {
       throw new BumpinInvalidParameter(
         "Order type should not be NONE (when placing order)"
       );
     }
 
-    if (isEqual(order.orderSide, OrderSideAccount.NONE)) {
+    if (isEqual(order.orderSide, OrderSide.NONE)) {
       throw new BumpinInvalidParameter(
         "Order side should not be NONE (when placing order)"
       );
     }
 
-    if (
-      order.size == 0 &&
-      isEqual(order.positionSide, PositionSideAccount.DECREASE)
-    ) {
+    if (order.size == 0 && isEqual(order.positionSide, PositionSide.DECREASE)) {
       throw new BumpinInvalidParameter(
         "Order size should not be zero (when placing order with position side decrease)"
       );
     }
 
     if (
-      isEqual(order.orderType, OrderTypeAccount.LIMIT) &&
-      isEqual(order.positionSide, PositionSideAccount.DECREASE)
+      isEqual(order.orderType, OrderType.LIMIT) &&
+      isEqual(order.positionSide, PositionSide.DECREASE)
     ) {
       throw new BumpinInvalidParameter(
         "Decrease position does not support limit order"
@@ -580,15 +579,15 @@ export class UserComponent extends Component {
     }
 
     if (
-      isEqual(order.orderType, OrderTypeAccount.STOP) &&
-      (isEqual(order.stopType, StopTypeAccount.NONE) || order.triggerPrice == 0)
+      isEqual(order.orderType, OrderType.STOP) &&
+      (isEqual(order.stopType, StopType.NONE) || order.triggerPrice == 0)
     ) {
       throw new BumpinInvalidParameter(
         "Stop order should have stop type(not none) and trigger price(>0)"
       );
     }
 
-    if (isEqual(order.positionSide, PositionSideAccount.INCREASE)) {
+    if (isEqual(order.positionSide, PositionSide.INCREASE)) {
       if (order.orderMargin == 0) {
         throw new BumpinInvalidParameter(
           "Order margin should not be zero (when placing order with Increase position side)"
@@ -709,7 +708,7 @@ export class UserComponent extends Component {
   ): Array<AccountMeta> {
     let remainingAccounts: Array<AccountMeta> = [];
     for (let token of user.tokens) {
-      if (isEqual(token.userTokenStatus, UserTokenStatusAccount.USING)) {
+      if (isEqual(token.userTokenStatus, UserTokenStatus.USING)) {
         remainingAccounts.push({
           pubkey: token.tokenMintKey,
           isWritable,
@@ -782,7 +781,7 @@ export class UserComponent extends Component {
     let user = await this.getUser(sync);
     return user.stakes.find(
       (value, index, obj) =>
-        isEqual(value.userStakeStatus, UserStakeStatusAccount.USING) &&
+        isEqual(value.userStakeStatus, UserStakeStatus.USING) &&
         value.poolKey.equals(poolKey)
     );
   }

@@ -11,11 +11,17 @@ import {
   MarketFundingFee,
   MarketPosition,
   OrderSide,
+  OrderStatus,
   OrderType,
   Pool,
+  PoolStatus,
   PositionSide,
+  PositionStatus,
   StopType,
   TradeToken,
+  UserStakeStatus,
+  UserStatus,
+  UserTokenStatus,
 } from "./beans/beans";
 
 export class OracleSource {
@@ -170,6 +176,24 @@ export class PoolStatusAccount {
   static readonly NORMAL = { init: {} };
   static readonly StakePaused = { stakePaused: {} };
   static readonly UnStakePaused = { unStakePaused: {} };
+
+  toString() {
+    return isEqual(this, PoolStatusAccount.NORMAL)
+      ? "Normal"
+      : isEqual(this, PoolStatusAccount.StakePaused)
+      ? "StakePaused"
+      : "UnStakePaused";
+  }
+
+  public static from(o: PoolStatus) {
+    if (o === PoolStatus.NORMAL) {
+      return PoolStatusAccount.NORMAL;
+    } else if (o === PoolStatus.StakePaused) {
+      return PoolStatusAccount.StakePaused;
+    } else {
+      return PoolStatusAccount.UnStakePaused;
+    }
+  }
 }
 
 export type PoolAccount = {
@@ -218,6 +242,18 @@ export type TradeTokenAccount = {
 export class UserStakeStatusAccount {
   static readonly INIT = { init: {} };
   static readonly USING = { using: {} };
+
+  toString() {
+    return isEqual(this, UserStakeStatusAccount.INIT) ? "Init" : "Using";
+  }
+
+  public static from(o: UserStakeStatus) {
+    if (o === UserStakeStatus.INIT) {
+      return UserStakeStatusAccount.INIT;
+    } else {
+      return UserStakeStatusAccount.USING;
+    }
+  }
 }
 
 export type UserRewardsAccount = {
@@ -237,6 +273,18 @@ export type UserStakeAccount = {
 export class UserTokenStatusAccount {
   static readonly INIT = { init: {} };
   static readonly USING = { using: {} };
+
+  toString() {
+    return isEqual(this, UserTokenStatusAccount.INIT) ? "Init" : "Using";
+  }
+
+  public static from(o: UserTokenStatus) {
+    if (o === UserTokenStatus.INIT) {
+      return UserTokenStatusAccount.INIT;
+    } else {
+      return UserTokenStatusAccount.USING;
+    }
+  }
 }
 
 export type UserTokenAccount = {
@@ -251,6 +299,18 @@ export type UserTokenAccount = {
 export class PositionStatusAccount {
   static readonly INIT = { init: {} };
   static readonly USING = { using: {} };
+
+  toString() {
+    return isEqual(this, PositionStatusAccount.INIT) ? "Init" : "Using";
+  }
+
+  public static from(o: PositionStatus) {
+    if (o === PositionStatus.INIT) {
+      return PositionStatus.INIT;
+    } else {
+      return PositionStatus.USING;
+    }
+  }
 }
 
 export type UserPositionAccount = {
@@ -310,6 +370,18 @@ export class OrderSideAccount {
 export class OrderStatusAccount {
   static readonly INIT = { init: {} };
   static readonly USING = { using: {} };
+
+  toString() {
+    return isEqual(this, OrderStatusAccount.INIT) ? "Init" : "Using";
+  }
+
+  public static from(o: OrderStatus) {
+    if (o === OrderStatus.INIT) {
+      return OrderStatus.INIT;
+    } else {
+      return OrderStatus.USING;
+    }
+  }
 }
 
 export class PositionSideAccount {
@@ -437,6 +509,24 @@ export class UserStatusAccount {
   static readonly NORMAL = { normal: {} };
   static readonly LIQUIDATION = { liquidation: {} };
   static readonly DISABLE = { disable: {} };
+
+  toString() {
+    return isEqual(this, UserStatusAccount.NORMAL)
+      ? "Normal"
+      : isEqual(this, UserStatusAccount.LIQUIDATION)
+      ? "Liquidation"
+      : "Disable";
+  }
+
+  public static from(o: UserStatus) {
+    if (o === UserStatus.NORMAL) {
+      return UserStatus.NORMAL;
+    } else if (o === UserStatus.LIQUIDATION) {
+      return UserStatus.LIQUIDATION;
+    } else {
+      return UserStatus.DISABLE;
+    }
+  }
 }
 
 export type UserStatusValue =
