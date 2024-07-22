@@ -352,16 +352,10 @@ export class BumpinClient {
         let markets = await this.getMarkets(sync);
         let pools = await this.getPools();
 
-        const poolMap: Map<PublicKey, Pool> = new Map();
-        pools.forEach(pool => {
-            poolMap.set(pool.key, pool);
-        });
+        let availableValue = await this.userComponent!.getUserAccountNetValue(user, tradeTokens, markets, pools);
+        for (let tradeToken of tradeTokens){
 
-        const marketMap: Map<number[], Market> = new Map();
-        markets.forEach(market => {
-            marketMap.set(market.symbol, market);
-        });
-        let availableValue = await this.userComponent!.getUserAccountNetValue(user, tradeTokens, marketMap, poolMap);
+        }
     }
 
     public async stake(
