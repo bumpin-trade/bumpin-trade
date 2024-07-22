@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
 use crate::errors::BumpResult;
-use crate::instructions::cal_utils;
+use crate::instructions::calculator;
 use crate::math::constants::SMALL_RATE_PRECISION;
 use crate::math::safe_math::SafeMath;
 use crate::state::pool::PoolBalance;
@@ -28,13 +28,13 @@ impl BorrowingFee {
         } else {
             let time_diff = self.get_pool_borrowing_fee_durations()?;
             let total_amount = pool_balance.amount.safe_add(pool_balance.un_settle_amount)?;
-            let hold_rate = cal_utils::div_to_precision_u(
+            let hold_rate = calculator::div_to_precision_u(
                 pool_balance.hold_amount,
                 total_amount,
                 SMALL_RATE_PRECISION,
             )?;
             self.cumulative_borrowing_fee_per_token =
-                self.cumulative_borrowing_fee_per_token.safe_add(cal_utils::mul_small_rate_u(
+                self.cumulative_borrowing_fee_per_token.safe_add(calculator::mul_small_rate_u(
                     hold_rate.safe_mul(time_diff as u128)?,
                     borrowing_interest_rate,
                 )?)?;
@@ -52,18 +52,18 @@ impl BorrowingFee {
     ) -> BumpResult<()> {
         if is_borrowing_fee_add {
             self.total_borrowing_fee =
-                cal_utils::add_u128(self.total_borrowing_fee, borrowing_fee)?;
+                calculator::add_u128(self.total_borrowing_fee, borrowing_fee)?;
         } else {
             self.total_borrowing_fee =
-                cal_utils::sub_u128(self.total_borrowing_fee, borrowing_fee)?;
+                calculator::sub_u128(self.total_borrowing_fee, borrowing_fee)?;
         }
 
         if is_realized_borrowing_fee_add {
             self.total_realized_borrowing_fee =
-                cal_utils::add_u128(self.total_realized_borrowing_fee, realized_borrowing_fee)?;
+                calculator::add_u128(self.total_realized_borrowing_fee, realized_borrowing_fee)?;
         } else {
             self.total_realized_borrowing_fee =
-                cal_utils::sub_u128(self.total_realized_borrowing_fee, realized_borrowing_fee)?;
+                calculator::sub_u128(self.total_realized_borrowing_fee, realized_borrowing_fee)?;
         }
 
         Ok(())

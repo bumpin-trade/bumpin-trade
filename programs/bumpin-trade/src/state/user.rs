@@ -5,7 +5,7 @@ use crate::errors::BumpErrorCode::{
     CouldNotFindUserOrder, CouldNotFindUserPosition, CouldNotFindUserStake, CouldNotFindUserToken,
 };
 use crate::errors::{BumpErrorCode, BumpResult};
-use crate::instructions::cal_utils;
+use crate::instructions::calculator;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::state::bump_events::{
@@ -58,7 +58,7 @@ impl Default for User {
             orders: [UserOrder::default(); 10],
             key: Pubkey::default(),
             authority: Pubkey::default(),
-            created_at: cal_utils::current_time(),
+            created_at: calculator::current_time(),
             user_status: UserStatus::NORMAL,
             padding: [0u8; 7],
             reserve_padding: [0u8; 288],
@@ -157,7 +157,7 @@ impl User {
         self.get_user_stake_index(pool_key).map(|user_stake| &self.stakes[user_stake])
     }
 
-    pub fn get_or_add_user_stake_ref_mut(
+    pub fn get_or_new_user_stake_ref_mut(
         &mut self,
         pool_key: &Pubkey,
     ) -> BumpResult<&mut UserStake> {
@@ -263,7 +263,7 @@ impl User {
     pub fn sub_order_hold_in_usd(&mut self, amount: u128) -> BumpResult<()> {
         validate!(self.hold >= amount, BumpErrorCode::AmountNotEnough.into())?;
         let pre_hold = self.hold;
-        self.hold = cal_utils::sub_u128(self.hold, amount)?;
+        self.hold = calculator::sub_u128(self.hold, amount)?;
         emit!(UserHoldUpdateEvent {
             user_key: self.key,
             pre_hold_amount: pre_hold,

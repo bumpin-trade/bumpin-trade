@@ -1,5 +1,5 @@
 use crate::errors::{BumpErrorCode, BumpResult};
-use crate::instructions::cal_utils;
+use crate::instructions::calculator;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::state::infrastructure::market_funding_fee::MarketFundingFee;
@@ -57,10 +57,10 @@ impl Market {
     ) -> BumpResult<()> {
         if is_long {
             self.funding_fee.total_long_funding_fee =
-                cal_utils::add_i128(self.funding_fee.total_long_funding_fee, amount)?;
+                calculator::add_i128(self.funding_fee.total_long_funding_fee, amount)?;
         } else {
             self.funding_fee.total_short_funding_fee =
-                cal_utils::add_i128(self.funding_fee.total_short_funding_fee, amount)?;
+                calculator::add_i128(self.funding_fee.total_short_funding_fee, amount)?;
         }
         Ok(())
     }
@@ -74,7 +74,7 @@ impl Market {
         if market_position.open_interest == 0u128 {
             market_position.add_open_interest(params.size, params.entry_price)?;
         } else {
-            let entry_price = cal_utils::compute_avg_entry_price(
+            let entry_price = calculator::compute_avg_entry_price(
                 market_position.open_interest,
                 market_position.entry_price,
                 params.size,
@@ -132,12 +132,12 @@ impl Market {
                 let funding_rate_per_second = {
                     let long_position_interest = long.open_interest;
                     let short_position_interest = short.open_interest;
-                    let diff = cal_utils::diff_u(long_position_interest, short_position_interest)?;
+                    let diff = calculator::diff_u(long_position_interest, short_position_interest)?;
                     let open_interest = long_position_interest.safe_add(short_position_interest)?;
                     if diff == 0u128 || open_interest == 0u128 {
                         0u128;
                     }
-                    cal_utils::mul_div_u(diff, state.funding_fee_base_rate, open_interest)?
+                    calculator::mul_div_u(diff, state.funding_fee_base_rate, open_interest)?
                 };
                 let total_funding_fee = long
                     .open_interest
@@ -153,7 +153,7 @@ impl Market {
                             .safe_mul(funding_fee_duration_in_seconds.abs().cast::<u128>()?)?
                             .min(total_funding_fee.safe_div(long.open_interest)?)
                     };
-                    long_funding_fee_per_qty_delta = cal_utils::usd_to_token_u(
+                    long_funding_fee_per_qty_delta = calculator::usd_to_token_u(
                         current_long_funding_fee_per_qty,
                         decimals,
                         price,
@@ -236,7 +236,7 @@ pub struct MarketPosition {
 
 impl MarketPosition {
     pub fn add_open_interest(&mut self, size: u128, price: u128) -> BumpResult<()> {
-        self.open_interest = cal_utils::add_u128(self.open_interest, size)?;
+        self.open_interest = calculator::add_u128(self.open_interest, size)?;
         self.entry_price = price;
         Ok(())
     }
@@ -250,7 +250,7 @@ impl MarketPosition {
                 .safe_mul(self.entry_price)?
                 .safe_sub(size.safe_mul(price)?)?
                 .safe_div(self.open_interest.safe_sub(size)?)?;
-            self.open_interest = cal_utils::sub_u128(self.open_interest, size)?;
+            self.open_interest = calculator::sub_u128(self.open_interest, size)?;
         }
         Ok(())
     }

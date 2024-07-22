@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
 use crate::errors::BumpResult;
-use crate::instructions::cal_utils;
+use crate::instructions::calculator;
 use crate::math::safe_math::SafeMath;
 use crate::state::oracle::OraclePriceData;
 use crate::state::trade_token::TradeToken;
@@ -53,7 +53,7 @@ impl UserToken {
         oracle_price_data: &OraclePriceData,
     ) -> BumpResult<u128> {
         if self.amount > self.used_amount {
-            let token_net_value = cal_utils::token_to_usd_u(
+            let token_net_value = calculator::token_value_in_usd(
                 self.amount.safe_sub(self.used_amount)?,
                 trade_token.decimals,
                 oracle_price_data.price,
@@ -70,7 +70,7 @@ impl UserToken {
         oracle_price_data: &OraclePriceData,
     ) -> BumpResult<u128> {
         if self.amount < self.used_amount {
-            let token_used_value = cal_utils::token_to_usd_u(
+            let token_used_value = calculator::token_value_in_usd(
                 self.used_amount.safe_sub(self.amount)?,
                 trade_token.decimals,
                 oracle_price_data.price,
@@ -101,7 +101,7 @@ impl UserToken {
             self.used_amount.safe_sub(self.amount)?.safe_sub(self.liability_amount)?;
 
         if borrowing_amount > 0 {
-            let token_borrowing_value = cal_utils::token_to_usd_u(
+            let token_borrowing_value = calculator::token_value_in_usd(
                 borrowing_amount,
                 trade_token.decimals,
                 oracle_price_data.price,

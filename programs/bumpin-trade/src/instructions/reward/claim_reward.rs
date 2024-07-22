@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::errors::BumpErrorCode;
-use crate::instructions::cal_utils;
+use crate::instructions::calculator;
 use crate::instructions::constraints::*;
 use crate::processor::user_processor;
 use crate::state::infrastructure::user_stake::UserStakeStatus;
@@ -106,7 +106,7 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
         user_stake.user_rewards.realised_rewards_token_amount,
     )
     .map_err(|_e| BumpErrorCode::TransferFailed)?;
-    user_stake.user_rewards.total_claim_rewards_amount = cal_utils::add_u128(
+    user_stake.user_rewards.total_claim_rewards_amount = calculator::add_u128(
         user_stake.user_rewards.total_claim_rewards_amount,
         user_stake.user_rewards.realised_rewards_token_amount,
     )?;

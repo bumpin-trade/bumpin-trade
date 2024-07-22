@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::errors::BumpErrorCode;
-use crate::instructions::cal_utils;
+use crate::instructions::calculator;
 use crate::math::safe_math::SafeMath;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::state::pool::Pool;
@@ -120,13 +120,13 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
             .map_err(|_e| BumpErrorCode::OracleNotFound)?
             .price;
         let transfer_usd =
-            cal_utils::token_to_usd_u(fee_amount, stable_trade_token.decimals, stable_token_price)?;
+            calculator::token_value_in_usd(fee_amount, stable_trade_token.decimals, stable_token_price)?;
         let token_price = oracle_map
             .get_price_data(&trade_token.oracle_key)
             .map_err(|_e| BumpErrorCode::OracleNotFound)?
             .price;
         let transfer_amount =
-            cal_utils::usd_to_token_u(transfer_usd, trade_token.decimals, token_price)?;
+            calculator::usd_to_token_u(transfer_usd, trade_token.decimals, token_price)?;
         // todo swap stable to un_stable token, using jup_swap.
         // let amount = swap::jup_swap()?;
         total_fee_amount = total_fee_amount.safe_add(transfer_amount)?;
@@ -135,7 +135,7 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
 
     //split fee to pool_rewards & dao_rewards
     let pool_rewards_amount =
-        cal_utils::mul_rate_u(total_fee_amount, ctx.accounts.state.pool_fee_reward_ratio as u128)?;
+        calculator::mul_rate_u(total_fee_amount, ctx.accounts.state.pool_fee_reward_ratio as u128)?;
     let dao_rewards_amount = total_fee_amount.safe_sub(pool_rewards_amount)?;
 
     //transfer pool rewards

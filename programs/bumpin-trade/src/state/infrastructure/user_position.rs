@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
 use crate::errors::BumpResult;
-use crate::instructions::cal_utils;
+use crate::instructions::calculator;
 use crate::math::casting::Cast;
 use crate::math::constants::RATE_PRECISION;
 use crate::math::safe_math::SafeMath;
@@ -362,7 +362,7 @@ impl UserPosition {
     }
 
     pub fn get_position_mm(&self, market: &Market, state: &State) -> BumpResult<u128> {
-        Ok(cal_utils::get_mm(
+        Ok(calculator::get_mm(
             self.position_size,
             market.config.maximum_leverage,
             state.maximum_maintenance_margin_rate,
@@ -379,7 +379,7 @@ impl UserPosition {
             return Ok(0i128);
         };
         let un_pnl_usd = self.get_position_un_pnl_usd(index_price)?;
-        Ok(cal_utils::usd_to_token_i(un_pnl_usd, trade_token.decimals, mint_token_price)?)
+        Ok(calculator::usd_to_token_i(un_pnl_usd, trade_token.decimals, mint_token_price)?)
     }
 
     pub fn get_position_fee(
@@ -397,30 +397,30 @@ impl UserPosition {
         } else {
             market.funding_fee.short_funding_fee_amount_per_size
         };
-        let funding_fee = cal_utils::mul_small_rate_i(
+        let funding_fee = calculator::mul_small_rate_i(
             self.position_size.cast::<i128>()?,
             funding_fee_amount_per_size.safe_sub(self.open_funding_fee_amount_per_size)?,
         )?;
 
         if self.is_long {
             let funding_fee_usd =
-                cal_utils::token_to_usd_i(funding_fee, trade_token_decimals, margin_mint_price)?;
+                calculator::token_to_usd_i(funding_fee, trade_token_decimals, margin_mint_price)?;
             funding_fee_total_usd = funding_fee_total_usd.safe_add(funding_fee_usd)?;
         } else {
             funding_fee_total_usd = funding_fee_total_usd.safe_add(funding_fee)?;
         }
 
-        let initial_margin_leverage = cal_utils::mul_rate_u(
+        let initial_margin_leverage = calculator::mul_rate_u(
             self.initial_margin,
             (self.leverage as u128).safe_sub(1u128.safe_mul(RATE_PRECISION)?)?,
         )?;
-        let borrowing_fee = cal_utils::mul_small_rate_u(
+        let borrowing_fee = calculator::mul_small_rate_u(
             pool.borrowing_fee
                 .cumulative_borrowing_fee_per_token
                 .safe_sub(self.open_borrowing_fee_per_token)?,
             initial_margin_leverage,
         )?;
-        borrowing_fee_total_usd = borrowing_fee_total_usd.safe_add(cal_utils::token_to_usd_u(
+        borrowing_fee_total_usd = borrowing_fee_total_usd.safe_add(calculator::token_value_in_usd(
             borrowing_fee,
             trade_token_decimals,
             margin_mint_price,
