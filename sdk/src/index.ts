@@ -12,5 +12,6 @@ export * from "./utils/token";
 export * from "./utils/pool";
 export * from "./utils/market";
 export * from "./utils/position";
+export * from "./beans/beans";
 
 export { BN };

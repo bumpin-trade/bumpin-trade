@@ -23,7 +23,7 @@ import {
   UserTokenAccount,
   UserTokenStatusAccount,
 } from "../typedef";
-import { BumpinConstants } from "../consts";
+import { C } from "../consts";
 import { BumpinUtils } from "../utils/utils";
 import { isEqual } from "lodash";
 import { BumpinTokenUtils } from "../utils/token";
@@ -57,17 +57,16 @@ export class State {
     this.tradeTokenSequence = state.tradeTokenSequence;
     this.minimumOrderMarginUsd =
       state.minimumOrderMarginUsd.toBigNumberWithDecimals(
-        BumpinConstants.USD_EXPONENT_NUMBER
+        C.USD_EXPONENT_NUMBER
       );
     this.maximumMaintenanceMarginRate =
-      state.maximumMaintenanceMarginRate /
-      BumpinConstants.RATE_MULTIPLIER_NUMBER;
+      state.maximumMaintenanceMarginRate / C.RATE_MULTIPLIER_NUMBER;
     this.fundingFeeBaseRate = state.fundingFeeBaseRate.toBigNumberWithDecimals(
-      BumpinConstants.SMALL_RATE_MULTIPLIER_NUMBER
+      C.SMALL_RATE_MULTIPLIER_NUMBER
     );
     this.maximumFundingBaseRate =
       state.maximumFundingBaseRate.toBigNumberWithDecimals(
-        BumpinConstants.SMALL_RATE_MULTIPLIER_NUMBER
+        C.SMALL_RATE_MULTIPLIER_NUMBER
       );
     this.minimumPrecisionMultiple =
       state.minimumPrecisionMultiple.toBigNumber();
@@ -75,10 +74,9 @@ export class State {
       state.poolRewardsIntervalLimit.toBigNumber();
     this.initFee = state.initFee;
     this.tradingFeeUsdPoolRewardsRatio =
-      state.tradingFeeUsdPoolRewardsRatio /
-      BumpinConstants.RATE_MULTIPLIER_NUMBER;
+      state.tradingFeeUsdPoolRewardsRatio / C.RATE_MULTIPLIER_NUMBER;
     this.poolFeeRewardRatio =
-      state.poolFeeRewardRatio / BumpinConstants.RATE_MULTIPLIER_NUMBER;
+      state.poolFeeRewardRatio / C.RATE_MULTIPLIER_NUMBER;
   }
 }
 
@@ -88,10 +86,10 @@ export class MarketPosition {
 
   constructor(marketPosition: MarketPositionAccount) {
     this.openInterest = marketPosition.openInterest.toBigNumberWithDecimals(
-      BumpinConstants.USD_EXPONENT_NUMBER
+      C.USD_EXPONENT_NUMBER
     );
     this.entryPrice = marketPosition.entryPrice.toBigNumberWithDecimals(
-      BumpinConstants.PRICE_EXPONENT_NUMBER
+      C.PRICE_EXPONENT_NUMBER
     );
   }
 }
@@ -109,34 +107,34 @@ export class MarketConfig {
 
   constructor(marketConfig: MarketConfigAccount) {
     this.tickSize = marketConfig.tickSize.toBigNumberWithDecimals(
-      BumpinConstants.PRICE_EXPONENT_NUMBER
+      C.PRICE_EXPONENT_NUMBER
     );
     this.openFeeRate = marketConfig.openFeeRate.toBigNumberWithDecimals(
-      BumpinConstants.RATE_MULTIPLIER_NUMBER
+      C.RATE_MULTIPLIER_NUMBER
     );
     this.closeFeeRate = marketConfig.closeFeeRate.toBigNumberWithDecimals(
-      BumpinConstants.RATE_MULTIPLIER_NUMBER
+      C.RATE_MULTIPLIER_NUMBER
     );
     this.maximumLongOpenInterestCap =
       marketConfig.maximumLongOpenInterestCap.toBigNumberWithDecimals(
-        BumpinConstants.USD_EXPONENT_NUMBER
+        C.USD_EXPONENT_NUMBER
       );
     this.maximumShortOpenInterestCap =
       marketConfig.maximumShortOpenInterestCap.toBigNumberWithDecimals(
-        BumpinConstants.USD_EXPONENT_NUMBER
+        C.USD_EXPONENT_NUMBER
       );
     this.longShortRatioLimit =
       marketConfig.longShortRatioLimit.toBigNumberWithDecimals(
-        BumpinConstants.RATE_MULTIPLIER_NUMBER
+        C.RATE_MULTIPLIER_NUMBER
       );
     this.longShortOiBottomLimit =
       marketConfig.longShortOiBottomLimit.toBigNumberWithDecimals(
-        BumpinConstants.USD_EXPONENT_NUMBER
+        C.USD_EXPONENT_NUMBER
       );
     this.maximumLeverage =
-      marketConfig.maximumLeverage / BumpinConstants.RATE_MULTIPLIER_NUMBER;
+      marketConfig.maximumLeverage / C.RATE_MULTIPLIER_NUMBER;
     this.minimumLeverage =
-      marketConfig.minimumLeverage / BumpinConstants.RATE_MULTIPLIER_NUMBER;
+      marketConfig.minimumLeverage / C.RATE_MULTIPLIER_NUMBER;
   }
 }
 
@@ -156,11 +154,11 @@ export class MarketFundingFee {
   ) {
     this.longFundingFeeAmountPerSize =
       marketFundingFee.longFundingFeeAmountPerSize.toBigNumberWithDecimals(
-        BumpinConstants.SMALL_RATE_MULTIPLIER_NUMBER
+        C.SMALL_RATE_MULTIPLIER_NUMBER
       );
     this.shortFundingFeeAmountPerSize =
       marketFundingFee.shortFundingFeeAmountPerSize.toBigNumberWithDecimals(
-        BumpinConstants.SMALL_RATE_MULTIPLIER_NUMBER
+        C.SMALL_RATE_MULTIPLIER_NUMBER
       );
     this.totalLongFundingFee =
       marketFundingFee.totalLongFundingFee.toBigNumberWithDecimals(
@@ -172,11 +170,11 @@ export class MarketFundingFee {
       );
     this.longFundingFeeRate =
       marketFundingFee.longFundingFeeRate.toBigNumberWithDecimals(
-        BumpinConstants.SMALL_RATE_MULTIPLIER_NUMBER
+        C.SMALL_RATE_MULTIPLIER_NUMBER
       );
     this.shortFundingFeeRate =
       marketFundingFee.shortFundingFeeRate.toBigNumberWithDecimals(
-        BumpinConstants.SMALL_RATE_MULTIPLIER_NUMBER
+        C.SMALL_RATE_MULTIPLIER_NUMBER
       );
     this.updatedAt = marketFundingFee.updatedAt.toBigNumber();
   }
@@ -268,7 +266,7 @@ export class BorrowingFee {
       );
     this.cumulativeBorrowingFeePerToken =
       borrowingFee.cumulativeBorrowingFeePerToken.toBigNumberWithDecimals(
-        BumpinConstants.SMALL_RATE_MULTIPLIER_NUMBER
+        C.SMALL_RATE_MULTIPLIER_NUMBER
       );
     this.updatedAt = borrowingFee.updatedAt.toBigNumber();
   }
@@ -286,13 +284,11 @@ export class FeeReward {
       feeReward.unSettleFeeAmount.toBigNumberWithDecimals(coinDecimals);
     this.cumulativeRewardsPerStakeToken =
       feeReward.cumulativeRewardsPerStakeToken.toBigNumberWithDecimals(
-        BumpinConstants.SMALL_RATE_MULTIPLIER_NUMBER
+        C.SMALL_RATE_MULTIPLIER_NUMBER
       );
     this.lastRewardsPerStakeTokenDeltas =
       feeReward.lastRewardsPerStakeTokenDeltas.map((delta) =>
-        delta.toBigNumberWithDecimals(
-          BumpinConstants.SMALL_RATE_MULTIPLIER_NUMBER
-        )
+        delta.toBigNumberWithDecimals(C.SMALL_RATE_MULTIPLIER_NUMBER)
       );
   }
 }
@@ -309,27 +305,24 @@ export class PoolConfig {
   constructor(poolConfig: PoolConfigAccount) {
     this.minimumStakeAmount =
       poolConfig.minimumStakeAmount.toBigNumberWithDecimals(
-        BumpinConstants.USD_EXPONENT_NUMBER
+        C.USD_EXPONENT_NUMBER
       );
     this.minimumUnStakeAmount =
       poolConfig.minimumUnStakeAmount.toBigNumberWithDecimals(
-        BumpinConstants.USD_EXPONENT_NUMBER
+        C.USD_EXPONENT_NUMBER
       );
     this.poolLiquidityLimit =
       poolConfig.poolLiquidityLimit.toBigNumberWithDecimals(
-        BumpinConstants.RATE_MULTIPLIER_NUMBER
+        C.RATE_MULTIPLIER_NUMBER
       );
     this.borrowingInterestRate =
       poolConfig.borrowingInterestRate.toBigNumberWithDecimals(
-        BumpinConstants.SMALL_RATE_MULTIPLIER_NUMBER
+        C.SMALL_RATE_MULTIPLIER_NUMBER
       );
-    this.stakeFeeRate =
-      poolConfig.stakeFeeRate / BumpinConstants.RATE_MULTIPLIER_NUMBER;
-    this.unStakeFeeRate =
-      poolConfig.unStakeFeeRate / BumpinConstants.RATE_MULTIPLIER_NUMBER;
+    this.stakeFeeRate = poolConfig.stakeFeeRate / C.RATE_MULTIPLIER_NUMBER;
+    this.unStakeFeeRate = poolConfig.unStakeFeeRate / C.RATE_MULTIPLIER_NUMBER;
     this.unSettleMintRatioLimit =
-      poolConfig.unSettleMintRatioLimit /
-      BumpinConstants.RATE_MULTIPLIER_NUMBER;
+      poolConfig.unSettleMintRatioLimit / C.RATE_MULTIPLIER_NUMBER;
   }
 }
 
@@ -365,12 +358,8 @@ export class Pool {
     stableCoinDecimals: number
   ) {
     this.name = BumpinUtils.decodeString(pool.name);
-    this.pnl = pool.pnl.toBigNumberWithDecimals(
-      BumpinConstants.USD_EXPONENT_NUMBER
-    );
-    this.apr = pool.apr.toBigNumberWithDecimals(
-      BumpinConstants.RATE_MULTIPLIER_NUMBER
-    );
+    this.pnl = pool.pnl.toBigNumberWithDecimals(C.USD_EXPONENT_NUMBER);
+    this.apr = pool.apr.toBigNumberWithDecimals(C.RATE_MULTIPLIER_NUMBER);
     this.insuranceFundAmount =
       pool.insuranceFundAmount.toBigNumberWithDecimals(baseCoinDecimals);
     this.totalSupply =
@@ -450,10 +439,9 @@ export class TradeToken {
     this.oracleKey = tradeToken.oracleKey;
     this.vaultKey = tradeToken.vaultKey;
     this.name = BumpinUtils.decodeString(tradeToken.name);
-    this.discount =
-      tradeToken.discount / BumpinConstants.RATE_MULTIPLIER_NUMBER;
+    this.discount = tradeToken.discount / C.RATE_MULTIPLIER_NUMBER;
     this.liquidationFactor =
-      tradeToken.liquidationFactor / BumpinConstants.RATE_MULTIPLIER_NUMBER;
+      tradeToken.liquidationFactor / C.RATE_MULTIPLIER_NUMBER;
     this.index = tradeToken.index;
     this.decimals = tradeToken.decimals;
   }
@@ -474,7 +462,7 @@ export class UserRewards {
       );
     this.openRewardsPerStakeToken =
       userRewards.openRewardsPerStakeToken.toBigNumberWithDecimals(
-        BumpinConstants.SMALL_RATE_MULTIPLIER_NUMBER
+        C.SMALL_RATE_MULTIPLIER_NUMBER
       );
     this.tokenKey = userRewards.tokenKey;
   }
@@ -570,24 +558,24 @@ export class UserPosition {
     stableCoinDecimals: number
   ) {
     this.positionSize = userPosition.positionSize.toBigNumberWithDecimals(
-      BumpinConstants.USD_EXPONENT_NUMBER
+      C.USD_EXPONENT_NUMBER
     );
     this.entryPrice = userPosition.entryPrice.toBigNumberWithDecimals(
-      BumpinConstants.PRICE_EXPONENT_NUMBER
+      C.PRICE_EXPONENT_NUMBER
     );
     this.initialMargin = userPosition.initialMargin.toBigNumberWithDecimals(
       userPosition.isLong ? baseCoinDecimals : stableCoinDecimals
     );
     this.initialMarginUsd =
       userPosition.initialMarginUsd.toBigNumberWithDecimals(
-        BumpinConstants.USD_EXPONENT_NUMBER
+        C.USD_EXPONENT_NUMBER
       );
     this.initialMarginUsdFromPortfolio =
       userPosition.initialMarginUsdFromPortfolio.toBigNumberWithDecimals(
-        BumpinConstants.USD_EXPONENT_NUMBER
+        C.USD_EXPONENT_NUMBER
       );
     this.mmUsd = userPosition.mmUsd.toBigNumberWithDecimals(
-      BumpinConstants.USD_EXPONENT_NUMBER
+      C.USD_EXPONENT_NUMBER
     );
     this.holdPoolAmount = userPosition.holdPoolAmount.toBigNumberWithDecimals(
       userPosition.isLong ? baseCoinDecimals : stableCoinDecimals
@@ -596,7 +584,7 @@ export class UserPosition {
       userPosition.isLong ? baseCoinDecimals : stableCoinDecimals
     );
     this.openFeeInUsd = userPosition.openFeeInUsd.toBigNumberWithDecimals(
-      BumpinConstants.USD_EXPONENT_NUMBER
+      C.USD_EXPONENT_NUMBER
     );
     this.realizedBorrowingFee =
       userPosition.realizedBorrowingFee.toBigNumberWithDecimals(
@@ -604,11 +592,11 @@ export class UserPosition {
       );
     this.realizedBorrowingFeeInUsd =
       userPosition.realizedBorrowingFeeInUsd.toBigNumberWithDecimals(
-        BumpinConstants.USD_EXPONENT_NUMBER
+        C.USD_EXPONENT_NUMBER
       );
     this.openBorrowingFeePerToken =
       userPosition.openBorrowingFeePerToken.toBigNumberWithDecimals(
-        BumpinConstants.SMALL_RATE_MULTIPLIER_NUMBER
+        C.SMALL_RATE_MULTIPLIER_NUMBER
       );
     this.realizedFundingFee =
       userPosition.realizedFundingFee.toBigNumberWithDecimals(
@@ -616,17 +604,17 @@ export class UserPosition {
       );
     this.realizedFundingFeeInUsd =
       userPosition.realizedFundingFeeInUsd.toBigNumberWithDecimals(
-        BumpinConstants.USD_EXPONENT_NUMBER
+        C.USD_EXPONENT_NUMBER
       );
     this.openFundingFeeAmountPerSize =
       userPosition.openFundingFeeAmountPerSize.toBigNumberWithDecimals(
-        BumpinConstants.SMALL_RATE_MULTIPLIER_NUMBER
+        C.SMALL_RATE_MULTIPLIER_NUMBER
       );
     this.closeFeeInUsd = userPosition.closeFeeInUsd.toBigNumberWithDecimals(
-      BumpinConstants.USD_EXPONENT_NUMBER
+      C.USD_EXPONENT_NUMBER
     );
     this.realizedPnl = userPosition.realizedPnl.toBigNumberWithDecimals(
-      BumpinConstants.USD_EXPONENT_NUMBER
+      C.USD_EXPONENT_NUMBER
     );
     this.userKey = userPosition.userKey;
     this.marginMintKey = userPosition.marginMintKey;
@@ -634,8 +622,7 @@ export class UserPosition {
     this.positionKey = userPosition.positionKey;
     this.symbol = BumpinUtils.decodeString(userPosition.symbol);
     this.updatedAt = userPosition.updatedAt.toBigNumber();
-    this.leverage =
-      userPosition.leverage / BumpinConstants.RATE_MULTIPLIER_NUMBER;
+    this.leverage = userPosition.leverage / C.RATE_MULTIPLIER_NUMBER;
     this.isLong = userPosition.isLong;
     this.isPortfolioMargin = userPosition.isPortfolioMargin;
     this.status = isEqual(userPosition.status, PositionStatusAccount.INIT)
@@ -674,33 +661,6 @@ export enum StopType {
   TakeProfit,
 }
 
-/**
- * export type UserOrderAccount = {
- *     orderMargin: BN;
- *     orderSize: BN;
- *     triggerPrice: BN;
- *     acceptablePrice: BN;
- *     createdAt: BN;
- *     orderId: BN;
- *     marginMintKey: PublicKey;
- *     authority: PublicKey;
- *     symbol: number[];
- *     leverage: number;
- *     orderSide: OrderSideAccount;
- *     positionSide: PositionSideAccount;
- *     orderType: OrderTypeAccount;
- *     stopType: StopTypeAccount;
- *     status: OrderStatusAccount;
- *     isPortfolioMargin: boolean;
- * };
- *
- * export class UserStatusAccount {
- *     static readonly NORMAL = {normal: {}};
- *     static readonly LIQUIDATION = {liquidation: {}};
- *     static readonly DISABLE = {disable: {}};
- * }
- */
-
 export enum UserStatus {
   NORMAL,
   LIQUIDATION,
@@ -726,23 +686,24 @@ export class UserOrder {
   public isPortfolioMargin: boolean;
 
   constructor(userOrder: UserOrderAccount, coinDecimals: number) {
-    this.orderMargin =
-      userOrder.orderMargin.toBigNumberWithDecimals(coinDecimals);
+    this.orderMargin = userOrder.orderMargin.toBigNumberWithDecimals(
+      userOrder.isPortfolioMargin ? C.USD_EXPONENT_NUMBER : coinDecimals
+    );
     this.orderSize = userOrder.orderSize.toBigNumberWithDecimals(
-      BumpinConstants.USD_EXPONENT_NUMBER
+      C.USD_EXPONENT_NUMBER
     );
     this.triggerPrice = userOrder.triggerPrice.toBigNumberWithDecimals(
-      BumpinConstants.PRICE_EXPONENT_NUMBER
+      C.PRICE_EXPONENT_NUMBER
     );
     this.acceptablePrice = userOrder.acceptablePrice.toBigNumberWithDecimals(
-      BumpinConstants.PRICE_EXPONENT_NUMBER
+      C.PRICE_EXPONENT_NUMBER
     );
     this.createdAt = userOrder.createdAt.toBigNumber();
     this.orderId = userOrder.orderId.toBigNumber();
     this.marginMintKey = userOrder.marginMintKey;
     this.authority = userOrder.authority;
     this.symbol = BumpinUtils.decodeString(userOrder.symbol);
-    this.leverage = userOrder.leverage / BumpinConstants.RATE_MULTIPLIER_NUMBER;
+    this.leverage = userOrder.leverage / C.RATE_MULTIPLIER_NUMBER;
     this.orderSide = isEqual(userOrder.orderSide, OrderSide.LONG)
       ? OrderSide.LONG
       : isEqual(userOrder.orderSide, OrderSide.SHORT)
@@ -772,22 +733,6 @@ export class UserOrder {
   }
 }
 
-/**
- * export type UserAccount = {
- *     nextOrderId: BN;
- *     nextLiquidationId: BN;
- *     hold: BN;
- *     tokens: UserTokenAccount[];
- *     stakes: UserStakeAccount[];
- *     positions: UserPositionAccount[];
- *     orders: UserOrderAccount[];
- *     key: PublicKey;
- *     authority: PublicKey;
- *     createdAt: BN;
- *     status: UserStatusValue;
- * };
- */
-
 export class User {
   public nextOrderId: BigNumber;
   public nextLiquidationId: BigNumber;
@@ -804,9 +749,7 @@ export class User {
   constructor(user: UserAccount, pools: Pool[], tradeTokens: TradeToken[]) {
     this.nextOrderId = user.nextOrderId.toBigNumber();
     this.nextLiquidationId = user.nextLiquidationId.toBigNumber();
-    this.hold = user.hold.toBigNumberWithDecimals(
-      BumpinConstants.USD_EXPONENT_NUMBER
-    );
+    this.hold = user.hold.toBigNumberWithDecimals(C.USD_EXPONENT_NUMBER);
     this.tokens = user.tokens.map((token) => {
       const target = BumpinTokenUtils.getTradeTokenByMintPublicKey(
         token.tokenMintKey,

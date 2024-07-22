@@ -1,6 +1,6 @@
 import { BN } from "@coral-xyz/anchor";
 
-export class BumpinConstants {
+export class C {
   public static readonly RATE_MULTIPLIER_BN: BN = new BN(100000);
   public static readonly RATE_MULTIPLIER: number = 100000;
   public static readonly RATE_MULTIPLIER_NUMBER: number = 5;

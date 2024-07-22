@@ -1,9 +1,4 @@
-import {
-  PositionBalance,
-  PositionFee,
-  PositionStatusAccount,
-  UserPositionAccount,
-} from "../typedef";
+import { PositionBalance, PositionFee } from "../typedef";
 import { BN } from "@coral-xyz/anchor";
 import { BumpinTokenUtils } from "./token";
 // @ts-ignore
@@ -23,24 +18,24 @@ import BigNumber from "bignumber.js";
 import { TradeTokenComponent } from "../componets/tradeToken";
 
 export class BumpinPositionUtils {
-  public static async reducePositionPortfolioBalance(
-    position: UserPositionAccount,
-    amount: BN
-  ): Promise<BN> {
-    let reduceInitialMarginUsd = amount
-      .mul(position.initialMarginUsdFromPortfolio)
-      .div(position.initialMargin);
-    if (position.initialMarginUsdFromPortfolio.lte(reduceInitialMarginUsd)) {
-      position.initialMarginUsdFromPortfolio = new BN(0);
-      return position.initialMarginUsdFromPortfolio
-        .mul(position.initialMargin)
-        .div(position.initialMargin);
-    } else {
-      position.initialMarginUsdFromPortfolio =
-        position.initialMarginUsdFromPortfolio.sub(reduceInitialMarginUsd);
-      return amount;
-    }
-  }
+  // public static async reducePositionPortfolioBalance(
+  //   position: UserPosition,
+  //   amount: BN
+  // ): Promise<BN> {
+  //   let reduceInitialMarginUsd = amount
+  //     .mul(position.initialMarginUsdFromPortfolio)
+  //     .div(position.initialMargin);
+  //   if (position.initialMarginUsdFromPortfolio.lte(reduceInitialMarginUsd)) {
+  //     position.initialMarginUsdFromPortfolio = new BN(0);
+  //     return position.initialMarginUsdFromPortfolio
+  //       .mul(position.initialMargin)
+  //       .div(position.initialMargin);
+  //   } else {
+  //     position.initialMarginUsdFromPortfolio =
+  //       position.initialMarginUsdFromPortfolio.sub(reduceInitialMarginUsd);
+  //     return amount;
+  //   }
+  // }
 
   public static async getUserPositionValue(
     tradeTokenComponent: TradeTokenComponent,

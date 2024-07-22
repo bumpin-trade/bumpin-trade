@@ -36,7 +36,7 @@ import { BumpinPoolUtils } from "../utils/pool";
 import { Account, AccountLayout } from "@solana/spl-token";
 import BigNumber from "bignumber.js";
 import { BumpinMarketUtils } from "../utils/market";
-import { BumpinConstants } from "../consts";
+import { C } from "../consts";
 import { ZERO } from "../constants/numericConstants";
 import { Market, Pool, TradeToken, User } from "../beans/beans";
 import { TradeTokenComponent } from "./tradeToken";
@@ -487,10 +487,7 @@ export class UserComponent extends Component {
       positionSide: param.positionSide,
       orderType: param.orderType,
       stopType: param.stopType,
-      size: BumpinUtils.number2Precision(
-        param.size,
-        BumpinConstants.USD_EXPONENT_NUMBER
-      ),
+      size: BumpinUtils.number2Precision(param.size, C.USD_EXPONENT_NUMBER),
       orderMargin: !param.isPortfolioMargin
         ? BumpinUtils.number2Precision(
             param.orderMargin,
@@ -504,12 +501,12 @@ export class UserComponent extends Component {
           )
         : BumpinUtils.number2Precision(
             param.orderMargin, //todo, portfolio_margin use order_margin * token_price get usd value, convert usd value to precision
-            BumpinConstants.USD_EXPONENT_NUMBER
+            C.USD_EXPONENT_NUMBER
           ),
-      leverage: param.leverage * BumpinConstants.RATE_MULTIPLIER,
+      leverage: param.leverage * C.RATE_MULTIPLIER,
       triggerPrice: BumpinUtils.number2Precision(
         param.triggerPrice,
-        BumpinConstants.PRICE_EXPONENT_NUMBER
+        C.PRICE_EXPONENT_NUMBER
       ),
       //TODO: recheck this
       acceptablePrice: ZERO,

@@ -98,8 +98,8 @@ export class BumpinTokenUtils {
 
   public static getUserTokenByMintPublicKey(
     mint: PublicKey,
-    userTokens: UserTokenAccount[]
-  ): UserTokenAccount {
+    userTokens: UserToken[]
+  ): UserToken {
     let userToken = userTokens.find((userToken) => {
       return userToken.tokenMintKey.equals(mint);
     });
