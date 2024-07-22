@@ -9,8 +9,8 @@ import { isEqual } from "lodash";
 import {
   MarketConfig,
   MarketFundingFee,
-  MarketPosition,
-  Pool,
+  MarketPosition, OrderSide, OrderType,
+  Pool, PositionSide, StopType,
   TradeToken,
 } from "./beans/beans";
 
@@ -445,10 +445,10 @@ export type PositionFee = {
 export type PlaceOrderParams = {
   isPortfolioMargin: boolean;
   isNativeToken: boolean;
-  orderSide: OrderSideValue;
-  positionSide: PositionSideValue;
-  orderType: OrderTypeValue;
-  stopType: StopTypeValue;
+  orderSide: OrderSide;
+  positionSide: PositionSide;
+  orderType: OrderType;
+  stopType: StopType;
   size: number;
   orderMargin: number;
   leverage: number;

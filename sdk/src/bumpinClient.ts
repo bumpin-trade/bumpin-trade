@@ -41,7 +41,6 @@ import { MarketComponent } from "./componets/market";
 import { BumpinTokenUtils } from "./utils/token";
 import { BumpinPoolUtils } from "./utils/pool";
 import { BumpinMarketUtils } from "./utils/market";
-import { TEN, ZERO } from "./constants/numericConstants";
 import { PriceData } from "@pythnetwork/client";
 import BigNumber from "bignumber.js";
 import { AccountLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
