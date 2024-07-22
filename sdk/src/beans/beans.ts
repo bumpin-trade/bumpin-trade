@@ -111,10 +111,10 @@ export class MarketConfig {
       C.PRICE_EXPONENT_NUMBER
     );
     this.openFeeRate = marketConfig.openFeeRate.toBigNumberWithDecimals(
-      C.RATE_MULTIPLIER_NUMBER
+      C.RATE_MULTIPLIER_EXPONENT
     );
     this.closeFeeRate = marketConfig.closeFeeRate.toBigNumberWithDecimals(
-      C.RATE_MULTIPLIER_NUMBER
+      C.RATE_MULTIPLIER_EXPONENT
     );
     this.maximumLongOpenInterestCap =
       marketConfig.maximumLongOpenInterestCap.toBigNumberWithDecimals(
@@ -126,7 +126,7 @@ export class MarketConfig {
       );
     this.longShortRatioLimit =
       marketConfig.longShortRatioLimit.toBigNumberWithDecimals(
-        C.RATE_MULTIPLIER_NUMBER
+        C.RATE_MULTIPLIER_EXPONENT
       );
     this.longShortOiBottomLimit =
       marketConfig.longShortOiBottomLimit.toBigNumberWithDecimals(
@@ -314,14 +314,15 @@ export class PoolConfig {
       );
     this.poolLiquidityLimit =
       poolConfig.poolLiquidityLimit.toBigNumberWithDecimals(
-        C.RATE_MULTIPLIER_NUMBER
+        C.RATE_MULTIPLIER_EXPONENT
       );
     this.borrowingInterestRate =
       poolConfig.borrowingInterestRate.toBigNumberWithDecimals(
         C.SMALL_RATE_MULTIPLIER_NUMBER
       );
     this.stakeFeeRate = poolConfig.stakeFeeRate / C.RATE_MULTIPLIER_NUMBER;
-    this.unStakeFeeRate = poolConfig.unStakeFeeRate / C.RATE_MULTIPLIER_NUMBER;
+    this.unStakeFeeRate =
+      poolConfig.unStakeFeeRate / C.RATE_MULTIPLIER_NUMBER;
     this.unSettleMintRatioLimit =
       poolConfig.unSettleMintRatioLimit / C.RATE_MULTIPLIER_NUMBER;
   }
@@ -360,7 +361,7 @@ export class Pool {
   ) {
     this.name = BumpinUtils.decodeString(pool.name);
     this.pnl = pool.pnl.toBigNumberWithDecimals(C.USD_EXPONENT_NUMBER);
-    this.apr = pool.apr.toBigNumberWithDecimals(C.RATE_MULTIPLIER_NUMBER);
+    this.apr = pool.apr.toBigNumberWithDecimals(C.RATE_MULTIPLIER_EXPONENT);
     this.insuranceFundAmount =
       pool.insuranceFundAmount.toBigNumberWithDecimals(baseCoinDecimals);
     this.totalSupply =

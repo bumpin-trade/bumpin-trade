@@ -668,9 +668,7 @@ export class BumpinClient {
     if (pool.totalSupply.isZero()) {
       return new BigNumber(0);
     } else {
-      return poolValueUsd.div(
-        pool.totalSupply
-      );
+      return poolValueUsd.div(pool.totalSupply);
     }
   }
 

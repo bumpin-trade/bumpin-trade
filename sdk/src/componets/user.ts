@@ -147,8 +147,8 @@ export class UserComponent extends Component {
   ): Promise<void> {
     // let user = await this.getUser(sync);
     let amount = BumpinUtils.size2Amount(
-        new BigNumber(size),
-        tradeToken.decimals
+      new BigNumber(size),
+      tradeToken.decimals
     );
     await this.checkStakeAmountFulfilRequirements(size, tradeToken, pool);
     await this.checkStakeWalletAmountSufficient(amount, wallet, tradeToken);
