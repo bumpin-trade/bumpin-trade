@@ -98,8 +98,6 @@ pub struct WalletStake<'info> {
     )]
     pub user_token_account: Box<Account<'info, TokenAccount>>,
 
-    pub tailor_lut: Account<'info,AddressLookupTable>,
-
     #[account(
         mut,
         seeds = [b"pool_vault".as_ref(), pool_index.to_le_bytes().as_ref()],
