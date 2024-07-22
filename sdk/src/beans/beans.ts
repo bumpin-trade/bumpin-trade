@@ -7,6 +7,7 @@ import {
   MarketConfigAccount,
   MarketFundingFeeAccount,
   MarketPositionAccount,
+  OrderStatusAccount,
   PoolAccount,
   PoolBalanceAccount,
   PoolConfigAccount,
@@ -466,6 +467,15 @@ export class UserRewards {
       );
     this.tokenKey = userRewards.tokenKey;
   }
+
+  public static newEmpty(): UserRewards {
+    return {
+      totalClaimRewardsAmount: new BigNumber(0),
+      realisedRewardsTokenAmount: new BigNumber(0),
+      openRewardsPerStakeToken: new BigNumber(0),
+      tokenKey: PublicKey.default,
+    };
+  }
 }
 
 export class UserStake {
@@ -485,6 +495,15 @@ export class UserStake {
     )
       ? UserStakeStatus.INIT
       : UserStakeStatus.USING;
+  }
+
+  public static newEmpty(): UserStake {
+    return {
+      stakedShare: new BigNumber(0),
+      userRewards: UserRewards.newEmpty(),
+      poolKey: PublicKey.default,
+      userStakeStatus: UserStakeStatus.INIT,
+    };
   }
 }
 
@@ -515,6 +534,17 @@ export class UserToken {
     )
       ? UserTokenStatus.INIT
       : UserTokenStatus.USING;
+  }
+
+  public static newEmpty(): UserToken {
+    return {
+      amount: new BigNumber(0),
+      usedAmount: new BigNumber(0),
+      liabilityAmount: new BigNumber(0),
+      tokenMintKey: PublicKey.default,
+      userTokenAccountKey: PublicKey.default,
+      userTokenStatus: UserTokenStatus.INIT,
+    };
   }
 }
 
@@ -629,6 +659,38 @@ export class UserPosition {
       ? PositionStatus.INIT
       : PositionStatus.USING;
   }
+
+  public static newEmpty(): UserPosition {
+    return {
+      positionSize: new BigNumber(0),
+      entryPrice: new BigNumber(0),
+      initialMargin: new BigNumber(0),
+      initialMarginUsd: new BigNumber(0),
+      initialMarginUsdFromPortfolio: new BigNumber(0),
+      mmUsd: new BigNumber(0),
+      holdPoolAmount: new BigNumber(0),
+      openFee: new BigNumber(0),
+      openFeeInUsd: new BigNumber(0),
+      realizedBorrowingFee: new BigNumber(0),
+      realizedBorrowingFeeInUsd: new BigNumber(0),
+      openBorrowingFeePerToken: new BigNumber(0),
+      realizedFundingFee: new BigNumber(0),
+      realizedFundingFeeInUsd: new BigNumber(0),
+      openFundingFeeAmountPerSize: new BigNumber(0),
+      closeFeeInUsd: new BigNumber(0),
+      realizedPnl: new BigNumber(0),
+      userKey: PublicKey.default,
+      marginMintKey: PublicKey.default,
+      indexMintOracle: PublicKey.default,
+      positionKey: PublicKey.default,
+      symbol: "",
+      updatedAt: new BigNumber(0),
+      leverage: 0,
+      isLong: false,
+      isPortfolioMargin: false,
+      status: PositionStatus.INIT,
+    };
+  }
 }
 
 export enum OrderSide {
@@ -731,6 +793,27 @@ export class UserOrder {
       : OrderStatus.USING;
     this.isPortfolioMargin = userOrder.isPortfolioMargin;
   }
+
+  public static newEmpty(): UserOrder {
+    return {
+      orderMargin: new BigNumber(0),
+      orderSize: new BigNumber(0),
+      triggerPrice: new BigNumber(0),
+      acceptablePrice: new BigNumber(0),
+      createdAt: new BigNumber(0),
+      orderId: new BigNumber(0),
+      marginMintKey: PublicKey.default,
+      authority: PublicKey.default,
+      symbol: "",
+      leverage: 0,
+      orderSide: OrderSide.NONE,
+      positionSide: PositionSide.NONE,
+      orderType: OrderType.NONE,
+      stopType: StopType.NONE,
+      status: OrderStatus.INIT,
+      isPortfolioMargin: false,
+    };
+  }
 }
 
 export class User {
@@ -751,43 +834,59 @@ export class User {
     this.nextLiquidationId = user.nextLiquidationId.toBigNumber();
     this.hold = user.hold.toBigNumberWithDecimals(C.USD_EXPONENT_NUMBER);
     this.tokens = user.tokens.map((token) => {
-      const target = BumpinTokenUtils.getTradeTokenByMintPublicKey(
-        token.tokenMintKey,
-        tradeTokens
-      );
-      return new UserToken(token, target.decimals);
+      if (isEqual(token.userTokenStatus, UserTokenStatusAccount.USING)) {
+        const target = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+          token.tokenMintKey,
+          tradeTokens
+        );
+        return new UserToken(token, target.decimals);
+      } else {
+        return UserToken.newEmpty();
+      }
     });
     this.stakes = user.stakes.map((stake) => {
-      const targetPool = BumpinPoolUtils.getPoolByMintPublicKey(
-        stake.poolKey,
-        pools
-      );
-      const target = BumpinTokenUtils.getTradeTokenByMintPublicKey(
-        targetPool.mintKey,
-        tradeTokens
-      );
-      return new UserStake(stake, target.decimals);
+      if (isEqual(stake.userStakeStatus, UserStakeStatusAccount.USING)) {
+        const targetPool = BumpinPoolUtils.getPoolByMintPublicKey(
+          stake.poolKey,
+          pools
+        );
+        const target = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+          targetPool.mintKey,
+          tradeTokens
+        );
+        return new UserStake(stake, target.decimals);
+      } else {
+        return UserStake.newEmpty();
+      }
     });
     this.positions = user.positions.map((position) => {
-      const indexTarget = BumpinTokenUtils.getTradeTokenByMintPublicKey(
-        position.indexMintOracle,
-        tradeTokens
-      );
-      return new UserPosition(
-        position,
-        indexTarget.decimals,
-        BumpinTokenUtils.getTradeTokenByMintPublicKey(
-          position.marginMintKey,
+      if (isEqual(position.status, PositionStatusAccount.USING)) {
+        const indexTarget = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+          position.indexMintOracle,
           tradeTokens
-        ).decimals
-      );
+        );
+        return new UserPosition(
+          position,
+          indexTarget.decimals,
+          BumpinTokenUtils.getTradeTokenByMintPublicKey(
+            position.marginMintKey,
+            tradeTokens
+          ).decimals
+        );
+      } else {
+        return UserPosition.newEmpty();
+      }
     });
     this.orders = user.orders.map((order) => {
-      const target = BumpinTokenUtils.getTradeTokenByMintPublicKey(
-        order.marginMintKey,
-        tradeTokens
-      );
-      return new UserOrder(order, target.decimals);
+      if (isEqual(order.status, OrderStatusAccount.USING)) {
+        const target = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+          order.marginMintKey,
+          tradeTokens
+        );
+        return new UserOrder(order, target.decimals);
+      } else {
+        return UserOrder.newEmpty();
+      }
     });
     this.key = user.key;
     this.authority = user.authority;
