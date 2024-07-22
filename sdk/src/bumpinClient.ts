@@ -664,13 +664,12 @@ export class BumpinClient {
   public async getPoolNetPrice(poolKey: PublicKey, sync: boolean = false) {
     this.checkInitialization();
     const pool = await this.getPool(poolKey, sync);
-    const tradeToken = await this.getTradeTokenByMintKey(pool.mintKey, sync);
     const poolValueUsd = await this.getPoolValueUsd(poolKey, sync);
     if (pool.totalSupply.isZero()) {
       return new BigNumber(0);
     } else {
       return poolValueUsd.div(
-        pool.totalSupply.div(BigNumber(10).pow(BigNumber(tradeToken.decimals)))
+        pool.totalSupply
       );
     }
   }

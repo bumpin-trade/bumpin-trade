@@ -846,7 +846,7 @@ export class User {
     });
     this.stakes = user.stakes.map((stake) => {
       if (isEqual(stake.userStakeStatus, UserStakeStatusAccount.USING)) {
-        const targetPool = BumpinPoolUtils.getPoolByMintPublicKey(
+        const targetPool = BumpinPoolUtils.getPoolByPublicKey(
           stake.poolKey,
           pools
         );
@@ -861,7 +861,7 @@ export class User {
     });
     this.positions = user.positions.map((position) => {
       if (isEqual(position.status, PositionStatusAccount.USING)) {
-        const indexTarget = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+        const indexTarget = BumpinTokenUtils.getTradeTokenByOraclePublicKey(
           position.indexMintOracle,
           tradeTokens
         );

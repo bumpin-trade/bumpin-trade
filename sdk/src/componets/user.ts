@@ -98,7 +98,7 @@ export class UserComponent extends Component {
       tradeToken.decimals
     );
     let stake_value = await this.checkStakeAmountFulfilRequirements(
-      amount,
+      size,
       tradeToken,
       pool
     );
@@ -147,10 +147,10 @@ export class UserComponent extends Component {
   ): Promise<void> {
     // let user = await this.getUser(sync);
     let amount = BumpinUtils.size2Amount(
-      new BigNumber(size),
-      tradeToken.decimals
+        new BigNumber(size),
+        tradeToken.decimals
     );
-    await this.checkStakeAmountFulfilRequirements(amount, tradeToken, pool);
+    await this.checkStakeAmountFulfilRequirements(size, tradeToken, pool);
     await this.checkStakeWalletAmountSufficient(amount, wallet, tradeToken);
     let tokenAccount =
       await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(
@@ -572,8 +572,7 @@ export class UserComponent extends Component {
 
     if (
       isEqual(order.orderType, OrderTypeAccount.STOP) &&
-      (isEqual(order.stopType, StopTypeAccount.NONE) ||
-        order.triggerPrice == 0)
+      (isEqual(order.stopType, StopTypeAccount.NONE) || order.triggerPrice == 0)
     ) {
       throw new BumpinInvalidParameter(
         "Stop order should have stop type(not none) and trigger price(>0)"
@@ -600,7 +599,8 @@ export class UserComponent extends Component {
     }
 
     if (
-        (order.orderMargin * tradeTokenPrice) < state.minimumOrderMarginUsd.toNumber()
+      order.orderMargin * tradeTokenPrice <
+      state.minimumOrderMarginUsd.toNumber()
     ) {
       throw new BumpinInvalidParameter(
         "Order margin should be greater than minimum order margin: " +
@@ -728,22 +728,26 @@ export class UserComponent extends Component {
   }
 
   async checkStakeAmountFulfilRequirements(
-    amount: BN,
+    size: number,
     tradeToken: TradeToken,
     pool: Pool
   ): Promise<BigNumber> {
-    const price = this.tradeTokenComponent.getTradeTokenPricesByOracleKey(
-      tradeToken.mintKey,
-      1
-    )[0].price;
+    const price = (
+      await this.tradeTokenComponent.getTradeTokenPricesByMintKey(
+        tradeToken.mintKey
+      )
+    ).price;
     if (!price) {
       throw new BumpinInvalidParameter("Price data not found");
     }
-    let value = BumpinUtils.toUsd(amount, price, tradeToken.decimals);
-    if (value < pool.config.minimumStakeAmount) {
-      throw new BumpinValueInsufficient(pool.config.minimumStakeAmount, value);
+    let value = price * size;
+    if (pool.config.minimumStakeAmount.gt(value)) {
+      throw new BumpinValueInsufficient(
+        pool.config.minimumStakeAmount,
+        BigNumber(value)
+      );
     }
-    return value;
+    return BigNumber(value);
   }
 
   async checkStakeWalletAmountSufficient(
