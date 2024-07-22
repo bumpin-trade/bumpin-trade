@@ -1,6 +1,7 @@
 use std::ops::DerefMut;
 
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::address_lookup_table::state::AddressLookupTable;
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::instructions::constraints::*;
@@ -96,6 +97,8 @@ pub struct WalletStake<'info> {
         token::authority = authority
     )]
     pub user_token_account: Box<Account<'info, TokenAccount>>,
+
+    pub tailor_lut: Account<'info,AddressLookupTable>,
 
     #[account(
         mut,

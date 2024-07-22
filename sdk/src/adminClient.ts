@@ -68,6 +68,14 @@ export class BumpinAdmin {
     );
   }
 
+  public getConnection(): Connection {
+    return this.connection;
+  }
+
+  public getProgram(): Program<BumpinTrade> {
+    return this.program;
+  }
+
   public async getOnlinePriceData(
     priceAccountPublicKey: PublicKey
   ): Promise<PriceData> {
@@ -162,7 +170,6 @@ export class BumpinAdmin {
         BumpinUtils.decodeString(marketParam.params.symbol)
       );
     }
-
     console.log("All initialized!");
   }
 
