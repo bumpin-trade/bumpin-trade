@@ -314,7 +314,7 @@ impl User {
 
     pub fn un_use_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
         let token_balance = self.get_user_token_mut_ref(token)?;
-        validate!(token_balance.used_amount > amount, BumpErrorCode::AmountNotEnough.into())?;
+        validate!(token_balance.used_amount >= amount, BumpErrorCode::AmountNotEnough.into())?;
         token_balance.sub_used_amount(amount)?;
         Ok(())
     }
@@ -612,7 +612,7 @@ impl User {
         let user_key = self.key;
         let user_token = self.get_user_token_mut_ref(token_mint)?;
         if user_token.liability_amount > 0 && user_token.amount > 0 {
-            let pre_user_token = user_token.clone();
+            let pre_user_token = *user_token;
 
             let repay_liability_amount = if user_token.amount >= user_token.liability_amount {
                 user_token.liability_amount
@@ -646,7 +646,7 @@ impl User {
         let mut liability = 0u128;
         let user_key = self.key;
         let user_token = self.get_user_token_mut_ref(token_mint)?;
-        let pre_user_token = user_token.clone();
+        let pre_user_token = *user_token;
         if user_token.amount >= amount {
             user_token.amount = user_token.amount.safe_sub(amount)?;
         } else if user_token.amount > 0u128 {
@@ -696,7 +696,7 @@ impl User {
         trade_token_map: &TradeTokenMap,
         oracle_map: &mut OracleMap,
     ) -> BumpResult<u128> {
-        let total_token_net_value = 0u128;
+        let mut total_token_net_value = 0u128;
         for user_token in &self.tokens {
             if user_token.user_token_status.eq(&UserTokenStatus::INIT) {
                 continue;
@@ -704,7 +704,7 @@ impl User {
             let trade_token =
                 trade_token_map.get_trade_token_by_mint_ref(&user_token.token_mint_key)?;
             let oracle_price = oracle_map.get_price_data(&trade_token.oracle_key)?;
-            total_token_net_value
+            total_token_net_value = total_token_net_value
                 .safe_add(user_token.get_token_net_value(&trade_token, oracle_price)?)?;
         }
         Ok(total_token_net_value)
@@ -745,8 +745,6 @@ impl User {
         &mut self,
         trade_token_map: &TradeTokenMap,
         mut oracle_map: &mut OracleMap,
-        market_map: &MarketMap,
-        state: &State,
     ) -> BumpResult<i128> {
         let portfolio_net_value =
             self.get_portfolio_net_value(&trade_token_map, &mut oracle_map)?;
@@ -758,7 +756,7 @@ impl User {
             _total_position_mm,
             _total_size,
             total_im_from_portfolio_value,
-        ) = self.get_user_cross_position_available_value(state, &market_map, &mut oracle_map)?;
+        ) = self.get_user_cross_position_available_value(&mut oracle_map)?;
 
         let available_value = portfolio_net_value
             .safe_add(total_im_usd)?
@@ -826,8 +824,6 @@ impl User {
 
     pub fn get_user_cross_position_available_value(
         &self,
-        state: &State,
-        market_map: &MarketMap,
         price_map: &mut OracleMap,
     ) -> BumpResult<(u128, i128, u128, u128, u128)> {
         let mut total_im_usd = 0u128;
@@ -848,9 +844,7 @@ impl User {
             total_un_pnl_usd =
                 total_un_pnl_usd.safe_add(user_position.get_position_un_pnl_usd(index_price)?)?;
 
-            let market = market_map.get_ref(&user_position.symbol)?;
-            total_position_mm =
-                total_position_mm.safe_add(user_position.get_position_mm(&market, state)?)?;
+            total_position_mm = total_position_mm.safe_add(user_position.mm_usd)?;
             total_size = total_size.safe_add(user_position.position_size)?;
             total_im_usd_from_portfolio = total_im_usd_from_portfolio
                 .safe_add(user_position.initial_margin_usd_from_portfolio)?;

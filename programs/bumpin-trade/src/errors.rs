@@ -95,6 +95,8 @@ pub enum BumpErrorCode {
     InvalidPoolAccount,
     #[msg("CanNotFindTradeToken")]
     TradeTokenNotFind,
+    #[msg("CanNotFindVault")]
+    VaultNotFind,
     #[msg("CanNotFindMarket")]
     MarketNotFind,
     #[msg("StakePaused")]

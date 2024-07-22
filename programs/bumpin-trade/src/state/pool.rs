@@ -140,7 +140,7 @@ impl Pool {
     pub fn un_hold_pool(&mut self, amount: u128) -> BumpResult<()> {
         let pre_pool = self.clone();
         validate!(self.balance.hold_amount >= amount, BumpErrorCode::AmountNotEnough.into())?;
-        self.balance.hold_amount = add_u128(self.balance.hold_amount, amount)?;
+        self.balance.hold_amount = sub_u128(self.balance.hold_amount, amount)?;
         self.emit_pool_update_event(&pre_pool);
         Ok(())
     }
@@ -411,9 +411,7 @@ impl Pool {
             //long
             None => {
                 if token_pnl < 0i128 {
-                    if self.stable {
-                        Err(BumpErrorCode::InvalidParam)?
-                    }
+                    validate!(!self.stable, BumpErrorCode::InvalidParam)?;
                     self.sub_amount(token_pnl.abs().cast::<u128>()?)?;
                 } else if add_liability == 0u128 {
                     self.add_amount(token_pnl.cast::<u128>()?)?

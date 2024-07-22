@@ -72,8 +72,7 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
 
     let remaining_accounts = ctx.remaining_accounts;
 
-    let AccountMaps { trade_token_map, mut oracle_map, market_map, .. } =
-        load_maps(remaining_accounts)?;
+    let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts)?;
 
     user_processor::withdraw(
         &mut user,
@@ -83,8 +82,6 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
         token_mint,
         &mut oracle_map,
         &trade_token_map,
-        &market_map,
-        &ctx.accounts.state,
     )?;
     trade_token.sub_amount(amount)?;
 

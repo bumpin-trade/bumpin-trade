@@ -1,8 +1,9 @@
 use anchor_lang::prelude::*;
 
-use crate::errors::BumpResult;
+use crate::errors::{BumpErrorCode, BumpResult};
 use crate::math::safe_math::SafeMath;
 use crate::traits::{MarketIndexOffset, Size};
+use crate::validate;
 
 #[account(zero_copy(unsafe))]
 #[derive(Eq, PartialEq, Debug, Default)]
@@ -36,12 +37,13 @@ impl TradeToken {
         Ok(())
     }
     pub fn add_liability(&mut self, amount: u128) -> BumpResult {
-        self.total_amount = self.total_liability.safe_add(amount)?;
+        self.total_liability = self.total_liability.safe_add(amount)?;
         Ok(())
     }
 
     pub fn sub_liability(&mut self, amount: u128) -> BumpResult {
-        self.total_amount = self.total_liability.safe_sub(amount)?;
+        validate!(self.total_liability >= amount, BumpErrorCode::AmountNotEnough)?;
+        self.total_liability = self.total_liability.safe_sub(amount)?;
         Ok(())
     }
 }

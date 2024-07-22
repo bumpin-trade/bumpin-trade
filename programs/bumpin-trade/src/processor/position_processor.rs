@@ -49,14 +49,8 @@ pub fn handle_execute_order<'info>(
     let mut base_token_pool = pool_map.get_mut_ref(&market.pool_key)?;
     let mut stable_pool = pool_map.get_mut_ref(&market.stable_pool_key)?;
     let mut trade_token = trade_token_map.get_trade_token_ref_mut(&market.pool_mint_key)?;
-    let pool_vault = vault_map.get_account(&base_token_pool.pool_vault_key)?;
-    let stable_pool_vault = vault_map.get_account(&stable_pool.pool_vault_key)?;
     let mut stable_trade_token =
         trade_token_map.get_trade_token_ref_mut(&market.stable_pool_mint_key)?;
-    let token_vault = match use_base_token(&user_order.position_side, &user_order.order_side)? {
-        true => vault_map.get_account(&trade_token.vault_key)?,
-        false => vault_map.get_account(&stable_trade_token.vault_key)?,
-    };
 
     //validate order
     validate_execute_order(&user_order, &market)?;
@@ -108,25 +102,30 @@ pub fn handle_execute_order<'info>(
                         true => market.pool_mint_key,
                         false => market.stable_pool_mint_key,
                     };
-                drop(market);
+                let trade_token_decimals = trade_token.decimals;
+                let stable_trade_token_decimals = stable_trade_token.decimals;
+                drop(trade_token);
+                drop(stable_trade_token);
                 //calculate real order_margin with validation
                 let (order_margin, order_margin_from_balance) = execute_increase_order_margin(
                     user_token_account.to_account_info().key,
                     &user_order,
                     &margin_token,
                     match use_base_token(&user_order.position_side, &user_order.order_side)? {
-                        true => trade_token.decimals,
-                        false => stable_trade_token.decimals,
+                        true => trade_token_decimals,
+                        false => stable_trade_token_decimals,
                     },
                     user,
                     margin_token_price,
                     oracle_map,
                     trade_token_map,
-                    market_map,
                     state_account,
                 )?;
 
-                let market = market_map.get_mut_ref(&user_order.symbol)?;
+                let mut trade_token =
+                    trade_token_map.get_trade_token_ref_mut(&market.pool_mint_key)?;
+                let mut stable_trade_token =
+                    trade_token_map.get_trade_token_ref_mut(&market.stable_pool_mint_key)?;
                 //collect open fee
                 let fee = if user_order.order_side.eq(&OrderSide::LONG) {
                     fee_processor::collect_long_open_position_fee(
@@ -189,6 +188,13 @@ pub fn handle_execute_order<'info>(
         PositionSide::DECREASE => {
             {
                 //decrease
+                let pool_vault = base_token_pool.pool_vault_key;
+                let stable_pool_vault = stable_pool.pool_vault_key;
+                let token_vault =
+                    match use_base_token(&user_order.position_side, &user_order.order_side)? {
+                        true => vault_map.get_account(&trade_token.vault_key)?,
+                        false => vault_map.get_account(&stable_trade_token.vault_key)?,
+                    };
                 let position = user.get_user_position_ref(&position_key)?;
                 let position_side = position.is_long;
                 if position.position_size == 0u128 {
@@ -217,8 +223,8 @@ pub fn handle_execute_order<'info>(
                     state_account,
                     Some(user_token_account),
                     match use_base_token(&user_order.position_side, &user_order.order_side)? {
-                        true => pool_vault,
-                        false => stable_pool_vault,
+                        true => vault_map.get_account(&pool_vault)?,
+                        false => vault_map.get_account(&stable_pool_vault)?,
                     },
                     match use_base_token(&user_order.position_side, &user_order.order_side)? {
                         true => trade_token.deref_mut(),
@@ -258,14 +264,12 @@ fn execute_increase_order_margin(
     margin_token_price: u128,
     oracle_map: &mut OracleMap,
     trade_token_map: &TradeTokenMap,
-    market_map: &MarketMap,
     state: &Account<State>,
 ) -> BumpResult<(u128, u128)> {
     let order_margin;
     let order_margin_from_balance;
     if order.is_portfolio_margin {
-        let available_value =
-            user.get_available_value(trade_token_map, oracle_map, market_map, state)?;
+        let available_value = user.get_available_value(trade_token_map, oracle_map)?;
         let order_margin_temp;
         if available_value < 0i128 {
             let fix_order_margin_in_usd =
@@ -421,7 +425,6 @@ pub fn decrease_position<'info>(
     oracle_map: &mut OracleMap,
     position_key: &Pubkey,
 ) -> BumpResult<()> {
-    msg!("===========decrease_position");
     let (is_long, position_deletion, pre_position, response) = {
         let position = user.get_user_position_mut_ref(position_key)?;
         let pre_position = *position;
@@ -719,11 +722,12 @@ fn settle_cross<'info>(
         )
         .map_err(|_e| BumpErrorCode::TransferFailed)?;
     } else if response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)? > 0i128 {
-        token::receive(
+        token::send_from_program_vault(
             token_program,
             trade_token_vault_account,
             pool_vault_account,
             bump_signer,
+            state_account.bump_signer_nonce,
             response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)?.cast::<u128>()?,
         )
         .map_err(|_e| BumpErrorCode::TransferFailed)?;
@@ -1406,7 +1410,7 @@ pub fn update_leverage<'info>(
                     0u128
                 };
                 let cross_available_value =
-                    user.get_available_value(trade_token_map, oracle_map, market_map, state)?;
+                    user.get_available_value(trade_token_map, oracle_map)?;
                 validate!(
                     add_margin_in_usd.cast::<i128>()? > cross_available_value,
                     BumpErrorCode::AmountNotEnough.into()

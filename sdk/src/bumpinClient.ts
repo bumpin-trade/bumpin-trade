@@ -495,7 +495,7 @@ export class BumpinClient {
             param,
             this.wallet.publicKey,
             await this.poolComponent!.getPools(sync),
-            await this.marketComponent!.getMarkets(),
+            await this.marketComponent!.getMarkets(sync),
             await this.tradeTokenComponent!.getTradeTokens(sync)
         );
     }

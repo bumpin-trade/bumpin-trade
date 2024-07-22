@@ -5,12 +5,8 @@ import {
   OrderSideAccount,
   OrderTypeAccount,
   PlaceOrderParams,
-  PoolAccount,
   PositionSideAccount,
   StopTypeAccount,
-  TradeTokenAccount,
-  UserStakeStatusAccount,
-  UserTokenStatusAccount,
 } from "../typedef";
 import { BulkAccountLoader } from "../account/bulkAccountLoader";
 import { BN, Program } from "@coral-xyz/anchor";
@@ -44,6 +40,7 @@ import {
   OrderType,
   Pool,
   PositionSide,
+  PositionStatus,
   StopType,
   TradeToken,
   User,
@@ -123,7 +120,7 @@ export class UserComponent extends Component {
       throw new BumpinValueInsufficient(amount.toBigNumber(), availableValue);
     }
 
-    let remainingAccounts = this.getUserRemainingAccounts(
+    let remainingAccounts = this.getUserTradeTokenRemainingAccounts(
       await this.getUser(),
       allTradeTokens
     );
@@ -383,101 +380,104 @@ export class UserComponent extends Component {
       uta = tokenAccount.address;
     }
 
-    let remainingAccounts = this.getUserRemainingAccounts(
+    let remainingAccounts = this.buildPortfolioRemainAccount(
+      marketIndex,
       user,
       tradeTokens,
-      true
+      markets,
+      pools,
+      param
     );
 
-    for (let market of markets) {
-      //append all markets which base token is pool.mint
-      if (market.poolKey.equals(pool.key)) {
-        remainingAccounts.push({
-          pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
-          isWritable: true,
-          isSigner: false,
-        });
-
-        remainingAccounts.push({
-          pubkey: market.indexMintOracle,
-          isWritable: true,
-          isSigner: false,
-        });
-      }
-    }
-
-    remainingAccounts.push({
-      pubkey: BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0],
-      isWritable: true,
-      isSigner: false,
-    });
-    remainingAccounts.push({
-      pubkey: tradeToken.oracleKey,
-      isWritable: true,
-      isSigner: false,
-    });
-
-    remainingAccounts.push({
-      pubkey: BumpinUtils.getPoolPda(this.program, pool.index)[0],
-      isWritable: true,
-      isSigner: false,
-    });
-
-    remainingAccounts.push({
-      pubkey: BumpinUtils.getPoolPda(this.program, stablePool.index)[0],
-      isWritable: true,
-      isSigner: false,
-    });
-
-    remainingAccounts.push({
-      pubkey: pool.poolVaultKey,
-      isWritable: true,
-      isSigner: false,
-    });
-
-    remainingAccounts.push({
-      pubkey: stablePool.poolVaultKey,
-      isWritable: true,
-      isSigner: false,
-    });
-
-    remainingAccounts.push({
-      pubkey: tradeToken.vaultKey,
-      isWritable: true,
-      isSigner: false,
-    });
-
-    remainingAccounts.push({
-      pubkey: stableTradeToken.vaultKey,
-      isWritable: true,
-      isSigner: false,
-    });
-
-    remainingAccounts.push({
-      pubkey: BumpinUtils.getTradeTokenPda(
-        this.program,
-        stableTradeToken.index
-      )[0],
-      isWritable: true,
-      isSigner: false,
-    });
-    remainingAccounts.push({
-      pubkey: stableTradeToken.oracleKey,
-      isWritable: false,
-      isSigner: false,
-    });
-
-    remainingAccounts.push({
-      pubkey: markets[marketIndex].poolMintKey,
-      isWritable: true,
-      isSigner: false,
-    });
-
-    remainingAccounts.push({
-      pubkey: markets[marketIndex].stablePoolKey,
-      isWritable: true,
-      isSigner: false,
-    });
+    // for (let market of markets) {
+    //   //append all markets which base token is pool.mint
+    //   if (market.poolKey.equals(pool.key)) {
+    //     remainingAccounts.push({
+    //       pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
+    //       isWritable: true,
+    //       isSigner: false,
+    //     });
+    //
+    //     remainingAccounts.push({
+    //       pubkey: market.indexMintOracle,
+    //       isWritable: true,
+    //       isSigner: false,
+    //     });
+    //   }
+    // }
+    //
+    // remainingAccounts.push({
+    //   pubkey: BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0],
+    //   isWritable: true,
+    //   isSigner: false,
+    // });
+    // remainingAccounts.push({
+    //   pubkey: tradeToken.oracleKey,
+    //   isWritable: true,
+    //   isSigner: false,
+    // });
+    //
+    // remainingAccounts.push({
+    //   pubkey: BumpinUtils.getPoolPda(this.program, pool.index)[0],
+    //   isWritable: true,
+    //   isSigner: false,
+    // });
+    //
+    // remainingAccounts.push({
+    //   pubkey: BumpinUtils.getPoolPda(this.program, stablePool.index)[0],
+    //   isWritable: true,
+    //   isSigner: false,
+    // });
+    //
+    // remainingAccounts.push({
+    //   pubkey: pool.poolVaultKey,
+    //   isWritable: true,
+    //   isSigner: false,
+    // });
+    //
+    // remainingAccounts.push({
+    //   pubkey: stablePool.poolVaultKey,
+    //   isWritable: true,
+    //   isSigner: false,
+    // });
+    //
+    // remainingAccounts.push({
+    //   pubkey: tradeToken.vaultKey,
+    //   isWritable: true,
+    //   isSigner: false,
+    // });
+    //
+    // remainingAccounts.push({
+    //   pubkey: stableTradeToken.vaultKey,
+    //   isWritable: true,
+    //   isSigner: false,
+    // });
+    //
+    // remainingAccounts.push({
+    //   pubkey: BumpinUtils.getTradeTokenPda(
+    //     this.program,
+    //     stableTradeToken.index
+    //   )[0],
+    //   isWritable: true,
+    //   isSigner: false,
+    // });
+    // remainingAccounts.push({
+    //   pubkey: stableTradeToken.oracleKey,
+    //   isWritable: false,
+    //   isSigner: false,
+    // });
+    //
+    // remainingAccounts.push({
+    //   pubkey: markets[marketIndex].poolMintKey,
+    //   isWritable: true,
+    //   isSigner: false,
+    // });
+    //
+    // remainingAccounts.push({
+    //   pubkey: markets[marketIndex].stablePoolKey,
+    //   isWritable: true,
+    //   isSigner: false,
+    // });
 
     let indexPrice = this.tradeTokenComponent.getTradeTokenPricesByOracleKey(
       markets[marketIndex].indexMintOracle,
@@ -488,11 +488,16 @@ export class UserComponent extends Component {
         "Price not found(undefined) for mint: " + pool.mintKey.toString()
       );
     }
+    await this.placePerpOrderValidation(
+      param,
+      indexPrice.price,
+      markets[marketIndex]
+    );
 
     let order: InnerPlaceOrderParams = {
       symbol: BumpinUtils.encodeString(symbol),
       placeTime: new BN(Date.now()),
-      isPortfolioMargin: false,
+      isPortfolioMargin: param.isPortfolioMargin,
       isNativeToken: false,
       orderSide: OrderSideAccount.from(param.orderSide),
       positionSide: PositionSideAccount.from(param.positionSide),
@@ -519,18 +524,15 @@ export class UserComponent extends Component {
         param.triggerPrice,
         C.PRICE_EXPONENT_NUMBER
       ),
-      //TODO: recheck this
       acceptablePrice: BumpinUtils.number2Precision(
         param.acceptablePrice,
         C.PRICE_EXPONENT_NUMBER
       ),
     };
-
-    await this.placePerpOrderValidation(
-      param,
-      indexPrice.price,
-      markets[marketIndex]
-    );
+    let accountMetas = BumpinUtils.removeDuplicateAccounts(remainingAccounts);
+    accountMetas.forEach((value) => {
+      console.log(value.pubkey.toString());
+    });
     await this.program.methods
       .placeOrder(order)
       .accounts({
@@ -538,7 +540,7 @@ export class UserComponent extends Component {
         authority: wallet,
         bumpSigner: (await this.getState()).bumpSigner,
       })
-      .remainingAccounts(BumpinUtils.removeDuplicateAccounts(remainingAccounts))
+      .remainingAccounts(accountMetas)
       .signers([])
       .rpc();
   }
@@ -566,15 +568,6 @@ export class UserComponent extends Component {
     if (order.size == 0 && isEqual(order.positionSide, PositionSide.DECREASE)) {
       throw new BumpinInvalidParameter(
         "Order size should not be zero (when placing order with position side decrease)"
-      );
-    }
-
-    if (
-      isEqual(order.orderType, OrderType.LIMIT) &&
-      isEqual(order.positionSide, PositionSide.DECREASE)
-    ) {
-      throw new BumpinInvalidParameter(
-        "Decrease position does not support limit order"
       );
     }
 
@@ -701,7 +694,7 @@ export class UserComponent extends Component {
       );
   }
 
-  public getUserRemainingAccounts(
+  public getUserTradeTokenRemainingAccounts(
     user: User,
     allTradeTokens: TradeToken[],
     isWritable: boolean = false
@@ -826,5 +819,167 @@ export class UserComponent extends Component {
       throw new BumpinAccountNotFound("User");
     }
     return userAccount;
+  }
+
+  private buildPortfolioRemainAccount(
+    marketIndex: number,
+    user: User,
+    tradeTokens: TradeToken[],
+    markets: Market[],
+    pools: Pool[],
+    param: PlaceOrderParams
+  ): Array<AccountMeta> {
+    let isActLong;
+    let isIncrease;
+    if (isEqual(param.positionSide, PositionSide.INCREASE)) {
+      isActLong = isEqual(param.orderSide, OrderSide.LONG);
+      isIncrease = true;
+    } else {
+      isActLong = isEqual(param.orderSide, OrderSide.SHORT);
+      isIncrease = false;
+    }
+    //trade_tokens
+    let accounts = this.getUserTradeTokenRemainingAccounts(
+      user,
+      tradeTokens,
+      true
+    );
+    let mainMarket = markets[marketIndex];
+    let baseTokenPool = BumpinPoolUtils.getPoolByPublicKey(
+      mainMarket.poolKey,
+      pools
+    );
+    let stablePool = BumpinPoolUtils.getPoolByPublicKey(
+      mainMarket.stablePoolKey,
+      pools
+    );
+    accounts.push({
+      pubkey: BumpinUtils.getMarketPda(this.program, mainMarket.index)[0],
+      isWritable: true,
+      isSigner: false,
+    });
+    accounts.push({
+      pubkey: mainMarket.indexMintOracle,
+      isWritable: true,
+      isSigner: false,
+    });
+    let baseTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+      mainMarket.poolMintKey,
+      tradeTokens
+    );
+    accounts.push({
+      pubkey: mainMarket.poolMintKey,
+      isWritable: true,
+      isSigner: false,
+    });
+    accounts.push({
+      pubkey: baseTradeToken.oracleKey,
+      isWritable: true,
+      isSigner: false,
+    });
+    let stableTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+      mainMarket.stablePoolMintKey,
+      tradeTokens
+    );
+    if (!isActLong) {
+      accounts.push({
+        pubkey: mainMarket.stablePoolMintKey,
+        isWritable: true,
+        isSigner: false,
+      });
+      accounts.push({
+        pubkey: stableTradeToken.oracleKey,
+        isWritable: true,
+        isSigner: false,
+      });
+    }
+
+    if (!isIncrease) {
+      console.log(isActLong);
+      if (isActLong) {
+        accounts.push({
+          pubkey: baseTokenPool.poolVaultKey,
+          isWritable: true,
+          isSigner: false,
+        });
+        accounts.push({
+          pubkey: baseTradeToken.vaultKey,
+          isWritable: true,
+          isSigner: false,
+        });
+      } else {
+        accounts.push({
+          pubkey: stablePool.poolVaultKey,
+          isWritable: true,
+          isSigner: false,
+        });
+        accounts.push({
+          pubkey: stableTradeToken.vaultKey,
+          isWritable: true,
+          isSigner: false,
+        });
+      }
+    }
+
+    user.positions.forEach((position) => {
+      if (isEqual(position.status, PositionStatus.USING)) {
+        markets.forEach((market) => {
+          if (market.symbol === position.symbol) {
+            accounts.push({
+              pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
+              isWritable: true,
+              isSigner: false,
+            });
+            accounts.push({
+              pubkey: market.indexMintOracle,
+              isWritable: true,
+              isSigner: false,
+            });
+          }
+        });
+      }
+    });
+
+    markets.forEach((market) => {
+      if (market.poolKey.equals(baseTokenPool.key)) {
+        accounts.push({
+          pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
+          isWritable: true,
+          isSigner: false,
+        });
+        accounts.push({
+          pubkey: market.indexMintOracle,
+          isWritable: true,
+          isSigner: false,
+        });
+      }
+    });
+    accounts.push({
+      pubkey: BumpinUtils.getPoolPda(this.program, baseTokenPool.index)[0],
+      isWritable: true,
+      isSigner: false,
+    });
+
+    accounts.push({
+      pubkey: BumpinUtils.getPoolPda(this.program, stablePool.index)[0],
+      isWritable: true,
+      isSigner: false,
+    });
+    if (isEqual(param.positionSide, PositionSide.DECREASE)) {
+      if (isEqual(param.orderSide, OrderSide.LONG)) {
+        accounts.push({
+          pubkey: stablePool.poolVaultKey,
+          isWritable: true,
+          isSigner: false,
+        });
+      } else {
+        accounts.push({
+          pubkey: baseTokenPool.poolVaultKey,
+          isWritable: true,
+          isSigner: false,
+        });
+      }
+    }
+    return accounts;
   }
 }

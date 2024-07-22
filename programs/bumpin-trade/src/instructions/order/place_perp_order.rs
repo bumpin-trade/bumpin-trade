@@ -53,7 +53,7 @@ pub struct PlaceOrder<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Eq, PartialEq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, Eq, PartialEq)]
 pub struct PlaceOrderParams {
     pub symbol: [u8; 32],
     pub size: u128,
@@ -74,6 +74,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, PlaceOrder<'c>>,
     order: PlaceOrderParams,
 ) -> Result<()> {
+    msg!("============handle_place_order, order:{:?}", order);
     let remaining_accounts = ctx.remaining_accounts;
     let AccountMaps { trade_token_map, mut oracle_map, market_map, pool_map, vault_map } =
         load_maps(remaining_accounts)?;
@@ -81,8 +82,6 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     let user = &mut ctx.accounts.user.load_mut()?;
     let pool = pool_map.get_mut_ref(&market.pool_key)?;
     let stable_pool = pool_map.get_mut_ref(&market.stable_pool_key)?;
-    let pool_vault = vault_map.get_account(&pool.pool_vault_key)?;
-    let stable_pool_vault = vault_map.get_account(&stable_pool.pool_vault_key)?;
     let margin_token =
         match position_processor::use_base_token(&order.position_side, &order.order_side)? {
             true => &market.pool_mint_key,
@@ -111,7 +110,11 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         token::receive(
             &ctx.accounts.token_program,
             &ctx.accounts.user_token_account,
-            if order.order_side.eq(&OrderSide::LONG) { pool_vault } else { stable_pool_vault },
+            if order.order_side.eq(&OrderSide::LONG) {
+                vault_map.get_account(&pool.pool_vault_key)?
+            } else {
+                vault_map.get_account(&stable_pool.pool_vault_key)?
+            },
             &ctx.accounts.authority,
             order.order_margin,
         )?;

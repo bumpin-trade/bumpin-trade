@@ -37,50 +37,6 @@ impl<'a> TradeTokenMap<'a> {
 
     #[track_caller]
     #[inline(always)]
-    pub fn get_trade_token_by_index_ref_mut(&self, index: u16) -> BumpResult<RefMut<TradeToken>> {
-        let loader = match self.0.values().find(|loader| loader.load().unwrap().index == index) {
-            None => {
-                let caller = Location::caller();
-                msg!("Could not find trade_token at {}:{}", caller.file(), caller.line());
-                return Err(TradeTokenNotFind);
-            },
-            Some(loader) => loader,
-        };
-        match loader.load_mut() {
-            Ok(trade_token) => Ok(trade_token),
-            Err(e) => {
-                let caller = Location::caller();
-                msg!("{:?}", e);
-                msg!("Could not load trade_token at {}:{}", caller.file(), caller.line());
-                Err(CouldNotLoadTradeTokenData)
-            },
-        }
-    }
-
-    #[track_caller]
-    #[inline(always)]
-    pub fn get_trade_token_by_index_ref(&self, index: u16) -> BumpResult<Ref<TradeToken>> {
-        let loader = match self.0.values().find(|loader| loader.load().unwrap().index == index) {
-            None => {
-                let caller = Location::caller();
-                msg!("Could not find trade_token at {}:{}", caller.file(), caller.line());
-                return Err(TradeTokenNotFind);
-            },
-            Some(loader) => loader,
-        };
-        match loader.load() {
-            Ok(trade_token) => Ok(trade_token),
-            Err(e) => {
-                let caller = Location::caller();
-                msg!("{:?}", e);
-                msg!("Could not load trade_token at {}:{}", caller.file(), caller.line());
-                Err(CouldNotLoadTradeTokenData)
-            },
-        }
-    }
-
-    #[track_caller]
-    #[inline(always)]
     pub fn get_trade_token_by_mint_ref(&self, mint: &Pubkey) -> BumpResult<Ref<TradeToken>> {
         let loader = match self.0.get(mint) {
             None => {
@@ -121,20 +77,6 @@ impl<'a> TradeTokenMap<'a> {
                 Err(CouldNotLoadTradeTokenData)
             },
         }
-    }
-
-    #[track_caller]
-    #[inline(always)]
-    pub fn get_account_loader(&self, mint: &Pubkey) -> BumpResult<&AccountLoader<'a, TradeToken>> {
-        let loader = match self.0.get(mint) {
-            None => {
-                let caller = Location::caller();
-                msg!("Could not find trade_token {} at {}:{}", mint, caller.file(), caller.line());
-                return Err(TradeTokenNotFind);
-            },
-            Some(loader) => loader,
-        };
-        Ok(loader)
     }
     pub fn load(remaining_accounts: &'a [AccountInfo<'a>]) -> BumpResult<TradeTokenMap<'a>> {
         let mut trade_token_vec: TradeTokenMap = TradeTokenMap(BTreeMap::new());

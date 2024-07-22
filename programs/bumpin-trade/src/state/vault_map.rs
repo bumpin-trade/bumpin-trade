@@ -8,7 +8,7 @@ use anchor_spl::token;
 use anchor_spl::token::TokenAccount;
 
 use crate::errors::BumpErrorCode::{
-    CouldNotLoadTokenAccountData, InvalidTokenAccount, TradeTokenNotFind,
+    CouldNotLoadTokenAccountData, InvalidTokenAccount, VaultNotFind,
 };
 use crate::errors::BumpResult;
 
@@ -21,13 +21,8 @@ impl<'a> VaultMap<'a> {
         let account = match self.0.get(account_key) {
             None => {
                 let caller = Location::caller();
-                msg!(
-                    "Could not find trade_token {} at {}:{}",
-                    account_key,
-                    caller.file(),
-                    caller.line()
-                );
-                return Err(TradeTokenNotFind);
+                msg!("Could not find vault {} at {}:{}", account_key, caller.file(), caller.line());
+                return Err(VaultNotFind);
             },
             Some(loader) => loader,
         };
