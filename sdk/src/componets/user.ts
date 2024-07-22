@@ -468,19 +468,19 @@ export class UserComponent extends Component {
       isSigner: false,
     });
 
-    let tradeTokenPrice = this.tradeTokenComponent.getTradeTokenPrices(
-      BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0]
-    );
+    let indexPrice = this.tradeTokenComponent.getTradeTokenPricesByOracleKey(
+      markets[marketIndex].indexMintOracle,
+      0
+    )[0];
+    if (!indexPrice.price) {
+      throw new BumpinInvalidParameter(
+        "Price not found(undefined) for mint: " + pool.mintKey.toString()
+      );
+    }
 
     let order: InnerPlaceOrderParams = {
       symbol: BumpinUtils.encodeString(symbol),
       placeTime: new BN(Date.now()),
-      marketIndex: marketIndex,
-      poolIndex: pool.index,
-      stablePoolIndex: stablePool.index,
-      tradeTokenIndex: tradeToken.index,
-      stableTradeTokenIndex: stableTradeToken.index,
-      orderId: new BN(0),
       isPortfolioMargin: false,
       isNativeToken: false,
       orderSide: param.orderSide,
@@ -500,7 +500,7 @@ export class UserComponent extends Component {
               : tradeToken.decimals
           )
         : BumpinUtils.number2Precision(
-            param.orderMargin, //todo, portfolio_margin use order_margin * token_price get usd value, convert usd value to precision
+            param.orderMargin * indexPrice.price,
             C.USD_EXPONENT_NUMBER
           ),
       leverage: param.leverage * C.RATE_MULTIPLIER,
@@ -509,12 +509,15 @@ export class UserComponent extends Component {
         C.PRICE_EXPONENT_NUMBER
       ),
       //TODO: recheck this
-      acceptablePrice: ZERO,
+      acceptablePrice: BumpinUtils.number2Precision(
+        param.acceptablePrice,
+        C.PRICE_EXPONENT_NUMBER
+      ),
     };
 
     await this.placePerpOrderValidation(
-      order,
-      tradeTokenPrice.price!,
+      param,
+      indexPrice.price,
       markets[marketIndex]
     );
     await this.program.methods
@@ -531,7 +534,7 @@ export class UserComponent extends Component {
 
   //TODO: recheck this conditions
   async placePerpOrderValidation(
-    order: InnerPlaceOrderParams,
+    order: PlaceOrderParams,
     tradeTokenPrice: number,
     market: Market,
     sync: boolean = false
@@ -550,7 +553,7 @@ export class UserComponent extends Component {
     }
 
     if (
-      order.size.isZero() &&
+      order.size == 0 &&
       isEqual(order.positionSide, PositionSideAccount.DECREASE)
     ) {
       throw new BumpinInvalidParameter(
@@ -570,7 +573,7 @@ export class UserComponent extends Component {
     if (
       isEqual(order.orderType, OrderTypeAccount.STOP) &&
       (isEqual(order.stopType, StopTypeAccount.NONE) ||
-        order.triggerPrice.isZero())
+        order.triggerPrice == 0)
     ) {
       throw new BumpinInvalidParameter(
         "Stop order should have stop type(not none) and trigger price(>0)"
@@ -578,7 +581,7 @@ export class UserComponent extends Component {
     }
 
     if (isEqual(order.positionSide, PositionSideAccount.INCREASE)) {
-      if (order.orderMargin.isZero()) {
+      if (order.orderMargin == 0) {
         throw new BumpinInvalidParameter(
           "Order margin should not be zero (when placing order with Increase position side)"
         );
@@ -587,8 +590,8 @@ export class UserComponent extends Component {
 
     if (
       order.isPortfolioMargin &&
-      (order.orderMargin.isZero() ||
-        order.orderMargin.toBigNumber().lt(state.minimumOrderMarginUsd))
+      (order.orderMargin == 0 ||
+        order.orderMargin < state.minimumOrderMarginUsd.toNumber())
     ) {
       throw new BumpinInvalidParameter(
         "Order margin should be greater than minimum order margin: " +
@@ -597,11 +600,7 @@ export class UserComponent extends Component {
     }
 
     if (
-      !order.isPortfolioMargin &&
-      order.orderMargin
-        .mul(new BN(tradeTokenPrice))
-        .toBigNumber()
-        .lt(state.minimumOrderMarginUsd)
+        (order.orderMargin * tradeTokenPrice) < state.minimumOrderMarginUsd.toNumber()
     ) {
       throw new BumpinInvalidParameter(
         "Order margin should be greater than minimum order margin: " +

@@ -453,6 +453,7 @@ export type PlaceOrderParams = {
   orderMargin: number;
   leverage: number;
   triggerPrice: number;
+  acceptablePrice: number;
 };
 
 export type InnerPlaceOrderParams = {
@@ -469,12 +470,6 @@ export type InnerPlaceOrderParams = {
   triggerPrice: BN;
   acceptablePrice: BN;
   placeTime: BN;
-  poolIndex: number;
-  stablePoolIndex: number;
-  marketIndex: number;
-  tradeTokenIndex: number;
-  stableTradeTokenIndex: number;
-  orderId: BN;
 };
 
 export type MarketWithIndexTradeTokenPrices = {

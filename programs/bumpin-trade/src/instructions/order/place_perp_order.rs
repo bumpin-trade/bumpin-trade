@@ -20,9 +20,6 @@ use crate::utils::token;
 use crate::{get_then_update_id, validate};
 
 #[derive(Accounts)]
-#[instruction(
-    order: PlaceOrderParams
-)]
 pub struct PlaceOrder<'info> {
     #[account(
         seeds = [b"bump_state".as_ref()],
@@ -65,18 +62,12 @@ pub struct PlaceOrderParams {
     pub trigger_price: u128,
     pub acceptable_price: u128,
     pub place_time: i64,
-    pub pool_index: u16,
-    pub stable_pool_index: u16,
-    pub market_index: u16,
-    pub trade_token_index: u16,
-    pub stable_trade_token_index: u16,
     pub is_portfolio_margin: bool,
     pub is_native_token: bool,
     pub order_side: OrderSide,
     pub position_side: PositionSide,
     pub order_type: OrderType,
     pub stop_type: StopType,
-    pub order_id: u64, // only for execute order from keeper
 }
 
 pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(

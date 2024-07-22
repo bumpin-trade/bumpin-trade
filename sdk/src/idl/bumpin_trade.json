@@ -3431,26 +3431,6 @@
             "type": "i64"
           },
           {
-            "name": "pool_index",
-            "type": "u16"
-          },
-          {
-            "name": "stable_pool_index",
-            "type": "u16"
-          },
-          {
-            "name": "market_index",
-            "type": "u16"
-          },
-          {
-            "name": "trade_token_index",
-            "type": "u16"
-          },
-          {
-            "name": "stable_trade_token_index",
-            "type": "u16"
-          },
-          {
             "name": "is_portfolio_margin",
             "type": "bool"
           },
@@ -3489,10 +3469,6 @@
                 "name": "StopType"
               }
             }
-          },
-          {
-            "name": "order_id",
-            "type": "u64"
           }
         ]
       }

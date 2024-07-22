@@ -3638,26 +3638,6 @@ export type BumpinTrade = {
             type: "i64";
           },
           {
-            name: "poolIndex";
-            type: "u16";
-          },
-          {
-            name: "stablePoolIndex";
-            type: "u16";
-          },
-          {
-            name: "marketIndex";
-            type: "u16";
-          },
-          {
-            name: "tradeTokenIndex";
-            type: "u16";
-          },
-          {
-            name: "stableTradeTokenIndex";
-            type: "u16";
-          },
-          {
             name: "isPortfolioMargin";
             type: "bool";
           },
@@ -3696,10 +3676,6 @@ export type BumpinTrade = {
                 name: "stopType";
               };
             };
-          },
-          {
-            name: "orderId";
-            type: "u64";
           }
         ];
       };
