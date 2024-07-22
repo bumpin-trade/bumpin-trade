@@ -38,7 +38,16 @@ import BigNumber from "bignumber.js";
 import { BumpinMarketUtils } from "../utils/market";
 import { C } from "../consts";
 import { ZERO } from "../constants/numericConstants";
-import {Market, OrderSide, OrderType, Pool, PositionSide, StopType, TradeToken, User} from "../beans/beans";
+import {
+  Market,
+  OrderSide,
+  OrderType,
+  Pool,
+  PositionSide,
+  StopType,
+  TradeToken,
+  User,
+} from "../beans/beans";
 import { TradeTokenComponent } from "./tradeToken";
 import { PoolComponent } from "./pool";
 
@@ -483,10 +492,10 @@ export class UserComponent extends Component {
       placeTime: new BN(Date.now()),
       isPortfolioMargin: false,
       isNativeToken: false,
-      orderSide: param.orderSide === OrderSide.LONG? OrderSideAccount.LONG : param.orderSide === OrderSide.SHORT? OrderSideAccount.SHORT : OrderSideAccount.NONE,
-      positionSide: param.positionSide === PositionSide.INCREASE? PositionSideAccount.INCREASE : param.positionSide === PositionSide.DECREASE? PositionSideAccount.DECREASE : PositionSideAccount.NONE,
-      orderType: param.orderType === OrderType.LIMIT? OrderTypeAccount.LIMIT : param.orderType === OrderType.MARKET? OrderTypeAccount.MARKET : OrderTypeAccount.STOP,
-      stopType: param.stopType === StopType.StopLoss? StopTypeAccount.StopLoss : param.stopType === StopType.TakeProfit? StopTypeAccount.TakeProfit : StopTypeAccount.NONE,
+      orderSide: OrderSideAccount.from(param.orderSide),
+      positionSide: PositionSideAccount.from(param.positionSide),
+      orderType: OrderTypeAccount.from(param.orderType),
+      stopType: StopTypeAccount.from(param.stopType),
       size: BumpinUtils.number2Precision(param.size, C.USD_EXPONENT_NUMBER),
       orderMargin: !param.isPortfolioMargin
         ? BumpinUtils.number2Precision(

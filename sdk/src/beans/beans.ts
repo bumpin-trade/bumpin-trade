@@ -321,8 +321,7 @@ export class PoolConfig {
         C.SMALL_RATE_MULTIPLIER_NUMBER
       );
     this.stakeFeeRate = poolConfig.stakeFeeRate / C.RATE_MULTIPLIER_NUMBER;
-    this.unStakeFeeRate =
-      poolConfig.unStakeFeeRate / C.RATE_MULTIPLIER_NUMBER;
+    this.unStakeFeeRate = poolConfig.unStakeFeeRate / C.RATE_MULTIPLIER_NUMBER;
     this.unSettleMintRatioLimit =
       poolConfig.unSettleMintRatioLimit / C.RATE_MULTIPLIER_NUMBER;
   }

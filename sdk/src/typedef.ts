@@ -9,8 +9,12 @@ import { isEqual } from "lodash";
 import {
   MarketConfig,
   MarketFundingFee,
-  MarketPosition, OrderSide, OrderType,
-  Pool, PositionSide, StopType,
+  MarketPosition,
+  OrderSide,
+  OrderType,
+  Pool,
+  PositionSide,
+  StopType,
   TradeToken,
 } from "./beans/beans";
 
@@ -291,6 +295,16 @@ export class OrderSideAccount {
       ? "Long"
       : "Short";
   }
+
+  public static from(o: OrderSide) {
+    if (o === OrderSide.LONG) {
+      return OrderSideAccount.LONG;
+    } else if (o === OrderSide.SHORT) {
+      return OrderSideAccount.SHORT;
+    } else {
+      return OrderSideAccount.NONE;
+    }
+  }
 }
 
 export class OrderStatusAccount {
@@ -310,6 +324,16 @@ export class PositionSideAccount {
       ? "Increase"
       : "Decrease";
   }
+
+  public static from(o: PositionSide) {
+    if (o === PositionSide.INCREASE) {
+      return PositionSideAccount.INCREASE;
+    } else if (o === PositionSide.DECREASE) {
+      return PositionSideAccount.DECREASE;
+    } else {
+      return PositionSideAccount.NONE;
+    }
+  }
 }
 
 export class OrderTypeAccount {
@@ -327,6 +351,18 @@ export class OrderTypeAccount {
       ? "Limit"
       : "Stop";
   }
+
+  public static from(o: OrderType) {
+    if (o === OrderType.MARKET) {
+      return OrderTypeAccount.MARKET;
+    } else if (o === OrderType.LIMIT) {
+      return OrderTypeAccount.LIMIT;
+    } else if (o === OrderType.STOP) {
+      return OrderTypeAccount.STOP;
+    } else {
+      return OrderTypeAccount.NONE;
+    }
+  }
 }
 
 export class StopTypeAccount {
@@ -340,6 +376,16 @@ export class StopTypeAccount {
       : isEqual(this, StopTypeAccount.StopLoss)
       ? "StopLoss"
       : "TakeProfit";
+  }
+
+  public static from(o: StopType) {
+    if (o === StopType.StopLoss) {
+      return StopTypeAccount.StopLoss;
+    } else if (o === StopType.TakeProfit) {
+      return StopTypeAccount.TakeProfit;
+    } else {
+      return StopTypeAccount.NONE;
+    }
   }
 }
 

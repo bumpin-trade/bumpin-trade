@@ -10,6 +10,8 @@ import { BN, Program, Provider, Wallet } from "@coral-xyz/anchor";
 import { Buffer } from "buffer";
 import { BumpinTrade } from "../types/bumpin_trade";
 import BigNumber from "bignumber.js";
+import { OrderSide } from "../beans/beans";
+import { OrderSideAccount } from "../typedef";
 
 export class BumpinUtils {
   public static bigintToUsd(
