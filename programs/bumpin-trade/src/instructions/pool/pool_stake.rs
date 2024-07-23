@@ -10,6 +10,7 @@ use crate::processor::optional_accounts::load_maps;
 use crate::state::bump_events::StakeOrUnStakeEvent;
 use crate::state::pool::Pool;
 use crate::state::state::State;
+use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::utils;
 
@@ -150,6 +151,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
     >,
     stake_params: StakeParams,
 ) -> Result<()> {
+
     match ctx {
         Either::Left(ctx) => {
             let pool = &mut ctx.accounts.pool.load_mut()?;
@@ -192,6 +194,7 @@ fn handle_pool_stake0<'a, 'b, 'c: 'info, 'info>(
             });
         },
         Either::Right(ctx) => {
+
             let pool = &mut ctx.accounts.pool.load_mut()?;
             let user = &mut ctx.accounts.user.load_mut()?;
 

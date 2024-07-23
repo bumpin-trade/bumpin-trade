@@ -1,4 +1,4 @@
-import {ConfirmOptions, Connection, PublicKey} from "@solana/web3.js";
+import {AddressLookupTableAccount, ConfirmOptions, Connection, PublicKey} from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {AnchorProvider, BN, Program, Wallet} from "@coral-xyz/anchor";
 import idlBumpinTrade from "./idl/bumpin_trade.json";
@@ -55,7 +55,7 @@ import {
     UserStakeStatus,
 } from "./beans/beans";
 import {isEqual} from "lodash";
-import {BumpinUserUtils} from "../lib/utils/user";
+import {BumpinUserUtils} from "./utils/user";
 import {BumpinPositionUtils} from "./utils/position";
 
 export class BumpinClient {
@@ -120,6 +120,14 @@ export class BumpinClient {
                 this.provider
             );
         }
+    }
+
+    public getConnection(): Connection {
+        return this.connection;
+    }
+
+    public getProgram(): Program<BumpinTrade> {
+        return this.program;
     }
 
     public hasWallet(): boolean {
@@ -396,7 +404,7 @@ export class BumpinClient {
         sync: boolean = false
     ) {
         this.checkInitialization(true);
-        let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+            let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
             mint,
             await this.getTradeTokens()
         );
