@@ -16,4 +16,5 @@ pub use order::*;
 pub use pool::*;
 pub use position::*;
 pub use reward::*;
+pub use stake::*;
 pub use utils::*;

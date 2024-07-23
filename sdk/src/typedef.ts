@@ -71,6 +71,22 @@ export type InitializeStateParams = {
   poolFeeRewardRatio: number;
 };
 
+export type ModifyStateParams = {
+  minOrderMarginUsd: BN | null;
+  maximumMaintenanceMarginRate: number | null;
+  fundingFeeBaseRate: BN | null;
+  maxFundingBaseRate: BN | null;
+  tradingFeeStakingRewardsRatio: number | null;
+  tradingFeePoolRewardsRatio: number | null;
+  tradingFeeUsdPoolRewardsRatio: number | null;
+  minPrecisionMultiple: BN | null;
+  poolRewardsIntervalLimit: BN | null;
+  initFee: BN | null;
+  stakingFeeRewardRatio: number | null;
+  poolFeeRewardRatio: number | null;
+  essentialAccountAlt: number[] | null;
+};
+
 export type InitializePoolParams = {
   name: number[];
   stableMintKey: number[];

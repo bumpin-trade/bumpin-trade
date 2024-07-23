@@ -10,7 +10,7 @@ use std::convert::TryInto;
 use std::io::{Error, ErrorKind, Write};
 use std::mem::size_of;
 use uint::construct_uint;
-
+use crate::borsh::maybestd::io::Read;
 use crate::errors::BumpErrorCode::BnConversionError;
 use crate::errors::BumpResult;
 
@@ -39,12 +39,12 @@ macro_rules! impl_borsh_deserialize_for_bn {
                 Ok(res)
             }
 
-            // #[inline]
-            // fn deserialize_reader<R: Read>(reader: &mut R) -> std::io::Result<Self> {
-            //     let mut buf = [0u8; size_of::<$type>()];
-            //     reader.read_exact(&mut buf)?;
-            //     Ok($type::from_le_bytes(buf))
-            // }
+            #[inline]
+            fn deserialize_reader<R: Read>(reader: &mut R) -> std::io::Result<Self> {
+                let mut buf = [0u8; size_of::<$type>()];
+                reader.read_exact(&mut buf)?;
+                Ok($type::from_le_bytes(buf))
+            }
         }
     };
 }

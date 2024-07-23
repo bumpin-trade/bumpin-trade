@@ -7,6 +7,7 @@ pub struct State {
     pub admin: Pubkey,
     pub bump_signer: Pubkey,
     pub keeper_key: Pubkey,
+    pub essential_account_alt: Pubkey,
     pub bump_signer_nonce: u8,
     pub market_sequence: u16,
     pub pool_sequence: u16,

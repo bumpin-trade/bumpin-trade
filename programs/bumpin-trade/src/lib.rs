@@ -27,6 +27,13 @@ pub mod bumpin_trade {
         handle_initialize_state(ctx, param)
     }
 
+    pub fn modify_state<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, ModifyState>,
+        param: ModifyStateParams,
+    ) -> Result<()> {
+        handle_modify_state(ctx, param)
+    }
+
     pub fn initialize_pool<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializePool>,
         params: InitializePoolParams,

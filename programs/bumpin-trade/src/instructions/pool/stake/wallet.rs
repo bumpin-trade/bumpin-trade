@@ -2,8 +2,7 @@ use std::ops::DerefMut;
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
-
-use crate::instructions::constraints::*;
+use crate::can_sign_for_user;
 use crate::processor::optional_accounts::load_maps;
 use crate::processor::{pool_processor, stake_processor};
 use crate::state::bump_events::StakeOrUnStakeEvent;

@@ -17,6 +17,7 @@ import {
   InitializePoolParams,
   InitializeStateParams,
   MarketAccount,
+  ModifyStateParams,
   PoolAccount,
   PoolConfigAccount,
   StateAccount,
@@ -86,6 +87,16 @@ export class BumpinAdmin {
       priceAccountPublicKey
     );
     return parsePriceData(buffer!.data);
+  }
+
+  public async modifyState(param: ModifyStateParams) {
+    await this.program.methods
+      .modifyState(param)
+      .accounts({
+        admin: this.wallet.publicKey,
+      })
+      .signers([])
+      .rpc();
   }
 
   public async initializeAll(

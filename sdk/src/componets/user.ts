@@ -955,8 +955,8 @@ export class UserComponent extends Component {
     });
     remainingAccounts.push({
       pubkey: BumpinUtils.getTradeTokenPda(
-          this.program,
-          baseTradeToken.index
+        this.program,
+        baseTradeToken.index
       )[0],
       isWritable: true,
       isSigner: false,
@@ -968,8 +968,8 @@ export class UserComponent extends Component {
     });
     remainingAccounts.push({
       pubkey: BumpinUtils.getTradeTokenPda(
-          this.program,
-          stableTradeToken.index
+        this.program,
+        stableTradeToken.index
       )[0],
       isWritable: true,
       isSigner: false,
@@ -1002,9 +1002,9 @@ export class UserComponent extends Component {
         isSigner: false,
       });
     }
-    remainingAccounts.forEach(value => {
-      console.log(value.pubkey.toString())
-    })
+    remainingAccounts.forEach((value) => {
+      console.log(value.pubkey.toString());
+    });
     return remainingAccounts;
   }
 }
