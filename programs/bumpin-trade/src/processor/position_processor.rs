@@ -355,13 +355,15 @@ pub fn update_funding_fee(
         market.funding_fee.short_funding_fee_amount_per_size
     };
 
-    let realized_funding_fee_delta = calculator::mul_small_rate_i(
+    let realized_funding_fee_delta = calculator::mul_funding_per_rate_i(
         position.position_size.cast::<i128>()?,
         market_funding_fee_per_size
             .cast::<i128>()?
-            .safe_sub(position.open_funding_fee_amount_per_size.cast::<i128>()?)?,
+            .safe_sub(position.open_funding_fee_amount_per_size.cast::<i128>()?)?, //10^5
     )?;
+    let realized_funding_fee;
     if position.is_long {
+        realized_funding_fee = realized_funding_fee_delta;
         position.add_realized_funding_fee(realized_funding_fee_delta)?;
         position.add_realized_funding_fee_in_usd(calculator::token_to_usd_i(
             realized_funding_fee_delta,
@@ -369,14 +371,14 @@ pub fn update_funding_fee(
             token_price,
         )?)?;
     } else {
-        let realized_funding_fee =
+        realized_funding_fee =
             calculator::usd_to_token_i(realized_funding_fee_delta, token.decimals, token_price)?;
         position.add_realized_funding_fee(realized_funding_fee)?;
         position.add_realized_funding_fee_in_usd(realized_funding_fee_delta)?
     }
 
     position.set_open_funding_fee_amount_per_size(market_funding_fee_per_size)?;
-    market.update_market_total_funding_fee(realized_funding_fee_delta, position.is_long)?;
+    market.update_market_total_funding_fee(realized_funding_fee, position.is_long)?;
     pool.update_pool_funding_fee(realized_funding_fee_delta, true)?;
     Ok(())
 }
@@ -1079,8 +1081,12 @@ fn cal_decrease_close_fee(
 ) -> BumpResult<(u128, u128)> {
     if position.position_size == decrease_size {
         return Ok((
-            calculator::usd_to_token_u(position.close_fee_in_usd, trade_token.decimals, token_price)
-                .unwrap(),
+            calculator::usd_to_token_u(
+                position.close_fee_in_usd,
+                trade_token.decimals,
+                token_price,
+            )
+            .unwrap(),
             position.close_fee_in_usd,
         ));
     }

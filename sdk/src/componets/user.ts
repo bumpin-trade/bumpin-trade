@@ -380,104 +380,22 @@ export class UserComponent extends Component {
       uta = tokenAccount.address;
     }
 
-    let remainingAccounts = this.buildPortfolioRemainAccount(
-      marketIndex,
-      user,
-      tradeTokens,
-      markets,
-      pools,
-      param
-    );
-
-    // for (let market of markets) {
-    //   //append all markets which base token is pool.mint
-    //   if (market.poolKey.equals(pool.key)) {
-    //     remainingAccounts.push({
-    //       pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
-    //       isWritable: true,
-    //       isSigner: false,
-    //     });
-    //
-    //     remainingAccounts.push({
-    //       pubkey: market.indexMintOracle,
-    //       isWritable: true,
-    //       isSigner: false,
-    //     });
-    //   }
-    // }
-    //
-    // remainingAccounts.push({
-    //   pubkey: BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0],
-    //   isWritable: true,
-    //   isSigner: false,
-    // });
-    // remainingAccounts.push({
-    //   pubkey: tradeToken.oracleKey,
-    //   isWritable: true,
-    //   isSigner: false,
-    // });
-    //
-    // remainingAccounts.push({
-    //   pubkey: BumpinUtils.getPoolPda(this.program, pool.index)[0],
-    //   isWritable: true,
-    //   isSigner: false,
-    // });
-    //
-    // remainingAccounts.push({
-    //   pubkey: BumpinUtils.getPoolPda(this.program, stablePool.index)[0],
-    //   isWritable: true,
-    //   isSigner: false,
-    // });
-    //
-    // remainingAccounts.push({
-    //   pubkey: pool.poolVaultKey,
-    //   isWritable: true,
-    //   isSigner: false,
-    // });
-    //
-    // remainingAccounts.push({
-    //   pubkey: stablePool.poolVaultKey,
-    //   isWritable: true,
-    //   isSigner: false,
-    // });
-    //
-    // remainingAccounts.push({
-    //   pubkey: tradeToken.vaultKey,
-    //   isWritable: true,
-    //   isSigner: false,
-    // });
-    //
-    // remainingAccounts.push({
-    //   pubkey: stableTradeToken.vaultKey,
-    //   isWritable: true,
-    //   isSigner: false,
-    // });
-    //
-    // remainingAccounts.push({
-    //   pubkey: BumpinUtils.getTradeTokenPda(
-    //     this.program,
-    //     stableTradeToken.index
-    //   )[0],
-    //   isWritable: true,
-    //   isSigner: false,
-    // });
-    // remainingAccounts.push({
-    //   pubkey: stableTradeToken.oracleKey,
-    //   isWritable: false,
-    //   isSigner: false,
-    // });
-    //
-    // remainingAccounts.push({
-    //   pubkey: markets[marketIndex].poolMintKey,
-    //   isWritable: true,
-    //   isSigner: false,
-    // });
-    //
-    // remainingAccounts.push({
-    //   pubkey: markets[marketIndex].stablePoolKey,
-    //   isWritable: true,
-    //   isSigner: false,
-    // });
+    let remainingAccounts = param.isPortfolioMargin
+      ? this.buildPortfolioRemainAccount(
+          marketIndex,
+          user,
+          tradeTokens,
+          markets,
+          pools,
+          param
+        )
+      : this.buildIsolateRemainAccount(
+          marketIndex,
+          tradeTokens,
+          markets,
+          pools,
+          param
+        );
 
     let indexPrice = this.tradeTokenComponent.getTradeTokenPricesByOracleKey(
       markets[marketIndex].indexMintOracle,
@@ -981,5 +899,112 @@ export class UserComponent extends Component {
       }
     }
     return accounts;
+  }
+
+  private buildIsolateRemainAccount(
+    marketIndex: number,
+    tradeTokens: TradeToken[],
+    markets: Market[],
+    pools: Pool[],
+    param: PlaceOrderParams
+  ): Array<AccountMeta> {
+    let isActLong;
+    if (isEqual(param.positionSide, PositionSide.INCREASE)) {
+      isActLong = isEqual(param.orderSide, OrderSide.LONG);
+    } else {
+      isActLong = isEqual(param.orderSide, OrderSide.SHORT);
+    }
+    let remainingAccounts: Array<AccountMeta> = [];
+    //trade token
+    let mainMarket = markets[marketIndex];
+    let baseTokenPool = BumpinPoolUtils.getPoolByPublicKey(
+      mainMarket.poolKey,
+      pools
+    );
+    let stablePool = BumpinPoolUtils.getPoolByPublicKey(
+      mainMarket.stablePoolKey,
+      pools
+    );
+    remainingAccounts.push({
+      pubkey: BumpinUtils.getMarketPda(this.program, mainMarket.index)[0],
+      isWritable: true,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: mainMarket.indexMintOracle,
+      isWritable: true,
+      isSigner: false,
+    });
+    let baseTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+      mainMarket.poolMintKey,
+      tradeTokens
+    );
+    let stableTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+      mainMarket.stablePoolMintKey,
+      tradeTokens
+    );
+    remainingAccounts.push({
+      pubkey: BumpinUtils.getPoolPda(this.program, baseTokenPool.index)[0],
+      isWritable: true,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: BumpinUtils.getPoolPda(this.program, stablePool.index)[0],
+      isWritable: true,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: BumpinUtils.getTradeTokenPda(
+          this.program,
+          baseTradeToken.index
+      )[0],
+      isWritable: true,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: baseTradeToken.oracleKey,
+      isWritable: true,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: BumpinUtils.getTradeTokenPda(
+          this.program,
+          stableTradeToken.index
+      )[0],
+      isWritable: true,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: stableTradeToken.oracleKey,
+      isWritable: true,
+      isSigner: false,
+    });
+    if (isActLong) {
+      remainingAccounts.push({
+        pubkey: baseTokenPool.poolVaultKey,
+        isWritable: true,
+        isSigner: false,
+      });
+      remainingAccounts.push({
+        pubkey: baseTradeToken.vaultKey,
+        isWritable: true,
+        isSigner: false,
+      });
+    } else {
+      remainingAccounts.push({
+        pubkey: stablePool.poolVaultKey,
+        isWritable: true,
+        isSigner: false,
+      });
+      remainingAccounts.push({
+        pubkey: stableTradeToken.vaultKey,
+        isWritable: true,
+        isSigner: false,
+      });
+    }
+    remainingAccounts.forEach(value => {
+      console.log(value.pubkey.toString())
+    })
+    return remainingAccounts;
   }
 }

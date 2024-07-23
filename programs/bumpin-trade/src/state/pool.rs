@@ -130,9 +130,11 @@ impl Pool {
         base_trade_token: &TradeToken,
         stable_trade_token: &TradeToken,
     ) -> BumpResult<()> {
+        msg!("============hold_pool_amount, amount:{}", amount);
         let available_liquidity =
             self.get_pool_available_liquidity(oracle_map, base_trade_token, stable_trade_token)?;
-        validate!(amount < available_liquidity, BumpErrorCode::AmountNotEnough)?;
+        msg!("============hold_pool_amount, available_liquidity:{}", available_liquidity);
+        validate!(amount < available_liquidity, BumpErrorCode::PoolAvailableLiquidityNotEnough)?;
         self.hold_pool(amount)?;
         Ok(())
     }
@@ -273,7 +275,7 @@ impl Pool {
         };
         validate!(
             Self::check_hold_allowed(&self.balance, self.config.pool_liquidity_limit, amount)?,
-            BumpErrorCode::AmountNotEnough
+            BumpErrorCode::PoolAvailableLiquidityNotEnough
         )?;
         self.balance.hold_amount = self.balance.hold_amount.safe_add(amount)?;
         self.emit_pool_update_event(&pre_pool);

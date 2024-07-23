@@ -21,7 +21,11 @@ pub fn stake(
 
     validate!(
         pool.config.minimum_stake_amount
-            <= calculator::token_value_in_usd(requested_token_amount, trade_token.decimals, token_price)?,
+            <= calculator::token_value_in_usd(
+                requested_token_amount,
+                trade_token.decimals,
+                token_price
+            )?,
         BumpErrorCode::StakeToSmall
     )?;
 
