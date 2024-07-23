@@ -108,6 +108,7 @@ export class BumpinAdmin {
   ) {
     const [pda, _] = BumpinUtils.getBumpinStatePda(this.program);
 
+    console.log("Initializing All, From state, confirm level: root (may need many time)");
     await this.initState(stateParam);
     console.log("State initialized");
 
@@ -141,7 +142,7 @@ export class BumpinAdmin {
           bumpSigner: pda,
         })
         .signers([])
-        .rpc(BumpinUtils.getDefaultConfirmOptions());
+        .rpc(BumpinUtils.getRootConfirmOptions());
       console.log(
         "Pool initialized: ",
         BumpinUtils.decodeString(poolParam.param.name)
@@ -159,7 +160,7 @@ export class BumpinAdmin {
           bumpSigner: pda,
         })
         .signers([])
-        .rpc(BumpinUtils.getDefaultConfirmOptions());
+        .rpc(BumpinUtils.getRootConfirmOptions());
       console.log("Reward initialized: ", rewardsPram.poolIndex);
     }
 
@@ -175,7 +176,7 @@ export class BumpinAdmin {
           bumpSigner: pda,
         })
         .signers([])
-        .rpc(BumpinUtils.getDefaultConfirmOptions());
+        .rpc(BumpinUtils.getRootConfirmOptions());
       console.log(
         "Market initialized: ",
         BumpinUtils.decodeString(marketParam.params.symbol)
@@ -249,7 +250,13 @@ export class BumpinAdmin {
         price: oracleKeypair.publicKey,
       })
       .signers([])
-      .rpc(BumpinUtils.getDefaultConfirmOptions());
+      .rpc({
+        skipPreflight: true,
+        commitment: "confirmed",
+        preflightCommitment: "confirmed",
+        maxRetries: 1,
+        minContextSlot: undefined,
+      });
     return oracleKeypair;
   }
 
@@ -287,7 +294,7 @@ export class BumpinAdmin {
         bumpSigner: pda,
       })
       .signers([])
-      .rpc(BumpinUtils.getDefaultConfirmOptions());
+      .rpc(BumpinUtils.getRootConfirmOptions());
     return oracleKeypair.publicKey;
   }
 
