@@ -355,7 +355,7 @@ pub fn update_funding_fee(
         market.funding_fee.short_funding_fee_amount_per_size
     };
 
-    let realized_funding_fee_delta = calculator::mul_funding_per_rate_i(
+    let realized_funding_fee_delta = calculator::mul_per_token_rate_i(
         position.position_size.cast::<i128>()?,
         market_funding_fee_per_size
             .cast::<i128>()?
@@ -389,7 +389,7 @@ pub fn update_borrowing_fee(
     token_price: u128,
     token: &TradeToken,
 ) -> BumpResult<()> {
-    let realized_borrowing_fee = calculator::mul_small_rate_u(
+    let realized_borrowing_fee = calculator::mul_per_token_rate_u(
         calculator::mul_rate_u(
             position.initial_margin,
             (position.leverage as u128).safe_sub(1u128.safe_mul(RATE_PRECISION)?)?,

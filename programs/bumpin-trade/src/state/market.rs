@@ -1,7 +1,7 @@
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::calculator;
 use crate::math::casting::Cast;
-use crate::math::constants::RATE_PRECISION;
+use crate::math::constants::SMALL_RATE_TO_PER_TOKEN_PRECISION;
 use crate::math::safe_math::SafeMath;
 use crate::state::infrastructure::market_funding_fee::MarketFundingFee;
 use crate::state::oracle_map::OracleMap;
@@ -138,28 +138,19 @@ impl Market {
                     if diff == 0u128 || open_interest == 0u128 {
                         0u128;
                     }
-                    msg!("===============diff:{}", diff);
-                    msg!("===============open_interest:{}", open_interest);
                     calculator::mul_div_u(diff, state.funding_fee_base_rate, open_interest)?
                 };
-                msg!("===============funding_rate_per_second:{}", funding_rate_per_second);
                 let total_funding_fee = long
                     .open_interest //^10
                     .max(short.open_interest)
                     .safe_mul(funding_fee_duration_in_seconds.abs().cast::<u128>()?)?
                     .safe_mul(funding_rate_per_second)?; //^10
                 if long.open_interest > 0 {
-                    msg!("=================long.open_interest:{}", long.open_interest);
-                    msg!("=================total_funding_fee:{}", total_funding_fee);
-                    msg!(
-                        "=================funding_fee_duration_in_seconds:{}",
-                        funding_fee_duration_in_seconds
-                    );
                     let current_long_funding_fee_per_qty = if long_pay_short {
                         calculator::div_to_precision_u(
                             total_funding_fee.safe_div(long.open_interest)?,
                             1u128,
-                            RATE_PRECISION,
+                            SMALL_RATE_TO_PER_TOKEN_PRECISION,
                         )? //^15
                     } else {
                         calculator::div_to_precision_u(
@@ -168,15 +159,9 @@ impl Market {
                                 .safe_mul(funding_fee_duration_in_seconds.abs().cast::<u128>()?)?
                                 .min(total_funding_fee.safe_div(long.open_interest)?),
                             1u128,
-                            RATE_PRECISION,
+                            SMALL_RATE_TO_PER_TOKEN_PRECISION,
                         )? //^15
                     };
-                    msg!(
-                        "=================current_long_funding_fee_per_qty:{}",
-                        current_long_funding_fee_per_qty
-                    );
-                    msg!("=================decimals:{}", decimals);
-                    msg!("=================price:{}", price);
                     long_funding_fee_per_qty_delta = calculator::usd_to_token_u(
                         current_long_funding_fee_per_qty,
                         decimals,
@@ -198,13 +183,13 @@ impl Market {
                                 .min(total_funding_fee.safe_div(short.open_interest)?)
                                 .cast::<i128>()?,
                             1i128,
-                            RATE_PRECISION.cast::<i128>()?,
+                            SMALL_RATE_TO_PER_TOKEN_PRECISION.cast::<i128>()?,
                         )?
                     } else {
                         calculator::div_to_precision_i(
                             total_funding_fee.safe_div(short.open_interest)?.cast::<i128>()?,
                             1i128,
-                            RATE_PRECISION.cast::<i128>()?,
+                            SMALL_RATE_TO_PER_TOKEN_PRECISION.cast::<i128>()?,
                         )?
                     }
                 }

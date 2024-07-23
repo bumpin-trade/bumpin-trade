@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;
 use crate::math::constants::{
-    FUNDING_PER_PRECISION, PRICE_TO_USD_PRECISION, RATE_PRECISION, SMALL_RATE_PRECISION,
+    PER_TOKEN_PRECISION, PRICE_TO_USD_PRECISION, RATE_PRECISION, SMALL_RATE_PRECISION,
 };
 use crate::math::safe_math::SafeMath;
 
@@ -23,8 +23,12 @@ pub fn mul_rate_i(value: i128, rate: i128) -> BumpResult<i128> {
     mul_div_i(value, rate, RATE_PRECISION.cast::<i128>()?)
 }
 
-pub fn mul_funding_per_rate_i(value: i128, rate: i128) -> BumpResult<i128> {
-    mul_div_i(value, rate, FUNDING_PER_PRECISION.cast::<i128>()?)
+pub fn mul_per_token_rate_i(value: i128, rate: i128) -> BumpResult<i128> {
+    mul_div_i(value, rate, PER_TOKEN_PRECISION.cast::<i128>()?)
+}
+
+pub fn mul_per_token_rate_u(value: u128, rate: u128) -> BumpResult<u128> {
+    mul_div_u(value, rate, PER_TOKEN_PRECISION)
 }
 
 pub fn div_rate_u(value: u128, rate: u128) -> BumpResult<u128> {

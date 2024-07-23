@@ -4,7 +4,7 @@ use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
 use crate::errors::BumpResult;
 use crate::instructions::calculator;
-use crate::math::constants::SMALL_RATE_PRECISION;
+use crate::math::constants::PER_TOKEN_PRECISION;
 use crate::math::safe_math::SafeMath;
 use crate::state::pool::PoolBalance;
 
@@ -31,7 +31,7 @@ impl BorrowingFee {
             let hold_rate = calculator::div_to_precision_u(
                 pool_balance.hold_amount,
                 total_amount,
-                SMALL_RATE_PRECISION,
+                PER_TOKEN_PRECISION,
             )?;
             self.cumulative_borrowing_fee_per_token =
                 self.cumulative_borrowing_fee_per_token.safe_add(calculator::mul_small_rate_u(
