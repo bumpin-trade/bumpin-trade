@@ -24,7 +24,8 @@ pub mod bumpin_trade {
         ctx: Context<'a, 'b, 'c, 'info, InitializeState>,
         param: InitializeStateParams,
     ) -> Result<()> {
-        handle_initialize_state(ctx, param)
+        handle_initialize_state(ctx, param).unwrap();
+        Ok(())
     }
 
     pub fn modify_state<'a, 'b, 'c: 'info, 'info>(

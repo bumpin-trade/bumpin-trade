@@ -141,7 +141,7 @@ export class BumpinAdmin {
           bumpSigner: pda,
         })
         .signers([])
-        .rpc(BumpinUtils.getRootConfirmOptions());
+        .rpc(BumpinUtils.getDefaultConfirmOptions());
       console.log(
         "Pool initialized: ",
         BumpinUtils.decodeString(poolParam.param.name)
@@ -159,7 +159,7 @@ export class BumpinAdmin {
           bumpSigner: pda,
         })
         .signers([])
-        .rpc(BumpinUtils.getRootConfirmOptions());
+        .rpc(BumpinUtils.getDefaultConfirmOptions());
       console.log("Reward initialized: ", rewardsPram.poolIndex);
     }
 
@@ -175,7 +175,7 @@ export class BumpinAdmin {
           bumpSigner: pda,
         })
         .signers([])
-        .rpc(BumpinUtils.getRootConfirmOptions());
+        .rpc(BumpinUtils.getDefaultConfirmOptions());
       console.log(
         "Market initialized: ",
         BumpinUtils.decodeString(marketParam.params.symbol)
@@ -191,7 +191,13 @@ export class BumpinAdmin {
         admin: this.wallet.publicKey,
       })
       .signers([])
-      .rpc();
+      .rpc({
+        skipPreflight: false,
+        commitment: "root", //default commitment: confirmed
+        preflightCommitment: "root",
+        maxRetries: 0,
+        minContextSlot: undefined,
+      });
   }
 
   public async initPool(
@@ -217,7 +223,7 @@ export class BumpinAdmin {
         bumpSigner: pda,
       })
       .signers([])
-      .rpc();
+      .rpc(BumpinUtils.getRootConfirmOptions());
   }
 
   public async DEV_TEST_ONLY__INIT_ORACLE(
@@ -243,7 +249,7 @@ export class BumpinAdmin {
         price: oracleKeypair.publicKey,
       })
       .signers([])
-      .rpc();
+      .rpc(BumpinUtils.getRootConfirmOptions());
     return oracleKeypair;
   }
 
@@ -334,7 +340,7 @@ export class BumpinAdmin {
         bumpSigner: pda,
       })
       .signers([])
-      .rpc();
+      .rpc(BumpinUtils.getRootConfirmOptions());
   }
 
   async sendAndConfirmTransaction(instructions: Array<TransactionInstruction>) {

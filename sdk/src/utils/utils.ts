@@ -149,15 +149,15 @@ export class BumpinUtils {
   }
 
   public static getPoolRewardsVaultPda(
-      program: Program<BumpinTrade>,
-      pool_index: number
+    program: Program<BumpinTrade>,
+    pool_index: number
   ): [PublicKey, number] {
     return PublicKey.findProgramAddressSync(
-        [
-          Buffer.from("pool_rewards_vault"),
-          new anchor.BN(pool_index).toArrayLike(Buffer, "le", 2),
-        ],
-        program.programId
+      [
+        Buffer.from("pool_rewards_vault"),
+        new anchor.BN(pool_index).toArrayLike(Buffer, "le", 2),
+      ],
+      program.programId
     );
   }
 
@@ -189,10 +189,21 @@ export class BumpinUtils {
     return parseFloat(formattedAmountStr);
   }
 
+  public static getDefaultConfirmOptions() {
+    let opt: ConfirmOptions = {
+      skipPreflight: false,
+      commitment: "confirmed", //default commitment: confirmed
+      preflightCommitment: "confirmed",
+      maxRetries: 3,
+      minContextSlot: undefined,
+    };
+    return opt;
+  }
+
   public static getRootConfirmOptions() {
     let opt: ConfirmOptions = {
       skipPreflight: false,
-      commitment: "root", //default commitment: confirmed
+      commitment: "root",
       preflightCommitment: "root",
       maxRetries: 0,
       minContextSlot: undefined,

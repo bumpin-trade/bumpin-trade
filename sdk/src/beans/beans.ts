@@ -34,6 +34,7 @@ export class State {
   public admin: PublicKey;
   public bumpSigner: PublicKey;
   public keeperSigner: PublicKey;
+  public essentialAccountAlt: PublicKey;
   public bumpSignerNonce: number;
   public marketSequence: number;
   public poolSequence: number;
@@ -52,6 +53,7 @@ export class State {
     this.admin = state.admin;
     this.bumpSigner = state.bumpSigner;
     this.keeperSigner = state.keeperSigner;
+    this.essentialAccountAlt = state.essentialAccountAlt;
     this.bumpSignerNonce = state.bumpSignerNonce;
     this.marketSequence = state.marketSequence;
     this.poolSequence = state.poolSequence;

@@ -98,6 +98,7 @@ export type StateAccount = {
   admin: PublicKey;
   bumpSigner: PublicKey;
   keeperSigner: PublicKey;
+  essentialAccountAlt: PublicKey;
   bumpSignerNonce: number;
   marketSequence: number;
   poolSequence: number;

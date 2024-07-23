@@ -75,6 +75,7 @@ pub struct ModifyStateParams {
     pub essential_account_alt: Option<[u8; 32]>,
 }
 
+#[track_caller]
 pub fn handle_initialize_state(
     ctx: Context<InitializeState>,
     initialize_state_params: InitializeStateParams,
@@ -85,7 +86,7 @@ pub fn handle_initialize_state(
         admin: *ctx.accounts.admin.key,
         bump_signer,
         keeper_key: Pubkey::new_from_array(initialize_state_params.keeper_key),
-        essential_account_alt: Default::default(),
+        essential_account_alt: Pubkey::default(),
         bump_signer_nonce,
         market_sequence: 0,
         pool_sequence: 0,
@@ -104,6 +105,7 @@ pub fn handle_initialize_state(
     Ok(())
 }
 
+#[track_caller]
 pub fn handle_modify_state(
     ctx: Context<ModifyState>,
     modify_state_params: ModifyStateParams,
