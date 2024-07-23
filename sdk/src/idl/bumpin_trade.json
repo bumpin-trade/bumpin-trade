@@ -4113,30 +4113,6 @@
             "type": "pubkey"
           },
           {
-            "name": "bump_signer_nonce",
-            "type": "u8"
-          },
-          {
-            "name": "market_sequence",
-            "type": "u16"
-          },
-          {
-            "name": "pool_sequence",
-            "type": "u16"
-          },
-          {
-            "name": "trade_token_sequence",
-            "type": "u16"
-          },
-          {
-            "name": "minimum_order_margin_usd",
-            "type": "u128"
-          },
-          {
-            "name": "maximum_maintenance_margin_rate",
-            "type": "u32"
-          },
-          {
             "name": "funding_fee_base_rate",
             "type": "u128"
           },
@@ -4153,6 +4129,10 @@
             "type": "u128"
           },
           {
+            "name": "minimum_order_margin_usd",
+            "type": "u128"
+          },
+          {
             "name": "init_fee",
             "type": "u64"
           },
@@ -4161,8 +4141,34 @@
             "type": "u32"
           },
           {
+            "name": "maximum_maintenance_margin_rate",
+            "type": "u32"
+          },
+          {
             "name": "pool_fee_reward_ratio",
             "type": "u32"
+          },
+          {
+            "name": "market_sequence",
+            "type": "u16"
+          },
+          {
+            "name": "pool_sequence",
+            "type": "u16"
+          },
+          {
+            "name": "trade_token_sequence",
+            "type": "u16"
+          },
+          {
+            "name": "bump_signer_nonce",
+            "type": "u8"
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": ["u8", 5]
+            }
           },
           {
             "name": "reserve_padding",

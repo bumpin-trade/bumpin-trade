@@ -4320,30 +4320,6 @@ export type BumpinTrade = {
             type: "pubkey";
           },
           {
-            name: "bumpSignerNonce";
-            type: "u8";
-          },
-          {
-            name: "marketSequence";
-            type: "u16";
-          },
-          {
-            name: "poolSequence";
-            type: "u16";
-          },
-          {
-            name: "tradeTokenSequence";
-            type: "u16";
-          },
-          {
-            name: "minimumOrderMarginUsd";
-            type: "u128";
-          },
-          {
-            name: "maximumMaintenanceMarginRate";
-            type: "u32";
-          },
-          {
             name: "fundingFeeBaseRate";
             type: "u128";
           },
@@ -4360,6 +4336,10 @@ export type BumpinTrade = {
             type: "u128";
           },
           {
+            name: "minimumOrderMarginUsd";
+            type: "u128";
+          },
+          {
             name: "initFee";
             type: "u64";
           },
@@ -4368,8 +4348,34 @@ export type BumpinTrade = {
             type: "u32";
           },
           {
+            name: "maximumMaintenanceMarginRate";
+            type: "u32";
+          },
+          {
             name: "poolFeeRewardRatio";
             type: "u32";
+          },
+          {
+            name: "marketSequence";
+            type: "u16";
+          },
+          {
+            name: "poolSequence";
+            type: "u16";
+          },
+          {
+            name: "tradeTokenSequence";
+            type: "u16";
+          },
+          {
+            name: "bumpSignerNonce";
+            type: "u8";
+          },
+          {
+            name: "padding";
+            type: {
+              array: ["u8", 5];
+            };
           },
           {
             name: "reservePadding";

@@ -100,6 +100,7 @@ pub fn handle_initialize_state(
         init_fee: initialize_state_params.init_fee,
         trading_fee_usd_pool_rewards_ratio: 0,
         pool_fee_reward_ratio: initialize_state_params.pool_fee_reward_ratio,
+        padding: [0u8; 5],
         reserve_padding: [0u8; 32],
     };
     Ok(())

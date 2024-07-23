@@ -192,7 +192,7 @@ export class BumpinAdmin {
       })
       .signers([])
       .rpc({
-        skipPreflight: false,
+        skipPreflight: true,
         commitment: "root", //default commitment: confirmed
         preflightCommitment: "root",
         maxRetries: 0,
@@ -249,7 +249,7 @@ export class BumpinAdmin {
         price: oracleKeypair.publicKey,
       })
       .signers([])
-      .rpc(BumpinUtils.getRootConfirmOptions());
+      .rpc(BumpinUtils.getDefaultConfirmOptions());
     return oracleKeypair;
   }
 
@@ -287,7 +287,7 @@ export class BumpinAdmin {
         bumpSigner: pda,
       })
       .signers([])
-      .rpc(BumpinUtils.getRootConfirmOptions());
+      .rpc(BumpinUtils.getDefaultConfirmOptions());
     return oracleKeypair.publicKey;
   }
 
