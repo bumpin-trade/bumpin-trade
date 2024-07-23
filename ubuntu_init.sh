@@ -81,7 +81,7 @@ token=$(spl-token create-token --decimals "$decimals_value" --output json --url 
   spl-token mint "$token" "$mint_amount_value" "$account4" --url localhost> /dev/null
   spl-token mint "$token" "$mint_amount_value" "$account5" --url localhost> /dev/null
 
-  results+="Token Mint: $token\nToken Account PublicKey: $account\nAmount: $mint_amount_value\nDecimals: $decimals_value\nReward Token Account: $account_reward\n================================================\n"
+  results+="Token Mint: $token\nReward Token Account: $account_reward\n================================================\n"
 
 done
 
