@@ -1,4 +1,4 @@
-import { ConfirmOptions, Connection, PublicKey } from "@solana/web3.js";
+import { AddressLookupTableAccount, ConfirmOptions, Connection, PublicKey} from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import { AnchorProvider, BN, Program, Wallet } from "@coral-xyz/anchor";
 import idlBumpinTrade from "./idl/bumpin_trade.json";
@@ -121,9 +121,17 @@ export class BumpinClient {
     }
   }
 
-  public hasWallet(): boolean {
-    return this.wallet !== null;
-  }
+  public getConnection(): Connection {
+        return this.connection;
+    }
+
+    public getProgram(): Program<BumpinTrade> {
+        return this.program;
+    }
+
+    public hasWallet(): boolean {
+        return this.wallet !== null;
+    }
 
   public async initialize() {
     if (this.isInitialized) {
@@ -400,43 +408,42 @@ export class BumpinClient {
     return userSummary;
   }
 
-  public async stake(
-    fromPortfolio: boolean,
-    size: number,
-    mint: PublicKey,
-    sync: boolean = false
-  ) {
-    this.checkInitialization(true);
-    let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
-      mint,
-      await this.getTradeTokens()
-    );
-    let targetPool = BumpinPoolUtils.getPoolByMintPublicKey(
-      mint,
-      await this.getPools()
-    );
-    if (fromPortfolio) {
-      await this.userComponent!.portfolioStake(
-        size,
-        targetTradeToken,
-        await this.getTradeTokens(),
-        targetPool,
-        await this.getMarkets(sync),
-        await this.getPools(sync),
-        sync
-      );
-    } else {
-      await this.userComponent!.walletStake(
-        size,
-        targetTradeToken,
-        await this.getTradeTokens(),
-        this.wallet.publicKey,
-        targetPool,
-        await this.getMarkets(sync),
-        sync
-      );
+    public async stake(
+        fromPortfolio: boolean,
+        size: number,
+        mint: PublicKey,
+        sync: boolean = false
+    ) {
+        this.checkInitialization(true);
+            let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+            mint,
+            await this.getTradeTokens()
+        );
+        let targetPool = BumpinPoolUtils.getPoolByMintPublicKey(
+            mint,
+            await this.getPools()
+        );
+        if (fromPortfolio) {
+            await this.userComponent!.portfolioStake(
+                size,
+                targetTradeToken,
+                await this.getTradeTokens(),
+                targetPool,
+                await this.getMarkets(sync), await this.getPools(sync),
+                sync
+            );
+        } else {
+            await this.userComponent!.walletStake(
+                size,
+                targetTradeToken,
+                await this.getTradeTokens(),
+                this.wallet.publicKey,
+                targetPool,
+                await this.getMarkets(sync),
+                sync
+            );
+        }
     }
-  }
 
   public async unStake(
     toPortfolio: boolean,
