@@ -9,6 +9,7 @@ use crate::instructions::constraints::*;
 use crate::math::safe_math::SafeMath;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::position_processor;
+use crate::processor::position_processor::use_base_token;
 use crate::state::infrastructure::user_order::{
     OrderSide, OrderStatus, OrderType, PositionSide, StopType, UserOrder,
 };
@@ -80,13 +81,14 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         load_maps(remaining_accounts)?;
     let market = market_map.get_mut_ref(&order.symbol)?;
     let user = &mut ctx.accounts.user.load_mut()?;
-    let pool = pool_map.get_mut_ref(&market.pool_key)?;
-    let stable_pool = pool_map.get_mut_ref(&market.stable_pool_key)?;
-    let margin_token =
-        match position_processor::use_base_token(&order.position_side, &order.order_side)? {
-            true => &market.pool_mint_key,
-            false => &market.stable_pool_mint_key,
-        };
+    let pool = match use_base_token(&order.position_side, &order.order_side)? {
+        true => pool_map.get_mut_ref(&market.pool_key)?,
+        false => pool_map.get_mut_ref(&market.stable_pool_key)?,
+    };
+    let margin_token = match use_base_token(&order.position_side, &order.order_side)? {
+        true => &market.pool_mint_key,
+        false => &market.stable_pool_mint_key,
+    };
     validate!(ctx.accounts.user_token_account.mint.eq(margin_token), BumpErrorCode::InvalidParam)?;
 
     let token_price = oracle_map
@@ -98,7 +100,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
             &order,
             margin_token,
             &market,
-            if order.order_side.eq(&OrderSide::LONG) { pool.deref() } else { stable_pool.deref() },
+            pool.deref(),
             &ctx.accounts.state,
             token_price
         )?,
@@ -110,11 +112,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         token::receive(
             &ctx.accounts.token_program,
             &ctx.accounts.user_token_account,
-            if order.order_side.eq(&OrderSide::LONG) {
-                vault_map.get_account(&pool.pool_vault_key)?
-            } else {
-                vault_map.get_account(&stable_pool.pool_vault_key)?
-            },
+            vault_map.get_account(&pool.pool_vault_key)?,
             &ctx.accounts.authority,
             order.order_margin,
         )?;
@@ -152,7 +150,6 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         //execute order immediately
         drop(market);
         drop(pool);
-        drop(stable_pool);
         let state_account = &ctx.accounts.state;
         let bump_signer_account_info = &ctx.accounts.bump_signer;
         let token_program = &ctx.accounts.token_program;

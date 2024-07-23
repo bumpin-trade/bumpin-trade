@@ -397,7 +397,7 @@ impl UserPosition {
         } else {
             market.funding_fee.short_funding_fee_amount_per_size
         };
-        let funding_fee = calculator::mul_small_rate_i(
+        let funding_fee = calculator::mul_funding_per_rate_i(
             self.position_size.cast::<i128>()?,
             funding_fee_amount_per_size.safe_sub(self.open_funding_fee_amount_per_size)?,
         )?;
@@ -420,11 +420,9 @@ impl UserPosition {
                 .safe_sub(self.open_borrowing_fee_per_token)?,
             initial_margin_leverage,
         )?;
-        borrowing_fee_total_usd = borrowing_fee_total_usd.safe_add(calculator::token_value_in_usd(
-            borrowing_fee,
-            trade_token_decimals,
-            margin_mint_price,
-        )?)?;
+        borrowing_fee_total_usd = borrowing_fee_total_usd.safe_add(
+            calculator::token_value_in_usd(borrowing_fee, trade_token_decimals, margin_mint_price)?,
+        )?;
         Ok(funding_fee_total_usd
             .safe_add(borrowing_fee_total_usd.cast()?)?
             .safe_add(self.close_fee_in_usd.cast()?)?)

@@ -2,7 +2,9 @@ use anchor_lang::prelude::*;
 
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;
-use crate::math::constants::{PRICE_TO_USD_PRECISION, RATE_PRECISION, SMALL_RATE_PRECISION};
+use crate::math::constants::{
+    FUNDING_PER_PRECISION, PRICE_TO_USD_PRECISION, RATE_PRECISION, SMALL_RATE_PRECISION,
+};
 use crate::math::safe_math::SafeMath;
 
 pub fn mul_div_i(a: i128, b: i128, denominator: i128) -> BumpResult<i128> {
@@ -19,6 +21,10 @@ pub fn mul_rate_u(value: u128, rate: u128) -> BumpResult<u128> {
 
 pub fn mul_rate_i(value: i128, rate: i128) -> BumpResult<i128> {
     mul_div_i(value, rate, RATE_PRECISION.cast::<i128>()?)
+}
+
+pub fn mul_funding_per_rate_i(value: i128, rate: i128) -> BumpResult<i128> {
+    mul_div_i(value, rate, FUNDING_PER_PRECISION.cast::<i128>()?)
 }
 
 pub fn div_rate_u(value: u128, rate: u128) -> BumpResult<u128> {
@@ -100,7 +106,11 @@ pub fn usd_to_token_i(usd_value: i128, decimals: u16, token_price: u128) -> Bump
     )
 }
 
-pub fn token_value_in_usd(token_amount: u128, decimals: u16, token_price: u128) -> BumpResult<u128> {
+pub fn token_value_in_usd(
+    token_amount: u128,
+    decimals: u16,
+    token_price: u128,
+) -> BumpResult<u128> {
     token_amount
         .safe_mul(token_price)?
         .safe_mul(PRICE_TO_USD_PRECISION)?

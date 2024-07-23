@@ -24,7 +24,6 @@ pub struct FeeReward {
     pub last_rewards_per_stake_token_deltas: [u128; 3],
 }
 
-
 struct FixedSizeQueue {
     data: [u128; 3],
     start: usize,
