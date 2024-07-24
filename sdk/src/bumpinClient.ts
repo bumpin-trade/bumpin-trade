@@ -158,12 +158,16 @@ export class BumpinClient {
         await this.stateSubscriber.subscribe();
 
         const state = this.stateSubscriber.getAccountAndSlot().data;
-        this.essentialAccountAltPublicKey = state.essentialAccountAlt;
-        this.essentialAccounts = (
-            await this.connection.getAddressLookupTable(
-                state.essentialAccountAlt,
-            )
-        ).value;
+        try {
+            this.essentialAccountAltPublicKey = state.essentialAccountAlt;
+            this.essentialAccounts = (
+                await this.connection.getAddressLookupTable(
+                    state.essentialAccountAlt,
+                )
+            ).value;
+        }catch (e) {
+           console.log('Essential account not found',e);
+        }
 
         this.tradeTokenComponent = new TradeTokenComponent(
             this.config,
