@@ -53,7 +53,7 @@ impl UserToken {
         oracle_price_data: &OraclePriceData,
     ) -> BumpResult<u128> {
         if self.amount > self.used_amount {
-            let token_net_value = calculator::token_value_in_usd(
+            let token_net_value = calculator::token_to_usd_u(
                 self.amount.safe_sub(self.used_amount)?,
                 trade_token.decimals,
                 oracle_price_data.price,
@@ -70,7 +70,7 @@ impl UserToken {
         oracle_price_data: &OraclePriceData,
     ) -> BumpResult<u128> {
         if self.amount < self.used_amount {
-            let token_used_value = calculator::token_value_in_usd(
+            let token_used_value = calculator::token_to_usd_u(
                 self.used_amount.safe_sub(self.amount)?,
                 trade_token.decimals,
                 oracle_price_data.price,
@@ -101,7 +101,7 @@ impl UserToken {
             self.used_amount.safe_sub(self.amount)?.safe_sub(self.liability_amount)?;
 
         if borrowing_amount > 0 {
-            let token_borrowing_value = calculator::token_value_in_usd(
+            let token_borrowing_value = calculator::token_to_usd_u(
                 borrowing_amount,
                 trade_token.decimals,
                 oracle_price_data.price,

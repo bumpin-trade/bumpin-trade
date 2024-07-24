@@ -274,7 +274,7 @@ impl User {
 
     pub fn add_order_hold_in_usd(&mut self, amount: u128) -> BumpResult<()> {
         let pre_hold = self.hold;
-        self.hold = self.hold.safe_add(amount)?;
+        self.hold = calculator::add_u128(self.hold, amount)?;
         emit!(UserHoldUpdateEvent {
             user_key: self.key,
             pre_hold_amount: pre_hold,

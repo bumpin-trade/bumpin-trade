@@ -119,7 +119,7 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
             .get_price_data(&stable_trade_token.oracle_key)
             .map_err(|_e| BumpErrorCode::OracleNotFound)?
             .price;
-        let transfer_usd = calculator::token_value_in_usd(
+        let transfer_usd = calculator::token_to_usd_u(
             fee_amount,
             stable_trade_token.decimals,
             stable_token_price,

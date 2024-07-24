@@ -436,22 +436,15 @@ export class UserComponent extends Component {
                 param,
             );
 
-        let indexPrice =
-            this.tradeTokenComponent.getTradeTokenPricesByOracleKey(
-                markets[marketIndex].indexMintOracle,
-                0,
-            )[0];
-        if (!indexPrice.price) {
-            throw new BumpinInvalidParameter(
-                'Price not found(undefined) for mint: ' +
-                pool.mintKey.toString(),
-            );
-        }
-        await this.placePerpOrderValidation(
-            param,
-            indexPrice.price,
-            markets[marketIndex],
-        );
+    let indexPrice = this.tradeTokenComponent.getTradeTokenPricesByOracleKey(
+      markets[marketIndex].indexMintOracle,
+      0
+    )[0];
+    if (!indexPrice.price) {
+      throw new BumpinInvalidParameter(
+        "Price not found(undefined) for mint: " + pool.mintKey.toString()
+      );
+    }
 
         let order: InnerPlaceOrderParams = {
             symbol: BumpinUtils.encodeString(symbol),
@@ -496,7 +489,12 @@ export class UserComponent extends Component {
         accountMetas.forEach((value) => {
             console.log(value.pubkey.toString());
         });
-        const ix = await this.program.methods
+        const ix = await this.placePerpOrderValidation(
+        order,
+        indexPrice.price,
+        markets[marketIndex]
+    );
+    await this.program.methods
             .placeOrder(order)
             .accounts({
                 userTokenAccount: uta,
@@ -511,7 +509,7 @@ export class UserComponent extends Component {
 
     //TODO: recheck this conditions
     async placePerpOrderValidation(
-        order: PlaceOrderParams,
+        order: InnerPlaceOrderParams,
         tradeTokenPrice: number,
         market: Market,
         sync: boolean = false,
@@ -530,7 +528,7 @@ export class UserComponent extends Component {
         }
 
         if (
-            order.size == 0 &&
+            order.size.isZero() &&
             isEqual(order.positionSide, PositionSide.DECREASE)
         ) {
             throw new BumpinInvalidParameter(
@@ -540,7 +538,7 @@ export class UserComponent extends Component {
 
         if (
             isEqual(order.orderType, OrderType.STOP) &&
-            (isEqual(order.stopType, StopType.NONE) || order.triggerPrice == 0)
+            (isEqual(order.stopType, StopType.NONE) || order.triggerPrice.isZero())
         ) {
             throw new BumpinInvalidParameter(
                 'Stop order should have stop type(not none) and trigger price(>0)',
@@ -548,46 +546,25 @@ export class UserComponent extends Component {
         }
 
         if (isEqual(order.positionSide, PositionSide.INCREASE)) {
-            if (order.orderMargin == 0) {
+            if (order.orderMargin.isZero()) {
                 throw new BumpinInvalidParameter(
                     'Order margin should not be zero (when placing order with Increase position side)',
                 );
             }
         }
 
-        if (
-            order.isPortfolioMargin &&
-            (order.orderMargin == 0 ||
-                order.orderMargin < state.minimumOrderMarginUsd.toNumber())
-        ) {
-            throw new BumpinInvalidParameter(
-                'Order margin should be greater than minimum order margin: ' +
-                state.minimumOrderMarginUsd.toString(),
-            );
-        }
-
-        if (
-            order.orderMargin * tradeTokenPrice <
-            state.minimumOrderMarginUsd.toNumber()
-        ) {
-            throw new BumpinInvalidParameter(
-                'Order margin should be greater than minimum order margin: ' +
-                state.minimumOrderMarginUsd.toString(),
-            );
-        }
-
-        if (
-            order.leverage > market.config.maximumLeverage ||
-            order.leverage < market.config.minimumLeverage
-        ) {
-            throw new BumpinInvalidParameter(
-                'Leverage should be between ' +
-                market.config.minimumLeverage +
-                ' and ' +
-                market.config.maximumLeverage,
-            );
-        }
+    if (
+      order.leverage / 100000 > market.config.maximumLeverage ||
+      order.leverage / 100000 < market.config.minimumLeverage
+    ) {
+      throw new BumpinInvalidParameter(
+        "Leverage should be between " +
+          market.config.minimumLeverage +
+          " and " +
+          market.config.maximumLeverage
+      );
     }
+  }
 
     public async getUserAccountNetValue(
         user: User,
@@ -845,26 +822,34 @@ export class UserComponent extends Component {
             isSigner: false,
         });
         accounts.push({
-            pubkey: baseTradeToken.oracleKey,
-            isWritable: true,
-            isSigner: false,
-        });
-        let stableTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
-            mainMarket.stablePoolMintKey,
-            tradeTokens,
+            pubkey: BumpinUtils.getTradeTokenPda(this.program,baseTradeToken.index)[0],
+      isWritable: true,
+      isSigner: false,
+    });
+    accounts.push({
+      pubkey: baseTradeToken.oracleKey,
+      isWritable: true,
+      isSigner: false,
+    });
+    let stableTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+      mainMarket.stablePoolMintKey,
+      tradeTokens,
         );
-        if (!isActLong) {
-            accounts.push({
-                pubkey: mainMarket.stablePoolMintKey,
-                isWritable: true,
-                isSigner: false,
-            });
-            accounts.push({
-                pubkey: stableTradeToken.oracleKey,
-                isWritable: true,
-                isSigner: false,
-            });
-        }
+        accounts.push({
+      pubkey: BumpinUtils.getTradeTokenPda(this.program,stableTradeToken.index)[0],
+      isWritable: true,
+      isSigner: false,
+    });
+    accounts.push({
+      pubkey: mainMarket.stablePoolMintKey,
+      isWritable: true,
+      isSigner: false,
+    });
+    accounts.push({
+      pubkey: stableTradeToken.oracleKey,
+      isWritable: true,
+      isSigner: false,
+    });
 
         if (!isIncrease) {
             console.log(isActLong);

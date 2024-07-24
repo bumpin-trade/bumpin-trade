@@ -286,7 +286,7 @@ fn execute_increase_order_margin(
             user.use_token(margin_token, order_margin, user_token_account_key, false)?;
     } else {
         let order_margin_in_usd =
-            calculator::token_value_in_usd(order.order_margin, decimals, margin_token_price)?;
+            calculator::token_to_usd_u(order.order_margin, decimals, margin_token_price)?;
         validate!(
             order_margin_in_usd >= state.minimum_order_margin_usd,
             BumpErrorCode::AmountNotEnough
@@ -400,7 +400,7 @@ pub fn update_borrowing_fee(
     )?;
 
     position.add_realized_borrowing_fee(realized_borrowing_fee)?;
-    position.add_realized_borrowing_fee_in_usd(calculator::token_value_in_usd(
+    position.add_realized_borrowing_fee_in_usd(calculator::token_to_usd_u(
         realized_borrowing_fee,
         token.decimals,
         token_price,
@@ -884,7 +884,7 @@ pub fn execute_reduce_position_margin(
             base_token_pool.get_pool_usd_value(trade_token_map, oracle_map, market_map)?;
         validate!(
             base_token_pool_value
-                >= calculator::token_value_in_usd(
+                >= calculator::token_to_usd_u(
                     reduce_margin_amount,
                     stable_trade_token.decimals,
                     oracle_map
@@ -1136,7 +1136,7 @@ pub fn execute_add_position_margin(
         )?)?;
         position.add_initial_margin_usd_from_portfolio(params.add_initial_margin_from_portfolio)?;
     } else {
-        position.add_initial_margin_usd(calculator::token_value_in_usd(
+        position.add_initial_margin_usd(calculator::token_to_usd_u(
             params.update_margin_amount,
             trade_token.decimals,
             position.entry_price,
@@ -1202,7 +1202,7 @@ pub fn increase_position(
         0u128
     };
     let decimal = if is_long { trade_token.decimals } else { stable_trade_token.decimals };
-    let increase_size = calculator::token_value_in_usd(
+    let increase_size = calculator::token_to_usd_u(
         calculator::mul_rate_u(increase_margin, order.leverage as u128)?,
         decimal,
         margin_token_price,
@@ -1223,12 +1223,12 @@ pub fn increase_position(
         position.set_margin_mint(order.margin_mint_key)?;
         position.set_entry_price(execute_price)?;
         position.add_initial_margin(increase_margin)?;
-        position.add_initial_margin_usd(calculator::token_value_in_usd(
+        position.add_initial_margin_usd(calculator::token_to_usd_u(
             increase_margin,
             decimal,
             margin_token_price,
         )?)?;
-        position.add_initial_margin_usd_from_portfolio(calculator::token_value_in_usd(
+        position.add_initial_margin_usd_from_portfolio(calculator::token_to_usd_u(
             increase_margin_from_balance,
             decimal,
             margin_token_price,
@@ -1238,7 +1238,7 @@ pub fn increase_position(
             market.config.close_fee_rate,
         )?)?;
         position.add_open_fee(fee)?;
-        position.add_open_fee_in_usd(calculator::token_value_in_usd(
+        position.add_open_fee_in_usd(calculator::token_to_usd_u(
             fee,
             decimal,
             margin_token_price,
@@ -1290,12 +1290,12 @@ pub fn increase_position(
             position.is_long,
         )?)?;
         position.add_initial_margin(increase_margin)?;
-        position.add_initial_margin_usd(calculator::token_value_in_usd(
+        position.add_initial_margin_usd(calculator::token_to_usd_u(
             increase_margin,
             decimal,
             margin_token_price,
         )?)?;
-        position.add_initial_margin_usd_from_portfolio(calculator::token_value_in_usd(
+        position.add_initial_margin_usd_from_portfolio(calculator::token_to_usd_u(
             increase_margin_from_balance,
             decimal,
             margin_token_price,
@@ -1306,13 +1306,13 @@ pub fn increase_position(
             market.config.close_fee_rate,
         )?)?;
         position.add_open_fee(fee)?;
-        position.add_open_fee_in_usd(calculator::token_value_in_usd(
+        position.add_open_fee_in_usd(calculator::token_to_usd_u(
             fee,
             decimal,
             margin_token_price,
         )?)?;
         position.add_realized_pnl(
-            -calculator::token_value_in_usd(fee, decimal, margin_token_price)?.cast::<i128>()?,
+            -calculator::token_to_usd_u(fee, decimal, margin_token_price)?.cast::<i128>()?,
         )?;
         position.set_last_update(calculator::current_time())?;
         position.add_hold_pool_amount(increase_hold)?;
@@ -1348,7 +1348,7 @@ pub fn increase_position(
         let market = market_map.get_mut_ref(symbol)?;
         let stable_trade_token =
             trade_token_map.get_trade_token_by_mint_ref(&market.stable_pool_mint_key)?;
-        let increase_hold_value = calculator::token_value_in_usd(
+        let increase_hold_value = calculator::token_to_usd_u(
             increase_hold,
             stable_trade_token.decimals,
             oracle_map
@@ -1431,7 +1431,7 @@ pub fn update_leverage<'info>(
                     },
                     position_entry_price,
                 )?;
-                add_initial_margin_from_portfolio = calculator::token_value_in_usd(
+                add_initial_margin_from_portfolio = calculator::token_to_usd_u(
                     add_margin_amount.min(available_amount),
                     if position.is_long {
                         base_trade_token.decimals

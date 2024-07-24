@@ -204,7 +204,7 @@ impl Pool {
 
     pub fn update_pool_borrowing_fee_rate(&mut self) -> BumpResult {
         self.borrowing_fee
-            .update_pool_borrowing_fee(&self.balance, self.config.borrowing_interest_rate)?;
+            .update_pool_borrowing_fee_rate(&self.balance, self.config.borrowing_interest_rate)?;
         Ok(())
     }
 
