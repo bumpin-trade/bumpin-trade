@@ -107,7 +107,7 @@ impl Pool {
 
     pub fn sub_amount_and_supply(&mut self, amount: u128, supply_amount: u128) -> BumpResult<()> {
         validate!(self.balance.amount >= amount, BumpErrorCode::AmountNotEnough.into())?;
-        validate!(self.total_supply > amount, BumpErrorCode::AmountNotEnough.into())?;
+        validate!(self.total_supply >= amount, BumpErrorCode::AmountNotEnough.into())?;
         let pre_pool = self.clone();
         self.balance.amount = self.balance.amount.safe_sub(amount)?;
         self.total_supply = self.total_supply.safe_sub(supply_amount)?;

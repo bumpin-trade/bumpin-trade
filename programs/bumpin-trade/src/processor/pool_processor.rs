@@ -27,9 +27,8 @@ pub fn un_stake(
     let pool_price = oracle_map.get_price_data(&trade_token.oracle_key)?;
     let token_amount = calculator::usd_to_token_u(un_stake_usd, trade_token.decimals, pool_price.price)?;
     validate!(token_amount > pool.config.minimum_un_stake_amount, BumpErrorCode::UnStakeTooSmall)?;
-
     let max_un_stake_amount = pool.get_current_max_un_stake()?;
-    validate!(token_amount < max_un_stake_amount, BumpErrorCode::UnStakeTooLarge)?;
+    validate!(token_amount <= max_un_stake_amount, BumpErrorCode::UnStakeTooLarge)?;
 
     let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
     user_stake.sub_staked_share(un_stake_amount)?;

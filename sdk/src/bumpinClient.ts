@@ -165,8 +165,8 @@ export class BumpinClient {
                     state.essentialAccountAlt,
                 )
             ).value;
-        }catch (e) {
-           console.log('Essential account not found',e);
+        } catch (e) {
+            console.log('Essential account not found', e);
         }
 
         this.tradeTokenComponent = new TradeTokenComponent(
