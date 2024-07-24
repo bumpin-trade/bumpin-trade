@@ -115,7 +115,9 @@ pub fn handle_modify_state(
     if let Some(min_order_margin_usd) = modify_state_params.min_order_margin_usd {
         state.minimum_order_margin_usd = min_order_margin_usd;
     }
-    if let Some(maximum_maintenance_margin_rate) = modify_state_params.maximum_maintenance_margin_rate {
+    if let Some(maximum_maintenance_margin_rate) =
+        modify_state_params.maximum_maintenance_margin_rate
+    {
         state.maximum_maintenance_margin_rate = maximum_maintenance_margin_rate;
     }
     if let Some(funding_fee_base_rate) = modify_state_params.funding_fee_base_rate {
@@ -124,13 +126,18 @@ pub fn handle_modify_state(
     if let Some(max_funding_base_rate) = modify_state_params.max_funding_base_rate {
         state.maximum_funding_base_rate = max_funding_base_rate;
     }
-    if let Some(trading_fee_staking_rewards_ratio) = modify_state_params.trading_fee_staking_rewards_ratio {
+    if let Some(trading_fee_staking_rewards_ratio) =
+        modify_state_params.trading_fee_staking_rewards_ratio
+    {
         state.trading_fee_usd_pool_rewards_ratio = trading_fee_staking_rewards_ratio;
     }
-    if let Some(trading_fee_pool_rewards_ratio) = modify_state_params.trading_fee_pool_rewards_ratio {
+    if let Some(trading_fee_pool_rewards_ratio) = modify_state_params.trading_fee_pool_rewards_ratio
+    {
         state.trading_fee_usd_pool_rewards_ratio = trading_fee_pool_rewards_ratio;
     }
-    if let Some(trading_fee_usd_pool_rewards_ratio) = modify_state_params.trading_fee_usd_pool_rewards_ratio {
+    if let Some(trading_fee_usd_pool_rewards_ratio) =
+        modify_state_params.trading_fee_usd_pool_rewards_ratio
+    {
         state.trading_fee_usd_pool_rewards_ratio = trading_fee_usd_pool_rewards_ratio;
     }
     if let Some(min_precision_multiple) = modify_state_params.min_precision_multiple {

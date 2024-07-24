@@ -4,15 +4,15 @@
 #![allow(clippy::ptr_offset_with_cast)]
 #![allow(clippy::manual_range_contains)]
 
+use crate::borsh::maybestd::io::Read;
+use crate::errors::BumpErrorCode::BnConversionError;
+use crate::errors::BumpResult;
 use anchor_lang::prelude::borsh::{BorshDeserialize, BorshSerialize};
 use std::borrow::BorrowMut;
 use std::convert::TryInto;
 use std::io::{Error, ErrorKind, Write};
 use std::mem::size_of;
 use uint::construct_uint;
-use crate::borsh::maybestd::io::Read;
-use crate::errors::BumpErrorCode::BnConversionError;
-use crate::errors::BumpResult;
 
 macro_rules! impl_borsh_serialize_for_bn {
     ($type: ident) => {

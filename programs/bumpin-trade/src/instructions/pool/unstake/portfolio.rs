@@ -1,20 +1,20 @@
 use std::ops::DerefMut;
 
-use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
 use crate::can_sign_for_user;
-use crate::is_normal;
-use crate::{utils, validate};
 use crate::errors::BumpErrorCode;
 use crate::instructions::unstake::UnStakeParams;
+use crate::is_normal;
 use crate::math::safe_math::SafeMath;
-use crate::processor::{fee_processor, pool_processor, user_processor};
 use crate::processor::optional_accounts::load_maps;
+use crate::processor::{fee_processor, pool_processor, user_processor};
 use crate::state::bump_events::StakeOrUnStakeEvent;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::{User, UserTokenUpdateReason};
+use crate::{utils, validate};
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Token, TokenAccount};
 
 #[derive(Accounts)]
 #[instruction(params: UnStakeParams,)]
@@ -81,10 +81,7 @@ pub fn handle_portfolio_un_stake<'a, 'b, 'c: 'info, 'info>(
     let user = &mut ctx.accounts.user.load_mut()?;
 
     let user_stake = &user.get_user_stake_ref(&pool.key)?.clone();
-    validate!(
-                user_stake.staked_share >= param.share,
-                BumpErrorCode::UnStakeTooSmall
-            )?;
+    validate!(user_stake.staked_share >= param.share, BumpErrorCode::UnStakeTooSmall)?;
 
     let remaining_accounts = ctx.remaining_accounts;
     let mut account_maps = load_maps(remaining_accounts)?;
@@ -106,9 +103,8 @@ pub fn handle_portfolio_un_stake<'a, 'b, 'c: 'info, 'info>(
     user_processor::update_account_fee_reward(pool.deref_mut(), user.deref_mut())?;
 
     let rewards_amount = user_stake.user_rewards.realised_rewards_token_amount;
-    let transfer_amount = un_stake_token_amount
-        .safe_add(rewards_amount)?
-        .safe_sub(un_stake_token_amount_fee)?;
+    let transfer_amount =
+        un_stake_token_amount.safe_add(rewards_amount)?.safe_sub(un_stake_token_amount_fee)?;
 
     let mut trade_token = ctx.accounts.trade_token.load_mut()?;
 
@@ -127,8 +123,8 @@ pub fn handle_portfolio_un_stake<'a, 'b, 'c: 'info, 'info>(
     )?;
     trade_token.add_amount(transfer_amount)?;
 
-    let repay_liability = user
-        .repay_liability(&trade_token.mint_key, UserTokenUpdateReason::TransferFromStake)?;
+    let repay_liability =
+        user.repay_liability(&trade_token.mint_key, UserTokenUpdateReason::TransferFromStake)?;
     if repay_liability > 0 {
         trade_token.sub_liability(repay_liability)?;
     }
@@ -151,12 +147,11 @@ pub fn handle_portfolio_un_stake<'a, 'b, 'c: 'info, 'info>(
     }
 
     emit!(StakeOrUnStakeEvent {
-                user_key: ctx.accounts.user.load()?.key,
-                token_mint: ctx.accounts.pool.load()?.mint_key,
-                change_supply_amount: un_stake_token_amount,
-                user_stake: user_stake.clone(),
-            });
+        user_key: ctx.accounts.user.load()?.key,
+        token_mint: ctx.accounts.pool.load()?.mint_key,
+        change_supply_amount: un_stake_token_amount,
+        user_stake: user_stake.clone(),
+    });
 
     Ok(())
 }
-

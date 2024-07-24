@@ -405,8 +405,8 @@ impl User {
     }
 
     pub fn delete_user_stake(&mut self, pool_key: &Pubkey) -> BumpResult {
-        let order_index = self.get_user_stake_index(pool_key)?;
-        self.tokens[order_index] = UserToken::default();
+        let index = self.get_user_stake_index(pool_key)?;
+        self.stakes[index] = UserStake::default();
         Ok(())
     }
 

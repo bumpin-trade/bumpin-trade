@@ -1,7 +1,5 @@
 use std::ops::DerefMut;
 
-use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
 use crate::can_sign_for_user;
 use crate::processor::optional_accounts::load_maps;
 use crate::processor::{pool_processor, stake_processor};
@@ -10,6 +8,8 @@ use crate::state::pool::Pool;
 use crate::state::state::State;
 use crate::state::user::User;
 use crate::utils;
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Token, TokenAccount};
 
 #[derive(Accounts)]
 #[instruction(pool_index: u16)]

@@ -6,7 +6,6 @@ pub mod wallet;
 pub use portfolio::*;
 pub use wallet::*;
 
-
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Eq, PartialEq)]
 pub struct UnStakeParams {
     pub share: u128,
