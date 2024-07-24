@@ -1,5 +1,3 @@
-use anchor_lang::prelude::msg;
-
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::calculator;
 use crate::math::safe_math::SafeMath;
@@ -25,7 +23,8 @@ pub fn un_stake(
 
     let un_stake_usd = calculator::mul_div_u(un_stake_amount, pool_value, pool.total_supply)?;
     let pool_price = oracle_map.get_price_data(&trade_token.oracle_key)?;
-    let token_amount = calculator::usd_to_token_u(un_stake_usd, trade_token.decimals, pool_price.price)?;
+    let token_amount =
+        calculator::usd_to_token_u(un_stake_usd, trade_token.decimals, pool_price.price)?;
     validate!(token_amount > pool.config.minimum_un_stake_amount, BumpErrorCode::UnStakeTooSmall)?;
     let max_un_stake_amount = pool.get_current_max_un_stake()?;
     validate!(token_amount <= max_un_stake_amount, BumpErrorCode::UnStakeTooLarge)?;
@@ -49,13 +48,12 @@ pub fn stake(
         let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle_key)?;
 
         supply_amount =
-            calculator::token_to_usd_u(mint_amount, trade_token.decimals, oracle_price_data.price
-        )?
-            .safe_div_small_rate(pool.get_pool_net_price(
-                trade_token_map,
-                oracle_map,
-                market_map,
-            )?)?;
+            calculator::token_to_usd_u(mint_amount, trade_token.decimals, oracle_price_data.price)?
+                .safe_div_small_rate(pool.get_pool_net_price(
+                    trade_token_map,
+                    oracle_map,
+                    market_map,
+                )?)?;
     }
     Ok(supply_amount)
 }
@@ -67,7 +65,7 @@ pub fn portfolio_to_stake(
     trade_token_map: &TradeTokenMap,
     oracle_map: &mut OracleMap,
     market_map: &MarketMap,
-    state: &State,
+    _state: &State,
 ) -> BumpResult<(u128, UserStake)> {
     let mut supply_amount = mint_amount;
     let trade_token = trade_token_map.get_trade_token_by_mint_ref(&pool.mint_key)?;
@@ -84,13 +82,12 @@ pub fn portfolio_to_stake(
         let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle_key)?;
 
         supply_amount =
-            calculator::token_to_usd_u(mint_amount, trade_token.decimals, oracle_price_data.price
-        )?
-            .safe_div_small_rate(pool.get_pool_net_price(
-                trade_token_map,
-                oracle_map,
-                market_map,
-            )?)?;
+            calculator::token_to_usd_u(mint_amount, trade_token.decimals, oracle_price_data.price)?
+                .safe_div_small_rate(pool.get_pool_net_price(
+                    trade_token_map,
+                    oracle_map,
+                    market_map,
+                )?)?;
     }
     let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
     user_stake.add_staked_share(supply_amount)?;

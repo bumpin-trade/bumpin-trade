@@ -111,7 +111,7 @@ pub fn handle_modify_state(
     ctx: Context<ModifyState>,
     modify_state_params: ModifyStateParams,
 ) -> Result<()> {
-    let mut state = &mut ctx.accounts.state;
+    let state = &mut ctx.accounts.state;
     if let Some(min_order_margin_usd) = modify_state_params.min_order_margin_usd {
         state.minimum_order_margin_usd = min_order_margin_usd;
     }

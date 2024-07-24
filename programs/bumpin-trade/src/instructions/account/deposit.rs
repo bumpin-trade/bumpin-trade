@@ -1,22 +1,22 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
-
-use crate::instructions::constraints::*;
+use crate::can_sign_for_user;
+use crate::is_normal;
 use crate::math::safe_math::SafeMath;
 use crate::processor::user_processor;
 use crate::state::bump_events::DepositEvent;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::{User, UserTokenUpdateReason};
 use crate::utils::token;
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Token, TokenAccount};
 
 #[derive(Accounts)]
 #[instruction(_token_index: u16)]
 pub struct Deposit<'info> {
     #[account(
         mut,
-        seeds = [b"user", authority.key.as_ref()],
+        seeds = [b"user", authority.key().as_ref()],
         bump,
-        constraint = can_sign_for_user(& user, & authority) ?
+        constraint = can_sign_for_user(& user, & authority) ? && is_normal(& user) ?,
     )]
     pub user: AccountLoader<'info, User>,
     pub authority: Signer<'info>,

@@ -260,7 +260,6 @@ export class BumpinClient {
 
     public async initializeUser() {
         this.checkInitialization();
-
         await this.program.methods
             .initializeUser()
             .accounts({
@@ -268,7 +267,7 @@ export class BumpinClient {
                 payer: this.wallet.publicKey,
             })
             .signers([])
-            .rpc();
+            .rpc(BumpinUtils.getRootConfirmOptions());
     }
 
     public async getWalletBalance(
@@ -322,6 +321,7 @@ export class BumpinClient {
             return new TokenBalance(
                 tradeToken,
                 account.amount,
+                account.key,
                 tradeTokenPriceData,
             );
         });
@@ -537,22 +537,24 @@ export class BumpinClient {
     ) {
         this.checkInitialization(true);
 
-        const [statePda, _] = BumpinUtils.getBumpinStatePda(this.program);
-        let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+        await this.userComponent!.deposit(
+            userTokenAccount,
             mintPublicKey,
-            await this.getTradeTokens(),
+            size,
         );
-        let amount = BumpinUtils.size2Amount(
-            new BigNumber(size),
-            targetTradeToken.decimals,
+    }
+
+    public async withdraw(
+        userTokenAccount: PublicKey,
+        mintPublicKey: PublicKey,
+        size: number,
+    ) {
+        this.checkInitialization(true);
+        await this.userComponent!.withdraw(
+            userTokenAccount,
+            mintPublicKey,
+            size,
         );
-        await this.program.methods
-            .deposit(targetTradeToken.index, amount)
-            .accounts({
-                userTokenAccount,
-            })
-            .signers([])
-            .rpc();
     }
 
     public async placePerpOrder(

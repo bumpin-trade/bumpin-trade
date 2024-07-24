@@ -81,10 +81,9 @@ pub mod bumpin_trade {
     pub fn wallet_stake<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, WalletStake>,
         pool_index: u16,
-        trade_token_index: u16,
         request_token_amount: u128,
     ) -> Result<()> {
-        handle_wallet_stake(ctx, pool_index, trade_token_index, request_token_amount)
+        handle_wallet_stake(ctx, pool_index, request_token_amount)
     }
 
     pub fn portfolio_un_stake<'a, 'b, 'c: 'info, 'info>(
@@ -114,9 +113,10 @@ pub mod bumpin_trade {
 
     pub fn withdraw<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, Withdraw>,
+        token_index: u16,
         amount: u128,
     ) -> Result<()> {
-        handle_withdraw(ctx, amount)
+        handle_withdraw(ctx, token_index, amount)
     }
 
     /*-----order------*/

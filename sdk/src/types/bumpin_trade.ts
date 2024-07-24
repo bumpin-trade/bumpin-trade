@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/bumpin_trade.json`.
  */
 export type BumpinTrade = {
-    address: 'Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR';
+    address: 'AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca';
     metadata: {
         name: 'bumpinTrade';
         version: '0.1.0';
@@ -2847,10 +2847,6 @@ export type BumpinTrade = {
                     type: 'u16';
                 },
                 {
-                    name: 'tradeTokenIndex';
-                    type: 'u16';
-                },
-                {
                     name: 'requestTokenAmount';
                     type: 'u128';
                 },
@@ -3059,6 +3055,18 @@ export type BumpinTrade = {
                 {
                     name: 'user';
                     writable: true;
+                    pda: {
+                        seeds: [
+                            {
+                                kind: 'const';
+                                value: [117, 115, 101, 114];
+                            },
+                            {
+                                kind: 'account';
+                                path: 'authority';
+                            },
+                        ];
+                    };
                 },
                 {
                     name: 'authority';
@@ -3069,7 +3077,36 @@ export type BumpinTrade = {
                     writable: true;
                 },
                 {
+                    name: 'tradeToken';
+                    writable: true;
+                    pda: {
+                        seeds: [
+                            {
+                                kind: 'const';
+                                value: [
+                                    116,
+                                    114,
+                                    97,
+                                    100,
+                                    101,
+                                    95,
+                                    116,
+                                    111,
+                                    107,
+                                    101,
+                                    110,
+                                ];
+                            },
+                            {
+                                kind: 'arg';
+                                path: 'tokenIndex';
+                            },
+                        ];
+                    };
+                },
+                {
                     name: 'tradeTokenVault';
+                    writable: true;
                     pda: {
                         seeds: [
                             {
@@ -3102,34 +3139,6 @@ export type BumpinTrade = {
                     };
                 },
                 {
-                    name: 'tradeToken';
-                    writable: true;
-                    pda: {
-                        seeds: [
-                            {
-                                kind: 'const';
-                                value: [
-                                    116,
-                                    114,
-                                    97,
-                                    100,
-                                    101,
-                                    95,
-                                    116,
-                                    111,
-                                    107,
-                                    101,
-                                    110,
-                                ];
-                            },
-                            {
-                                kind: 'arg';
-                                path: 'tokenIndex';
-                            },
-                        ];
-                    };
-                },
-                {
                     name: 'bumpSigner';
                 },
                 {
@@ -3138,6 +3147,10 @@ export type BumpinTrade = {
                 },
             ];
             args: [
+                {
+                    name: 'tokenIndex';
+                    type: 'u16';
+                },
                 {
                     name: 'amount';
                     type: 'u128';

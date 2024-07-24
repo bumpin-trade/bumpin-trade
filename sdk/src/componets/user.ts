@@ -224,7 +224,7 @@ export class UserComponent extends Component {
         }
 
         const ix = await this.program.methods
-            .walletStake(pool.index, tradeToken.index, amount)
+            .walletStake(pool.index,  amount)
             .accounts({
                 authority: wallet,
                 userTokenAccount: tokenAccount.address,
@@ -322,6 +322,57 @@ export class UserComponent extends Component {
                 .instruction();
             await this.sendAndConfirm([ix]);
         }
+    }
+
+    public async deposit(
+        userTokenAccount: PublicKey,
+        mintPublicKey: PublicKey,
+        size: number,
+    ) {
+        const [statePda, _] = BumpinUtils.getBumpinStatePda(this.program);
+        let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+            mintPublicKey,
+            await this.tradeTokenComponent.getTradeTokens(),
+        );
+        let amount = BumpinUtils.size2Amount(
+            new BigNumber(size),
+            targetTradeToken.decimals,
+        );
+
+        const ix = await this.program.methods
+            .deposit(targetTradeToken.index, amount)
+            .accounts({
+                userTokenAccount,
+            })
+            .signers([])
+            .instruction();
+        await this.sendAndConfirm([ix]);
+    }
+
+    public async withdraw(
+        userTokenAccount: PublicKey,
+        mintPublicKey: PublicKey,
+        size: number,
+    ) {
+        const [statePda, _] = BumpinUtils.getBumpinStatePda(this.program);
+        let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+            mintPublicKey,
+            await this.tradeTokenComponent.getTradeTokens(),
+        );
+        let amount = BumpinUtils.size2Amount(
+            new BigNumber(size),
+            targetTradeToken.decimals,
+        );
+        const ix = await this.program.methods
+            .withdraw(targetTradeToken.index, amount)
+            .accounts({
+                userTokenAccount,
+                authority: this.publicKey,
+                bumpSigner: (await this.getState()).bumpSigner,
+            })
+            .signers([])
+            .instruction();
+        await this.sendAndConfirm([ix]);
     }
 
     public async placePerpOrder(

@@ -33,9 +33,9 @@ pub struct WalletUnStake<'info> {
 
     #[account(
         mut,
-        seeds = [b"user", authority.key.as_ref()],
+        seeds = [b"user", authority.key().as_ref()],
         bump,
-        constraint = can_sign_for_user(& user, & authority) ?
+        constraint = can_sign_for_user(& user, & authority) ? && is_normal(& user) ?,
     )]
     pub user: AccountLoader<'info, User>,
 

@@ -673,14 +673,17 @@ export type UserClaimRewardsResult = {
 export class TokenBalance {
     tradeToken: TradeToken;
     amount: BN;
+    tokenAccountPublicKey: PublicKey;
     tradeTokenPriceData: PriceData;
 
     constructor(
         tradeToken: TradeToken,
         amount: bigint,
+        tokenAccountPublicKey: PublicKey,
         tradeTokenPriceData: PriceData,
     ) {
         this.tradeToken = tradeToken;
+        this.tokenAccountPublicKey = tokenAccountPublicKey;
         this.amount = new BN(amount.toString());
         this.tradeTokenPriceData = tradeTokenPriceData;
     }

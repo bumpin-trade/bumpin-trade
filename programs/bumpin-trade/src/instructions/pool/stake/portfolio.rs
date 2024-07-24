@@ -14,7 +14,7 @@ use crate::state::User;
 use crate::utils;
 
 #[derive(Accounts)]
-#[instruction(pool_index: u16, trade_token_index: u16)]
+#[instruction(_pool_index: u16, _trade_token_index: u16)]
 pub struct PortfolioStake<'info> {
     #[account(
         seeds = [b"bump_state".as_ref()],
@@ -38,14 +38,14 @@ pub struct PortfolioStake<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool".as_ref(), pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool".as_ref(), _pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
         mut,
-        seeds = [b"pool_vault".as_ref(), pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
         bump,
         token::mint = pool.load() ?.mint_key,
         token::authority = state.bump_signer
@@ -54,7 +54,7 @@ pub struct PortfolioStake<'info> {
 
     #[account(
         mut,
-        seeds = [b"trade_token_vault".as_ref(), trade_token_index.to_le_bytes().as_ref()],
+        seeds = [b"trade_token_vault".as_ref(), _trade_token_index.to_le_bytes().as_ref()],
         bump,
         token::mint = pool.load() ?.mint_key,
         token::authority = state.bump_signer
@@ -68,8 +68,8 @@ pub struct PortfolioStake<'info> {
 
 pub fn handle_portfolio_stake<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, PortfolioStake>,
-    pool_index: u16,
-    trade_token_index: u16,
+    _pool_index: u16,
+    _trade_token_index: u16,
     request_token_amount: u128,
 ) -> Result<()> {
     let pool = &mut ctx.accounts.pool.load_mut()?;

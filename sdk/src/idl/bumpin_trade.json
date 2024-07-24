@@ -1832,7 +1832,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "pool_index"
+                                "path": "_pool_index"
                             }
                         ]
                     }
@@ -1851,7 +1851,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "pool_index"
+                                "path": "_pool_index"
                             }
                         ]
                     }
@@ -1870,7 +1870,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "trade_token_index"
+                                "path": "_trade_token_index"
                             }
                         ]
                     }
@@ -2268,7 +2268,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "pool_index"
+                                "path": "_pool_index"
                             }
                         ]
                     }
@@ -2291,7 +2291,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "pool_index"
+                                "path": "_pool_index"
                             }
                         ]
                     }
@@ -2308,10 +2308,6 @@
             "args": [
                 {
                     "name": "pool_index",
-                    "type": "u16"
-                },
-                {
-                    "name": "trade_token_index",
                     "type": "u16"
                 },
                 {
@@ -2473,7 +2469,19 @@
                 },
                 {
                     "name": "user",
-                    "writable": true
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "const",
+                                "value": [117, 115, 101, 114]
+                            },
+                            {
+                                "kind": "account",
+                                "path": "authority"
+                            }
+                        ]
+                    }
                 },
                 {
                     "name": "authority",
@@ -2482,24 +2490,6 @@
                 {
                     "name": "user_token_account",
                     "writable": true
-                },
-                {
-                    "name": "trade_token_vault",
-                    "pda": {
-                        "seeds": [
-                            {
-                                "kind": "const",
-                                "value": [
-                                    116, 114, 97, 100, 101, 95, 116, 111, 107,
-                                    101, 110, 95, 118, 97, 117, 108, 116
-                                ]
-                            },
-                            {
-                                "kind": "arg",
-                                "path": "token_index"
-                            }
-                        ]
-                    }
                 },
                 {
                     "name": "trade_token",
@@ -2515,7 +2505,26 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "token_index"
+                                "path": "_token_index"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "trade_token_vault",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "const",
+                                "value": [
+                                    116, 114, 97, 100, 101, 95, 116, 111, 107,
+                                    101, 110, 95, 118, 97, 117, 108, 116
+                                ]
+                            },
+                            {
+                                "kind": "arg",
+                                "path": "_token_index"
                             }
                         ]
                     }
@@ -2529,6 +2538,10 @@
                 }
             ],
             "args": [
+                {
+                    "name": "token_index",
+                    "type": "u16"
+                },
                 {
                     "name": "amount",
                     "type": "u128"

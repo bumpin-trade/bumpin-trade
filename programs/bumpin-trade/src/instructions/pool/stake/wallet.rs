@@ -1,6 +1,7 @@
 use std::ops::DerefMut;
 
 use crate::can_sign_for_user;
+use crate::is_normal;
 use crate::processor::optional_accounts::load_maps;
 use crate::processor::{pool_processor, stake_processor};
 use crate::state::bump_events::StakeOrUnStakeEvent;
@@ -12,7 +13,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 #[derive(Accounts)]
-#[instruction(pool_index: u16)]
+#[instruction(_pool_index: u16)]
 pub struct WalletStake<'info> {
     #[account(
         seeds = [b"bump_state".as_ref()],
@@ -22,15 +23,15 @@ pub struct WalletStake<'info> {
 
     #[account(
         mut,
-        seeds = [b"user", authority.key.as_ref()],
+        seeds = [b"user", authority.key().as_ref()],
         bump,
-        constraint = can_sign_for_user(& user, & authority) ?
+        constraint = can_sign_for_user(& user, & authority) ? && is_normal(& user) ?,
     )]
     pub user: AccountLoader<'info, User>,
 
     #[account(
         mut,
-        seeds = [b"pool".as_ref(), pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool".as_ref(), _pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub pool: AccountLoader<'info, Pool>,
@@ -44,7 +45,7 @@ pub struct WalletStake<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool_vault".as_ref(), pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
         bump,
         token::mint = pool.load() ?.mint_key,
         token::authority = state.bump_signer
@@ -66,8 +67,7 @@ pub struct StakeParams {
 
 pub fn handle_wallet_stake<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, WalletStake>,
-    pool_index: u16,
-    trade_token_index: u16,
+    _pool_index: u16,
     request_token_amount: u128,
 ) -> Result<()> {
     let pool = &mut ctx.accounts.pool.load_mut()?;

@@ -1,8 +1,6 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
-
+use crate::can_sign_for_user;
 use crate::errors::BumpErrorCode;
-use crate::instructions::constraints::*;
+use crate::is_normal;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::user_processor;
 use crate::state::bump_events::WithdrawEvent;
@@ -10,9 +8,11 @@ use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::{utils, validate};
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Token, TokenAccount};
 
 #[derive(Accounts)]
-#[instruction(token_index: u16,)]
+#[instruction(_token_index: u16,)]
 pub struct Withdraw<'info> {
     #[account(
         seeds = [b"bump_state".as_ref()],
@@ -22,7 +22,9 @@ pub struct Withdraw<'info> {
 
     #[account(
         mut,
-        constraint = can_sign_for_user(& user, & authority) ?
+        seeds = [b"user", authority.key().as_ref()],
+        bump,
+        constraint = can_sign_for_user(& user, & authority) ? && is_normal(& user) ?,
     )]
     pub user: AccountLoader<'info, User>,
     pub authority: Signer<'info>,
@@ -34,17 +36,18 @@ pub struct Withdraw<'info> {
     pub user_token_account: Box<Account<'info, TokenAccount>>,
 
     #[account(
-        seeds = [b"trade_token_vault".as_ref(), token_index.to_le_bytes().as_ref()],
-        bump
-    )]
-    pub trade_token_vault: Box<Account<'info, TokenAccount>>,
-
-    #[account(
         mut,
-        seeds = [b"trade_token", token_index.to_le_bytes().as_ref()],
+        seeds = [b"trade_token", _token_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub trade_token: AccountLoader<'info, TradeToken>,
+
+    #[account(
+        mut,
+        seeds = [b"trade_token_vault", _token_index.to_le_bytes().as_ref()],
+        bump,
+    )]
+    pub trade_token_vault: Account<'info, TokenAccount>,
 
     #[account(
         constraint = state.bump_signer.eq(& bump_signer.key())
@@ -58,6 +61,7 @@ pub struct Withdraw<'info> {
 
 pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, Withdraw>,
+    _token_index: u16,
     amount: u128,
 ) -> Result<()> {
     validate!(amount > 0, BumpErrorCode::AmountZero)?;
