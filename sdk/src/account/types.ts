@@ -1,28 +1,28 @@
 export interface AccountSubscriber<T> {
-  isSubscribed: boolean;
+    isSubscribed: boolean;
 
-  subscribe(userAccount?: T): Promise<boolean>;
+    subscribe(userAccount?: T): Promise<boolean>;
 
-  fetch(): Promise<void>;
+    fetch(): Promise<void>;
 
-  updateData(userAccount: T, slot: number): void;
+    updateData(userAccount: T, slot: number): void;
 
-  unsubscribe(): Promise<void>;
+    unsubscribe(): Promise<void>;
 
-  getAccountAndSlot(): DataAndSlot<T>;
+    getAccountAndSlot(): DataAndSlot<T>;
 }
 
 export type BufferAndSlot = {
-  slot: number;
-  buffer: Buffer | undefined;
+    slot: number;
+    buffer: Buffer | undefined;
 };
 
 export type DataAndSlot<T> = {
-  data: T;
-  slot: number;
+    data: T;
+    slot: number;
 };
 
 export type ResubOpts = {
-  resubTimeoutMs?: number;
-  logResubMessages?: boolean;
+    resubTimeoutMs?: number;
+    logResubMessages?: boolean;
 };

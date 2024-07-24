@@ -1,1010 +1,1060 @@
-import { AccountMeta, PublicKey } from "@solana/web3.js";
+import { AccountMeta, PublicKey } from '@solana/web3.js';
 import {
-  AccountNetValue,
-  InnerPlaceOrderParams,
-  OrderSideAccount,
-  OrderTypeAccount,
-  PlaceOrderParams,
-  PositionSideAccount,
-  StopTypeAccount,
-} from "../typedef";
-import { BulkAccountLoader } from "../account/bulkAccountLoader";
-import { BN, Program } from "@coral-xyz/anchor";
-import { BumpinUtils } from "../utils/utils";
-import { BumpinTrade } from "../types/bumpin_trade";
+    AccountNetValue,
+    InnerPlaceOrderParams,
+    OrderSideAccount,
+    OrderTypeAccount,
+    PlaceOrderParams,
+    PositionSideAccount,
+    StopTypeAccount,
+} from '../typedef';
+import { BulkAccountLoader } from '../account/bulkAccountLoader';
+import { BN, Program } from '@coral-xyz/anchor';
+import { BumpinUtils } from '../utils/utils';
+import { BumpinTrade } from '../types/bumpin_trade';
 // @ts-ignore
-import { isEqual } from "lodash";
-import { Component } from "./componet";
-import { PollingStateAccountSubscriber } from "../account/pollingStateAccountSubscriber";
-import { PollingUserAccountSubscriber } from "../account/pollingUserAccountSubscriber";
+import { isEqual } from 'lodash';
+import { Component } from './componet';
+import { PollingStateAccountSubscriber } from '../account/pollingStateAccountSubscriber';
+import { PollingUserAccountSubscriber } from '../account/pollingUserAccountSubscriber';
 import {
-  BumpinAccountNotFound,
-  BumpinInvalidParameter,
-  BumpinSubscriptionFailed,
-  BumpinSupplyInsufficient,
-  BumpinTokenAccountUnexpected,
-  BumpinValueInsufficient,
-} from "../errors";
-import { DataAndSlot } from "../account/types";
-import { BumpinTokenUtils } from "../utils/token";
-import { BumpinPositionUtils } from "../utils/position";
-import { BumpinPoolUtils } from "../utils/pool";
-import { Account, AccountLayout } from "@solana/spl-token";
-import BigNumber from "bignumber.js";
-import { BumpinMarketUtils } from "../utils/market";
-import { C } from "../consts";
-import { ZERO } from "../constants/numericConstants";
+    BumpinAccountNotFound,
+    BumpinInvalidParameter,
+    BumpinSubscriptionFailed,
+    BumpinSupplyInsufficient,
+    BumpinTokenAccountUnexpected,
+    BumpinValueInsufficient,
+} from '../errors';
+import { DataAndSlot } from '../account/types';
+import { BumpinTokenUtils } from '../utils/token';
+import { BumpinPositionUtils } from '../utils/position';
+import { BumpinPoolUtils } from '../utils/pool';
+import { Account, AccountLayout } from '@solana/spl-token';
+import BigNumber from 'bignumber.js';
+import { BumpinMarketUtils } from '../utils/market';
+import { C } from '../consts';
+import { ZERO } from '../constants/numericConstants';
 import {
-  Market,
-  OrderSide,
-  OrderType,
-  Pool,
-  PositionSide,
-  PositionStatus,
-  StopType,
-  TradeToken,
-  User,
-  UserStakeStatus,
-  UserTokenStatus,
-} from "../beans/beans";
-import { TradeTokenComponent } from "./tradeToken";
-import { PoolComponent } from "./pool";
+    Market,
+    OrderSide,
+    OrderType,
+    Pool,
+    PositionSide,
+    PositionStatus,
+    StopType,
+    TradeToken,
+    User,
+    UserStakeStatus,
+    UserTokenStatus,
+} from '../beans/beans';
+import { TradeTokenComponent } from './tradeToken';
+import { PoolComponent } from './pool';
 
 export class UserComponent extends Component {
-  publicKey: PublicKey;
-  program: Program<BumpinTrade>;
-  userAccountSubscriber: PollingUserAccountSubscriber;
-  tradeTokenComponent: TradeTokenComponent;
-  poolComponent: PoolComponent;
+    publicKey: PublicKey;
+    program: Program<BumpinTrade>;
+    userAccountSubscriber: PollingUserAccountSubscriber;
+    tradeTokenComponent: TradeTokenComponent;
+    poolComponent: PoolComponent;
 
-  constructor(
-    publicKey: PublicKey,
-    bulkAccountLoader: BulkAccountLoader,
-    stateSubscriber: PollingStateAccountSubscriber,
-    tradeTokenComponent: TradeTokenComponent,
-    poolComponent: PoolComponent,
-    program: Program<BumpinTrade>
-  ) {
-    super(stateSubscriber, program);
-    this.publicKey = publicKey;
-    this.program = program;
-    this.tradeTokenComponent = tradeTokenComponent;
-    this.poolComponent = poolComponent;
-    const [pda, _] = BumpinUtils.getPdaSync(this.program, [
-      Buffer.from("user"),
-      this.publicKey.toBuffer(),
-    ]);
-    this.userAccountSubscriber = new PollingUserAccountSubscriber(
-      this.program,
-      pda,
-      bulkAccountLoader,
-      tradeTokenComponent,
-      poolComponent
-    );
-  }
-
-  public async subscribe() {
-    await this.userAccountSubscriber.subscribe();
-  }
-
-  public async unsubscribe() {
-    await this.userAccountSubscriber.unsubscribe();
-  }
-
-  public async portfolioStake(
-    size: number,
-    tradeToken: TradeToken,
-    allTradeTokens: TradeToken[],
-    pool: Pool,
-    allMarkets: Market[],
-    pools: Pool[],
-    sync: boolean = false
-  ): Promise<void> {
-    let user = await this.getUser(sync);
-    let amount = BumpinUtils.size2Amount(
-      new BigNumber(size),
-      tradeToken.decimals
-    );
-    let stake_value = await this.checkStakeAmountFulfilRequirements(
-      size,
-      tradeToken,
-      pool
-    );
-    let availableValue = await this.getUserAvailableValue(
-      user,
-      allTradeTokens,
-      allMarkets,
-      pools
-    );
-    if (!availableValue.gt(stake_value)) {
-      throw new BumpinValueInsufficient(amount.toBigNumber(), availableValue);
-    }
-
-    let remainingAccounts = this.getUserTradeTokenRemainingAccounts(
-      await this.getUser(),
-      allTradeTokens
-    );
-    let markets = BumpinMarketUtils.getMarketsByPoolKey(pool.key, allMarkets);
-    for (let market of markets.values()) {
-      remainingAccounts.push({
-        pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
-        isWritable: true,
-        isSigner: false,
-      });
-    }
-
-    await this.program.methods
-      .portfolioStake(pool.index, tradeToken.index, amount)
-      .accounts({
-        authority: this.publicKey,
-        bumpSigner: (await this.getState()).bumpSigner,
-      })
-      .remainingAccounts(remainingAccounts)
-      .signers([])
-      .rpc();
-  }
-
-  public async walletStake(
-    size: number,
-    tradeToken: TradeToken,
-    allTradeTokens: TradeToken[],
-    wallet: PublicKey,
-    pool: Pool,
-    allMarkets: Market[],
-    sync: boolean = false
-  ): Promise<void> {
-    // let user = await this.getUser(sync);
-    let amount = BumpinUtils.size2Amount(
-      new BigNumber(size),
-      tradeToken.decimals
-    );
-    await this.checkStakeAmountFulfilRequirements(size, tradeToken, pool);
-    await this.checkStakeWalletAmountSufficient(amount, wallet, tradeToken);
-    let tokenAccount =
-      await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(
-        this.program.provider.connection,
-        wallet,
-        tradeToken.mintKey
-      );
-
-    let remainingAccounts = [];
-    remainingAccounts.push({
-      pubkey: tradeToken.mintKey,
-      isWritable: false,
-      isSigner: false,
-    });
-    remainingAccounts.push({
-      pubkey: tradeToken.oracleKey,
-      isWritable: false,
-      isSigner: false,
-    });
-    let pda = BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0];
-    remainingAccounts.push({
-      pubkey: pda,
-      isWritable: false,
-      isSigner: false,
-    });
-
-    let markets = BumpinMarketUtils.getMarketsByPoolKey(pool.key, allMarkets);
-    for (let market of markets) {
-      remainingAccounts.push({
-        pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
-        isWritable: true,
-        isSigner: false,
-      });
-    }
-
-    await this.program.methods
-      .walletStake(pool.index, tradeToken.index, amount)
-      .accounts({
-        authority: wallet,
-        userTokenAccount: tokenAccount.address,
-      })
-      .remainingAccounts(remainingAccounts)
-      .signers([])
-      .rpc();
-  }
-
-  public async unStake(
-    portfolio: boolean,
-    share: BigNumber,
-    tradeToken: TradeToken,
-    wallet: PublicKey,
-    pool: Pool,
-    allMarkets: Market[]
-  ): Promise<void> {
-    let userStake = await this.findUsingStake(pool.key, false);
-    if (!userStake) {
-      throw new BumpinInvalidParameter("User stake not found");
-    }
-    if (share.gt(userStake.stakedShare)) {
-      throw new BumpinValueInsufficient(userStake.stakedShare, share);
-    }
-    if (pool.totalSupply.isZero()) {
-      throw new BumpinSupplyInsufficient(share, BigNumber(0));
-    }
-
-    let param = {
-      share: BumpinUtils.size2Amount(share, tradeToken.decimals),
-      poolIndex: pool.index,
-      tradeTokenIndex: tradeToken.index,
-    };
-
-    let remainingAccounts = [];
-    remainingAccounts.push({
-      pubkey: tradeToken.mintKey,
-      isWritable: false,
-      isSigner: false,
-    });
-    remainingAccounts.push({
-      pubkey: tradeToken.oracleKey,
-      isWritable: false,
-      isSigner: false,
-    });
-    let pda = BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0];
-    remainingAccounts.push({
-      pubkey: pda,
-      isWritable: false,
-      isSigner: false,
-    });
-
-    let markets = BumpinMarketUtils.getMarketsByPoolKey(pool.key, allMarkets);
-    for (let market of markets) {
-      remainingAccounts.push({
-        pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
-        isWritable: true,
-        isSigner: false,
-      });
-    }
-
-    if (portfolio) {
-      await this.program.methods
-        .portfolioUnStake(param)
-        .accounts({
-          authority: wallet,
-        })
-        .remainingAccounts(remainingAccounts)
-        .signers([])
-        .rpc();
-    } else {
-      let tokenAccount =
-        await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(
-          this.program.provider.connection,
-          wallet,
-          tradeToken.mintKey
-        );
-      await this.program.methods
-        .walletUnStake(param)
-        .accounts({
-          authority: wallet,
-          userTokenAccount: tokenAccount.address,
-          bumpSigner: (await this.getState()).bumpSigner,
-        })
-        .remainingAccounts(remainingAccounts)
-        .signers([])
-        .rpc();
-    }
-  }
-
-  public async placePerpOrder(
-    symbol: string,
-    marketIndex: number,
-    param: PlaceOrderParams,
-    wallet: PublicKey,
-    pools: Pool[],
-    markets: Market[],
-    tradeTokens: TradeToken[]
-  ) {
-    const user = await this.getUser();
-    const pool = BumpinPoolUtils.getPoolByMintPublicKey(
-      markets[marketIndex].poolMintKey,
-      pools
-    );
-    const stablePool = BumpinPoolUtils.getPoolByMintPublicKey(
-      markets[marketIndex].stablePoolMintKey,
-      pools
-    );
-    const tradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
-      markets[marketIndex].poolMintKey,
-      tradeTokens
-    );
-    const stableTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
-      markets[marketIndex].stablePoolMintKey,
-      tradeTokens
-    );
-
-    let userTokenAccount = (
-      await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(
-        this.program.provider.connection,
-        wallet,
-        tradeToken.mintKey
-      )
-    ).address;
-
-    if (
-      (isEqual(param.positionSide, PositionSide.DECREASE) &&
-        isEqual(param.orderSide, OrderSide.LONG)) ||
-      (isEqual(param.positionSide, PositionSide.INCREASE) &&
-        isEqual(param.orderSide, OrderSide.SHORT))
+    constructor(
+        publicKey: PublicKey,
+        bulkAccountLoader: BulkAccountLoader,
+        stateSubscriber: PollingStateAccountSubscriber,
+        tradeTokenComponent: TradeTokenComponent,
+        poolComponent: PoolComponent,
+        program: Program<BumpinTrade>,
     ) {
-      // When the order side is short, the userTokenAccount is the stable token.
-      userTokenAccount = (
-        await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(
-          this.program.provider.connection,
-          wallet,
-          markets[marketIndex].stablePoolMintKey
-        )
-      ).address;
-    } // When trading position by position (Isolated position), userTokenAccount is determined based on the order direction.
-    let uta = userTokenAccount;
-    if (!param.isPortfolioMargin) {
-      let tokenAccount: Account =
-        await BumpinTokenUtils.getTokenAccountFromWalletAndKey(
-          this.program.provider.connection,
-          wallet,
-          userTokenAccount
+        super(stateSubscriber, program);
+        this.publicKey = publicKey;
+        this.program = program;
+        this.tradeTokenComponent = tradeTokenComponent;
+        this.poolComponent = poolComponent;
+        const [pda, _] = BumpinUtils.getPdaSync(this.program, [
+            Buffer.from('user'),
+            this.publicKey.toBuffer(),
+        ]);
+        this.userAccountSubscriber = new PollingUserAccountSubscriber(
+            this.program,
+            pda,
+            bulkAccountLoader,
+            tradeTokenComponent,
+            poolComponent,
         );
-      if (isEqual(param.positionSide, PositionSide.INCREASE)) {
-        if (isEqual(param.orderSide, OrderSide.LONG)) {
-          if (!tokenAccount.mint.equals(pool.mintKey)) {
-            throw new BumpinTokenAccountUnexpected(
-              "Pool mint key: " + pool.mintKey.toString(),
-              "Token account mint key: " + tokenAccount.mint.toString()
+    }
+
+    public async subscribe() {
+        await this.userAccountSubscriber.subscribe();
+    }
+
+    public async unsubscribe() {
+        await this.userAccountSubscriber.unsubscribe();
+    }
+
+    public async portfolioStake(
+        size: number,
+        tradeToken: TradeToken,
+        allTradeTokens: TradeToken[],
+        pool: Pool,
+        allMarkets: Market[],
+        pools: Pool[],
+        sync: boolean = false,
+    ): Promise<void> {
+        let user = await this.getUser(sync);
+        let amount = BumpinUtils.size2Amount(
+            new BigNumber(size),
+            tradeToken.decimals,
+        );
+        let stake_value = await this.checkStakeAmountFulfilRequirements(
+            size,
+            tradeToken,
+            pool,
+        );
+        let availableValue = await this.getUserAvailableValue(
+            user,
+            allTradeTokens,
+            allMarkets,
+            pools,
+        );
+        if (!availableValue.gt(stake_value)) {
+            throw new BumpinValueInsufficient(
+                amount.toBigNumber(),
+                availableValue,
             );
-          }
-        } else {
-          if (!tokenAccount.mint.equals(stablePool.mintKey)) {
-            throw new BumpinTokenAccountUnexpected(
-              "Stable Pool mint key: " + stablePool.mintKey.toString(),
-              "Token account mint key: " + tokenAccount.mint.toString()
-            );
-          }
         }
-      } else {
-        if (isEqual(param.orderSide, OrderSide.LONG)) {
-          if (!tokenAccount.mint.equals(stablePool.mintKey)) {
-            throw new BumpinTokenAccountUnexpected(
-              "Stable Pool mint key: " + stablePool.mintKey.toString(),
-              "Token account mint key: " + tokenAccount.mint.toString()
-            );
-          }
-        } else {
-          if (!tokenAccount.mint.equals(pool.mintKey)) {
-            throw new BumpinTokenAccountUnexpected(
-              "Pool mint key: " + pool.mintKey.toString(),
-              "Token account mint key: " + tokenAccount.mint.toString()
-            );
-          }
+
+        let remainingAccounts = this.getUserTradeTokenRemainingAccounts(
+            await this.getUser(),
+            allTradeTokens,
+        );
+        let markets = BumpinMarketUtils.getMarketsByPoolKey(
+            pool.key,
+            allMarkets,
+        );
+        for (let market of markets.values()) {
+            remainingAccounts.push({
+                pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
+                isWritable: true,
+                isSigner: false,
+            });
         }
-      }
-      uta = tokenAccount.address;
+
+        await this.program.methods
+            .portfolioStake(pool.index, tradeToken.index, amount)
+            .accounts({
+                authority: this.publicKey,
+                bumpSigner: (await this.getState()).bumpSigner,
+            })
+            .remainingAccounts(remainingAccounts)
+            .signers([])
+            .rpc();
     }
 
-    let remainingAccounts = param.isPortfolioMargin
-      ? this.buildPortfolioRemainAccount(
-          marketIndex,
-          user,
-          tradeTokens,
-          markets,
-          pools,
-          param
-        )
-      : this.buildIsolateRemainAccount(
-          marketIndex,
-          tradeTokens,
-          markets,
-          pools,
-          param
+    public async walletStake(
+        size: number,
+        tradeToken: TradeToken,
+        allTradeTokens: TradeToken[],
+        wallet: PublicKey,
+        pool: Pool,
+        allMarkets: Market[],
+        sync: boolean = false,
+    ): Promise<void> {
+        // let user = await this.getUser(sync);
+        let amount = BumpinUtils.size2Amount(
+            new BigNumber(size),
+            tradeToken.decimals,
+        );
+        await this.checkStakeAmountFulfilRequirements(size, tradeToken, pool);
+        await this.checkStakeWalletAmountSufficient(amount, wallet, tradeToken);
+        let tokenAccount =
+            await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(
+                this.program.provider.connection,
+                wallet,
+                tradeToken.mintKey,
+            );
+
+        let remainingAccounts = [];
+        remainingAccounts.push({
+            pubkey: tradeToken.mintKey,
+            isWritable: false,
+            isSigner: false,
+        });
+        remainingAccounts.push({
+            pubkey: tradeToken.oracleKey,
+            isWritable: false,
+            isSigner: false,
+        });
+        let pda = BumpinUtils.getTradeTokenPda(
+            this.program,
+            tradeToken.index,
+        )[0];
+        remainingAccounts.push({
+            pubkey: pda,
+            isWritable: false,
+            isSigner: false,
+        });
+
+        let markets = BumpinMarketUtils.getMarketsByPoolKey(
+            pool.key,
+            allMarkets,
+        );
+        for (let market of markets) {
+            remainingAccounts.push({
+                pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
+                isWritable: true,
+                isSigner: false,
+            });
+        }
+
+        await this.program.methods
+            .walletStake(pool.index, tradeToken.index, amount)
+            .accounts({
+                authority: wallet,
+                userTokenAccount: tokenAccount.address,
+            })
+            .remainingAccounts(remainingAccounts)
+            .signers([])
+            .rpc();
+    }
+
+    public async unStake(
+        portfolio: boolean,
+        share: BigNumber,
+        tradeToken: TradeToken,
+        wallet: PublicKey,
+        pool: Pool,
+        allMarkets: Market[],
+    ): Promise<void> {
+        let userStake = await this.findUsingStake(pool.key, false);
+        if (!userStake) {
+            throw new BumpinInvalidParameter('User stake not found');
+        }
+        if (share.gt(userStake.stakedShare)) {
+            throw new BumpinValueInsufficient(userStake.stakedShare, share);
+        }
+        if (pool.totalSupply.isZero()) {
+            throw new BumpinSupplyInsufficient(share, BigNumber(0));
+        }
+
+        let param = {
+            share: BumpinUtils.size2Amount(share, tradeToken.decimals),
+            poolIndex: pool.index,
+            tradeTokenIndex: tradeToken.index,
+        };
+
+        let remainingAccounts = [];
+        remainingAccounts.push({
+            pubkey: tradeToken.mintKey,
+            isWritable: false,
+            isSigner: false,
+        });
+        remainingAccounts.push({
+            pubkey: tradeToken.oracleKey,
+            isWritable: false,
+            isSigner: false,
+        });
+        let pda = BumpinUtils.getTradeTokenPda(
+            this.program,
+            tradeToken.index,
+        )[0];
+        remainingAccounts.push({
+            pubkey: pda,
+            isWritable: false,
+            isSigner: false,
+        });
+
+        let markets = BumpinMarketUtils.getMarketsByPoolKey(
+            pool.key,
+            allMarkets,
+        );
+        for (let market of markets) {
+            remainingAccounts.push({
+                pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
+                isWritable: true,
+                isSigner: false,
+            });
+        }
+
+        if (portfolio) {
+            await this.program.methods
+                .portfolioUnStake(param)
+                .accounts({
+                    authority: wallet,
+                })
+                .remainingAccounts(remainingAccounts)
+                .signers([])
+                .rpc();
+        } else {
+            let tokenAccount =
+                await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(
+                    this.program.provider.connection,
+                    wallet,
+                    tradeToken.mintKey,
+                );
+            await this.program.methods
+                .walletUnStake(param)
+                .accounts({
+                    authority: wallet,
+                    userTokenAccount: tokenAccount.address,
+                    bumpSigner: (await this.getState()).bumpSigner,
+                })
+                .remainingAccounts(remainingAccounts)
+                .signers([])
+                .rpc();
+        }
+    }
+
+    public async placePerpOrder(
+        symbol: string,
+        marketIndex: number,
+        param: PlaceOrderParams,
+        wallet: PublicKey,
+        pools: Pool[],
+        markets: Market[],
+        tradeTokens: TradeToken[],
+    ) {
+        const user = await this.getUser();
+        const pool = BumpinPoolUtils.getPoolByMintPublicKey(
+            markets[marketIndex].poolMintKey,
+            pools,
+        );
+        const stablePool = BumpinPoolUtils.getPoolByMintPublicKey(
+            markets[marketIndex].stablePoolMintKey,
+            pools,
+        );
+        const tradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+            markets[marketIndex].poolMintKey,
+            tradeTokens,
+        );
+        const stableTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+            markets[marketIndex].stablePoolMintKey,
+            tradeTokens,
         );
 
-    let indexPrice = this.tradeTokenComponent.getTradeTokenPricesByOracleKey(
-      markets[marketIndex].indexMintOracle,
-      0
-    )[0];
-    if (!indexPrice.price) {
-      throw new BumpinInvalidParameter(
-        "Price not found(undefined) for mint: " + pool.mintKey.toString()
-      );
-    }
-    await this.placePerpOrderValidation(
-      param,
-      indexPrice.price,
-      markets[marketIndex]
-    );
+        let userTokenAccount = (
+            await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(
+                this.program.provider.connection,
+                wallet,
+                tradeToken.mintKey,
+            )
+        ).address;
 
-    let order: InnerPlaceOrderParams = {
-      symbol: BumpinUtils.encodeString(symbol),
-      placeTime: new BN(Date.now()),
-      isPortfolioMargin: param.isPortfolioMargin,
-      isNativeToken: false,
-      orderSide: OrderSideAccount.from(param.orderSide),
-      positionSide: PositionSideAccount.from(param.positionSide),
-      orderType: OrderTypeAccount.from(param.orderType),
-      stopType: StopTypeAccount.from(param.stopType),
-      size: BumpinUtils.number2Precision(param.size, C.USD_EXPONENT_NUMBER),
-      orderMargin: !param.isPortfolioMargin
-        ? BumpinUtils.number2Precision(
-            param.orderMargin,
-            isEqual(param.positionSide, PositionSide.INCREASE)
-              ? isEqual(param.orderSide, OrderSide.LONG)
-                ? tradeToken.decimals
-                : stableTradeToken.decimals
-              : isEqual(param.orderSide, OrderSide.LONG)
-              ? stableTradeToken.decimals
-              : tradeToken.decimals
-          )
-        : BumpinUtils.number2Precision(
-            param.orderMargin * indexPrice.price,
-            C.USD_EXPONENT_NUMBER
-          ),
-      leverage: param.leverage * C.RATE_MULTIPLIER,
-      triggerPrice: BumpinUtils.number2Precision(
-        param.triggerPrice,
-        C.PRICE_EXPONENT_NUMBER
-      ),
-      acceptablePrice: BumpinUtils.number2Precision(
-        param.acceptablePrice,
-        C.PRICE_EXPONENT_NUMBER
-      ),
-    };
-    let accountMetas = BumpinUtils.removeDuplicateAccounts(remainingAccounts);
-    accountMetas.forEach((value) => {
-      console.log(value.pubkey.toString());
-    });
-    await this.program.methods
-      .placeOrder(order)
-      .accounts({
-        userTokenAccount: uta,
-        authority: wallet,
-        bumpSigner: (await this.getState()).bumpSigner,
-      })
-      .remainingAccounts(accountMetas)
-      .signers([])
-      .rpc();
-  }
+        if (
+            (isEqual(param.positionSide, PositionSide.DECREASE) &&
+                isEqual(param.orderSide, OrderSide.LONG)) ||
+            (isEqual(param.positionSide, PositionSide.INCREASE) &&
+                isEqual(param.orderSide, OrderSide.SHORT))
+        ) {
+            // When the order side is short, the userTokenAccount is the stable token.
+            userTokenAccount = (
+                await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(
+                    this.program.provider.connection,
+                    wallet,
+                    markets[marketIndex].stablePoolMintKey,
+                )
+            ).address;
+        } // When trading position by position (Isolated position), userTokenAccount is determined based on the order direction.
+        let uta = userTokenAccount;
+        if (!param.isPortfolioMargin) {
+            let tokenAccount: Account =
+                await BumpinTokenUtils.getTokenAccountFromWalletAndKey(
+                    this.program.provider.connection,
+                    wallet,
+                    userTokenAccount,
+                );
+            if (isEqual(param.positionSide, PositionSide.INCREASE)) {
+                if (isEqual(param.orderSide, OrderSide.LONG)) {
+                    if (!tokenAccount.mint.equals(pool.mintKey)) {
+                        throw new BumpinTokenAccountUnexpected(
+                            'Pool mint key: ' + pool.mintKey.toString(),
+                            'Token account mint key: ' +
+                                tokenAccount.mint.toString(),
+                        );
+                    }
+                } else {
+                    if (!tokenAccount.mint.equals(stablePool.mintKey)) {
+                        throw new BumpinTokenAccountUnexpected(
+                            'Stable Pool mint key: ' +
+                                stablePool.mintKey.toString(),
+                            'Token account mint key: ' +
+                                tokenAccount.mint.toString(),
+                        );
+                    }
+                }
+            } else {
+                if (isEqual(param.orderSide, OrderSide.LONG)) {
+                    if (!tokenAccount.mint.equals(stablePool.mintKey)) {
+                        throw new BumpinTokenAccountUnexpected(
+                            'Stable Pool mint key: ' +
+                                stablePool.mintKey.toString(),
+                            'Token account mint key: ' +
+                                tokenAccount.mint.toString(),
+                        );
+                    }
+                } else {
+                    if (!tokenAccount.mint.equals(pool.mintKey)) {
+                        throw new BumpinTokenAccountUnexpected(
+                            'Pool mint key: ' + pool.mintKey.toString(),
+                            'Token account mint key: ' +
+                                tokenAccount.mint.toString(),
+                        );
+                    }
+                }
+            }
+            uta = tokenAccount.address;
+        }
 
-  //TODO: recheck this conditions
-  async placePerpOrderValidation(
-    order: PlaceOrderParams,
-    tradeTokenPrice: number,
-    market: Market,
-    sync: boolean = false
-  ) {
-    let state = await this.getState(sync);
-    if (isEqual(order.orderType, OrderType.NONE)) {
-      throw new BumpinInvalidParameter(
-        "Order type should not be NONE (when placing order)"
-      );
-    }
+        let remainingAccounts = param.isPortfolioMargin
+            ? this.buildPortfolioRemainAccount(
+                  marketIndex,
+                  user,
+                  tradeTokens,
+                  markets,
+                  pools,
+                  param,
+              )
+            : this.buildIsolateRemainAccount(
+                  marketIndex,
+                  tradeTokens,
+                  markets,
+                  pools,
+                  param,
+              );
 
-    if (isEqual(order.orderSide, OrderSide.NONE)) {
-      throw new BumpinInvalidParameter(
-        "Order side should not be NONE (when placing order)"
-      );
-    }
-
-    if (order.size == 0 && isEqual(order.positionSide, PositionSide.DECREASE)) {
-      throw new BumpinInvalidParameter(
-        "Order size should not be zero (when placing order with position side decrease)"
-      );
-    }
-
-    if (
-      isEqual(order.orderType, OrderType.STOP) &&
-      (isEqual(order.stopType, StopType.NONE) || order.triggerPrice == 0)
-    ) {
-      throw new BumpinInvalidParameter(
-        "Stop order should have stop type(not none) and trigger price(>0)"
-      );
-    }
-
-    if (isEqual(order.positionSide, PositionSide.INCREASE)) {
-      if (order.orderMargin == 0) {
-        throw new BumpinInvalidParameter(
-          "Order margin should not be zero (when placing order with Increase position side)"
+        let indexPrice =
+            this.tradeTokenComponent.getTradeTokenPricesByOracleKey(
+                markets[marketIndex].indexMintOracle,
+                0,
+            )[0];
+        if (!indexPrice.price) {
+            throw new BumpinInvalidParameter(
+                'Price not found(undefined) for mint: ' +
+                    pool.mintKey.toString(),
+            );
+        }
+        await this.placePerpOrderValidation(
+            param,
+            indexPrice.price,
+            markets[marketIndex],
         );
-      }
-    }
 
-    if (
-      order.isPortfolioMargin &&
-      (order.orderMargin == 0 ||
-        order.orderMargin < state.minimumOrderMarginUsd.toNumber())
-    ) {
-      throw new BumpinInvalidParameter(
-        "Order margin should be greater than minimum order margin: " +
-          state.minimumOrderMarginUsd.toString()
-      );
-    }
-
-    if (
-      order.orderMargin * tradeTokenPrice <
-      state.minimumOrderMarginUsd.toNumber()
-    ) {
-      throw new BumpinInvalidParameter(
-        "Order margin should be greater than minimum order margin: " +
-          state.minimumOrderMarginUsd.toString()
-      );
-    }
-
-    if (
-      order.leverage > market.config.maximumLeverage ||
-      order.leverage < market.config.minimumLeverage
-    ) {
-      throw new BumpinInvalidParameter(
-        "Leverage should be between " +
-          market.config.minimumLeverage +
-          " and " +
-          market.config.maximumLeverage
-      );
-    }
-  }
-
-  public async getUserAccountNetValue(
-    user: User,
-    tradeTokens: TradeToken[],
-    markets: Market[],
-    pools: Pool[]
-  ): Promise<AccountNetValue> {
-    let accountNetValue = {
-      accountNetValue: BigNumber(0),
-      totalMM: BigNumber(0),
-    };
-    let balanceOfUserTradeTokens =
-      await BumpinTokenUtils.getUserTradeTokenBalance(
-        this.tradeTokenComponent,
-        user,
-        tradeTokens
-      );
-    let balanceOfUserPositions = await BumpinPositionUtils.getUserPositionValue(
-      this.tradeTokenComponent,
-      user,
-      tradeTokens,
-      markets,
-      pools
-    );
-    accountNetValue.accountNetValue = balanceOfUserTradeTokens.tokenNetValue
-      .plus(balanceOfUserPositions.initialMarginUsd)
-      .plus(user.hold)
-      .minus(balanceOfUserTradeTokens.tokenUsedValue)
-      .plus(
-        balanceOfUserPositions.positionUnPnl.gt(BigNumber(0))
-          ? BigNumber(0)
-          : balanceOfUserPositions.positionUnPnl
-      )
-      .minus(balanceOfUserPositions.positionFee);
-    accountNetValue.totalMM = balanceOfUserPositions.mmUsd;
-    return accountNetValue;
-  }
-
-  public async getUserAvailableValue(
-    user: User,
-    tradeTokens: TradeToken[],
-    markets: Market[],
-    pools: Pool[]
-  ): Promise<BigNumber> {
-    let balanceOfUserTradeTokens =
-      await BumpinTokenUtils.getUserTradeTokenBalance(
-        this.tradeTokenComponent,
-        user,
-        tradeTokens
-      );
-    let balanceOfUserPositions = await BumpinPositionUtils.getUserPositionValue(
-      this.tradeTokenComponent,
-      user,
-      tradeTokens,
-      markets,
-      pools
-    );
-    return balanceOfUserTradeTokens.tokenNetValue
-      .plus(balanceOfUserPositions.initialMarginUsd)
-      .plus(user.hold)
-      .minus(balanceOfUserTradeTokens.tokenUsedValue)
-      .plus(
-        balanceOfUserPositions.positionUnPnl.gt(BigNumber(0))
-          ? BigNumber(0)
-          : balanceOfUserPositions.positionUnPnl
-      )
-      .minus(
-        balanceOfUserTradeTokens.tokenBorrowingValue.plus(
-          balanceOfUserPositions.initialMarginUsdFromPortfolio
-        )
-      );
-  }
-
-  public getUserTradeTokenRemainingAccounts(
-    user: User,
-    allTradeTokens: TradeToken[],
-    isWritable: boolean = false
-  ): Array<AccountMeta> {
-    let remainingAccounts: Array<AccountMeta> = [];
-    for (let token of user.tokens) {
-      if (isEqual(token.userTokenStatus, UserTokenStatus.USING)) {
-        remainingAccounts.push({
-          pubkey: token.tokenMintKey,
-          isWritable,
-          isSigner: false,
+        let order: InnerPlaceOrderParams = {
+            symbol: BumpinUtils.encodeString(symbol),
+            placeTime: new BN(Date.now()),
+            isPortfolioMargin: param.isPortfolioMargin,
+            isNativeToken: false,
+            orderSide: OrderSideAccount.from(param.orderSide),
+            positionSide: PositionSideAccount.from(param.positionSide),
+            orderType: OrderTypeAccount.from(param.orderType),
+            stopType: StopTypeAccount.from(param.stopType),
+            size: BumpinUtils.number2Precision(
+                param.size,
+                C.USD_EXPONENT_NUMBER,
+            ),
+            orderMargin: !param.isPortfolioMargin
+                ? BumpinUtils.number2Precision(
+                      param.orderMargin,
+                      isEqual(param.positionSide, PositionSide.INCREASE)
+                          ? isEqual(param.orderSide, OrderSide.LONG)
+                              ? tradeToken.decimals
+                              : stableTradeToken.decimals
+                          : isEqual(param.orderSide, OrderSide.LONG)
+                          ? stableTradeToken.decimals
+                          : tradeToken.decimals,
+                  )
+                : BumpinUtils.number2Precision(
+                      param.orderMargin * indexPrice.price,
+                      C.USD_EXPONENT_NUMBER,
+                  ),
+            leverage: param.leverage * C.RATE_MULTIPLIER,
+            triggerPrice: BumpinUtils.number2Precision(
+                param.triggerPrice,
+                C.PRICE_EXPONENT_NUMBER,
+            ),
+            acceptablePrice: BumpinUtils.number2Precision(
+                param.acceptablePrice,
+                C.PRICE_EXPONENT_NUMBER,
+            ),
+        };
+        let accountMetas =
+            BumpinUtils.removeDuplicateAccounts(remainingAccounts);
+        accountMetas.forEach((value) => {
+            console.log(value.pubkey.toString());
         });
-        let target = BumpinTokenUtils.getTradeTokenByMintPublicKey(
-          token.tokenMintKey,
-          allTradeTokens
+        await this.program.methods
+            .placeOrder(order)
+            .accounts({
+                userTokenAccount: uta,
+                authority: wallet,
+                bumpSigner: (await this.getState()).bumpSigner,
+            })
+            .remainingAccounts(accountMetas)
+            .signers([])
+            .rpc();
+    }
+
+    //TODO: recheck this conditions
+    async placePerpOrderValidation(
+        order: PlaceOrderParams,
+        tradeTokenPrice: number,
+        market: Market,
+        sync: boolean = false,
+    ) {
+        let state = await this.getState(sync);
+        if (isEqual(order.orderType, OrderType.NONE)) {
+            throw new BumpinInvalidParameter(
+                'Order type should not be NONE (when placing order)',
+            );
+        }
+
+        if (isEqual(order.orderSide, OrderSide.NONE)) {
+            throw new BumpinInvalidParameter(
+                'Order side should not be NONE (when placing order)',
+            );
+        }
+
+        if (
+            order.size == 0 &&
+            isEqual(order.positionSide, PositionSide.DECREASE)
+        ) {
+            throw new BumpinInvalidParameter(
+                'Order size should not be zero (when placing order with position side decrease)',
+            );
+        }
+
+        if (
+            isEqual(order.orderType, OrderType.STOP) &&
+            (isEqual(order.stopType, StopType.NONE) || order.triggerPrice == 0)
+        ) {
+            throw new BumpinInvalidParameter(
+                'Stop order should have stop type(not none) and trigger price(>0)',
+            );
+        }
+
+        if (isEqual(order.positionSide, PositionSide.INCREASE)) {
+            if (order.orderMargin == 0) {
+                throw new BumpinInvalidParameter(
+                    'Order margin should not be zero (when placing order with Increase position side)',
+                );
+            }
+        }
+
+        if (
+            order.isPortfolioMargin &&
+            (order.orderMargin == 0 ||
+                order.orderMargin < state.minimumOrderMarginUsd.toNumber())
+        ) {
+            throw new BumpinInvalidParameter(
+                'Order margin should be greater than minimum order margin: ' +
+                    state.minimumOrderMarginUsd.toString(),
+            );
+        }
+
+        if (
+            order.orderMargin * tradeTokenPrice <
+            state.minimumOrderMarginUsd.toNumber()
+        ) {
+            throw new BumpinInvalidParameter(
+                'Order margin should be greater than minimum order margin: ' +
+                    state.minimumOrderMarginUsd.toString(),
+            );
+        }
+
+        if (
+            order.leverage > market.config.maximumLeverage ||
+            order.leverage < market.config.minimumLeverage
+        ) {
+            throw new BumpinInvalidParameter(
+                'Leverage should be between ' +
+                    market.config.minimumLeverage +
+                    ' and ' +
+                    market.config.maximumLeverage,
+            );
+        }
+    }
+
+    public async getUserAccountNetValue(
+        user: User,
+        tradeTokens: TradeToken[],
+        markets: Market[],
+        pools: Pool[],
+    ): Promise<AccountNetValue> {
+        let accountNetValue = {
+            accountNetValue: BigNumber(0),
+            totalMM: BigNumber(0),
+        };
+        let balanceOfUserTradeTokens =
+            await BumpinTokenUtils.getUserTradeTokenBalance(
+                this.tradeTokenComponent,
+                user,
+                tradeTokens,
+            );
+        let balanceOfUserPositions =
+            await BumpinPositionUtils.getUserPositionValue(
+                this.tradeTokenComponent,
+                user,
+                tradeTokens,
+                markets,
+                pools,
+            );
+        accountNetValue.accountNetValue = balanceOfUserTradeTokens.tokenNetValue
+            .plus(balanceOfUserPositions.initialMarginUsd)
+            .plus(user.hold)
+            .minus(balanceOfUserTradeTokens.tokenUsedValue)
+            .plus(
+                balanceOfUserPositions.positionUnPnl.gt(BigNumber(0))
+                    ? BigNumber(0)
+                    : balanceOfUserPositions.positionUnPnl,
+            )
+            .minus(balanceOfUserPositions.positionFee);
+        accountNetValue.totalMM = balanceOfUserPositions.mmUsd;
+        return accountNetValue;
+    }
+
+    public async getUserAvailableValue(
+        user: User,
+        tradeTokens: TradeToken[],
+        markets: Market[],
+        pools: Pool[],
+    ): Promise<BigNumber> {
+        let balanceOfUserTradeTokens =
+            await BumpinTokenUtils.getUserTradeTokenBalance(
+                this.tradeTokenComponent,
+                user,
+                tradeTokens,
+            );
+        let balanceOfUserPositions =
+            await BumpinPositionUtils.getUserPositionValue(
+                this.tradeTokenComponent,
+                user,
+                tradeTokens,
+                markets,
+                pools,
+            );
+        return balanceOfUserTradeTokens.tokenNetValue
+            .plus(balanceOfUserPositions.initialMarginUsd)
+            .plus(user.hold)
+            .minus(balanceOfUserTradeTokens.tokenUsedValue)
+            .plus(
+                balanceOfUserPositions.positionUnPnl.gt(BigNumber(0))
+                    ? BigNumber(0)
+                    : balanceOfUserPositions.positionUnPnl,
+            )
+            .minus(
+                balanceOfUserTradeTokens.tokenBorrowingValue.plus(
+                    balanceOfUserPositions.initialMarginUsdFromPortfolio,
+                ),
+            );
+    }
+
+    public getUserTradeTokenRemainingAccounts(
+        user: User,
+        allTradeTokens: TradeToken[],
+        isWritable: boolean = false,
+    ): Array<AccountMeta> {
+        let remainingAccounts: Array<AccountMeta> = [];
+        for (let token of user.tokens) {
+            if (isEqual(token.userTokenStatus, UserTokenStatus.USING)) {
+                remainingAccounts.push({
+                    pubkey: token.tokenMintKey,
+                    isWritable,
+                    isSigner: false,
+                });
+                let target = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+                    token.tokenMintKey,
+                    allTradeTokens,
+                );
+                remainingAccounts.push({
+                    pubkey: target.oracleKey,
+                    isWritable,
+                    isSigner: false,
+                });
+                let pda = BumpinUtils.getTradeTokenPda(
+                    this.program,
+                    target.index,
+                )[0];
+                remainingAccounts.push({
+                    pubkey: pda,
+                    isWritable,
+                    isSigner: false,
+                });
+            }
+        }
+
+        return remainingAccounts;
+    }
+
+    async checkStakeAmountFulfilRequirements(
+        size: number,
+        tradeToken: TradeToken,
+        pool: Pool,
+    ): Promise<BigNumber> {
+        const price = (
+            await this.tradeTokenComponent.getTradeTokenPricesByMintKey(
+                tradeToken.mintKey,
+            )
+        ).price;
+        if (!price) {
+            throw new BumpinInvalidParameter('Price data not found');
+        }
+        let value = price * size;
+        if (pool.config.minimumStakeAmount.gt(value)) {
+            throw new BumpinValueInsufficient(
+                pool.config.minimumStakeAmount,
+                BigNumber(value),
+            );
+        }
+        return BigNumber(value);
+    }
+
+    async checkStakeWalletAmountSufficient(
+        amount: BN,
+        wallet: PublicKey,
+        tradeToken: TradeToken,
+    ): Promise<void> {
+        let balance = await BumpinTokenUtils.getTokenBalanceFromWallet(
+            this.program.provider.connection,
+            wallet,
+            tradeToken.mintKey,
         );
-        remainingAccounts.push({
-          pubkey: target.oracleKey,
-          isWritable,
-          isSigner: false,
+        let balanceAmount = new BN(balance.toString());
+        if (balanceAmount.lt(amount)) {
+            throw new BumpinValueInsufficient(
+                amount.toBigNumber(),
+                balanceAmount.toBigNumber(),
+            );
+        }
+    }
+
+    public async findUsingStake(poolKey: PublicKey, sync: boolean) {
+        let user = await this.getUser(sync);
+        return user.stakes.find(
+            (value, index, obj) =>
+                isEqual(value.userStakeStatus, UserStakeStatus.USING) &&
+                value.poolKey.equals(poolKey),
+        );
+    }
+
+    public async getUserTokenAccountByMint(mint: PublicKey) {
+        const tokenAccount =
+            await this.program.provider.connection.getTokenAccountsByOwner(
+                this.publicKey,
+                { mint: mint },
+            );
+        return tokenAccount.value.map((accountInfo: any) => {
+            const accountData = AccountLayout.decode(accountInfo.account.data);
+            const mint = new PublicKey(accountData.mint).toBase58();
+            const amount = accountData.amount; // Assuming the token has 9 decimal places
+            return {
+                pubkey: accountInfo.pubkey.toBase58(),
+                mint,
+                amount,
+            };
         });
-        let pda = BumpinUtils.getTradeTokenPda(this.program, target.index)[0];
-        remainingAccounts.push({
-          pubkey: pda,
-          isWritable,
-          isSigner: false,
-        });
-      }
     }
 
-    return remainingAccounts;
-  }
-
-  async checkStakeAmountFulfilRequirements(
-    size: number,
-    tradeToken: TradeToken,
-    pool: Pool
-  ): Promise<BigNumber> {
-    const price = (
-      await this.tradeTokenComponent.getTradeTokenPricesByMintKey(
-        tradeToken.mintKey
-      )
-    ).price;
-    if (!price) {
-      throw new BumpinInvalidParameter("Price data not found");
-    }
-    let value = price * size;
-    if (pool.config.minimumStakeAmount.gt(value)) {
-      throw new BumpinValueInsufficient(
-        pool.config.minimumStakeAmount,
-        BigNumber(value)
-      );
-    }
-    return BigNumber(value);
-  }
-
-  async checkStakeWalletAmountSufficient(
-    amount: BN,
-    wallet: PublicKey,
-    tradeToken: TradeToken
-  ): Promise<void> {
-    let balance = await BumpinTokenUtils.getTokenBalanceFromWallet(
-      this.program.provider.connection,
-      wallet,
-      tradeToken.mintKey
-    );
-    let balanceAmount = new BN(balance.toString());
-    if (balanceAmount.lt(amount)) {
-      throw new BumpinValueInsufficient(
-        amount.toBigNumber(),
-        balanceAmount.toBigNumber()
-      );
-    }
-  }
-
-  public async findUsingStake(poolKey: PublicKey, sync: boolean) {
-    let user = await this.getUser(sync);
-    return user.stakes.find(
-      (value, index, obj) =>
-        isEqual(value.userStakeStatus, UserStakeStatus.USING) &&
-        value.poolKey.equals(poolKey)
-    );
-  }
-
-  public async getUserTokenAccountByMint(mint: PublicKey) {
-    const tokenAccount =
-      await this.program.provider.connection.getTokenAccountsByOwner(
-        this.publicKey,
-        { mint: mint }
-      );
-    return tokenAccount.value.map((accountInfo: any) => {
-      const accountData = AccountLayout.decode(accountInfo.account.data);
-      const mint = new PublicKey(accountData.mint).toBase58();
-      const amount = accountData.amount; // Assuming the token has 9 decimal places
-      return {
-        pubkey: accountInfo.pubkey.toBase58(),
-        mint,
-        amount,
-      };
-    });
-  }
-
-  public async getUser(sync: boolean = false): Promise<User> {
-    let userWithSlot = await this.getUserWithSlot(sync);
-    return userWithSlot.data;
-  }
-
-  public async getUserWithSlot(
-    sync: boolean = false
-  ): Promise<DataAndSlot<User>> {
-    if (
-      !this.userAccountSubscriber ||
-      !this.userAccountSubscriber.isSubscribed
-    ) {
-      throw new BumpinSubscriptionFailed("User");
-    }
-    if (sync) {
-      await this.userAccountSubscriber.fetch();
-    }
-    let userAccount = this.userAccountSubscriber.getAccountAndSlot();
-    if (!userAccount) {
-      throw new BumpinAccountNotFound("User");
-    }
-    return userAccount;
-  }
-
-  private buildPortfolioRemainAccount(
-    marketIndex: number,
-    user: User,
-    tradeTokens: TradeToken[],
-    markets: Market[],
-    pools: Pool[],
-    param: PlaceOrderParams
-  ): Array<AccountMeta> {
-    let isActLong;
-    let isIncrease;
-    if (isEqual(param.positionSide, PositionSide.INCREASE)) {
-      isActLong = isEqual(param.orderSide, OrderSide.LONG);
-      isIncrease = true;
-    } else {
-      isActLong = isEqual(param.orderSide, OrderSide.SHORT);
-      isIncrease = false;
-    }
-    //trade_tokens
-    let accounts = this.getUserTradeTokenRemainingAccounts(
-      user,
-      tradeTokens,
-      true
-    );
-    let mainMarket = markets[marketIndex];
-    let baseTokenPool = BumpinPoolUtils.getPoolByPublicKey(
-      mainMarket.poolKey,
-      pools
-    );
-    let stablePool = BumpinPoolUtils.getPoolByPublicKey(
-      mainMarket.stablePoolKey,
-      pools
-    );
-    accounts.push({
-      pubkey: BumpinUtils.getMarketPda(this.program, mainMarket.index)[0],
-      isWritable: true,
-      isSigner: false,
-    });
-    accounts.push({
-      pubkey: mainMarket.indexMintOracle,
-      isWritable: true,
-      isSigner: false,
-    });
-    let baseTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
-      mainMarket.poolMintKey,
-      tradeTokens
-    );
-    accounts.push({
-      pubkey: mainMarket.poolMintKey,
-      isWritable: true,
-      isSigner: false,
-    });
-    accounts.push({
-      pubkey: baseTradeToken.oracleKey,
-      isWritable: true,
-      isSigner: false,
-    });
-    let stableTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
-      mainMarket.stablePoolMintKey,
-      tradeTokens
-    );
-    if (!isActLong) {
-      accounts.push({
-        pubkey: mainMarket.stablePoolMintKey,
-        isWritable: true,
-        isSigner: false,
-      });
-      accounts.push({
-        pubkey: stableTradeToken.oracleKey,
-        isWritable: true,
-        isSigner: false,
-      });
+    public async getUser(sync: boolean = false): Promise<User> {
+        let userWithSlot = await this.getUserWithSlot(sync);
+        return userWithSlot.data;
     }
 
-    if (!isIncrease) {
-      console.log(isActLong);
-      if (isActLong) {
+    public async getUserWithSlot(
+        sync: boolean = false,
+    ): Promise<DataAndSlot<User>> {
+        if (
+            !this.userAccountSubscriber ||
+            !this.userAccountSubscriber.isSubscribed
+        ) {
+            throw new BumpinSubscriptionFailed('User');
+        }
+        if (sync) {
+            await this.userAccountSubscriber.fetch();
+        }
+        let userAccount = this.userAccountSubscriber.getAccountAndSlot();
+        if (!userAccount) {
+            throw new BumpinAccountNotFound('User');
+        }
+        return userAccount;
+    }
+
+    private buildPortfolioRemainAccount(
+        marketIndex: number,
+        user: User,
+        tradeTokens: TradeToken[],
+        markets: Market[],
+        pools: Pool[],
+        param: PlaceOrderParams,
+    ): Array<AccountMeta> {
+        let isActLong;
+        let isIncrease;
+        if (isEqual(param.positionSide, PositionSide.INCREASE)) {
+            isActLong = isEqual(param.orderSide, OrderSide.LONG);
+            isIncrease = true;
+        } else {
+            isActLong = isEqual(param.orderSide, OrderSide.SHORT);
+            isIncrease = false;
+        }
+        //trade_tokens
+        let accounts = this.getUserTradeTokenRemainingAccounts(
+            user,
+            tradeTokens,
+            true,
+        );
+        let mainMarket = markets[marketIndex];
+        let baseTokenPool = BumpinPoolUtils.getPoolByPublicKey(
+            mainMarket.poolKey,
+            pools,
+        );
+        let stablePool = BumpinPoolUtils.getPoolByPublicKey(
+            mainMarket.stablePoolKey,
+            pools,
+        );
         accounts.push({
-          pubkey: baseTokenPool.poolVaultKey,
-          isWritable: true,
-          isSigner: false,
+            pubkey: BumpinUtils.getMarketPda(this.program, mainMarket.index)[0],
+            isWritable: true,
+            isSigner: false,
         });
         accounts.push({
-          pubkey: baseTradeToken.vaultKey,
-          isWritable: true,
-          isSigner: false,
+            pubkey: mainMarket.indexMintOracle,
+            isWritable: true,
+            isSigner: false,
         });
-      } else {
+        let baseTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+            mainMarket.poolMintKey,
+            tradeTokens,
+        );
         accounts.push({
-          pubkey: stablePool.poolVaultKey,
-          isWritable: true,
-          isSigner: false,
+            pubkey: mainMarket.poolMintKey,
+            isWritable: true,
+            isSigner: false,
         });
         accounts.push({
-          pubkey: stableTradeToken.vaultKey,
-          isWritable: true,
-          isSigner: false,
+            pubkey: baseTradeToken.oracleKey,
+            isWritable: true,
+            isSigner: false,
         });
-      }
-    }
+        let stableTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+            mainMarket.stablePoolMintKey,
+            tradeTokens,
+        );
+        if (!isActLong) {
+            accounts.push({
+                pubkey: mainMarket.stablePoolMintKey,
+                isWritable: true,
+                isSigner: false,
+            });
+            accounts.push({
+                pubkey: stableTradeToken.oracleKey,
+                isWritable: true,
+                isSigner: false,
+            });
+        }
 
-    user.positions.forEach((position) => {
-      if (isEqual(position.status, PositionStatus.USING)) {
+        if (!isIncrease) {
+            console.log(isActLong);
+            if (isActLong) {
+                accounts.push({
+                    pubkey: baseTokenPool.poolVaultKey,
+                    isWritable: true,
+                    isSigner: false,
+                });
+                accounts.push({
+                    pubkey: baseTradeToken.vaultKey,
+                    isWritable: true,
+                    isSigner: false,
+                });
+            } else {
+                accounts.push({
+                    pubkey: stablePool.poolVaultKey,
+                    isWritable: true,
+                    isSigner: false,
+                });
+                accounts.push({
+                    pubkey: stableTradeToken.vaultKey,
+                    isWritable: true,
+                    isSigner: false,
+                });
+            }
+        }
+
+        user.positions.forEach((position) => {
+            if (isEqual(position.status, PositionStatus.USING)) {
+                markets.forEach((market) => {
+                    if (market.symbol === position.symbol) {
+                        accounts.push({
+                            pubkey: BumpinUtils.getMarketPda(
+                                this.program,
+                                market.index,
+                            )[0],
+                            isWritable: true,
+                            isSigner: false,
+                        });
+                        accounts.push({
+                            pubkey: market.indexMintOracle,
+                            isWritable: true,
+                            isSigner: false,
+                        });
+                    }
+                });
+            }
+        });
+
         markets.forEach((market) => {
-          if (market.symbol === position.symbol) {
-            accounts.push({
-              pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
-              isWritable: true,
-              isSigner: false,
+            if (market.poolKey.equals(baseTokenPool.key)) {
+                accounts.push({
+                    pubkey: BumpinUtils.getMarketPda(
+                        this.program,
+                        market.index,
+                    )[0],
+                    isWritable: true,
+                    isSigner: false,
+                });
+                accounts.push({
+                    pubkey: market.indexMintOracle,
+                    isWritable: true,
+                    isSigner: false,
+                });
+            }
+        });
+        accounts.push({
+            pubkey: BumpinUtils.getPoolPda(
+                this.program,
+                baseTokenPool.index,
+            )[0],
+            isWritable: true,
+            isSigner: false,
+        });
+
+        accounts.push({
+            pubkey: BumpinUtils.getPoolPda(this.program, stablePool.index)[0],
+            isWritable: true,
+            isSigner: false,
+        });
+        if (isEqual(param.positionSide, PositionSide.DECREASE)) {
+            if (isEqual(param.orderSide, OrderSide.LONG)) {
+                accounts.push({
+                    pubkey: stablePool.poolVaultKey,
+                    isWritable: true,
+                    isSigner: false,
+                });
+            } else {
+                accounts.push({
+                    pubkey: baseTokenPool.poolVaultKey,
+                    isWritable: true,
+                    isSigner: false,
+                });
+            }
+        }
+        return accounts;
+    }
+
+    private buildIsolateRemainAccount(
+        marketIndex: number,
+        tradeTokens: TradeToken[],
+        markets: Market[],
+        pools: Pool[],
+        param: PlaceOrderParams,
+    ): Array<AccountMeta> {
+        let isActLong;
+        if (isEqual(param.positionSide, PositionSide.INCREASE)) {
+            isActLong = isEqual(param.orderSide, OrderSide.LONG);
+        } else {
+            isActLong = isEqual(param.orderSide, OrderSide.SHORT);
+        }
+        let remainingAccounts: Array<AccountMeta> = [];
+        //trade token
+        let mainMarket = markets[marketIndex];
+        let baseTokenPool = BumpinPoolUtils.getPoolByPublicKey(
+            mainMarket.poolKey,
+            pools,
+        );
+        let stablePool = BumpinPoolUtils.getPoolByPublicKey(
+            mainMarket.stablePoolKey,
+            pools,
+        );
+        remainingAccounts.push({
+            pubkey: BumpinUtils.getMarketPda(this.program, mainMarket.index)[0],
+            isWritable: true,
+            isSigner: false,
+        });
+        remainingAccounts.push({
+            pubkey: mainMarket.indexMintOracle,
+            isWritable: true,
+            isSigner: false,
+        });
+        let baseTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+            mainMarket.poolMintKey,
+            tradeTokens,
+        );
+        let stableTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+            mainMarket.stablePoolMintKey,
+            tradeTokens,
+        );
+        remainingAccounts.push({
+            pubkey: BumpinUtils.getPoolPda(
+                this.program,
+                baseTokenPool.index,
+            )[0],
+            isWritable: true,
+            isSigner: false,
+        });
+        remainingAccounts.push({
+            pubkey: BumpinUtils.getPoolPda(this.program, stablePool.index)[0],
+            isWritable: true,
+            isSigner: false,
+        });
+        remainingAccounts.push({
+            pubkey: BumpinUtils.getTradeTokenPda(
+                this.program,
+                baseTradeToken.index,
+            )[0],
+            isWritable: true,
+            isSigner: false,
+        });
+        remainingAccounts.push({
+            pubkey: baseTradeToken.oracleKey,
+            isWritable: true,
+            isSigner: false,
+        });
+        remainingAccounts.push({
+            pubkey: BumpinUtils.getTradeTokenPda(
+                this.program,
+                stableTradeToken.index,
+            )[0],
+            isWritable: true,
+            isSigner: false,
+        });
+        remainingAccounts.push({
+            pubkey: stableTradeToken.oracleKey,
+            isWritable: true,
+            isSigner: false,
+        });
+        if (isActLong) {
+            remainingAccounts.push({
+                pubkey: baseTokenPool.poolVaultKey,
+                isWritable: true,
+                isSigner: false,
             });
-            accounts.push({
-              pubkey: market.indexMintOracle,
-              isWritable: true,
-              isSigner: false,
+            remainingAccounts.push({
+                pubkey: baseTradeToken.vaultKey,
+                isWritable: true,
+                isSigner: false,
             });
-          }
+        } else {
+            remainingAccounts.push({
+                pubkey: stablePool.poolVaultKey,
+                isWritable: true,
+                isSigner: false,
+            });
+            remainingAccounts.push({
+                pubkey: stableTradeToken.vaultKey,
+                isWritable: true,
+                isSigner: false,
+            });
+        }
+        remainingAccounts.forEach((value) => {
+            console.log(value.pubkey.toString());
         });
-      }
-    });
-
-    markets.forEach((market) => {
-      if (market.poolKey.equals(baseTokenPool.key)) {
-        accounts.push({
-          pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
-          isWritable: true,
-          isSigner: false,
-        });
-        accounts.push({
-          pubkey: market.indexMintOracle,
-          isWritable: true,
-          isSigner: false,
-        });
-      }
-    });
-    accounts.push({
-      pubkey: BumpinUtils.getPoolPda(this.program, baseTokenPool.index)[0],
-      isWritable: true,
-      isSigner: false,
-    });
-
-    accounts.push({
-      pubkey: BumpinUtils.getPoolPda(this.program, stablePool.index)[0],
-      isWritable: true,
-      isSigner: false,
-    });
-    if (isEqual(param.positionSide, PositionSide.DECREASE)) {
-      if (isEqual(param.orderSide, OrderSide.LONG)) {
-        accounts.push({
-          pubkey: stablePool.poolVaultKey,
-          isWritable: true,
-          isSigner: false,
-        });
-      } else {
-        accounts.push({
-          pubkey: baseTokenPool.poolVaultKey,
-          isWritable: true,
-          isSigner: false,
-        });
-      }
+        return remainingAccounts;
     }
-    return accounts;
-  }
-
-  private buildIsolateRemainAccount(
-    marketIndex: number,
-    tradeTokens: TradeToken[],
-    markets: Market[],
-    pools: Pool[],
-    param: PlaceOrderParams
-  ): Array<AccountMeta> {
-    let isActLong;
-    if (isEqual(param.positionSide, PositionSide.INCREASE)) {
-      isActLong = isEqual(param.orderSide, OrderSide.LONG);
-    } else {
-      isActLong = isEqual(param.orderSide, OrderSide.SHORT);
-    }
-    let remainingAccounts: Array<AccountMeta> = [];
-    //trade token
-    let mainMarket = markets[marketIndex];
-    let baseTokenPool = BumpinPoolUtils.getPoolByPublicKey(
-      mainMarket.poolKey,
-      pools
-    );
-    let stablePool = BumpinPoolUtils.getPoolByPublicKey(
-      mainMarket.stablePoolKey,
-      pools
-    );
-    remainingAccounts.push({
-      pubkey: BumpinUtils.getMarketPda(this.program, mainMarket.index)[0],
-      isWritable: true,
-      isSigner: false,
-    });
-    remainingAccounts.push({
-      pubkey: mainMarket.indexMintOracle,
-      isWritable: true,
-      isSigner: false,
-    });
-    let baseTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
-      mainMarket.poolMintKey,
-      tradeTokens
-    );
-    let stableTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
-      mainMarket.stablePoolMintKey,
-      tradeTokens
-    );
-    remainingAccounts.push({
-      pubkey: BumpinUtils.getPoolPda(this.program, baseTokenPool.index)[0],
-      isWritable: true,
-      isSigner: false,
-    });
-    remainingAccounts.push({
-      pubkey: BumpinUtils.getPoolPda(this.program, stablePool.index)[0],
-      isWritable: true,
-      isSigner: false,
-    });
-    remainingAccounts.push({
-      pubkey: BumpinUtils.getTradeTokenPda(
-        this.program,
-        baseTradeToken.index
-      )[0],
-      isWritable: true,
-      isSigner: false,
-    });
-    remainingAccounts.push({
-      pubkey: baseTradeToken.oracleKey,
-      isWritable: true,
-      isSigner: false,
-    });
-    remainingAccounts.push({
-      pubkey: BumpinUtils.getTradeTokenPda(
-        this.program,
-        stableTradeToken.index
-      )[0],
-      isWritable: true,
-      isSigner: false,
-    });
-    remainingAccounts.push({
-      pubkey: stableTradeToken.oracleKey,
-      isWritable: true,
-      isSigner: false,
-    });
-    if (isActLong) {
-      remainingAccounts.push({
-        pubkey: baseTokenPool.poolVaultKey,
-        isWritable: true,
-        isSigner: false,
-      });
-      remainingAccounts.push({
-        pubkey: baseTradeToken.vaultKey,
-        isWritable: true,
-        isSigner: false,
-      });
-    } else {
-      remainingAccounts.push({
-        pubkey: stablePool.poolVaultKey,
-        isWritable: true,
-        isSigner: false,
-      });
-      remainingAccounts.push({
-        pubkey: stableTradeToken.vaultKey,
-        isWritable: true,
-        isSigner: false,
-      });
-    }
-    remainingAccounts.forEach((value) => {
-      console.log(value.pubkey.toString());
-    });
-    return remainingAccounts;
-  }
 }

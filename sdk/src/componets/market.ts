@@ -1,95 +1,99 @@
-import { PublicKey } from "@solana/web3.js";
-import { MarketAccount } from "../typedef";
-import { BulkAccountLoader } from "../account/bulkAccountLoader";
-import { Program } from "@coral-xyz/anchor";
-import { BumpinUtils } from "../utils/utils";
-import { BumpinTrade } from "../types/bumpin_trade";
+import { PublicKey } from '@solana/web3.js';
+import { MarketAccount } from '../typedef';
+import { BulkAccountLoader } from '../account/bulkAccountLoader';
+import { Program } from '@coral-xyz/anchor';
+import { BumpinUtils } from '../utils/utils';
+import { BumpinTrade } from '../types/bumpin_trade';
 // import {tokenToUsd} from "./utils/cal_utils";
-import { Component } from "./componet";
-import { PollingStateAccountSubscriber } from "../account/pollingStateAccountSubscriber";
-import { BumpinSubscriptionFailed } from "../errors";
-import { DataAndSlot } from "../account/types";
-import { PollingMarketAccountSubscriber } from "../account/pollingMarketAccountSubscriber";
-import { TradeTokenComponent } from "./tradeToken";
-import { Market } from "../beans/beans";
+import { Component } from './componet';
+import { PollingStateAccountSubscriber } from '../account/pollingStateAccountSubscriber';
+import { BumpinSubscriptionFailed } from '../errors';
+import { DataAndSlot } from '../account/types';
+import { PollingMarketAccountSubscriber } from '../account/pollingMarketAccountSubscriber';
+import { TradeTokenComponent } from './tradeToken';
+import { Market } from '../beans/beans';
 
 export class MarketComponent extends Component {
-  program: Program<BumpinTrade>;
-  markets: Map<string, PollingMarketAccountSubscriber> = new Map();
+    program: Program<BumpinTrade>;
+    markets: Map<string, PollingMarketAccountSubscriber> = new Map();
 
-  constructor(
-    bulkAccountLoader: BulkAccountLoader,
-    stateSubscriber: PollingStateAccountSubscriber,
-    tradeTokenComponent: TradeTokenComponent,
-    program: Program<BumpinTrade>
-  ) {
-    super(stateSubscriber, program);
-    let state = super.getStateSync();
-    this.program = program;
-    for (let i = 0; i < state.marketSequence; i++) {
-      const [pda, _] = BumpinUtils.getMarketPda(this.program, i);
-      let marketAccountSubscriber = new PollingMarketAccountSubscriber(
-        program,
-        pda,
-        bulkAccountLoader,
-        tradeTokenComponent
-      );
-      this.markets.set(pda.toString(), marketAccountSubscriber);
+    constructor(
+        bulkAccountLoader: BulkAccountLoader,
+        stateSubscriber: PollingStateAccountSubscriber,
+        tradeTokenComponent: TradeTokenComponent,
+        program: Program<BumpinTrade>,
+    ) {
+        super(stateSubscriber, program);
+        let state = super.getStateSync();
+        this.program = program;
+        for (let i = 0; i < state.marketSequence; i++) {
+            const [pda, _] = BumpinUtils.getMarketPda(this.program, i);
+            let marketAccountSubscriber = new PollingMarketAccountSubscriber(
+                program,
+                pda,
+                bulkAccountLoader,
+                tradeTokenComponent,
+            );
+            this.markets.set(pda.toString(), marketAccountSubscriber);
+        }
     }
-  }
 
-  public async subscribe() {
-    for (let marketAccountSubscriber of this.markets.values()) {
-      await marketAccountSubscriber.subscribe();
+    public async subscribe() {
+        for (let marketAccountSubscriber of this.markets.values()) {
+            await marketAccountSubscriber.subscribe();
+        }
     }
-  }
 
-  public async unsubscribe() {
-    for (let marketAccountSubscriber of this.markets.values()) {
-      await marketAccountSubscriber.unsubscribe();
+    public async unsubscribe() {
+        for (let marketAccountSubscriber of this.markets.values()) {
+            await marketAccountSubscriber.unsubscribe();
+        }
     }
-  }
 
-  public async getMarkets(sync: boolean = false): Promise<Market[]> {
-    let markets = await this.getMarketsWithSlot(sync);
-    return markets.map((dataAndSlot) => dataAndSlot.data);
-  }
-
-  public async getMarketsWithSlot(
-    sync: boolean = false
-  ): Promise<DataAndSlot<Market>[]> {
-    let marketsWithSlot: DataAndSlot<Market>[] = [];
-    for (let marketAccountSubscriber of this.markets.values()) {
-      if (sync) {
-        await marketAccountSubscriber.fetch();
-      }
-      marketsWithSlot.push(marketAccountSubscriber.getAccountAndSlot());
+    public async getMarkets(sync: boolean = false): Promise<Market[]> {
+        let markets = await this.getMarketsWithSlot(sync);
+        return markets.map((dataAndSlot) => dataAndSlot.data);
     }
-    return marketsWithSlot;
-  }
 
-  public async getMarket(
-    marketPublicKey: PublicKey,
-    sync: boolean = false
-  ): Promise<Market> {
-    let marketWithSlot = await this.getMarketWithSlot(marketPublicKey, sync);
-    return marketWithSlot.data;
-  }
+    public async getMarketsWithSlot(
+        sync: boolean = false,
+    ): Promise<DataAndSlot<Market>[]> {
+        let marketsWithSlot: DataAndSlot<Market>[] = [];
+        for (let marketAccountSubscriber of this.markets.values()) {
+            if (sync) {
+                await marketAccountSubscriber.fetch();
+            }
+            marketsWithSlot.push(marketAccountSubscriber.getAccountAndSlot());
+        }
+        return marketsWithSlot;
+    }
 
-  public async getMarketWithSlot(
-    marketPublicKey: PublicKey,
-    sync: boolean = false
-  ): Promise<DataAndSlot<Market>> {
-    const marketAccountSubscriber: PollingMarketAccountSubscriber | undefined =
-      this.markets.get(marketPublicKey.toString());
-    if (marketAccountSubscriber === undefined) {
-      throw new BumpinSubscriptionFailed(
-        `Market with the key ${marketPublicKey} does not exist`
-      );
+    public async getMarket(
+        marketPublicKey: PublicKey,
+        sync: boolean = false,
+    ): Promise<Market> {
+        let marketWithSlot = await this.getMarketWithSlot(
+            marketPublicKey,
+            sync,
+        );
+        return marketWithSlot.data;
     }
-    if (sync) {
-      await marketAccountSubscriber.fetch();
+
+    public async getMarketWithSlot(
+        marketPublicKey: PublicKey,
+        sync: boolean = false,
+    ): Promise<DataAndSlot<Market>> {
+        const marketAccountSubscriber:
+            | PollingMarketAccountSubscriber
+            | undefined = this.markets.get(marketPublicKey.toString());
+        if (marketAccountSubscriber === undefined) {
+            throw new BumpinSubscriptionFailed(
+                `Market with the key ${marketPublicKey} does not exist`,
+            );
+        }
+        if (sync) {
+            await marketAccountSubscriber.fetch();
+        }
+        return marketAccountSubscriber.getAccountAndSlot();
     }
-    return marketAccountSubscriber.getAccountAndSlot();
-  }
 }

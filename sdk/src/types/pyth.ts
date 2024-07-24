@@ -5,56 +5,56 @@
  * IDL can be found at `target/idl/pyth.json`.
  */
 export type Pyth = {
-  address: "AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca";
-  metadata: {
-    name: "pyth";
-    version: "0.1.0";
-    spec: "0.1.0";
-  };
-  instructions: [
-    {
-      name: "initialize";
-      discriminator: [175, 175, 109, 31, 13, 152, 155, 237];
-      accounts: [
+    address: 'AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca';
+    metadata: {
+        name: 'pyth';
+        version: '0.1.0';
+        spec: '0.1.0';
+    };
+    instructions: [
         {
-          name: "price";
-          writable: true;
-        }
-      ];
-      args: [
-        {
-          name: "price";
-          type: "i64";
+            name: 'initialize';
+            discriminator: [175, 175, 109, 31, 13, 152, 155, 237];
+            accounts: [
+                {
+                    name: 'price';
+                    writable: true;
+                },
+            ];
+            args: [
+                {
+                    name: 'price';
+                    type: 'i64';
+                },
+                {
+                    name: 'exponent';
+                    type: 'i32';
+                },
+                {
+                    name: 'conf';
+                    type: 'u64';
+                },
+            ];
         },
         {
-          name: "exponent";
-          type: "i32";
+            name: 'setPrice';
+            discriminator: [16, 19, 182, 8, 149, 83, 72, 181];
+            accounts: [
+                {
+                    name: 'price';
+                    writable: true;
+                },
+            ];
+            args: [
+                {
+                    name: 'price';
+                    type: 'i64';
+                },
+                {
+                    name: 'conf';
+                    type: 'u64';
+                },
+            ];
         },
-        {
-          name: "conf";
-          type: "u64";
-        }
-      ];
-    },
-    {
-      name: "setPrice";
-      discriminator: [16, 19, 182, 8, 149, 83, 72, 181];
-      accounts: [
-        {
-          name: "price";
-          writable: true;
-        }
-      ];
-      args: [
-        {
-          name: "price";
-          type: "i64";
-        },
-        {
-          name: "conf";
-          type: "u64";
-        }
-      ];
-    }
-  ];
+    ];
 };

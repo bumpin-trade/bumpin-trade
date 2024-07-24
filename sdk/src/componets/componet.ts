@@ -1,61 +1,81 @@
-import { DataAndSlot } from "../account/types";
-import { StateAccount } from "../typedef";
-import { Program } from "@coral-xyz/anchor";
-import { BumpinTrade } from "../types/bumpin_trade";
-import { PollingStateAccountSubscriber } from "../account/pollingStateAccountSubscriber";
+import {DataAndSlot} from '../account/types';
+import {Program, Wallet} from '@coral-xyz/anchor';
+import {BumpinTrade} from '../types/bumpin_trade';
+import {PollingStateAccountSubscriber} from '../account/pollingStateAccountSubscriber';
+import {BumpinAccountNotFound, BumpinClientInternalError, BumpinSubscriptionFailed,} from '../errors';
+import {State} from '../beans/beans';
 import {
-  BumpinAccountNotFound,
-  BumpinClientInternalError,
-  BumpinSubscriptionFailed,
-} from "../errors";
-import { State } from "../beans/beans";
+    AddressLookupTableAccount,
+    PublicKey,
+    TransactionInstruction,
+    TransactionMessage,
+    VersionedTransaction,
+} from '@solana/web3.js';
 
 export abstract class Component {
-  stateSubscriber: PollingStateAccountSubscriber;
-  program: Program<BumpinTrade>;
+    // account lookup table
+    essentialAccountAltPublicKey: PublicKey | undefined;
+    essentialAccounts: AddressLookupTableAccount[] = [];
 
-  constructor(
-    stateSubscriber: PollingStateAccountSubscriber,
-    program: Program<BumpinTrade>
-  ) {
-    if (!stateSubscriber.isSubscribed) {
-      throw new BumpinClientInternalError("State not subscribed");
-    }
-    this.stateSubscriber = stateSubscriber;
-    this.program = program;
-  }
+    wallet: Wallet | undefined;
+    stateSubscriber: PollingStateAccountSubscriber;
+    program: Program<BumpinTrade>;
 
-  protected getStateWithSlotSync(): DataAndSlot<State> {
-    let stateAccount = this.stateSubscriber.state;
-    if (!stateAccount) {
-      throw new BumpinAccountNotFound("State");
+    constructor(
+        stateSubscriber: PollingStateAccountSubscriber,
+        program: Program<BumpinTrade>,
+    ) {
+        if (!stateSubscriber.isSubscribed) {
+            throw new BumpinClientInternalError('State not subscribed');
+        }
+        this.stateSubscriber = stateSubscriber;
+        this.program = program;
     }
-    return stateAccount;
-  }
 
-  protected getStateSync(): State {
-    let stateAccount = this.stateSubscriber.getAccountAndSlot();
-    return stateAccount.data;
-  }
+    protected getStateWithSlotSync(): DataAndSlot<State> {
+        let stateAccount = this.stateSubscriber.state;
+        if (!stateAccount) {
+            throw new BumpinAccountNotFound('State');
+        }
+        return stateAccount;
+    }
 
-  protected async getState(sync: boolean = false): Promise<State> {
-    let stateWithSlot = await this.getStateWithSlot(sync);
-    return stateWithSlot.data;
-  }
+    protected getStateSync(): State {
+        let stateAccount = this.stateSubscriber.getAccountAndSlot();
+        return stateAccount.data;
+    }
 
-  protected async getStateWithSlot(
-    sync: boolean = false
-  ): Promise<DataAndSlot<State>> {
-    if (!this.stateSubscriber || !this.stateSubscriber.isSubscribed) {
-      throw new BumpinSubscriptionFailed("State");
+    protected async getState(sync: boolean = false): Promise<State> {
+        let stateWithSlot = await this.getStateWithSlot(sync);
+        return stateWithSlot.data;
     }
-    if (sync) {
-      await this.stateSubscriber.fetch();
+
+    protected async getStateWithSlot(
+        sync: boolean = false,
+    ): Promise<DataAndSlot<State>> {
+        if (!this.stateSubscriber || !this.stateSubscriber.isSubscribed) {
+            throw new BumpinSubscriptionFailed('State');
+        }
+        if (sync) {
+            await this.stateSubscriber.fetch();
+        }
+        let stateAccount = this.stateSubscriber.state;
+        if (!stateAccount) {
+            throw new BumpinAccountNotFound('State');
+        }
+        return stateAccount;
     }
-    let stateAccount = this.stateSubscriber.state;
-    if (!stateAccount) {
-      throw new BumpinAccountNotFound("State");
+
+    protected async sendAndConfirm(ixs: TransactionInstruction[]) {
+        let lastBlockHash =
+            await this.program.provider.connection.getLatestBlockhash();
+        let blockhash = lastBlockHash.blockhash;
+        const messageV0 = new TransactionMessage({
+            payerKey: this.wallet!.publicKey,
+            recentBlockhash: blockhash,
+            instructions: ixs,
+        }).compileToV0Message(this.essentialAccounts);
+        const transactionV0 = new VersionedTransaction(messageV0);
+        await this.program.provider.sendAndConfirm!(transactionV0, []);
     }
-    return stateAccount;
-  }
 }
