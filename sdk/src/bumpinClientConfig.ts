@@ -12,6 +12,7 @@ export enum NetType {
 
 export type BumpinClientConfig = {
     netType: NetType;
+    verbose: boolean;
     endpoint: string;
     wallet: Wallet;
     connectionConfig?: ConnectionConfig;
@@ -28,6 +29,7 @@ export class BumpinClientConfigBuilder {
     ) {
         this.config = {
             netType,
+            verbose: false,
             endpoint,
             wallet: new NoneWallet(),
             pollingFrequency: 1000,
@@ -58,6 +60,11 @@ export class BumpinClientConfigBuilder {
             endpoint,
             connectionConfig,
         );
+    }
+
+    public verbose(verbose: boolean): BumpinClientConfigBuilder {
+        this.config.verbose = verbose;
+        return this;
     }
 
     public wallet(wallet: Wallet): BumpinClientConfigBuilder {

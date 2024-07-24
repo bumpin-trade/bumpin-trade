@@ -1,34 +1,50 @@
-import {DataAndSlot} from '../account/types';
-import {Program, Wallet} from '@coral-xyz/anchor';
-import {BumpinTrade} from '../types/bumpin_trade';
-import {PollingStateAccountSubscriber} from '../account/pollingStateAccountSubscriber';
-import {BumpinAccountNotFound, BumpinClientInternalError, BumpinSubscriptionFailed,} from '../errors';
-import {State} from '../beans/beans';
+import { DataAndSlot } from '../account/types';
+import { Program, Wallet } from '@coral-xyz/anchor';
+import { BumpinTrade } from '../types/bumpin_trade';
+import { PollingStateAccountSubscriber } from '../account/pollingStateAccountSubscriber';
+import {
+    BumpinAccountNotFound,
+    BumpinClientInternalError,
+    BumpinSubscriptionFailed,
+} from '../errors';
+import { State } from '../beans/beans';
 import {
     AddressLookupTableAccount,
-    PublicKey,
+    ConfirmOptions,
     TransactionInstruction,
     TransactionMessage,
     VersionedTransaction,
 } from '@solana/web3.js';
+import { BumpinClientConfig } from '../bumpinClientConfig';
 
 export abstract class Component {
+    readonly config: BumpinClientConfig;
+    readonly defaultConfirmOptions: ConfirmOptions;
+
     // account lookup table
-    essentialAccountAltPublicKey: PublicKey | undefined;
     essentialAccounts: AddressLookupTableAccount[] = [];
 
     wallet: Wallet | undefined;
     stateSubscriber: PollingStateAccountSubscriber;
+
     program: Program<BumpinTrade>;
 
     constructor(
+        config: BumpinClientConfig,
+        defaultConfirmOptions: ConfirmOptions,
         stateSubscriber: PollingStateAccountSubscriber,
         program: Program<BumpinTrade>,
+        wallet?: Wallet,
+        essentialAccounts: AddressLookupTableAccount[] = [],
     ) {
         if (!stateSubscriber.isSubscribed) {
             throw new BumpinClientInternalError('State not subscribed');
         }
+        this.config = config;
         this.stateSubscriber = stateSubscriber;
+        this.defaultConfirmOptions = defaultConfirmOptions;
+        this.wallet = wallet;
+        this.essentialAccounts = essentialAccounts;
         this.program = program;
     }
 
@@ -66,7 +82,10 @@ export abstract class Component {
         return stateAccount;
     }
 
-    protected async sendAndConfirm(ixs: TransactionInstruction[]) {
+    protected async sendAndConfirm(
+        ixs: TransactionInstruction[],
+        opts?: ConfirmOptions,
+    ) {
         let lastBlockHash =
             await this.program.provider.connection.getLatestBlockhash();
         let blockhash = lastBlockHash.blockhash;
@@ -76,6 +95,7 @@ export abstract class Component {
             instructions: ixs,
         }).compileToV0Message(this.essentialAccounts);
         const transactionV0 = new VersionedTransaction(messageV0);
-        await this.program.provider.sendAndConfirm!(transactionV0, []);
+        const options = opts || this.defaultConfirmOptions;
+        await this.program.provider.sendAndConfirm!(transactionV0, [], options);
     }
 }

@@ -1,6 +1,10 @@
-import { PublicKey } from '@solana/web3.js';
+import {
+    AddressLookupTableAccount,
+    ConfirmOptions,
+    PublicKey,
+} from '@solana/web3.js';
 import { BulkAccountLoader } from '../account/bulkAccountLoader';
-import { Program } from '@coral-xyz/anchor';
+import { Program, Wallet } from '@coral-xyz/anchor';
 import { BumpinUtils } from '../utils/utils';
 import { BumpinTrade } from '../types/bumpin_trade';
 import { Component } from './componet';
@@ -11,6 +15,7 @@ import { PollingTradeTokenAccountSubscriber } from '../account/pollingTradeToken
 import { StashedPythClient } from '../oracles/stashedPythClient';
 import { PriceData } from '@pythnetwork/client';
 import { TradeToken } from '../beans/beans';
+import { BumpinClientConfig } from '../bumpinClientConfig';
 
 export class TradeTokenComponent extends Component {
     bulkAccountLoader: BulkAccountLoader;
@@ -20,11 +25,22 @@ export class TradeTokenComponent extends Component {
     tradeTokenOraclePyths: Map<string, StashedPythClient> = new Map();
 
     constructor(
+        config: BumpinClientConfig,
+        defaultConfirmOptions: ConfirmOptions,
         bulkAccountLoader: BulkAccountLoader,
         stateSubscriber: PollingStateAccountSubscriber,
         program: Program<BumpinTrade>,
+        wallet?: Wallet,
+        essentialAccounts: AddressLookupTableAccount[] = [],
     ) {
-        super(stateSubscriber, program);
+        super(
+            config,
+            defaultConfirmOptions,
+            stateSubscriber,
+            program,
+            wallet,
+            essentialAccounts,
+        );
         let state = super.getStateSync();
         this.bulkAccountLoader = bulkAccountLoader;
         this.program = program;

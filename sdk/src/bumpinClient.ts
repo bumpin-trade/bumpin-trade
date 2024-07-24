@@ -63,7 +63,8 @@ import { BumpinPositionUtils } from './utils/position';
 import { BumpinUserUtils } from './utils/user';
 
 export class BumpinClient {
-    netType: NetType;
+    readonly config: BumpinClientConfig;
+    readonly netType: NetType;
     connection: Connection;
     wallet: Wallet;
     provider: AnchorProvider;
@@ -90,6 +91,7 @@ export class BumpinClient {
     userComponent: UserComponent | undefined;
 
     constructor(config: BumpinClientConfig) {
+        this.config = config;
         this.netType = config.netType;
         this.connection = new Connection(
             config.endpoint,
@@ -164,6 +166,8 @@ export class BumpinClient {
         ).value;
 
         this.tradeTokenComponent = new TradeTokenComponent(
+            this.config,
+            BumpinUtils.getDefaultConfirmOptions(),
             this.bulkAccountLoader,
             this.stateSubscriber,
             this.program,
@@ -171,25 +175,37 @@ export class BumpinClient {
         await this.tradeTokenComponent.subscribe();
 
         this.poolComponent = new PoolComponent(
+            this.config,
+            BumpinUtils.getDefaultConfirmOptions(),
             this.bulkAccountLoader,
             this.stateSubscriber,
             this.tradeTokenComponent,
             this.program,
+            this.wallet,
+            this.essentialAccounts === null ? [] : [this.essentialAccounts],
         );
         await this.poolComponent.subscribe();
 
         this.marketComponent = new MarketComponent(
+            this.config,
+            BumpinUtils.getDefaultConfirmOptions(),
             this.bulkAccountLoader,
             this.stateSubscriber,
             this.tradeTokenComponent,
             this.program,
+            this.wallet,
+            this.essentialAccounts === null ? [] : [this.essentialAccounts],
         );
         const p1 = this.marketComponent.subscribe();
 
         this.rewardComponent = new RewardsComponent(
+            this.config,
+            BumpinUtils.getDefaultConfirmOptions(),
             this.bulkAccountLoader,
             this.stateSubscriber,
             this.program,
+            this.wallet,
+            this.essentialAccounts === null ? [] : [this.essentialAccounts],
         );
         const p2 = this.rewardComponent.subscribe();
 
@@ -210,12 +226,18 @@ export class BumpinClient {
             )) as any as UserAccount;
             if (me) {
                 this.userComponent = new UserComponent(
+                    this.config,
+                    BumpinUtils.getDefaultConfirmOptions(),
                     this.wallet.publicKey,
                     this.bulkAccountLoader,
                     this.stateSubscriber,
                     this.tradeTokenComponent!,
                     this.poolComponent!,
                     this.program,
+                    this.wallet,
+                    this.essentialAccounts === null
+                        ? []
+                        : [this.essentialAccounts],
                 );
                 await this.userComponent.subscribe();
                 console.log('User logged in');

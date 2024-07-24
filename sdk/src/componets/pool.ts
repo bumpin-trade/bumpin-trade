@@ -1,7 +1,11 @@
-import { PublicKey } from '@solana/web3.js';
+import {
+    AddressLookupTableAccount,
+    ConfirmOptions,
+    PublicKey,
+} from '@solana/web3.js';
 import { PollingPoolAccountSubscriber } from '../account/pollingPoolAccountSubscriber';
 import { BulkAccountLoader } from '../account/bulkAccountLoader';
-import { Program } from '@coral-xyz/anchor';
+import { Program, Wallet } from '@coral-xyz/anchor';
 import { BumpinUtils } from '../utils/utils';
 import { BumpinTrade } from '../types/bumpin_trade';
 // import {tokenToUsd} from "./utils/cal_utils";
@@ -11,18 +15,30 @@ import { BumpinSubscriptionFailed } from '../errors';
 import { DataAndSlot } from '../account/types';
 import { TradeTokenComponent } from './tradeToken';
 import { Pool } from '../beans/beans';
+import { BumpinClientConfig } from '../bumpinClientConfig';
 
 export class PoolComponent extends Component {
     program: Program<BumpinTrade>;
     pools: Map<string, PollingPoolAccountSubscriber> = new Map();
 
     constructor(
+        config: BumpinClientConfig,
+        defaultConfirmOptions: ConfirmOptions,
         bulkAccountLoader: BulkAccountLoader,
         stateSubscriber: PollingStateAccountSubscriber,
         tradeTokenComponent: TradeTokenComponent,
         program: Program<BumpinTrade>,
+        wallet?: Wallet,
+        essentialAccounts: AddressLookupTableAccount[] = [],
     ) {
-        super(stateSubscriber, program);
+        super(
+            config,
+            defaultConfirmOptions,
+            stateSubscriber,
+            program,
+            wallet,
+            essentialAccounts,
+        );
         let state = super.getStateSync();
         this.program = program;
         for (let i = 0; i < state.poolSequence; i++) {
