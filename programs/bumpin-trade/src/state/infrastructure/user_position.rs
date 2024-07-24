@@ -420,9 +420,11 @@ impl UserPosition {
                 .safe_sub(self.open_borrowing_fee_per_token)?,
             initial_margin_leverage,
         )?;
-        borrowing_fee_total_usd = borrowing_fee_total_usd.safe_add(
-            calculator::token_value_in_usd(borrowing_fee, trade_token_decimals, margin_mint_price)?,
-        )?;
+        borrowing_fee_total_usd = borrowing_fee_total_usd.safe_add(calculator::token_to_usd_u(
+            borrowing_fee,
+            trade_token_decimals,
+            margin_mint_price,
+        )?)?;
         Ok(funding_fee_total_usd
             .safe_add(borrowing_fee_total_usd.cast()?)?
             .safe_add(self.close_fee_in_usd.cast()?)?)

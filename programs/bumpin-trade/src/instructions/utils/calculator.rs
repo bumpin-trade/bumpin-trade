@@ -110,11 +110,7 @@ pub fn usd_to_token_i(usd_value: i128, decimals: u16, token_price: u128) -> Bump
     )
 }
 
-pub fn token_value_in_usd(
-    token_amount: u128,
-    decimals: u16,
-    token_price: u128,
-) -> BumpResult<u128> {
+pub fn token_to_usd_u(token_amount: u128, decimals: u16, token_price: u128) -> BumpResult<u128> {
     token_amount
         .safe_mul(token_price)?
         .safe_mul(PRICE_TO_USD_PRECISION)?

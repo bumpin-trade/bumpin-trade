@@ -49,10 +49,8 @@ pub fn stake(
     if pool.total_supply > 0 {
         let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle_key)?;
 
-        supply_amount = calculator::token_value_in_usd(
-            mint_amount,
-            trade_token.decimals,
-            oracle_price_data.price,
+        supply_amount =
+            calculator::token_to_usd_u(mint_amount, trade_token.decimals, oracle_price_data.price
         )?
             .safe_div_small_rate(pool.get_pool_net_price(
                 trade_token_map,
@@ -86,10 +84,8 @@ pub fn portfolio_to_stake(
     if pool.total_supply > 0 {
         let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle_key)?;
 
-        supply_amount = calculator::token_value_in_usd(
-            mint_amount,
-            trade_token.decimals,
-            oracle_price_data.price,
+        supply_amount =
+            calculator::token_to_usd_u(mint_amount, trade_token.decimals, oracle_price_data.price
         )?
             .safe_div_small_rate(pool.get_pool_net_price(
                 trade_token_map,

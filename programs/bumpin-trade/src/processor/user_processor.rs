@@ -23,7 +23,7 @@ pub fn withdraw(
     trade_token_map: &TradeTokenMap,
 ) -> BumpResult {
     let price = oracle_map.get_price_data(oracle)?.price;
-    let withdraw_usd = calculator::token_value_in_usd(amount, trade_token.decimals, price)?;
+    let withdraw_usd = calculator::token_to_usd_u(amount, trade_token.decimals, price)?;
 
     let available_value = user.get_available_value(trade_token_map, oracle_map)?;
     validate!(

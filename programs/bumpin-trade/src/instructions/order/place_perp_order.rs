@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
@@ -80,7 +80,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     let AccountMaps { trade_token_map, mut oracle_map, market_map, pool_map, vault_map } =
         load_maps(remaining_accounts)?;
     let market = market_map.get_mut_ref(&order.symbol)?;
-    let user = &mut ctx.accounts.user.load_mut()?;
+    let mut user = ctx.accounts.user.load_mut()?;
     let pool = match use_base_token(&order.position_side, &order.order_side)? {
         true => pool_map.get_mut_ref(&market.pool_key)?,
         false => pool_map.get_mut_ref(&market.stable_pool_key)?,
@@ -107,7 +107,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         BumpErrorCode::InvalidParam
     )?;
 
-    if order.position_side == PositionSide::INCREASE && !order.is_portfolio_margin {
+    if order.position_side.eq(&PositionSide::INCREASE) && !order.is_portfolio_margin {
         //isolate order, transfer order_margin into pool
         token::receive(
             &ctx.accounts.token_program,
@@ -119,7 +119,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
     }
     if order.position_side.eq(&PositionSide::INCREASE) && order.is_portfolio_margin {
         //hold usd
-        user.add_order_hold_in_usd(order.order_margin)?;
+        user.deref_mut().add_order_hold_in_usd(order.order_margin)?;
     }
 
     if user.has_other_short_order(order.symbol, margin_token.key(), order.is_portfolio_margin)? {
@@ -154,7 +154,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         let bump_signer_account_info = &ctx.accounts.bump_signer;
         let token_program = &ctx.accounts.token_program;
         position_processor::handle_execute_order(
-            user,
+            user.deref_mut(),
             &market_map,
             &pool_map,
             state_account,
