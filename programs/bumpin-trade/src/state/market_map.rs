@@ -80,7 +80,7 @@ impl<'a> MarketMap<'a> {
                 continue;
             }
             let data =
-                account_info.try_borrow_data().or(Err(BumpErrorCode::CouldNotLoadMarketData))?;
+                account_info.try_borrow_data().unwrap();
 
             let expected_data_len = Market::SIZE;
             if data.len() < expected_data_len {
