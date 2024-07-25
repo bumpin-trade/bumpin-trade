@@ -24,6 +24,7 @@ pub fn withdraw(
     let withdraw_usd = calculator::token_to_usd_u(amount,trade_token .decimals, price)?;
 
     let available_value = user.get_available_value(trade_tokens, oracle_map)?;
+    msg!("available_value: {}, withdraw_usd: {}", available_value.abs().cast::<u128>()?,withdraw_usd );
     validate!(
         available_value.abs().cast::<u128>()? > withdraw_usd,
         BumpErrorCode::UserNotEnoughValue
