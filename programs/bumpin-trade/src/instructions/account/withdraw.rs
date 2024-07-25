@@ -11,7 +11,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 #[derive(Accounts)]
-#[instruction(_token_index: u16,)]
+#[instruction(token_index: u16,)]
 pub struct Withdraw<'info> {
     #[account(
         seeds = [b"bump_state".as_ref()],
@@ -36,7 +36,7 @@ pub struct Withdraw<'info> {
 
     #[account(
         mut,
-        seeds = [b"trade_token_vault", _token_index.to_le_bytes().as_ref()],
+        seeds = [b"trade_token_vault", token_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub trade_token_vault: Account<'info, TokenAccount>,
@@ -54,30 +54,28 @@ pub struct Withdraw<'info> {
 #[track_caller]
 pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, Withdraw>,
-    _token_index: u16,
+    token_index: u16,
     amount: u128,
 ) -> Result<()> {
+    msg!("=============handle_withdraw, amount:{}", amount);
     validate!(amount > 0, BumpErrorCode::AmountZero)?;
 
     let mut user = ctx.accounts.user.load_mut()?;
     let token_mint = &ctx.accounts.user_token_account.mint;
-
     let user_token = user.get_user_token_ref(token_mint)?;
     validate!(user_token.amount > amount, BumpErrorCode::AmountNotEnough)?;
 
     let remaining_accounts = ctx.remaining_accounts;
+    let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts)?;
 
-    let AccountMaps {  trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts)?;
+    let trade_token = trade_token_map.get_trade_token_by_mint_ref(token_mint)?;
+    validate!(trade_token.index == token_index && trade_token.mint_key.eq(token_mint), BumpErrorCode::InvalidParam)?;
+    drop(trade_token);
 
-    user_processor::withdraw(
-        &mut user,
-        amount,
-        token_mint,
-        &mut oracle_map,
-        &trade_token_map,
-    )?;
+    user_processor::withdraw(&mut user, amount, token_mint, &mut oracle_map, &trade_token_map)?;
 
-    trade_token_map.get_trade_token_by_mint_ref_mut(token_mint)?.sub_amount(amount)?;
+    let mut trade_token = trade_token_map.get_trade_token_by_mint_ref_mut(token_mint)?;
+    trade_token.sub_amount(amount)?;
 
     let bump_signer_nonce = ctx.accounts.state.bump_signer_nonce;
     utils::token::send_from_program_vault(

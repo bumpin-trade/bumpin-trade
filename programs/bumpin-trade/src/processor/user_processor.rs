@@ -21,10 +21,14 @@ pub fn withdraw(
 ) -> BumpResult {
     let trade_token = trade_tokens.get_trade_token_by_mint_ref(token_mint)?;
     let price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
-    let withdraw_usd = calculator::token_to_usd_u(amount,trade_token .decimals, price)?;
+    let withdraw_usd = calculator::token_to_usd_u(amount, trade_token.decimals, price)?;
 
     let available_value = user.get_available_value(trade_tokens, oracle_map)?;
-    msg!("available_value: {}, withdraw_usd: {}", available_value.abs().cast::<u128>()?,withdraw_usd );
+    msg!(
+        "available_value: {}, withdraw_usd: {}",
+        available_value.abs().cast::<u128>()?,
+        withdraw_usd
+    );
     validate!(
         available_value.abs().cast::<u128>()? > withdraw_usd,
         BumpErrorCode::UserNotEnoughValue

@@ -124,8 +124,8 @@ pub fn handle_execute_order<'info>(
 
                 let mut trade_token =
                     trade_token_map.get_trade_token_by_mint_ref_mut(&market.pool_mint_key)?;
-                let mut stable_trade_token =
-                    trade_token_map.get_trade_token_by_mint_ref_mut(&market.stable_pool_mint_key)?;
+                let mut stable_trade_token = trade_token_map
+                    .get_trade_token_by_mint_ref_mut(&market.stable_pool_mint_key)?;
                 //collect open fee
                 let fee = if user_order.order_side.eq(&OrderSide::LONG) {
                     fee_processor::collect_long_open_position_fee(

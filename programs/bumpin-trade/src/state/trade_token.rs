@@ -33,6 +33,7 @@ impl TradeToken {
         Ok(())
     }
     pub fn sub_amount(&mut self, amount: u128) -> BumpResult {
+        validate!(self.total_amount >= amount, BumpErrorCode::AmountNotEnough)?;
         self.total_amount = self.total_amount.safe_sub(amount)?;
         Ok(())
     }
