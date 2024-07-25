@@ -12,7 +12,7 @@ use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::{User, UserTokenUpdateReason};
 use crate::validate;
-
+#[track_caller]
 pub fn withdraw(
     user: &mut User,
     amount: u128,

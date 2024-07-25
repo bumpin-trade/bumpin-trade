@@ -353,11 +353,14 @@ export class UserComponent extends Component {
         userTokenAccount: PublicKey,
         mintPublicKey: PublicKey,
         size: number,
+        sync: boolean = false,
     ) {
+        const me = await this.getUser(sync);
+        const tradeTokens = await this.tradeTokenComponent.getTradeTokens(sync);
         const [statePda, _] = BumpinUtils.getBumpinStatePda(this.program);
         let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
             mintPublicKey,
-            await this.tradeTokenComponent.getTradeTokens(),
+            tradeTokens,
         );
         let amount = BumpinUtils.size2Amount(
             new BigNumber(size),
@@ -370,6 +373,9 @@ export class UserComponent extends Component {
                 authority: this.publicKey,
                 bumpSigner: (await this.getState()).bumpSigner,
             })
+            .remainingAccounts(
+                this.getUserTradeTokenRemainingAccounts(me, tradeTokens),
+            )
             .signers([])
             .instruction();
         await this.sendAndConfirm([ix]);

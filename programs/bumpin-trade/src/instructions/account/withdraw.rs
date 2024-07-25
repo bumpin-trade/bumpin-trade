@@ -59,6 +59,7 @@ pub struct Withdraw<'info> {
     pub token_program: Program<'info, Token>,
 }
 
+#[track_caller]
 pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, Withdraw>,
     _token_index: u16,
@@ -86,7 +87,7 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
         token_mint,
         &mut oracle_map,
         &trade_token_map,
-    )?;
+    ).unwrap();
     trade_token.sub_amount(amount)?;
 
     let bump_signer_nonce = ctx.accounts.state.bump_signer_nonce;
