@@ -90,7 +90,7 @@ impl<'a> PoolMap<'a> {
                 continue;
             }
 
-            if let Ok(data) = account_info.try_borrow() {
+            if let Ok(data) = account_info.try_borrow_data() {
                 let expected_data_len = Pool::SIZE;
                 if data.len() < expected_data_len {
                     continue;
@@ -106,7 +106,6 @@ impl<'a> PoolMap<'a> {
 
                 pool_map.0.insert(pool_key, account_loader);
             }
-
         }
         Ok(pool_map)
     }

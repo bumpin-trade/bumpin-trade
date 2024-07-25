@@ -85,7 +85,7 @@ impl<'a> TradeTokenMap<'a> {
             if !account_info.owner.eq(&crate::id()) {
                 continue;
             }
-            if let Ok(data) = account_info.try_borrow() {
+            if let Ok(data) = account_info.try_borrow_data() {
                 let expected_data_len = TradeToken::SIZE;
                 if data.len() < expected_data_len {
                     continue;
@@ -101,8 +101,6 @@ impl<'a> TradeTokenMap<'a> {
 
                 trade_token_vec.0.insert(trade_token_mint, account_loader);
             }
-
-
         }
         Ok(trade_token_vec)
     }

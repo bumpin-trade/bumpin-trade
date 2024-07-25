@@ -32,7 +32,7 @@ impl<'a> VaultMap<'a> {
     pub fn load(remaining_accounts: &'a [AccountInfo<'a>]) -> BumpResult<VaultMap<'a>> {
         let mut token_account_map: VaultMap = VaultMap(BTreeMap::new());
         for account_info in remaining_accounts.iter() {
-            if let Ok(data) = account_info.try_borrow() {
+            if let Ok(data) = account_info.try_borrow_data() {
                 let expected_data_len = TokenAccount::LEN;
                 if data.len() < expected_data_len {
                     continue;

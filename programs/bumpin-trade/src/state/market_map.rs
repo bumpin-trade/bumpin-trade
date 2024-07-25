@@ -1,12 +1,12 @@
 use std::cell::{Ref, RefMut};
 use std::collections::BTreeMap;
 
-use anchor_lang::Discriminator;
 use anchor_lang::prelude::*;
+use anchor_lang::Discriminator;
 use arrayref::array_ref;
 
-use crate::errors::{BumpErrorCode, BumpResult};
 use crate::errors::BumpErrorCode::{CouldNotLoadMarketData, MarketNotFind};
+use crate::errors::{BumpErrorCode, BumpResult};
 use crate::state::market::Market;
 use crate::traits::Size;
 use crate::validate;
@@ -31,7 +31,7 @@ impl<'a> MarketMap<'a> {
         let loader = match self.0.get(symbol) {
             None => {
                 return Err(MarketNotFind);
-            }
+            },
             Some(loader) => loader,
         };
         match loader.load_mut() {
@@ -39,7 +39,7 @@ impl<'a> MarketMap<'a> {
             Err(e) => {
                 msg!("{:?}", e);
                 Err(CouldNotLoadMarketData)
-            }
+            },
         }
     }
 
@@ -49,7 +49,7 @@ impl<'a> MarketMap<'a> {
         let loader = match self.0.get(symbol) {
             None => {
                 return Err(MarketNotFind);
-            }
+            },
             Some(loader) => loader,
         };
         Ok(loader)
@@ -61,7 +61,7 @@ impl<'a> MarketMap<'a> {
         let loader = match self.0.get(symbol) {
             None => {
                 return Err(MarketNotFind);
-            }
+            },
             Some(loader) => loader,
         };
         match loader.load() {
