@@ -577,6 +577,7 @@ impl User {
         Ok(())
     }
 
+    #[track_caller]
     pub fn sub_user_token_amount_ignore_used_amount(
         &mut self,
         token_mint: &Pubkey,
@@ -585,6 +586,7 @@ impl User {
     ) -> BumpResult {
         let user_key = self.key;
         let user_token = self.get_user_token_mut_ref(token_mint)?;
+        msg!("###, amount:{}, user_token: {:?}", amount, user_token);
         validate!(user_token.amount >= amount, BumpErrorCode::AmountNotEnough)?;
         validate!(
             user_token.amount >= user_token.used_amount.safe_add(amount)?,
