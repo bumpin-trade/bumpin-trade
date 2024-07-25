@@ -637,7 +637,7 @@ fn settle<'info>(
         )?;
         let repay_amount = user
             .repay_liability(&position.margin_mint_key, UserTokenUpdateReason::DecreasePosition)?;
-        trade_token.sub_liability(repay_amount)?;
+        trade_token.sub_total_liability(repay_amount)?;
     } else {
         settle_isolate(
             response,

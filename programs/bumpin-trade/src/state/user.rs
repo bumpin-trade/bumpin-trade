@@ -586,7 +586,6 @@ impl User {
     ) -> BumpResult {
         let user_key = self.key;
         let user_token = self.get_user_token_mut_ref(token_mint)?;
-        msg!("###, amount:{}, user_token: {:?}", amount, user_token);
         validate!(user_token.amount >= amount, BumpErrorCode::AmountNotEnough)?;
         validate!(
             user_token.amount >= user_token.used_amount.safe_add(amount)?,
@@ -656,12 +655,12 @@ impl User {
             user_token.liability_amount = user_token.liability_amount.safe_add(liability)?;
             user_token.used_amount = user_token.used_amount.safe_add(liability)?;
             user_token.amount = 0u128;
-            trade_token.add_liability(liability)?;
+            trade_token.add_total_liability(liability)?;
         } else {
             user_token.liability_amount = user_token.liability_amount.safe_add(amount)?;
             user_token.used_amount = user_token.used_amount.safe_add(amount)?;
             liability = amount;
-            trade_token.add_liability(amount)?;
+            trade_token.add_total_liability(amount)?;
         }
         emit!(UserTokenBalanceUpdateEvent {
             user_key,

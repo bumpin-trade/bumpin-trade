@@ -28,21 +28,21 @@ impl Size for TradeToken {
 }
 
 impl TradeToken {
-    pub fn add_amount(&mut self, amount: u128) -> BumpResult {
+    pub fn add_total_amount(&mut self, amount: u128) -> BumpResult {
         self.total_amount = self.total_amount.safe_add(amount)?;
         Ok(())
     }
-    pub fn sub_amount(&mut self, amount: u128) -> BumpResult {
+    pub fn sub_total_amount(&mut self, amount: u128) -> BumpResult {
         validate!(self.total_amount >= amount, BumpErrorCode::AmountNotEnough)?;
         self.total_amount = self.total_amount.safe_sub(amount)?;
         Ok(())
     }
-    pub fn add_liability(&mut self, amount: u128) -> BumpResult {
+    pub fn add_total_liability(&mut self, amount: u128) -> BumpResult {
         self.total_liability = self.total_liability.safe_add(amount)?;
         Ok(())
     }
 
-    pub fn sub_liability(&mut self, amount: u128) -> BumpResult {
+    pub fn sub_total_liability(&mut self, amount: u128) -> BumpResult {
         validate!(self.total_liability >= amount, BumpErrorCode::AmountNotEnough)?;
         self.total_liability = self.total_liability.safe_sub(amount)?;
         Ok(())

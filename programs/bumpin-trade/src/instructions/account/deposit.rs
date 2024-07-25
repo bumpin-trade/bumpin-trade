@@ -57,8 +57,8 @@ pub fn handle_deposit(ctx: Context<Deposit>, _token_index: u16, amount: u128) ->
         &ctx.accounts.authority,
         amount,
     )?;
-    ctx.accounts.trade_token_vault.reload()?;
 
+    trade_token.add_total_amount(amount)?;
     //check user token exist, if not create new user token
     user.force_get_user_token_mut_ref(
         token_mint,
@@ -69,7 +69,7 @@ pub fn handle_deposit(ctx: Context<Deposit>, _token_index: u16, amount: u128) ->
 
     let repay_amount =
         user.repay_liability(&trade_token.mint_key, UserTokenUpdateReason::DEPOSIT)?;
-    trade_token.sub_liability(repay_amount)?;
+    trade_token.sub_total_liability(repay_amount)?;
     if amount > repay_amount {
         let left_amount = amount.safe_sub(repay_amount)?;
         user_processor::update_cross_position_balance(

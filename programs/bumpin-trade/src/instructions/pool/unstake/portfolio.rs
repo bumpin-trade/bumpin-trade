@@ -122,12 +122,12 @@ pub fn handle_portfolio_un_stake<'a, 'b, 'c: 'info, 'info>(
         rewards_amount.safe_add(transfer_amount)?,
         &UserTokenUpdateReason::TransferFromStake,
     )?;
-    trade_token.add_amount(transfer_amount)?;
+    trade_token.add_total_amount(transfer_amount)?;
 
     let repay_liability =
         user.repay_liability(&trade_token.mint_key, UserTokenUpdateReason::TransferFromStake)?;
     if repay_liability > 0 {
-        trade_token.sub_liability(repay_liability)?;
+        trade_token.sub_total_liability(repay_liability)?;
     }
 
     user_processor::update_cross_position_balance(

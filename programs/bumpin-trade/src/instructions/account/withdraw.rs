@@ -69,13 +69,16 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
     let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts)?;
 
     let trade_token = trade_token_map.get_trade_token_by_mint_ref(token_mint)?;
-    validate!(trade_token.index == token_index && trade_token.mint_key.eq(token_mint), BumpErrorCode::InvalidParam)?;
+    validate!(
+        trade_token.index == token_index && trade_token.mint_key.eq(token_mint),
+        BumpErrorCode::InvalidParam
+    )?;
     drop(trade_token);
 
     user_processor::withdraw(&mut user, amount, token_mint, &mut oracle_map, &trade_token_map)?;
 
     let mut trade_token = trade_token_map.get_trade_token_by_mint_ref_mut(token_mint)?;
-    trade_token.sub_amount(amount)?;
+    trade_token.sub_total_amount(amount)?;
 
     let bump_signer_nonce = ctx.accounts.state.bump_signer_nonce;
     utils::token::send_from_program_vault(

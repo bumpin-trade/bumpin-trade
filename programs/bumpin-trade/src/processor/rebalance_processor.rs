@@ -63,7 +63,7 @@ pub fn rebalance_pool_unsettle<'a>(
         )
         .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
         pool.balance.un_settle_amount = 0u128;
-        trade_token.sub_liability(transfer_amount)?;
+        trade_token.sub_total_liability(transfer_amount)?;
     }
     Ok(())
 }
