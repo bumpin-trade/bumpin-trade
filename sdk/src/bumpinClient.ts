@@ -286,7 +286,7 @@ export class BumpinClient {
             },
         );
         const accounts = userTokenAccounts.value.map((accountInfo: any) => {
-            const key: PublicKey = accountInfo.publicKey;
+            const key: PublicKey = accountInfo.pubkey;
             const accountData = AccountLayout.decode(accountInfo.account.data);
             const mint = accountData.mint;
             const amount = accountData.amount;

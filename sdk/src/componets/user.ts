@@ -224,7 +224,7 @@ export class UserComponent extends Component {
         }
 
         const ix = await this.program.methods
-            .walletStake(pool.index,  amount)
+            .walletStake(pool.index, amount)
             .accounts({
                 authority: wallet,
                 userTokenAccount: tokenAccount.address,
