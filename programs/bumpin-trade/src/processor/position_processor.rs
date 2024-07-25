@@ -48,9 +48,9 @@ pub fn handle_execute_order<'info>(
     let mut market = market_map.get_mut_ref(&user_order.symbol)?;
     let mut base_token_pool = pool_map.get_mut_ref(&market.pool_key)?;
     let mut stable_pool = pool_map.get_mut_ref(&market.stable_pool_key)?;
-    let mut trade_token = trade_token_map.get_trade_token_ref_mut(&market.pool_mint_key)?;
+    let mut trade_token = trade_token_map.get_trade_token_by_mint_ref_mut(&market.pool_mint_key)?;
     let mut stable_trade_token =
-        trade_token_map.get_trade_token_ref_mut(&market.stable_pool_mint_key)?;
+        trade_token_map.get_trade_token_by_mint_ref_mut(&market.stable_pool_mint_key)?;
 
     //validate order
     validate_execute_order(&user_order, &market)?;
@@ -123,9 +123,9 @@ pub fn handle_execute_order<'info>(
                 )?;
 
                 let mut trade_token =
-                    trade_token_map.get_trade_token_ref_mut(&market.pool_mint_key)?;
+                    trade_token_map.get_trade_token_by_mint_ref_mut(&market.pool_mint_key)?;
                 let mut stable_trade_token =
-                    trade_token_map.get_trade_token_ref_mut(&market.stable_pool_mint_key)?;
+                    trade_token_map.get_trade_token_by_mint_ref_mut(&market.stable_pool_mint_key)?;
                 //collect open fee
                 let fee = if user_order.order_side.eq(&OrderSide::LONG) {
                     fee_processor::collect_long_open_position_fee(
@@ -1176,9 +1176,9 @@ pub fn increase_position(
     let mut market = market_map.get_mut_ref(symbol)?;
     let mut base_token_pool = pool_map.get_mut_ref(&market.pool_key)?;
     let mut stable_pool = pool_map.get_mut_ref(&market.stable_pool_key)?;
-    let mut trade_token = trade_token_map.get_trade_token_ref_mut(&market.pool_mint_key)?;
+    let mut trade_token = trade_token_map.get_trade_token_by_mint_ref_mut(&market.pool_mint_key)?;
     let mut stable_trade_token =
-        trade_token_map.get_trade_token_ref_mut(&market.stable_pool_mint_key)?;
+        trade_token_map.get_trade_token_by_mint_ref_mut(&market.stable_pool_mint_key)?;
     let position_key = pda::generate_position_key(
         &user.key,
         market.symbol,

@@ -8,7 +8,6 @@ use crate::state::bump_events::UserRewardsUpdateEvent;
 use crate::state::infrastructure::user_position::PositionStatus;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
-use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::{User, UserTokenUpdateReason};
 use crate::validate;
@@ -16,16 +15,15 @@ use crate::validate;
 pub fn withdraw(
     user: &mut User,
     amount: u128,
-    oracle: &Pubkey,
-    trade_token: &TradeToken,
     token_mint: &Pubkey,
     oracle_map: &mut OracleMap,
-    trade_token_map: &TradeTokenMap,
+    trade_tokens: &TradeTokenMap,
 ) -> BumpResult {
-    let price = oracle_map.get_price_data(oracle)?.price;
-    let withdraw_usd = calculator::token_to_usd_u(amount, trade_token.decimals, price)?;
+    let trade_token = trade_tokens.get_trade_token_by_mint_ref(token_mint)?;
+    let price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
+    let withdraw_usd = calculator::token_to_usd_u(amount,trade_token .decimals, price)?;
 
-    let available_value = user.get_available_value(trade_token_map, oracle_map)?;
+    let available_value = user.get_available_value(trade_tokens, oracle_map)?;
     validate!(
         available_value.abs().cast::<u128>()? > withdraw_usd,
         BumpErrorCode::UserNotEnoughValue

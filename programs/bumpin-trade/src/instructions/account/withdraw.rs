@@ -5,7 +5,6 @@ use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::user_processor;
 use crate::state::bump_events::WithdrawEvent;
 use crate::state::state::State;
-use crate::state::trade_token::TradeToken;
 use crate::state::user::User;
 use crate::{utils, validate};
 use anchor_lang::prelude::*;
@@ -37,13 +36,6 @@ pub struct Withdraw<'info> {
 
     #[account(
         mut,
-        seeds = [b"trade_token", _token_index.to_le_bytes().as_ref()],
-        bump,
-    )]
-    pub trade_token: AccountLoader<'info, TradeToken>,
-
-    #[account(
-        mut,
         seeds = [b"trade_token_vault", _token_index.to_le_bytes().as_ref()],
         bump,
     )]
@@ -68,27 +60,24 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
     validate!(amount > 0, BumpErrorCode::AmountZero)?;
 
     let mut user = ctx.accounts.user.load_mut()?;
-    let mut trade_token = ctx.accounts.trade_token.load_mut()?;
     let token_mint = &ctx.accounts.user_token_account.mint;
-    let oracle = &trade_token.oracle_key;
 
     let user_token = user.get_user_token_ref(token_mint)?;
     validate!(user_token.amount > amount, BumpErrorCode::AmountNotEnough)?;
 
     let remaining_accounts = ctx.remaining_accounts;
 
-    let AccountMaps { trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts)?;
+    let AccountMaps {  trade_token_map, mut oracle_map, .. } = load_maps(remaining_accounts)?;
 
     user_processor::withdraw(
         &mut user,
         amount,
-        oracle,
-        &trade_token,
         token_mint,
         &mut oracle_map,
         &trade_token_map,
     )?;
-    trade_token.sub_amount(amount)?;
+
+    trade_token_map.get_trade_token_by_mint_ref_mut(token_mint)?.sub_amount(amount)?;
 
     let bump_signer_nonce = ctx.accounts.state.bump_signer_nonce;
     utils::token::send_from_program_vault(

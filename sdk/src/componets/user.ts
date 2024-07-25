@@ -388,7 +388,7 @@ export class UserComponent extends Component {
             })
             .remainingAccounts(
                 marketRemainingAccounts.concat(
-                    this.getUserTradeTokenRemainingAccounts(me, tradeTokens),
+                    this.getUserTradeTokenRemainingAccounts(me, tradeTokens, true),
                 ),
             )
             .signers([])

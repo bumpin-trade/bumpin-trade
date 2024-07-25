@@ -59,7 +59,7 @@ impl<'a> TradeTokenMap<'a> {
 
     #[track_caller]
     #[inline(always)]
-    pub fn get_trade_token_ref_mut(&self, mint: &Pubkey) -> BumpResult<RefMut<TradeToken>> {
+    pub fn get_trade_token_by_mint_ref_mut(&self, mint: &Pubkey) -> BumpResult<RefMut<TradeToken>> {
         let loader = match self.0.get(mint) {
             None => {
                 let caller = Location::caller();
