@@ -5,6 +5,7 @@ use crate::state::market::Market;
 use crate::state::pool::Pool;
 use crate::state::state::State;
 
+#[track_caller]
 pub fn charge_staking_fee(stake_pool: &mut Pool, amount: u128) -> BumpResult<u128> {
     let fee_amount = amount.safe_mul_rate(stake_pool.config.stake_fee_rate.into())?;
     stake_pool.fee_reward.add_fee_amount(fee_amount)?;
@@ -12,12 +13,14 @@ pub fn charge_staking_fee(stake_pool: &mut Pool, amount: u128) -> BumpResult<u12
     Ok(fee_amount)
 }
 
+#[track_caller]
 pub fn collect_un_stake_fee(stake_pool: &mut Pool, un_stake_amount: u128) -> BumpResult<u128> {
     let fee_amount = un_stake_amount.safe_mul_rate(stake_pool.config.un_stake_fee_rate.into())?;
     stake_pool.fee_reward.add_fee_amount(fee_amount)?;
     Ok(fee_amount)
 }
 
+#[track_caller]
 pub fn collect_long_open_position_fee(
     market: &Market,
     pool: &mut Pool,
@@ -34,6 +37,7 @@ pub fn collect_long_open_position_fee(
     Ok(fee_amount)
 }
 
+#[track_caller]
 pub fn collect_short_open_position_fee(
     market: &Market,
     pool: &mut Pool,
@@ -59,6 +63,7 @@ pub fn collect_short_open_position_fee(
     Ok(fee_amount)
 }
 
+#[track_caller]
 pub fn collect_long_close_position_fee(
     stake_pool: &mut Pool,
     fee_amount: u128,
@@ -72,6 +77,7 @@ pub fn collect_long_close_position_fee(
     Ok(fee_amount)
 }
 
+#[track_caller]
 pub fn collect_short_close_position_fee(
     stable_pool: &mut Pool,
     pool: &mut Pool,
@@ -94,6 +100,7 @@ pub fn collect_short_close_position_fee(
     Ok(())
 }
 
+#[track_caller]
 pub fn collect_borrowing_fee(
     pool: &mut Pool,
     fee_amount: u128,
@@ -108,6 +115,7 @@ pub fn collect_borrowing_fee(
     Ok(fee_amount)
 }
 
+#[track_caller]
 pub fn settle_funding_fee(
     base_token_pool: &mut Pool,
     stable_pool: &mut Pool,

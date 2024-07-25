@@ -36,6 +36,7 @@ pub fn un_stake(
     Ok(token_amount)
 }
 
+#[track_caller]
 pub fn stake(
     pool: &mut Pool,
     mint_amount: u128,
@@ -59,6 +60,7 @@ pub fn stake(
     Ok(supply_amount)
 }
 
+#[track_caller]
 pub fn portfolio_to_stake(
     user: &mut User,
     pool: &mut Pool,

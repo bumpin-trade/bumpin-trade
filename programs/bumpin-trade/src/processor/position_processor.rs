@@ -30,6 +30,7 @@ use crate::state::vault_map::VaultMap;
 use crate::utils::{pda, token};
 use crate::validate;
 
+#[track_caller]
 pub fn handle_execute_order<'info>(
     user: &mut User,
     market_map: &MarketMap,
@@ -245,6 +246,7 @@ pub fn handle_execute_order<'info>(
     Ok(())
 }
 
+#[track_caller]
 pub fn use_base_token(position_side: &PositionSide, order_side: &OrderSide) -> BumpResult<bool> {
     match (position_side, order_side) {
         (PositionSide::INCREASE, OrderSide::LONG) => Ok(true),
@@ -255,6 +257,7 @@ pub fn use_base_token(position_side: &PositionSide, order_side: &OrderSide) -> B
     }
 }
 
+#[track_caller]
 fn execute_increase_order_margin(
     user_token_account_key: &Pubkey,
     order: &UserOrder,
@@ -298,6 +301,7 @@ fn execute_increase_order_margin(
     Ok((order_margin, order_margin_from_balance))
 }
 
+#[track_caller]
 fn get_execution_price(index_price: u128, order: &UserOrder) -> BumpResult<u128> {
     if order.order_type.eq(&OrderType::MARKET) {
         if order.acceptable_price > 0 {
@@ -333,6 +337,7 @@ fn get_execution_price(index_price: u128, order: &UserOrder) -> BumpResult<u128>
     Err(BumpErrorCode::PriceIsNotAllowed)
 }
 
+#[track_caller]
 fn validate_execute_order(order: &UserOrder, market: &Market) -> BumpResult<()> {
     if order.leverage > market.config.maximum_leverage
         || order.leverage < market.config.minimum_leverage
@@ -342,6 +347,7 @@ fn validate_execute_order(order: &UserOrder, market: &Market) -> BumpResult<()> 
     Ok(())
 }
 
+#[track_caller]
 pub fn update_funding_fee(
     position: &mut UserPosition,
     market: &mut Market,
@@ -383,6 +389,7 @@ pub fn update_funding_fee(
     Ok(())
 }
 
+#[track_caller]
 pub fn update_borrowing_fee(
     position: &mut UserPosition,
     pool: &mut Pool,
@@ -411,6 +418,7 @@ pub fn update_borrowing_fee(
     Ok(())
 }
 
+#[track_caller]
 pub fn decrease_position<'info>(
     params: DecreasePositionParams,
     user: &mut User,
@@ -528,6 +536,7 @@ pub fn decrease_position<'info>(
     Ok(())
 }
 
+#[track_caller]
 fn collect_decrease_fee(
     base_token_pool: &mut Pool,
     stable_pool: &mut Pool,
@@ -577,6 +586,7 @@ fn collect_decrease_fee(
     Ok(())
 }
 
+#[track_caller]
 fn update_decrease_position(
     position: &mut UserPosition,
     decrease_size: u128,
@@ -666,6 +676,7 @@ fn settle<'info>(
     Ok(())
 }
 
+#[track_caller]
 fn settle_cross<'info>(
     response: &UpdateDecreaseResponse,
     user: &mut User,
@@ -775,6 +786,7 @@ fn settle_isolate<'info>(
     Ok(())
 }
 
+#[track_caller]
 fn add_insurance_fund(
     market: &Market,
     state: &State,
@@ -813,6 +825,7 @@ fn add_insurance_fund(
     pool.add_insurance_fund(add_funds)
 }
 
+#[track_caller]
 pub fn execute_reduce_position_margin(
     params: &UpdatePositionMarginParams,
     need_update_leverage: bool,
@@ -905,6 +918,7 @@ pub fn execute_reduce_position_margin(
     Ok(reduce_margin_amount)
 }
 
+#[track_caller]
 pub fn calculate_decrease_position(
     decrease_size: u128,
     is_liquidation: bool,
@@ -1023,6 +1037,7 @@ pub fn calculate_decrease_position(
     Ok(response)
 }
 
+#[track_caller]
 fn get_pos_fee_in_usd(
     funding_fee_in_usd: i128,
     borrowing_fee_in_usd: u128,
@@ -1034,6 +1049,7 @@ fn get_pos_fee_in_usd(
     Ok(result)
 }
 
+#[track_caller]
 fn cal_decrease_borrowing_fee(
     position: &UserPosition,
     decrease_size: u128,
@@ -1053,6 +1069,7 @@ fn cal_decrease_borrowing_fee(
     ))
 }
 
+#[track_caller]
 fn cal_decrease_funding_fee(
     position: &UserPosition,
     decrease_size: u128,
@@ -1072,6 +1089,7 @@ fn cal_decrease_funding_fee(
     ))
 }
 
+#[track_caller]
 fn cal_decrease_close_fee(
     decrease_size: u128,
     trade_token: &TradeToken,
@@ -1104,6 +1122,7 @@ fn cal_decrease_close_fee(
     ))
 }
 
+#[track_caller]
 pub fn execute_add_position_margin(
     params: &UpdatePositionMarginParams,
     trade_token: &TradeToken,
@@ -1157,6 +1176,7 @@ pub fn execute_add_position_margin(
     Ok(())
 }
 
+#[track_caller]
 pub fn increase_position(
     symbol: &[u8; 32],
     user: &mut User,
@@ -1368,6 +1388,7 @@ pub fn increase_position(
     Ok(())
 }
 
+#[track_caller]
 pub fn update_leverage<'info>(
     params: UpdatePositionLeverageParams,
     position_key: &Pubkey,

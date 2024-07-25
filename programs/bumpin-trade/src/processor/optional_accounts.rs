@@ -15,6 +15,7 @@ pub struct AccountMaps<'a> {
     pub vault_map: VaultMap<'a>,
 }
 
+#[track_caller]
 pub fn load_maps<'a: 'info, 'info>(
     remaining_accounts: &'info [AccountInfo<'info>],
 ) -> BumpResult<AccountMaps<'info>> {
