@@ -16,10 +16,13 @@ pub mod utils;
 
 declare_id!("Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR");
 
+// declare_id!("88ZPYBftFhJLJLXL2hBHkDcXGEW8MbpqhyCtzkCWyUry");
+
 #[program]
 pub mod bumpin_trade {
     use super::*;
 
+    #[track_caller]
     pub fn initialize_state<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializeState>,
         param: InitializeStateParams,
@@ -28,6 +31,7 @@ pub mod bumpin_trade {
         Ok(())
     }
 
+    #[track_caller]
     pub fn modify_state<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ModifyState>,
         param: ModifyStateParams,
@@ -35,6 +39,7 @@ pub mod bumpin_trade {
         handle_modify_state(ctx, param)
     }
 
+    #[track_caller]
     pub fn initialize_pool<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializePool>,
         params: InitializePoolParams,
@@ -42,12 +47,14 @@ pub mod bumpin_trade {
         handle_initialize_pool(ctx, params)
     }
 
+    #[track_caller]
     pub fn initialize_user<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializeUser>,
     ) -> Result<()> {
         handle_initialize_user(ctx)
     }
 
+    #[track_caller]
     pub fn initialize_trade_token<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializeTradeToken>,
         discount: u32,
@@ -57,6 +64,7 @@ pub mod bumpin_trade {
         handle_initialize_trade_token(ctx, discount, mint_name, liquidation_factor)
     }
 
+    #[track_caller]
     pub fn initialize_market<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializeMarket>,
         params: InitializeMarketParams,
@@ -64,11 +72,12 @@ pub mod bumpin_trade {
         handle_initialize_market(ctx, params)
     }
 
+    #[track_caller]
     pub fn initialize_rewards(ctx: Context<InitializePoolRewards>, _pool_index: u16) -> Result<()> {
         handle_initialize_rewards(ctx)
     }
 
-    /*-----pool pool------*/
+    #[track_caller]
     pub fn portfolio_stake<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PortfolioStake>,
         pool_index: u16,
@@ -78,6 +87,7 @@ pub mod bumpin_trade {
         handle_portfolio_stake(ctx, pool_index, trade_token_index, request_token_amount)
     }
 
+    #[track_caller]
     pub fn wallet_stake<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, WalletStake>,
         pool_index: u16,
@@ -86,6 +96,7 @@ pub mod bumpin_trade {
         handle_wallet_stake(ctx, pool_index, request_token_amount)
     }
 
+    #[track_caller]
     pub fn portfolio_un_stake<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PortfolioUnStake>,
         params: UnStakeParams,
@@ -94,15 +105,15 @@ pub mod bumpin_trade {
         Ok(())
     }
 
+    #[track_caller]
     pub fn wallet_un_stake<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, WalletUnStake>,
         params: UnStakeParams,
     ) -> Result<()> {
-        handle_wallet_un_stake(ctx, params).unwrap();
-        Ok(())
+        handle_wallet_un_stake(ctx, params)
     }
 
-    /*-----account------*/
+    #[track_caller]
     pub fn deposit<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, Deposit>,
         token_index: u16,
@@ -111,6 +122,7 @@ pub mod bumpin_trade {
         handle_deposit(ctx, token_index, amount)
     }
 
+    #[track_caller]
     pub fn withdraw<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, Withdraw>,
         token_index: u16,
@@ -119,7 +131,7 @@ pub mod bumpin_trade {
         handle_withdraw(ctx, token_index, amount)
     }
 
-    /*-----order------*/
+    #[track_caller]
     pub fn place_order<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, PlaceOrder<'c>>,
         order: PlaceOrderParams,
@@ -128,6 +140,7 @@ pub mod bumpin_trade {
         Ok(())
     }
 
+    #[track_caller]
     pub fn execute_order<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ExecuteOrder<'c>>,
         order_id: u64,
@@ -144,7 +157,7 @@ pub mod bumpin_trade {
         handle_cancel_order(ctx, order_id, _pool_index)
     }
 
-    /*-----position------*/
+    #[track_caller]
     pub fn add_position_margin<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, AddPositionMargin>,
         params: UpdatePositionMarginParams,
@@ -152,6 +165,7 @@ pub mod bumpin_trade {
         handle_add_position_margin(ctx, params)
     }
 
+    #[track_caller]
     pub fn update_position_leverage<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, UpdatePositionLeverage>,
         params: UpdatePositionLeverageParams,
@@ -171,7 +185,7 @@ pub mod bumpin_trade {
         handle_liquidate_position(ctx, position_key, liquidation_price)
     }
 
-    /*-----adl------*/
+    #[track_caller]
     pub fn adl<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ADL<'info>>,
         _pool_index: u16,
@@ -183,6 +197,7 @@ pub mod bumpin_trade {
         handle_adl(ctx, params)
     }
 
+    #[track_caller]
     pub fn update_user_status(
         ctx: Context<UpdateUserStatus>,
         user_status: UserStatus,
@@ -191,7 +206,7 @@ pub mod bumpin_trade {
         handle_update_user_status(ctx, user_status, user_authority_key)
     }
 
-    /*-----reward------*/
+    #[track_caller]
     pub fn claim_rewards<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ClaimRewards<'c>>,
         _pool_index: u16,
@@ -199,6 +214,7 @@ pub mod bumpin_trade {
         handle_claim_rewards(ctx)
     }
 
+    #[track_caller]
     pub fn auto_compound<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, AutoCompoundRewards<'c>>,
         pool_index: u16,
@@ -206,6 +222,7 @@ pub mod bumpin_trade {
         handle_auto_compound(ctx, pool_index)
     }
 
+    #[track_caller]
     pub fn collect_rewards<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, CollectRewards<'info>>,
         _pool_index: u16,

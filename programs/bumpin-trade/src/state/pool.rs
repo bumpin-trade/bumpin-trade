@@ -338,6 +338,7 @@ impl Pool {
         });
     }
 
+    #[track_caller]
     pub fn get_pool_usd_value(
         &self,
         trade_token_map: &TradeTokenMap,

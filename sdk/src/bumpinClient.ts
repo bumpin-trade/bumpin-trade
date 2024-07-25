@@ -238,6 +238,7 @@ export class BumpinClient {
                     this.tradeTokenComponent!,
                     this.marketComponent!,
                     this.poolComponent!,
+                    this.rewardComponent!,
                     this.program,
                     this.wallet,
                     this.essentialAccounts === null

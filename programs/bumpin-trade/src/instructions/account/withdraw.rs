@@ -57,7 +57,6 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
     token_index: u16,
     amount: u128,
 ) -> Result<()> {
-    msg!("=============handle_withdraw, amount:{}", amount);
     validate!(amount > 0, BumpErrorCode::AmountZero)?;
 
     let mut user = ctx.accounts.user.load_mut()?;
@@ -90,11 +89,7 @@ pub fn handle_withdraw<'a, 'b, 'c: 'info, 'info>(
         amount,
     )?;
 
-    emit!(WithdrawEvent {
-        user_key: user.key,
-        token_mint: *token_mint,
-        amount,
-    });
+    emit!(WithdrawEvent { user_key: user.key, token_mint: *token_mint, amount });
 
     Ok(())
 }

@@ -17,6 +17,10 @@ export class BumpinAdminConfigBuilder {
         return new BumpinAdminConfigBuilder('https://mainnet.endpoint.com');
     }
 
+    public static devnet(): BumpinAdminConfigBuilder {
+        return new BumpinAdminConfigBuilder('https://api.devnet.solana.com');
+    }
+
     public static localnet(): BumpinAdminConfigBuilder {
         return new BumpinAdminConfigBuilder('http://127.0.0.1:8899');
     }

@@ -11,6 +11,8 @@ name = "bumpin_trade"
 [features]
 default = []
 mainnet-beta = []
+devnet = []
+testnet = []
 cpi = ["no-entrypoint"]
 no-entrypoint = []
 no-idl = []

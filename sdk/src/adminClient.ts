@@ -124,6 +124,7 @@ export class BumpinAdmin {
                 p.discount,
                 p.liquidationFactor,
                 p.exponent,
+                p.trueOraclePublicKey,
             );
             tradeTokenOracleMap.set(p.tradeTokenMint, oracleKey.toString());
             console.log(
@@ -194,7 +195,7 @@ export class BumpinAdmin {
             })
             .signers([])
             .rpc({
-                skipPreflight: true,
+                skipPreflight: false,
                 commitment: 'root', //default commitment: confirmed
                 preflightCommitment: 'root',
                 maxRetries: 0,
@@ -278,26 +279,30 @@ export class BumpinAdmin {
         discount: number,
         liquidationFactor: number,
         exponent: number,
+        trueOraclePublicKey: string | undefined,
     ): Promise<PublicKey> {
-        let tradeTokenMintPublicKey = new PublicKey(tradeTokenMint);
-        const s = BumpinUtils.encodeString(tradeTokenName);
-        let oracleKeypair = await this.DEV_TEST_ONLY__INIT_ORACLE(
-            70000,
-            1.0,
-            exponent,
-        );
+        const tradeTokenMintPublicKey = new PublicKey(tradeTokenMint);
+        let oraclePublicKey: PublicKey;
+        if (trueOraclePublicKey) {
+            oraclePublicKey = new PublicKey(trueOraclePublicKey);
+        } else {
+            oraclePublicKey = (
+                await this.DEV_TEST_ONLY__INIT_ORACLE(70000, 1.0, exponent)
+            ).publicKey;
+        }
 
+        const s = BumpinUtils.encodeString(tradeTokenName);
         let [pda, nonce] = BumpinUtils.getBumpinStatePda(this.program);
         await this.program.methods
             .initializeTradeToken(discount, s, liquidationFactor)
             .accounts({
                 tradeTokenMint: tradeTokenMintPublicKey,
-                oracle: oracleKeypair.publicKey,
+                oracle: oraclePublicKey,
                 bumpSigner: pda,
             })
             .signers([])
             .rpc(BumpinUtils.getRootConfirmOptions());
-        return oracleKeypair.publicKey;
+        return oraclePublicKey;
     }
 
     public async initRewards(
@@ -393,6 +398,7 @@ export type WrappedInitializeTradeTokenParams = {
     discount: number;
     liquidationFactor: number;
     exponent: number;
+    trueOraclePublicKey: string | undefined;
 };
 
 export type WrappedInitializeMarketParams = {

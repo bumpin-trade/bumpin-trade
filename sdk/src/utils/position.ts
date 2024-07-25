@@ -165,10 +165,11 @@ export class BumpinPositionUtils {
             totalUsd: BigNumber(0),
         };
 
-        const price = tradeTokenComponent.getTradeTokenPricesByOracleKey(
-            position.marginMintKey,
-            1,
-        )[0].price!;
+        const price = (
+            await tradeTokenComponent.getTradeTokenPricesByMintKey(
+                position.marginMintKey,
+            )
+        ).price!;
 
         if (position.isLong) {
             positionFee.fundingFee =

@@ -44,6 +44,13 @@ export class BumpinClientConfigBuilder {
         );
     }
 
+    public static devnet(): BumpinClientConfigBuilder {
+        return new BumpinClientConfigBuilder(
+            NetType.DEVNET,
+            'https://api.devnet.solana.com',
+        );
+    }
+
     public static localnet(): BumpinClientConfigBuilder {
         return new BumpinClientConfigBuilder(
             NetType.LOCALNET,

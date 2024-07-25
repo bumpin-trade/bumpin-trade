@@ -271,4 +271,31 @@ export class BumpinUtils {
             signature,
         });
     }
+
+    public static prettyPrintParam(param: any, headMessage?:string): void {
+        if(headMessage){
+            console.log("==============={ "+headMessage+" }===============");
+        }
+        if (param === null || param === undefined) {
+            console.log('Param is null or undefined');
+            return;
+        }
+
+        if (typeof param !== 'object') {
+            console.log(`[Value]: ${param.toString()}`);
+            return;
+        }
+
+        for (const [key, value] of Object.entries(param)) {
+            if (
+                Array.isArray(value) &&
+                value.every((item) => typeof item === 'number')
+            ) {
+                console.log(`[${key}] : ${BumpinUtils.decodeString(value)}`);
+            } else {
+                // @ts-ignore
+                console.log(`[${key}] : ${value.toString()}`);
+            }
+        }
+    }
 }

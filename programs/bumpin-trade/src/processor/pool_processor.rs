@@ -10,6 +10,7 @@ use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::user::User;
 use crate::validate;
 
+#[track_caller]
 pub fn un_stake(
     pool: &Pool,
     user: &mut User,
