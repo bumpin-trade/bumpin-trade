@@ -32,21 +32,21 @@ impl<'a> VaultMap<'a> {
     pub fn load(remaining_accounts: &'a [AccountInfo<'a>]) -> BumpResult<VaultMap<'a>> {
         let mut token_account_map: VaultMap = VaultMap(BTreeMap::new());
         for account_info in remaining_accounts.iter() {
-            let data = account_info.try_borrow_data().or(Err(CouldNotLoadTokenAccountData))?;
+            if let Ok(data) = account_info.try_borrow() {
+                let expected_data_len = TokenAccount::LEN;
+                if data.len() < expected_data_len {
+                    continue;
+                }
 
-            let expected_data_len = TokenAccount::LEN;
-            if data.len() < expected_data_len {
-                continue;
+                if account_info.owner != &token::ID {
+                    continue;
+                }
+
+                let account: Account<'a, TokenAccount> =
+                    Account::try_from(account_info).or(Err(InvalidTokenAccount))?;
+
+                token_account_map.0.insert(account.key(), account);
             }
-
-            if account_info.owner != &token::ID {
-                continue;
-            }
-
-            let account: Account<'a, TokenAccount> =
-                Account::try_from(account_info).or(Err(InvalidTokenAccount))?;
-
-            token_account_map.0.insert(account.key(), account);
         }
         Ok(token_account_map)
     }

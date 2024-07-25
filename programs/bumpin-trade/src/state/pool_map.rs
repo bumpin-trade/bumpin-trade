@@ -89,22 +89,24 @@ impl<'a> PoolMap<'a> {
             if !account_info.owner.eq(&crate::id()) {
                 continue;
             }
-            let data = account_info.try_borrow_data().or(Err(CouldNotLoadPoolData))?;
 
-            let expected_data_len = Pool::SIZE;
-            if data.len() < expected_data_len {
-                continue;
+            if let Ok(data) = account_info.try_borrow() {
+                let expected_data_len = Pool::SIZE;
+                if data.len() < expected_data_len {
+                    continue;
+                }
+                let account_discriminator = array_ref![data, 0, 8];
+                if account_discriminator != &pool_discriminator {
+                    continue;
+                }
+
+                let pool_key = Pubkey::from(*array_ref![data, 8, 32]);
+                let account_loader: AccountLoader<'a, Pool> =
+                    AccountLoader::try_from(account_info).or(Err(CouldNotLoadPoolData))?;
+
+                pool_map.0.insert(pool_key, account_loader);
             }
-            let account_discriminator = array_ref![data, 0, 8];
-            if account_discriminator != &pool_discriminator {
-                continue;
-            }
 
-            let pool_key = Pubkey::from(*array_ref![data, 8, 32]);
-            let account_loader: AccountLoader<'a, Pool> =
-                AccountLoader::try_from(account_info).or(Err(CouldNotLoadPoolData))?;
-
-            pool_map.0.insert(pool_key, account_loader);
         }
         Ok(pool_map)
     }

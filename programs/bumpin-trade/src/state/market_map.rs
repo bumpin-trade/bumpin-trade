@@ -1,12 +1,12 @@
 use std::cell::{Ref, RefMut};
 use std::collections::BTreeMap;
 
-use anchor_lang::prelude::*;
 use anchor_lang::Discriminator;
+use anchor_lang::prelude::*;
 use arrayref::array_ref;
 
-use crate::errors::BumpErrorCode::{CouldNotLoadMarketData, MarketNotFind};
 use crate::errors::{BumpErrorCode, BumpResult};
+use crate::errors::BumpErrorCode::{CouldNotLoadMarketData, MarketNotFind};
 use crate::state::market::Market;
 use crate::traits::Size;
 use crate::validate;
@@ -31,7 +31,7 @@ impl<'a> MarketMap<'a> {
         let loader = match self.0.get(symbol) {
             None => {
                 return Err(MarketNotFind);
-            },
+            }
             Some(loader) => loader,
         };
         match loader.load_mut() {
@@ -39,7 +39,7 @@ impl<'a> MarketMap<'a> {
             Err(e) => {
                 msg!("{:?}", e);
                 Err(CouldNotLoadMarketData)
-            },
+            }
         }
     }
 
@@ -49,7 +49,7 @@ impl<'a> MarketMap<'a> {
         let loader = match self.0.get(symbol) {
             None => {
                 return Err(MarketNotFind);
-            },
+            }
             Some(loader) => loader,
         };
         Ok(loader)
@@ -61,7 +61,7 @@ impl<'a> MarketMap<'a> {
         let loader = match self.0.get(symbol) {
             None => {
                 return Err(MarketNotFind);
-            },
+            }
             Some(loader) => loader,
         };
         match loader.load() {
@@ -79,23 +79,24 @@ impl<'a> MarketMap<'a> {
             if !account_info.owner.eq(&crate::id()) {
                 continue;
             }
-            let data =
-                account_info.try_borrow_data().unwrap();
+            if let Ok(data) = account_info.try_borrow_data() {
+                let expected_data_len = Market::SIZE;
+                if data.len() < expected_data_len {
+                    continue;
+                }
+                let account_discriminator = array_ref![data, 0, 8];
+                if account_discriminator != &market_discriminator {
+                    continue;
+                }
+                let symbol = *array_ref![data, 8, 32];
 
-            let expected_data_len = Market::SIZE;
-            if data.len() < expected_data_len {
+                let account_loader: AccountLoader<'a, Market> =
+                    AccountLoader::try_from(account_info)
+                        .or(Err(BumpErrorCode::InvalidMarketAccount))?;
+                perp_market_map.0.insert(symbol, account_loader);
+            } else {
                 continue;
             }
-            let account_discriminator = array_ref![data, 0, 8];
-            if account_discriminator != &market_discriminator {
-                continue;
-            }
-            let symbol = *array_ref![data, 8, 32];
-
-            let account_loader: AccountLoader<'a, Market> =
-                AccountLoader::try_from(account_info)
-                    .or(Err(BumpErrorCode::InvalidMarketAccount))?;
-            perp_market_map.0.insert(symbol, account_loader);
         }
         Ok(perp_market_map)
     }

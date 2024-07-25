@@ -85,22 +85,24 @@ impl<'a> TradeTokenMap<'a> {
             if !account_info.owner.eq(&crate::id()) {
                 continue;
             }
-            let data = account_info.try_borrow_data().or(Err(CouldNotLoadTradeTokenData))?;
+            if let Ok(data) = account_info.try_borrow() {
+                let expected_data_len = TradeToken::SIZE;
+                if data.len() < expected_data_len {
+                    continue;
+                }
+                let account_discriminator = array_ref![data, 0, 8];
+                if account_discriminator != &trade_token_discriminator {
+                    continue;
+                }
 
-            let expected_data_len = TradeToken::SIZE;
-            if data.len() < expected_data_len {
-                continue;
+                let trade_token_mint = Pubkey::from(*array_ref![data, 8, 32]);
+                let account_loader: AccountLoader<'a, TradeToken> =
+                    AccountLoader::try_from(account_info).or(Err(InvalidTradeTokenAccount))?;
+
+                trade_token_vec.0.insert(trade_token_mint, account_loader);
             }
-            let account_discriminator = array_ref![data, 0, 8];
-            if account_discriminator != &trade_token_discriminator {
-                continue;
-            }
 
-            let trade_token_mint = Pubkey::from(*array_ref![data, 8, 32]);
-            let account_loader: AccountLoader<'a, TradeToken> =
-                AccountLoader::try_from(account_info).or(Err(InvalidTradeTokenAccount))?;
 
-            trade_token_vec.0.insert(trade_token_mint, account_loader);
         }
         Ok(trade_token_vec)
     }
