@@ -48,7 +48,7 @@ pub struct Deposit<'info> {
 pub fn handle_deposit(ctx: Context<Deposit>, _token_index: u16, amount: u128) -> Result<()> {
     let mut user = ctx.accounts.user.load_mut()?;
     let trade_token = &mut ctx.accounts.trade_token.load_mut()?;
-    let token_mint = &trade_token.mint_key;
+    let token_mint = trade_token.mint_key;
 
     token::receive(
         &ctx.accounts.token_program,
@@ -61,11 +61,11 @@ pub fn handle_deposit(ctx: Context<Deposit>, _token_index: u16, amount: u128) ->
     trade_token.add_total_amount(amount)?;
     //check user token exist, if not create new user token
     user.force_get_user_token_mut_ref(
-        token_mint,
+        &token_mint,
         ctx.accounts.user_token_account.to_account_info().key,
     )?;
 
-    user.add_user_token_amount(token_mint, amount, &UserTokenUpdateReason::DEPOSIT)?;
+    user.add_user_token_amount(&token_mint, amount, &UserTokenUpdateReason::DEPOSIT)?;
 
     let repay_amount =
         user.repay_liability(&trade_token.mint_key, UserTokenUpdateReason::DEPOSIT)?;
