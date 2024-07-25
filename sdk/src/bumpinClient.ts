@@ -236,6 +236,7 @@ export class BumpinClient {
                     this.bulkAccountLoader,
                     this.stateSubscriber,
                     this.tradeTokenComponent!,
+                    this.marketComponent!,
                     this.poolComponent!,
                     this.program,
                     this.wallet,

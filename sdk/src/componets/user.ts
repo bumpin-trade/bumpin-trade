@@ -54,6 +54,7 @@ import {
 import { TradeTokenComponent } from './tradeToken';
 import { PoolComponent } from './pool';
 import { BumpinClientConfig } from '../bumpinClientConfig';
+import { MarketComponent } from './market';
 
 export class UserComponent extends Component {
     publicKey: PublicKey;
@@ -61,6 +62,7 @@ export class UserComponent extends Component {
     userAccountSubscriber: PollingUserAccountSubscriber;
     tradeTokenComponent: TradeTokenComponent;
     poolComponent: PoolComponent;
+    marketComponent: MarketComponent;
 
     constructor(
         config: BumpinClientConfig,
@@ -69,6 +71,7 @@ export class UserComponent extends Component {
         bulkAccountLoader: BulkAccountLoader,
         stateSubscriber: PollingStateAccountSubscriber,
         tradeTokenComponent: TradeTokenComponent,
+        marketComponent: MarketComponent,
         poolComponent: PoolComponent,
         program: Program<BumpinTrade>,
         wallet?: Wallet,
@@ -85,6 +88,7 @@ export class UserComponent extends Component {
         this.publicKey = publicKey;
         this.program = program;
         this.tradeTokenComponent = tradeTokenComponent;
+        this.marketComponent = marketComponent;
         this.poolComponent = poolComponent;
         const [pda, _] = BumpinUtils.getPdaSync(this.program, [
             Buffer.from('user'),
@@ -366,6 +370,15 @@ export class UserComponent extends Component {
             new BigNumber(size),
             targetTradeToken.decimals,
         );
+        const marketRemainingAccounts = (
+            await this.marketComponent.getMarkets(sync)
+        ).map((e) => {
+            return {
+                pubkey: BumpinUtils.getMarketPda(this.program, e.index)[0],
+                isWritable: false,
+                isSigner: false,
+            };
+        });
         const ix = await this.program.methods
             .withdraw(targetTradeToken.index, amount)
             .accounts({
@@ -374,7 +387,9 @@ export class UserComponent extends Component {
                 bumpSigner: (await this.getState()).bumpSigner,
             })
             .remainingAccounts(
-                this.getUserTradeTokenRemainingAccounts(me, tradeTokens),
+                marketRemainingAccounts.concat(
+                    this.getUserTradeTokenRemainingAccounts(me, tradeTokens),
+                ),
             )
             .signers([])
             .instruction();
