@@ -36,9 +36,9 @@ solana airdrop 100000 "$player4_pubkey" --url localhost > /dev/null
 solana airdrop 100000 "$player5_pubkey" --url localhost > /dev/null
 
 
-# SOL USDC WBTC WHETH BONK BNB
+# SOL USDC WBTC WHETH BNB BONK
 decimals=(9 6 8 8 8 5)
-mint_amounts=(1000 1000000 10 100 1000000000 1000)
+mint_amounts=(10000 10000000 100 1000 10000 10000000000)
 
 results="================================================\n"
 

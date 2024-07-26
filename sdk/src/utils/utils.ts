@@ -272,17 +272,23 @@ export class BumpinUtils {
         });
     }
 
-    public static prettyPrintParam(param: any, headMessage?:string): void {
-        if(headMessage){
-            console.log("==============={ "+headMessage+" }===============");
+    public static prettyPrintParam(
+        param: any,
+        headMessage?: string,
+        indent: string = '',
+    ): void {
+        if (headMessage) {
+            console.log(
+                '==============={ ' + headMessage + ' }===============',
+            );
         }
         if (param === null || param === undefined) {
-            console.log('Param is null or undefined');
+            console.log(indent + 'Param is null or undefined');
             return;
         }
 
         if (typeof param !== 'object') {
-            console.log(`[Value]: ${param.toString()}`);
+            console.log(indent + `[Value]: ${param.toString()}`);
             return;
         }
 
@@ -291,10 +297,23 @@ export class BumpinUtils {
                 Array.isArray(value) &&
                 value.every((item) => typeof item === 'number')
             ) {
-                console.log(`[${key}] : ${BumpinUtils.decodeString(value)}`);
+                console.log(
+                    indent + `[${key}] : ${BumpinUtils.decodeString(value)}`,
+                );
+            } else if (
+                value instanceof BN ||
+                value instanceof BigNumber ||
+                value instanceof PublicKey
+            ) {
+                console.log(indent + `[${key}] : ${value.toString()}`);
+            } else if (typeof value === 'object' && value !== null) {
+                console.log(indent + `[${key}] : {`);
+                BumpinUtils.prettyPrintParam(value, undefined, indent + '  ');
+                console.log(indent + `}`);
+            } else if (value === null) {
+                console.log(indent + `[${key}] : null | undefined`);
             } else {
-                // @ts-ignore
-                console.log(`[${key}] : ${value.toString()}`);
+                console.log(indent + `[${key}] : ${value!.toString()}`);
             }
         }
     }

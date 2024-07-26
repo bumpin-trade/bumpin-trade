@@ -14,11 +14,13 @@ solana airdrop 100000 $(solana-keygen pubkey ./keys/player4.json) --url localhos
 solana airdrop 100000 $(solana-keygen pubkey ./keys/player5.json) --url localhost> /dev/null
 solana airdrop 100000 $(solana-keygen pubkey ./keys/reward.json) --url localhost> /dev/null
 decimals=(9 6 8 8 8 5)
+mint_amounts=(1000 1000000 10 100 1000000000 1000)
 results="================================================\n"
 
 for ((i=1; i<=num_loops; i++))
 do
   decimals_value=${decimals[$((i-1))]}
+  mint_amount_value=${mint_amounts[$((i-1))]}
   # Step 2: Create a new SPL token and extract the token address
   token=$(spl-token create-token --decimals "$decimals_value" --output json | jq -r .commandOutput.address)
 
@@ -38,12 +40,11 @@ do
 
 
   # Step 4: Mint tokens to the created account
-  mint_amount=$((i * 100000000))
-  spl-token mint $token $mint_amount $account > /dev/null
-  spl-token mint $token $mint_amount $account2 > /dev/null
-  spl-token mint $token $mint_amount $account3 > /dev/null
-  spl-token mint $token $mint_amount $account4 > /dev/null
-  spl-token mint $token $mint_amount $account5 > /dev/null
+  spl-token mint $token $mint_amount_value $account > /dev/null
+  spl-token mint $token $mint_amount_value $account2 > /dev/null
+  spl-token mint $token $mint_amount_value $account3 > /dev/null
+  spl-token mint $token $mint_amount_value $account4 > /dev/null
+  spl-token mint $token $mint_amount_value $account5 > /dev/null
 
   results+="Token Mint: $token  Amount: $mint_amount  Decimals: $decimals_value  Reward Token Account: $account_reward\n"
 done

@@ -21,6 +21,8 @@ export class PoolComponent extends Component {
     program: Program<BumpinTrade>;
     pools: Map<string, PollingPoolAccountSubscriber> = new Map();
 
+    tradeTokenComponent: TradeTokenComponent;
+
     constructor(
         config: BumpinClientConfig,
         defaultConfirmOptions: ConfirmOptions,
@@ -40,6 +42,7 @@ export class PoolComponent extends Component {
             essentialAccounts,
         );
         let state = super.getStateSync();
+        this.tradeTokenComponent = tradeTokenComponent;
         this.program = program;
         for (let i = 0; i < state.poolSequence; i++) {
             const [pda, _] = BumpinUtils.getPoolPda(this.program, i);

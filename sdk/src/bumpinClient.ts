@@ -413,24 +413,25 @@ export class BumpinClient {
 
     public async getUserSummary(sync: boolean = false): Promise<UserSummary> {
         this.checkInitialization(true);
-        let userSummary = {
+        const userSummary = {
             accountNetValue: new BigNumber(0),
             pnl: new BigNumber(0),
             earn: new BigNumber(0),
             tokens: [] as UserTokenSummary[],
         };
-        let user = await this.getUser(sync);
-        let tradeTokens = await this.getTradeTokens();
-        let markets = await this.getMarkets(sync);
-        let pools = await this.getPools();
+        const user = await this.getUser(sync);
+        const tradeTokens = await this.getTradeTokens();
+        const markets = await this.getMarkets(sync);
+        const pools = await this.getPools();
 
-        let accountNetValue = await this.userComponent!.getUserAccountNetValue(
-            user,
-            tradeTokens,
-            markets,
-            pools,
-        );
-        let balanceOfUserPositions =
+        const accountNetValue =
+            await this.userComponent!.getUserAccountNetValue(
+                user,
+                tradeTokens,
+                markets,
+                pools,
+            );
+        const balanceOfUserPositions =
             await BumpinPositionUtils.getUserPositionValue(
                 this.tradeTokenComponent!,
                 user,
@@ -440,14 +441,14 @@ export class BumpinClient {
             );
         userSummary.accountNetValue = accountNetValue.accountNetValue;
         userSummary.pnl = balanceOfUserPositions.positionUnPnl;
-        for (let tradeToken of tradeTokens) {
-            let userTokenSummary = {
+        for (const tradeToken of tradeTokens) {
+            const userTokenSummary = {
                 token: tradeToken,
                 amount: new BigNumber(0),
                 used: new BigNumber(0),
                 borrow: new BigNumber(0),
             };
-            let userToken = BumpinUserUtils.getMyTokenByMint(
+            const userToken = BumpinUserUtils.getMyTokenByMint(
                 user,
                 tradeToken.mintKey,
             );

@@ -1,4 +1,9 @@
-import { AccountMeta, AddressLookupTableAccount, ConfirmOptions, PublicKey } from '@solana/web3.js';
+import {
+    AccountMeta,
+    AddressLookupTableAccount,
+    ConfirmOptions,
+    PublicKey,
+} from '@solana/web3.js';
 import {
     AccountNetValue,
     InnerPlaceOrderParams,
@@ -344,7 +349,8 @@ export class UserComponent extends Component {
             targetTradeToken.decimals,
         );
 
-        console.log('Deposit:\namount: ' + amount.toString(), '\n', 'TradeToken: ' + targetTradeToken.toString());
+        console.log('Deposit:\namount: ' + amount.toString());
+        BumpinUtils.prettyPrintParam(targetTradeToken);
         const ix = await this.program.methods
             .deposit(targetTradeToken.index, amount)
             .accounts({
@@ -382,7 +388,8 @@ export class UserComponent extends Component {
             };
         });
 
-        console.log('Withdraw:\namount: ' + amount.toString(), '\n', 'TradeToken: ' + targetTradeToken.toString());
+        console.log('Withdraw:\namount: ' + amount.toString());
+        BumpinUtils.prettyPrintParam(targetTradeToken);
         const ix = await this.program.methods
             .withdraw(targetTradeToken.index, amount)
             .accounts({
@@ -468,16 +475,16 @@ export class UserComponent extends Component {
                         throw new BumpinTokenAccountUnexpected(
                             'Pool mint key: ' + pool.mintKey.toString(),
                             'Token account mint key: ' +
-                            tokenAccount.mint.toString(),
+                                tokenAccount.mint.toString(),
                         );
                     }
                 } else {
                     if (!tokenAccount.mint.equals(stablePool.mintKey)) {
                         throw new BumpinTokenAccountUnexpected(
                             'Stable Pool mint key: ' +
-                            stablePool.mintKey.toString(),
+                                stablePool.mintKey.toString(),
                             'Token account mint key: ' +
-                            tokenAccount.mint.toString(),
+                                tokenAccount.mint.toString(),
                         );
                     }
                 }
@@ -486,9 +493,9 @@ export class UserComponent extends Component {
                     if (!tokenAccount.mint.equals(stablePool.mintKey)) {
                         throw new BumpinTokenAccountUnexpected(
                             'Stable Pool mint key: ' +
-                            stablePool.mintKey.toString(),
+                                stablePool.mintKey.toString(),
                             'Token account mint key: ' +
-                            tokenAccount.mint.toString(),
+                                tokenAccount.mint.toString(),
                         );
                     }
                 } else {
@@ -496,7 +503,7 @@ export class UserComponent extends Component {
                         throw new BumpinTokenAccountUnexpected(
                             'Pool mint key: ' + pool.mintKey.toString(),
                             'Token account mint key: ' +
-                            tokenAccount.mint.toString(),
+                                tokenAccount.mint.toString(),
                         );
                     }
                 }
@@ -506,20 +513,20 @@ export class UserComponent extends Component {
 
         let remainingAccounts = param.isPortfolioMargin
             ? this.buildPortfolioRemainAccount(
-                marketIndex,
-                user,
-                tradeTokens,
-                markets,
-                pools,
-                param,
-            )
+                  marketIndex,
+                  user,
+                  tradeTokens,
+                  markets,
+                  pools,
+                  param,
+              )
             : this.buildIsolateRemainAccount(
-                marketIndex,
-                tradeTokens,
-                markets,
-                pools,
-                param,
-            );
+                  marketIndex,
+                  tradeTokens,
+                  markets,
+                  pools,
+                  param,
+              );
 
         let indexPrice =
             this.tradeTokenComponent.getTradeTokenPricesByOracleKey(
@@ -529,7 +536,7 @@ export class UserComponent extends Component {
         if (!indexPrice.price) {
             throw new BumpinInvalidParameter(
                 'Price not found(undefined) for mint: ' +
-                pool.mintKey.toString(),
+                    pool.mintKey.toString(),
             );
         }
 
@@ -548,19 +555,19 @@ export class UserComponent extends Component {
             ),
             orderMargin: !param.isPortfolioMargin
                 ? BumpinUtils.number2Precision(
-                    param.orderMargin,
-                    isEqual(param.positionSide, PositionSide.INCREASE)
-                        ? isEqual(param.orderSide, OrderSide.LONG)
-                            ? tradeToken.decimals
-                            : stableTradeToken.decimals
-                        : isEqual(param.orderSide, OrderSide.LONG)
-                            ? stableTradeToken.decimals
-                            : tradeToken.decimals,
-                )
+                      param.orderMargin,
+                      isEqual(param.positionSide, PositionSide.INCREASE)
+                          ? isEqual(param.orderSide, OrderSide.LONG)
+                              ? tradeToken.decimals
+                              : stableTradeToken.decimals
+                          : isEqual(param.orderSide, OrderSide.LONG)
+                          ? stableTradeToken.decimals
+                          : tradeToken.decimals,
+                  )
                 : BumpinUtils.number2Precision(
-                    param.orderMargin * indexPrice.price,
-                    C.USD_EXPONENT_NUMBER,
-                ),
+                      param.orderMargin * indexPrice.price,
+                      C.USD_EXPONENT_NUMBER,
+                  ),
             leverage: param.leverage * C.RATE_MULTIPLIER,
             triggerPrice: BumpinUtils.number2Precision(
                 param.triggerPrice,
@@ -643,15 +650,16 @@ export class UserComponent extends Component {
             }
         }
 
+        //TODO: Do better
         if (
             order.leverage / 100000 > market.config.maximumLeverage ||
             order.leverage / 100000 < market.config.minimumLeverage
         ) {
             throw new BumpinInvalidParameter(
                 'Leverage should be between ' +
-                market.config.minimumLeverage +
-                ' and ' +
-                market.config.maximumLeverage,
+                    market.config.minimumLeverage +
+                    ' and ' +
+                    market.config.maximumLeverage,
             );
         }
     }
