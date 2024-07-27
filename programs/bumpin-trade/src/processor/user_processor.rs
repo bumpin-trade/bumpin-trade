@@ -88,7 +88,7 @@ pub fn update_account_fee_reward(stake_pool: &mut Pool, user: &mut User) -> Bump
             .fee_reward
             .cumulative_rewards_per_stake_token
             .safe_sub(user_stake.user_rewards.open_rewards_per_stake_token)?
-            .safe_mul_small_rate(user_stake.staked_share)?;
+            .safe_mul_per_rate(user_stake.staked_share)?;
         user_stake.add_user_rewards(realised_rewards_token_amount)?;
         user_stake.user_rewards.open_rewards_per_stake_token =
             fee_reward.cumulative_rewards_per_stake_token;

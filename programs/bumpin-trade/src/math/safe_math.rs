@@ -2,7 +2,7 @@ use crate::errors::{BumpErrorCode, BumpResult};
 use crate::math::bn::{U192, U256};
 use crate::math::casting::Cast;
 use crate::math::ceil_div::CheckedCeilDiv;
-use crate::math::constants::{RATE_PRECISION, SMALL_RATE_PRECISION};
+use crate::math::constants::{PER_TOKEN_PRECISION_NUMBER, RATE_PRECISION, SMALL_RATE_PRECISION};
 use crate::math::floor_div::CheckedFloorDiv;
 use anchor_lang::prelude::*;
 use std::panic::Location;
@@ -13,6 +13,7 @@ pub trait SafeMath: Sized {
     fn safe_mul(self, rhs: Self) -> BumpResult<Self>;
     fn safe_mul_rate(self, rhs: Self) -> BumpResult<Self>;
     fn safe_mul_small_rate(self, rhs: Self) -> BumpResult<Self>;
+    fn safe_mul_per_rate(self, rhs: Self) -> BumpResult<Self>;
     fn safe_div(self, rhs: Self) -> BumpResult<Self>;
     fn safe_div_rate(self, rhs: Self) -> BumpResult<Self>;
     fn safe_div_small_rate(self, rhs: Self) -> BumpResult<Self>;
@@ -72,6 +73,13 @@ macro_rules! checked_impl {
             fn safe_mul_small_rate(self, v: $t) -> BumpResult<$t> {
                 self.safe_mul(v)?.safe_div(SMALL_RATE_PRECISION.cast()?)
             }
+
+            #[track_caller]
+            #[inline(always)]
+            fn safe_mul_per_rate(self, v: $t) -> BumpResult<$t> {
+                self.safe_mul(v)?.safe_div(PER_TOKEN_PRECISION_NUMBER.cast()?)
+            }
+
             #[track_caller]
             #[inline(always)]
             fn safe_div(self, v: $t) -> BumpResult<$t> {

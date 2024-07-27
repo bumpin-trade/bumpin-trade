@@ -1,5 +1,6 @@
-use crate::errors::BumpResult;
+use crate::errors::{BumpErrorCode, BumpResult};
 use crate::math::safe_math::SafeMath;
+use crate::validate;
 use anchor_lang::prelude::*;
 use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
@@ -77,6 +78,7 @@ impl FeeReward {
         Ok(())
     }
     pub fn sub_un_settle_amount(&mut self, amount: u128) -> BumpResult<()> {
+        validate!(self.fee_amount >= amount, BumpErrorCode::AmountNotEnough)?;
         self.fee_amount = self.un_settle_fee_amount.safe_sub(amount)?;
         Ok(())
     }

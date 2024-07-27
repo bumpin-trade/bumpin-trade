@@ -162,6 +162,19 @@ export class BumpinUtils {
         );
     }
 
+    public static getPoolVaultPda(
+        program: Program<BumpinTrade>,
+        pool_index: number,
+    ): [PublicKey, number] {
+        return PublicKey.findProgramAddressSync(
+            [
+                Buffer.from('pool_vault'),
+                new anchor.BN(pool_index).toArrayLike(Buffer, 'le', 2),
+            ],
+            program.programId,
+        );
+    }
+
     public static getPoolRewardsVaultPda(
         program: Program<BumpinTrade>,
         pool_index: number,

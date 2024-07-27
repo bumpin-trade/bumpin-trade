@@ -358,10 +358,20 @@ impl Pool {
         )?;
         if !self.stable {
             let markets = market_map.get_all_market(self.market_number)?;
+            let mut market_loaded = vec![];
             for market_loader in markets {
                 let market =
                     market_loader.load().map_err(|_e| BumpErrorCode::CouldNotLoadMarketData)?;
-                validate!(self.key.eq(&market.pool_key), BumpErrorCode::CouldNotFindMarket)?;
+                if self.key.eq(&market.pool_key) {
+                    market_loaded.push(market);
+                }
+            }
+            validate!(
+                self.market_number == market_loaded.len() as u16,
+                BumpErrorCode::MarketNumberNotEqual2Pool
+            )?;
+
+            for market in market_loaded {
                 let long_market_un_pnl = market.get_market_un_pnl(true, oracle_map)?;
                 pool_value = add_i128(pool_value, long_market_un_pnl)?;
 

@@ -169,7 +169,7 @@ export class UserComponent extends Component {
                 authority: this.publicKey,
                 bumpSigner: (await this.getState()).bumpSigner,
             })
-            .remainingAccounts(remainingAccounts)
+            .remainingAccounts(BumpinUtils.removeDuplicateAccounts(remainingAccounts.concat(await this.essentialRemainingAccounts())))
             .signers([])
             .instruction();
         await this.sendAndConfirm([ix]);
@@ -237,7 +237,7 @@ export class UserComponent extends Component {
                 authority: wallet,
                 userTokenAccount: tokenAccount.address,
             })
-            .remainingAccounts(remainingAccounts)
+            .remainingAccounts(BumpinUtils.removeDuplicateAccounts(remainingAccounts.concat(await this.essentialRemainingAccounts())))
             .signers([])
             .instruction();
         await this.sendAndConfirm([ix]);
@@ -327,7 +327,7 @@ export class UserComponent extends Component {
                     userTokenAccount: tokenAccount.address,
                     bumpSigner: (await this.getState()).bumpSigner,
                 })
-                .remainingAccounts(remainingAccounts)
+                .remainingAccounts(BumpinUtils.removeDuplicateAccounts(remainingAccounts.concat(await this.essentialRemainingAccounts())))
                 .signers([])
                 .instruction();
             await this.sendAndConfirm([ix]);
