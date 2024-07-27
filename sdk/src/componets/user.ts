@@ -579,10 +579,8 @@ export class UserComponent extends Component {
             ),
         };
         let accountMetas =
-            BumpinUtils.removeDuplicateAccounts(remainingAccounts);
-        accountMetas.forEach((value) => {
-            console.log(value.pubkey.toString());
-        });
+            BumpinUtils.removeDuplicateAccounts((await this.essentialRemainingAccounts()).concat(remainingAccounts));
+
         await this.placePerpOrderValidation(
             order,
             indexPrice.price,
@@ -1052,7 +1050,6 @@ export class UserComponent extends Component {
         }
         return accounts;
     }
-
     private buildIsolateRemainAccount(
         marketIndex: number,
         tradeTokens: TradeToken[],
@@ -1160,6 +1157,59 @@ export class UserComponent extends Component {
         remainingAccounts.forEach((value) => {
             console.log(value.pubkey.toString());
         });
+        return remainingAccounts;
+    }
+
+    private async essentialRemainingAccounts(){
+        const pools = await this.poolComponent.getPools();
+        const tradeTokens = await this.tradeTokenComponent.getTradeTokens();
+        const markets = await this.marketComponent.getMarkets();
+
+        let remainingAccounts: Array<AccountMeta> = [];
+
+        //trade_tokens
+        tradeTokens.forEach((tradeToken) => {
+            remainingAccounts.push({
+                pubkey: tradeToken.mintKey,
+                isWritable: false,
+                isSigner: false,
+            });
+            remainingAccounts.push({
+                pubkey: tradeToken.oracleKey,
+                isWritable: false,
+                isSigner: false,
+            });
+            let pda = BumpinUtils.getTradeTokenPda(
+                this.program,
+                tradeToken.index,
+            )[0];
+            remainingAccounts.push({
+                pubkey: pda,
+                isWritable: false,
+                isSigner: false,
+            });
+        });
+
+        //pools
+        pools.forEach((pool) => {
+            let poolPda = BumpinUtils.getPoolPda(this.program, pool.index)[0];
+            remainingAccounts.push({
+                pubkey: poolPda,
+                isWritable: false,
+                isSigner: false,
+            });
+        });
+
+        //markets
+        markets.forEach((market) => {
+            let marketPda = BumpinUtils.getMarketPda(this.program, market.index)[0];
+            remainingAccounts.push({
+                pubkey: marketPda,
+                isWritable: false,
+                isSigner: false,
+            });
+        });
+
         return remainingAccounts;
     }
 }
