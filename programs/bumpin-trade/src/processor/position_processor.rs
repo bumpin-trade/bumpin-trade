@@ -14,7 +14,7 @@ use crate::state::bump_events::{
     AddOrDecreaseMarginEvent, AddOrDeleteUserPositionEvent, UpdateUserPositionEvent,
 };
 use crate::state::infrastructure::user_order::{
-    OrderSide, OrderType, PositionSide, StopType, UserOrder,
+    OrderSide, OrderStatus, OrderType, PositionSide, StopType, UserOrder,
 };
 use crate::state::infrastructure::user_position::UserPosition;
 use crate::state::market::{Market, UpdateOIParams};
@@ -160,6 +160,8 @@ pub fn handle_execute_order<'info>(
                         &UserTokenUpdateReason::SettleFee,
                     )?;
                 }
+                let trade_token_vault = trade_token.vault_key;
+                let stable_trade_token_vault = stable_trade_token.vault_key;
                 drop(base_token_pool);
                 drop(stable_pool);
                 drop(market);
@@ -182,6 +184,37 @@ pub fn handle_execute_order<'info>(
                     market_map,
                     state_account,
                 )?;
+
+                let mut need_delete_order_ids = Vec::new();
+                //find user order in this position
+                for user_order in &user.orders {
+                    if user_order.status.eq(&OrderStatus::INIT) {
+                        continue;
+                    }
+                    let order_position_key = pda::generate_position_key(
+                        &user.key,
+                        user_order.symbol,
+                        user_order.is_portfolio_margin,
+                        program_id,
+                    )?;
+                    if order_position_key.eq(&position_key) {
+                        need_delete_order_ids.push(user_order.order_id);
+                    }
+                }
+                for order_id in need_delete_order_ids {
+                    let order = *user.get_user_order_ref(order_id)?;
+                    user.cancel_order(
+                        &order,
+                        token_program,
+                        match use_base_token(&user_order.position_side, &user_order.order_side)? {
+                            true => vault_map.get_account(&trade_token_vault)?,
+                            false => vault_map.get_account(&stable_trade_token_vault)?,
+                        },
+                        user_token_account,
+                        bump_signer,
+                        state_account,
+                    )?;
+                }
                 Ok(())
             }
         },
