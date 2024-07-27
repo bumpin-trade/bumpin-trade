@@ -54,7 +54,7 @@ export class BumpinPositionUtils {
         };
 
         for (let userPosition of user.positions) {
-            if (isEqual(userPosition.status, PositionStatus.INIT)) {
+            if (isEqual(userPosition.status, PositionStatus.INIT) || !userPosition.isPortfolioMargin) {
                 continue;
             }
             const indexTradeToken =
