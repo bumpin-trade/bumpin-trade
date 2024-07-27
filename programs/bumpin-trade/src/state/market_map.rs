@@ -9,19 +9,18 @@ use crate::errors::BumpErrorCode::{CouldNotLoadMarketData, MarketNotFind};
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::state::market::Market;
 use crate::traits::Size;
-use crate::validate;
+
 
 pub struct MarketMap<'a>(pub BTreeMap<[u8; 32], AccountLoader<'a, Market>>);
 
 impl<'a> MarketMap<'a> {
     #[track_caller]
     #[inline(always)]
-    pub fn get_all_market(&self, size: u16) -> BumpResult<Vec<&AccountLoader<'a, Market>>> {
+    pub fn get_all_market(&self, _size: u16) -> BumpResult<Vec<&AccountLoader<'a, Market>>> {
         let mut markets = Vec::new();
         for market_loader in self.0.values() {
             markets.push(market_loader);
         }
-        validate!(markets.len() as u16 == size, BumpErrorCode::MarketNumberNotEqual2Pool)?;
         Ok(markets)
     }
 
