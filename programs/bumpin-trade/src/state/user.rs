@@ -24,7 +24,7 @@ use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::state::traits::Size;
-use crate::utils::token;
+use crate::utils::{pda, token};
 use crate::validate;
 
 #[account(zero_copy(unsafe))]
@@ -319,32 +319,23 @@ impl User {
         Ok(())
     }
 
-    pub fn has_other_short_order(
+    pub fn make_order_is_allowed(
         &self,
         symbol: [u8; 32],
-        margin_token: Pubkey,
         is_portfolio_margin: bool,
+        program_id: &Pubkey,
     ) -> BumpResult<bool> {
-        for order in &self.orders {
-            if order.symbol.eq(&symbol)
-                && order.margin_mint_key.eq(&margin_token)
-                && order.is_portfolio_margin.eq(&is_portfolio_margin)
-                && order.position_side.eq(&PositionSide::INCREASE)
-                && order.order_side.eq(&OrderSide::SHORT)
-            {
-                return Ok(true);
+        let position_key =
+            pda::generate_position_key(&self.key, symbol, is_portfolio_margin, program_id)?;
+        for position in &self.positions {
+            if position.status.eq(&PositionStatus::INIT) {
+                continue;
+            }
+            if position_key.eq(&position.position_key) {
+                return Ok(false);
             }
         }
-        Ok(false)
-    }
-
-    pub fn has_other_order(self, order_id: u64) -> BumpResult<bool> {
-        for order in &self.orders {
-            if order.order_id == order_id {
-                return Ok(true);
-            }
-        }
-        Ok(false)
+        Ok(true)
     }
 
     pub fn next_usable_order_index(&self) -> BumpResult<usize> {

@@ -67,22 +67,18 @@ pub fn handle_cancel_order(
     order_id: u64,
     _pool_index: u16,
 ) -> Result<()> {
-    let user = ctx.accounts.user.load()?;
-    let order = user.get_user_order_ref(order_id)?;
+    let mut user = ctx.accounts.user.load_mut()?;
+    let order = *user.get_user_order_ref(order_id)?;
     if order.status.eq(&OrderStatus::INIT) {
         return Err(BumpErrorCode::InvalidParam.into());
     }
-
     //validate pool is correct
     validate!(
         order.margin_mint_key.eq(&ctx.accounts.pool.load()?.mint_key),
         BumpErrorCode::InvalidParam
     )?;
-
-    let mut user =
-        ctx.accounts.user.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadUserData)?;
     user.cancel_order(
-        order,
+        &order,
         &ctx.accounts.token_program,
         &ctx.accounts.pool_vault,
         &ctx.accounts.user_token_account,
