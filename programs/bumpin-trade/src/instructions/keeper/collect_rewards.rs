@@ -3,6 +3,8 @@ use anchor_spl::token::{Token, TokenAccount};
 
 use crate::errors::BumpErrorCode;
 use crate::instructions::calculator;
+use crate::math::casting::Cast;
+use crate::math::constants::PER_TOKEN_PRECISION_NUMBER;
 use crate::math::safe_math::SafeMath;
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::state::pool::Pool;
@@ -111,6 +113,7 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
     validate!(total_supply > 0u128, BumpErrorCode::PoolMintSupplyIsZero)?;
 
     let mut total_fee_amount = fee_reward.fee_amount;
+    let token_decimal = trade_token.decimals;
     if !pool.stable {
         //need swap stable_fee_reward to amount
         let stable_fee_reward = &mut pool.stable_fee_reward;
@@ -129,7 +132,7 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
             .map_err(|_e| BumpErrorCode::OracleNotFound)?
             .price;
         let transfer_amount =
-            calculator::usd_to_token_u(transfer_usd, trade_token.decimals, token_price)?;
+            calculator::usd_to_token_u(transfer_usd, token_decimal, token_price)?;
         // todo swap stable to un_stable token, using jup_swap.
         // let amount = swap::jup_swap()?;
         total_fee_amount = total_fee_amount.safe_add(transfer_amount)?;
@@ -156,7 +159,8 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
     rewards.add_pool_total_rewards_amount(pool_rewards_amount)?;
     rewards.add_pool_un_claim_rewards(pool_rewards_amount)?;
     let fee_reward = &mut pool.fee_reward;
-    let delta = pool_rewards_amount.safe_div_ceil(total_supply)?;
+    let exp = PER_TOKEN_PRECISION_NUMBER.safe_sub(token_decimal)?;
+    let delta = pool_rewards_amount.safe_mul(10u128.pow(exp.cast::<u32>()?))?.safe_div_ceil(total_supply)?;
     fee_reward.add_cumulative_rewards_per_stake_token(delta)?;
     fee_reward.push_last_rewards_per_stake_token_deltas(delta)?;
     fee_reward.sub_fee_amount(fee_reward.fee_amount)?;
