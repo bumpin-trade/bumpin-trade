@@ -122,8 +122,8 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         user.deref_mut().add_order_hold_in_usd(order.order_margin)?;
     }
 
-    if user.make_order_is_allowed(order.symbol, order.is_portfolio_margin, ctx.program_id)? {
-        return Err(BumpErrorCode::OnlyOneShortOrderAllowed.into());
+    if !user.make_order_is_allowed(order.symbol, order.is_portfolio_margin, ctx.program_id)? {
+        return Err(BumpErrorCode::OnlyOneTypeOrderAllowed.into());
     }
 
     let order_id = get_then_update_id!(user, next_order_id);

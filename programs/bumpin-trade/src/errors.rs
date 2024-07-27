@@ -13,8 +13,8 @@ pub enum BumpErrorCode {
     InvalidTransfer,
     #[msg("InvalidParam")]
     InvalidParam,
-    #[msg("OnlyOneShortOrderAllowed")]
-    OnlyOneShortOrderAllowed,
+    #[msg("OnlyOneTypeOrderAllowed")]
+    OnlyOneTypeOrderAllowed,
     #[msg("OrderNotExist")]
     OrderNotExist,
     #[msg("TokenNotMatch")]
