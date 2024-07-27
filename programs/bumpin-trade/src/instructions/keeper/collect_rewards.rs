@@ -118,25 +118,27 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
         //need swap stable_fee_reward to amount
         let stable_fee_reward = &mut pool.stable_fee_reward;
         let fee_amount = stable_fee_reward.fee_amount;
-        let stable_token_price = oracle_map
-            .get_price_data(&stable_trade_token.oracle_key)
-            .map_err(|_e| BumpErrorCode::OracleNotFound)?
-            .price;
-        let transfer_usd = calculator::token_to_usd_u(
-            fee_amount,
-            stable_trade_token.decimals,
-            stable_token_price,
-        )?;
-        let token_price = oracle_map
-            .get_price_data(&trade_token.oracle_key)
-            .map_err(|_e| BumpErrorCode::OracleNotFound)?
-            .price;
-        let transfer_amount =
-            calculator::usd_to_token_u(transfer_usd, token_decimal, token_price)?;
-        // todo swap stable to un_stable token, using jup_swap.
-        // let amount = swap::jup_swap()?;
-        total_fee_amount = total_fee_amount.safe_add(transfer_amount)?;
-        stable_fee_reward.sub_un_settle_amount(fee_amount)?
+        if fee_amount != 0u128 {
+            let stable_token_price = oracle_map
+                .get_price_data(&stable_trade_token.oracle_key)
+                .map_err(|_e| BumpErrorCode::OracleNotFound)?
+                .price;
+            let transfer_usd = calculator::token_to_usd_u(
+                fee_amount,
+                stable_trade_token.decimals,
+                stable_token_price,
+            )?;
+            let token_price = oracle_map
+                .get_price_data(&trade_token.oracle_key)
+                .map_err(|_e| BumpErrorCode::OracleNotFound)?
+                .price;
+            let transfer_amount =
+                calculator::usd_to_token_u(transfer_usd, token_decimal, token_price)?;
+            // todo swap stable to un_stable token, using jup_swap.
+            // let amount = swap::jup_swap()?;
+            total_fee_amount = total_fee_amount.safe_add(transfer_amount)?;
+            stable_fee_reward.sub_un_settle_amount(fee_amount)?
+        }
     }
 
     //split fee to pool_rewards & dao_rewards
@@ -160,7 +162,9 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
     rewards.add_pool_un_claim_rewards(pool_rewards_amount)?;
     let fee_reward = &mut pool.fee_reward;
     let exp = PER_TOKEN_PRECISION_NUMBER.safe_sub(token_decimal)?;
-    let delta = pool_rewards_amount.safe_mul(10u128.pow(exp.cast::<u32>()?))?.safe_div_ceil(total_supply)?;
+    let delta = pool_rewards_amount
+        .safe_mul(10u128.pow(exp.cast::<u32>()?))?
+        .safe_div_ceil(total_supply)?;
     fee_reward.add_cumulative_rewards_per_stake_token(delta)?;
     fee_reward.push_last_rewards_per_stake_token_deltas(delta)?;
     fee_reward.sub_fee_amount(fee_reward.fee_amount)?;

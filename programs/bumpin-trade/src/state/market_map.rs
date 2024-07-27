@@ -10,7 +10,6 @@ use crate::errors::{BumpErrorCode, BumpResult};
 use crate::state::market::Market;
 use crate::traits::Size;
 
-
 pub struct MarketMap<'a>(pub BTreeMap<[u8; 32], AccountLoader<'a, Market>>);
 
 impl<'a> MarketMap<'a> {

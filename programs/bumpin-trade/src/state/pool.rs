@@ -2,8 +2,8 @@ use anchor_lang::prelude::*;
 
 use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
-use crate::errors::{BumpErrorCode, BumpResult};
 use crate::errors::BumpErrorCode::PoolSubUnsettleNotEnough;
+use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{add_i128, add_u128, calculator, sub_u128};
 use crate::math::casting::Cast;
 use crate::math::constants::PRICE_PRECISION;
@@ -298,7 +298,7 @@ impl Pool {
                 token_balance.amount.safe_add(token_balance.un_settle_amount)?,
                 pool_liquidity_limit,
             )?
-                .safe_sub(token_balance.hold_amount)?
+            .safe_sub(token_balance.hold_amount)?
                 >= amount)
         };
     }
@@ -366,7 +366,10 @@ impl Pool {
                     market_loaded.push(market);
                 }
             }
-            validate!(self.market_number==market_loaded.len() as u16, BumpErrorCode::MarketNumberNotEqual2Pool)?;
+            validate!(
+                self.market_number == market_loaded.len() as u16,
+                BumpErrorCode::MarketNumberNotEqual2Pool
+            )?;
 
             for market in market_loaded {
                 let long_market_un_pnl = market.get_market_un_pnl(true, oracle_map)?;
@@ -438,7 +441,7 @@ impl Pool {
                         u_token_pnl
                     })?;
                 }
-            }
+            },
             Some(base_token_pool) => {
                 //short
                 if token_pnl < 0i128 {
@@ -461,7 +464,7 @@ impl Pool {
                         if u_token_pnl > add_liability { add_liability } else { u_token_pnl },
                     )?;
                 }
-            }
+            },
         })
     }
 }
