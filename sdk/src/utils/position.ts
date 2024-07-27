@@ -1,11 +1,11 @@
-import { PositionBalance, PositionFee } from '../typedef';
-import { BN } from '@coral-xyz/anchor';
-import { BumpinTokenUtils } from './token';
+import {PositionBalance, PositionFee} from '../typedef';
+import {BN} from '@coral-xyz/anchor';
+import {BumpinTokenUtils} from './token';
 // @ts-ignore
-import { isEqual } from 'lodash';
-import { BumpinMarketNotFound, BumpinPoolNotFound } from '../errors';
-import { BumpinMarketUtils } from './market';
-import { BumpinPoolUtils } from './pool';
+import {isEqual} from 'lodash';
+import {BumpinMarketNotFound, BumpinPoolNotFound} from '../errors';
+import {BumpinMarketUtils} from './market';
+import {BumpinPoolUtils} from './pool';
 import {
     Market,
     Pool,
@@ -15,7 +15,7 @@ import {
     UserPosition,
 } from '../beans/beans';
 import BigNumber from 'bignumber.js';
-import { TradeTokenComponent } from '../componets/tradeToken';
+import {TradeTokenComponent} from '../componets/tradeToken';
 
 export class BumpinPositionUtils {
     // public static async reducePositionPortfolioBalance(
@@ -43,6 +43,7 @@ export class BumpinPositionUtils {
         tradeTokens: TradeToken[],
         markets: Market[],
         pools: Pool[],
+        positionValue: boolean = true
     ): Promise<PositionBalance> {
         let totalBalance = {
             initialMarginUsd: BigNumber(0),
@@ -70,7 +71,7 @@ export class BumpinPositionUtils {
                 tradeTokenComponent,
                 indexTradeToken,
                 marginTradeToken,
-                userPosition,
+                userPosition, positionValue
             );
             const market = BumpinMarketUtils.getMarketBySymbol(
                 userPosition.symbol,
@@ -121,6 +122,7 @@ export class BumpinPositionUtils {
         indexTradeToken: TradeToken,
         marginTradeToken: TradeToken,
         position: UserPosition,
+        positionValue: boolean = true
     ): Promise<BigNumber> {
         const price = tradeTokenComponent.getTradeTokenPricesByOracleKey(
             indexTradeToken.oracleKey,
@@ -137,12 +139,14 @@ export class BumpinPositionUtils {
                     .multipliedBy(position.entryPrice.toNumber() - price)
                     .div(position.entryPrice);
             }
-            if (unPnl.gt(BigNumber(0))) {
-                unPnl = unPnl.multipliedBy(marginTradeToken.discount);
-            } else {
-                unPnl = unPnl.multipliedBy(
-                    marginTradeToken.liquidationFactor + 1,
-                );
+            if (positionValue) {
+                if (unPnl.gt(BigNumber(0))) {
+                    unPnl = unPnl.multipliedBy(marginTradeToken.discount);
+                } else {
+                    unPnl = unPnl.multipliedBy(
+                        marginTradeToken.liquidationFactor + 1,
+                    );
+                }
             }
         }
         return unPnl;
