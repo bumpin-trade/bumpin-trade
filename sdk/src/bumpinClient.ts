@@ -760,8 +760,8 @@ export class BumpinClient {
             marketIndex,
         )[0];
         const market = await this.getMarket(marketKey, sync);
-        let long = market.fundingFee.longFundingFeeRate.div(10 ** 10);
-        let short = market.fundingFee.shortFundingFeeRate.div(10 ** 10);
+        let long = market.fundingFee.longFundingFeeRate;
+        let short = market.fundingFee.shortFundingFeeRate;
         if (long.isNaN()) {
             long = new BigNumber(0);
         }
