@@ -298,7 +298,7 @@ impl Pool {
                 token_balance.amount.safe_add(token_balance.un_settle_amount)?,
                 pool_liquidity_limit,
             )?
-            .safe_sub(token_balance.hold_amount)?
+                .safe_sub(token_balance.hold_amount)?
                 >= amount)
         };
     }
@@ -407,8 +407,9 @@ impl Pool {
         oracle_map: &mut OracleMap,
         market_vec: &MarketMap,
     ) -> BumpResult<u128> {
+        let pool_token = trade_token_map.get_trade_token_by_mint_ref(&self.mint_key)?;
         let pool_value = self.get_pool_usd_value(trade_token_map, oracle_map, market_vec)?;
-        calculator::div_to_precision_u(pool_value, self.total_supply, PRICE_PRECISION)
+        calculator::div_to_precision_u(pool_value, self.total_supply, 10u128.pow(pool_token.decimals.cast::<u32>()?))
     }
 
     pub fn update_pnl_and_un_hold_pool_amount(
@@ -441,7 +442,7 @@ impl Pool {
                         u_token_pnl
                     })?;
                 }
-            },
+            }
             Some(base_token_pool) => {
                 //short
                 if token_pnl < 0i128 {
@@ -464,7 +465,7 @@ impl Pool {
                         if u_token_pnl > add_liability { add_liability } else { u_token_pnl },
                     )?;
                 }
-            },
+            }
         })
     }
 }

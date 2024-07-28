@@ -20,9 +20,12 @@ pub fn un_stake(
     market_map: &MarketMap,
 ) -> BumpResult<u128> {
     let trade_token = trade_token_map.get_trade_token_by_mint_ref(&pool.mint_key)?;
-    let pool_value = pool.get_pool_usd_value(trade_token_map, oracle_map, market_map)?;
-
-    let un_stake_usd = calculator::mul_div_u(un_stake_amount, pool_value, pool.total_supply)?;
+    let net_price = pool.get_pool_net_price(
+        trade_token_map,
+        oracle_map,
+        market_map,
+    )?;
+    let un_stake_usd = calculator::token_to_usd_u(un_stake_amount, trade_token.decimals, net_price)?;
     let pool_price = oracle_map.get_price_data(&trade_token.oracle_key)?;
     let token_amount =
         calculator::usd_to_token_u(un_stake_usd, trade_token.decimals, pool_price.price)?;
