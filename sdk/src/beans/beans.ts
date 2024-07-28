@@ -174,11 +174,11 @@ export class MarketFundingFee {
             );
         this.longFundingFeeRate =
             marketFundingFee.longFundingFeeRate.toBigNumberWithDecimals(
-                C.RATE_MULTIPLIER,
+                C.RATE_MULTIPLIER_EXPONENT
             );
         this.shortFundingFeeRate =
             marketFundingFee.shortFundingFeeRate.toBigNumberWithDecimals(
-                C.RATE_MULTIPLIER,
+                C.RATE_MULTIPLIER_EXPONENT,
             );
         this.updatedAt = marketFundingFee.updatedAt.toBigNumber();
     }
