@@ -144,6 +144,21 @@ pub fn compute_avg_entry_price(
     format_to_ticker_size(origin_entry_price, ticker_size, up)
 }
 
+pub fn compute_decrease_avg_entry_price(
+    amount: u128,
+    entry_price: u128,
+    decrease_amount: u128,
+    token_price: u128,
+    ticker_size: u128,
+    up: bool,
+) -> BumpResult<u128> {
+    let origin_entry_price = amount
+        .safe_mul(entry_price)?
+        .safe_sub(decrease_amount.safe_mul(token_price)?)?
+        .safe_div(amount.safe_sub(decrease_amount)?)?;
+    format_to_ticker_size(origin_entry_price, ticker_size, up)
+}
+
 pub fn format_to_ticker_size(price: u128, ticker_size: u128, up: bool) -> BumpResult<u128> {
     let remainder = price % ticker_size;
     if remainder == 0u128 {

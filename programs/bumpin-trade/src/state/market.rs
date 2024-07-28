@@ -76,9 +76,9 @@ impl Market {
             market_position.add_open_interest(params.size, params.entry_price)?;
         } else {
             let entry_price = calculator::compute_avg_entry_price(
-                market_position.open_interest,
+                market_position.open_interest.safe_div(market_position.entry_price)?,
                 market_position.entry_price,
-                params.size,
+                params.size.safe_div(params.entry_price)?,
                 params.entry_price,
                 self.config.tick_size,
                 params.is_long,
@@ -95,8 +95,16 @@ impl Market {
         } else {
             &mut self.short_open_interest
         };
+        let entry_price = calculator::compute_decrease_avg_entry_price(
+            market_position.open_interest.safe_div(market_position.entry_price)?,
+            market_position.entry_price,
+            params.size.safe_div(params.entry_price)?,
+            params.entry_price,
+            self.config.tick_size,
+            params.is_long,
+        )?;
 
-        market_position.sub_open_interest(params.size, params.entry_price)?;
+        market_position.sub_open_interest(params.size, entry_price)?;
         Ok(())
     }
 
@@ -167,7 +175,7 @@ impl Market {
                         decimals,
                         price,
                     )?
-                    .cast::<i128>()?;
+                        .cast::<i128>()?;
                     long_funding_fee_per_qty_delta = if long_pay_short {
                         long_funding_fee_per_qty_delta
                     } else {
@@ -262,11 +270,7 @@ impl MarketPosition {
             self.open_interest = 0u128;
             self.entry_price = 0u128;
         } else {
-            self.entry_price = self
-                .open_interest
-                .safe_mul(self.entry_price)?
-                .safe_sub(size.safe_mul(price)?)?
-                .safe_div(self.open_interest.safe_sub(size)?)?;
+            self.entry_price = price;
             self.open_interest = calculator::sub_u128(self.open_interest, size)?;
         }
         Ok(())
