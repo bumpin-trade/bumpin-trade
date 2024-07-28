@@ -31,12 +31,10 @@ impl MarketFundingFee {
         fee_durations: i64,
     ) -> BumpResult<()> {
         self.short_funding_fee_amount_per_size = short_funding_fee_amount_per_size_delta
-            .safe_add(self.short_funding_fee_amount_per_size.cast::<i128>()?)?
-            .cast::<i128>()?;
+            .safe_add(self.short_funding_fee_amount_per_size)?;
 
         self.long_funding_fee_amount_per_size = long_funding_fee_amount_per_size_delta
-            .safe_add(self.long_funding_fee_amount_per_size.cast()?)?
-            .cast::<i128>()?;
+            .safe_add(self.long_funding_fee_amount_per_size)?;
 
         self.long_funding_fee_rate = long_funding_fee_amount_per_size_delta
             .safe_mul(3600i128)?
