@@ -76,11 +76,12 @@ impl Market {
             market_position.add_open_interest(params.size, params.entry_price)?;
         } else {
             let entry_price = calculator::compute_avg_entry_price(
-                market_position.open_interest.safe_div(market_position.entry_price)?,
+                market_position.open_interest,
                 market_position.entry_price,
-                params.size.safe_div(params.entry_price)?,
+                params.size,
                 params.entry_price,
                 self.config.tick_size,
+                params.token_decimal,
                 params.is_long,
             )?;
 
@@ -96,11 +97,12 @@ impl Market {
             &mut self.short_open_interest
         };
         let entry_price = calculator::compute_decrease_avg_entry_price(
-            market_position.open_interest.safe_div(market_position.entry_price)?,
+            market_position.open_interest,
             market_position.entry_price,
-            params.size.safe_div(params.entry_price)?,
+            params.size,
             params.entry_price,
             self.config.tick_size,
+            params.token_decimal,
             params.is_long,
         )?;
 
@@ -175,7 +177,7 @@ impl Market {
                         decimals,
                         price,
                     )?
-                        .cast::<i128>()?;
+                    .cast::<i128>()?;
                     long_funding_fee_per_qty_delta = if long_pay_short {
                         long_funding_fee_per_qty_delta
                     } else {
@@ -297,4 +299,5 @@ pub struct UpdateOIParams {
     pub size: u128,
     pub is_long: bool,
     pub entry_price: u128,
+    pub token_decimal: u16,
 }

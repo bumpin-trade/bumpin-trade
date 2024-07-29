@@ -6,7 +6,6 @@ use crate::errors::BumpErrorCode::PoolSubUnsettleNotEnough;
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{add_i128, add_u128, calculator, sub_u128};
 use crate::math::casting::Cast;
-use crate::math::constants::PRICE_PRECISION;
 use crate::math::safe_math::SafeMath;
 use crate::state::bump_events::PoolUpdateEvent;
 use crate::state::infrastructure::fee_reward::FeeReward;
@@ -130,10 +129,8 @@ impl Pool {
         base_trade_token: &TradeToken,
         stable_trade_token: &TradeToken,
     ) -> BumpResult<()> {
-        msg!("============hold_pool_amount, amount:{}", amount);
         let available_liquidity =
             self.get_pool_available_liquidity(oracle_map, base_trade_token, stable_trade_token)?;
-        msg!("============hold_pool_amount, available_liquidity:{}", available_liquidity);
         validate!(amount < available_liquidity, BumpErrorCode::PoolAvailableLiquidityNotEnough)?;
         self.hold_pool(amount)?;
         Ok(())
@@ -298,7 +295,7 @@ impl Pool {
                 token_balance.amount.safe_add(token_balance.un_settle_amount)?,
                 pool_liquidity_limit,
             )?
-                .safe_sub(token_balance.hold_amount)?
+            .safe_sub(token_balance.hold_amount)?
                 >= amount)
         };
     }
@@ -409,7 +406,11 @@ impl Pool {
     ) -> BumpResult<u128> {
         let pool_token = trade_token_map.get_trade_token_by_mint_ref(&self.mint_key)?;
         let pool_value = self.get_pool_usd_value(trade_token_map, oracle_map, market_vec)?;
-        calculator::div_to_precision_u(pool_value, self.total_supply, 10u128.pow(pool_token.decimals.cast::<u32>()?))
+        calculator::div_to_precision_u(
+            pool_value,
+            self.total_supply,
+            10u128.pow(pool_token.decimals.cast::<u32>()?),
+        )
     }
 
     pub fn update_pnl_and_un_hold_pool_amount(
@@ -442,7 +443,7 @@ impl Pool {
                         u_token_pnl
                     })?;
                 }
-            }
+            },
             Some(base_token_pool) => {
                 //short
                 if token_pnl < 0i128 {
@@ -465,7 +466,7 @@ impl Pool {
                         if u_token_pnl > add_liability { add_liability } else { u_token_pnl },
                     )?;
                 }
-            }
+            },
         })
     }
 }

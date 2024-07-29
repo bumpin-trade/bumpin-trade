@@ -529,6 +529,7 @@ pub fn decrease_position<'info>(
         params.decrease_size,
         is_long,
         pre_position.entry_price,
+        trade_token.decimals,
     )?;
     settle(
         &response,
@@ -583,6 +584,7 @@ fn collect_decrease_fee(
     decrease_size: u128,
     is_long: bool,
     entry_price: u128,
+    token_decimal: u16,
 ) -> BumpResult {
     if is_long {
         fee_processor::collect_long_close_position_fee(
@@ -614,7 +616,13 @@ fn collect_decrease_fee(
     market.update_market_total_funding_fee(settle_funding_fee, is_long)?;
     market.update_oi(
         false,
-        UpdateOIParams { margin_token: *margin_token, size: decrease_size, is_long, entry_price },
+        UpdateOIParams {
+            margin_token: *margin_token,
+            size: decrease_size,
+            is_long,
+            entry_price,
+            token_decimal,
+        },
     )?;
     Ok(())
 }
@@ -1340,6 +1348,7 @@ pub fn increase_position(
             increase_size,
             execute_price,
             market.config.tick_size,
+            decimal,
             position.is_long,
         )?)?;
         position.add_initial_margin(increase_margin)?;
@@ -1380,6 +1389,7 @@ pub fn increase_position(
             size: increase_size,
             is_long,
             entry_price: execute_price,
+            token_decimal: decimal,
         },
     )?;
 

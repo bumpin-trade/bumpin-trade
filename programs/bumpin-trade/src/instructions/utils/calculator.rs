@@ -3,7 +3,8 @@ use anchor_lang::prelude::*;
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;
 use crate::math::constants::{
-    PER_TOKEN_PRECISION, PRICE_TO_USD_PRECISION, RATE_PRECISION, SMALL_RATE_PRECISION,
+    PER_TOKEN_PRECISION, PRICE_PRECISION_NUMBER, PRICE_TO_USD_PRECISION,
+    RATE_PRECISION, SMALL_RATE_PRECISION,
 };
 use crate::math::safe_math::SafeMath;
 
@@ -130,33 +131,55 @@ pub fn current_time() -> i64 {
 }
 
 pub fn compute_avg_entry_price(
-    amount: u128,
-    entry_price: u128,
-    increase_amount: u128,
+    origin_size: u128,
+    origin_entry_price: u128,
+    increase_size: u128,
     token_price: u128,
     ticker_size: u128,
+    decimal: u16,
     up: bool,
 ) -> BumpResult<u128> {
-    let origin_entry_price = amount
-        .safe_mul(entry_price)?
-        .safe_add(increase_amount.safe_mul(token_price)?)?
-        .safe_div(amount.safe_add(increase_amount)?)?;
-    format_to_ticker_size(origin_entry_price, ticker_size, up)
+    let origin_token_amount = usd_to_token_u(origin_size, decimal, origin_entry_price)?;
+    let increase_amount = usd_to_token_u(increase_size, decimal, token_price)?;
+    let total_size = origin_size.safe_add(increase_size)?;
+    let entry_price = if decimal >= PRICE_PRECISION_NUMBER {
+        total_size
+            .safe_mul(10u128.pow(decimal.safe_sub(PRICE_PRECISION_NUMBER)?.cast()?))?
+            .safe_div(origin_token_amount.safe_add(increase_amount)?)?
+            .safe_div(PRICE_TO_USD_PRECISION)?
+    } else {
+        total_size
+            .safe_div(10u128.pow(PRICE_PRECISION_NUMBER.safe_sub(decimal)?.cast()?))?
+            .safe_div(origin_token_amount.safe_add(increase_amount)?)?
+            .safe_div(PRICE_TO_USD_PRECISION)?
+    };
+    format_to_ticker_size(entry_price, ticker_size, up)
 }
 
 pub fn compute_decrease_avg_entry_price(
-    amount: u128,
-    entry_price: u128,
-    decrease_amount: u128,
+    origin_size: u128,
+    origin_entry_price: u128,
+    increase_size: u128,
     token_price: u128,
     ticker_size: u128,
+    decimal: u16,
     up: bool,
 ) -> BumpResult<u128> {
-    let origin_entry_price = amount
-        .safe_mul(entry_price)?
-        .safe_sub(decrease_amount.safe_mul(token_price)?)?
-        .safe_div(amount.safe_sub(decrease_amount)?)?;
-    format_to_ticker_size(origin_entry_price, ticker_size, up)
+    let origin_token_amount = usd_to_token_u(origin_size, decimal, origin_entry_price)?;
+    let increase_amount = usd_to_token_u(increase_size, decimal, token_price)?;
+    let total_size = origin_size.safe_sub(increase_size)?;
+    let entry_price = if decimal >= PRICE_PRECISION_NUMBER {
+        total_size
+            .safe_mul(10u128.pow(decimal.safe_sub(PRICE_PRECISION_NUMBER)?.cast()?))?
+            .safe_div(origin_token_amount.safe_sub(increase_amount)?)?
+            .safe_div(PRICE_TO_USD_PRECISION)?
+    } else {
+        total_size
+            .safe_div(10u128.pow(PRICE_PRECISION_NUMBER.safe_sub(decimal)?.cast()?))?
+            .safe_div(origin_token_amount.safe_sub(increase_amount)?)?
+            .safe_div(PRICE_TO_USD_PRECISION)?
+    };
+    format_to_ticker_size(entry_price, ticker_size, up)
 }
 
 pub fn format_to_ticker_size(price: u128, ticker_size: u128, up: bool) -> BumpResult<u128> {
