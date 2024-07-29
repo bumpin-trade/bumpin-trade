@@ -107,6 +107,8 @@ pub enum BumpErrorCode {
     StakeToSmall,
     #[msg("UnStakeTooSmall")]
     UnStakeTooSmall,
+    #[msg("UnStakeWithAmountNotEnough")]
+    UnStakeWithAmountNotEnough,
     #[msg("UnStakeTooLarge")]
     UnStakeTooLarge,
     #[msg("PositionSideNotSupport")]

@@ -18,15 +18,24 @@ pub fn un_stake(
     oracle_map: &mut OracleMap,
     market_map: &MarketMap,
 ) -> BumpResult<u128> {
-    let trade_token = trade_token_map.get_trade_token_by_mint_ref(&pool.mint_key)?;
+    let base_trade_token = trade_token_map.get_trade_token_by_mint_ref(&pool.mint_key)?;
+    let stable_trade_token = trade_token_map.get_trade_token_by_mint_ref(&pool.stable_mint_key)?;
     let net_price = pool.get_pool_net_price(trade_token_map, oracle_map, market_map)?;
     let un_stake_usd =
-        calculator::token_to_usd_u(un_stake_amount, trade_token.decimals, net_price)?;
-    let token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
-    let token_amount = calculator::usd_to_token_u(un_stake_usd, trade_token.decimals, token_price)?;
+        calculator::token_to_usd_u(un_stake_amount, base_trade_token.decimals, net_price)?;
+    let token_price = oracle_map.get_price_data(&base_trade_token.oracle_key)?.price;
+    let token_amount =
+        calculator::usd_to_token_u(un_stake_usd, base_trade_token.decimals, token_price)?;
     validate!(un_stake_usd > pool.config.minimum_un_stake_amount, BumpErrorCode::UnStakeTooSmall)?;
-    let max_un_stake_amount = pool.get_current_max_un_stake()?;
-    validate!(token_amount <= max_un_stake_amount, BumpErrorCode::UnStakeTooLarge)?;
+    validate!(
+        token_amount
+            <= pool.get_pool_available_liquidity(
+                oracle_map,
+                &base_trade_token,
+                &stable_trade_token
+            )?,
+        BumpErrorCode::UnStakeWithAmountNotEnough
+    )?;
 
     let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
     user_stake.sub_staked_share(un_stake_amount)?;
