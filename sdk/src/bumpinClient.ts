@@ -418,6 +418,8 @@ export class BumpinClient {
             pnl: new BigNumber(0),
             earn: new BigNumber(0),
             tokens: [] as UserTokenSummary[],
+            liabilityRatio: new BigNumber(0),
+            apr: new BigNumber(0),
         };
         const user = await this.getUser(sync);
         const tradeTokens = await this.getTradeTokens();
