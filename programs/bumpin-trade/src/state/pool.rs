@@ -6,6 +6,7 @@ use crate::errors::BumpErrorCode::PoolSubUnsettleNotEnough;
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::{add_i128, add_u128, calculator, sub_u128};
 use crate::math::casting::Cast;
+use crate::math::constants::PRICE_TO_USD_PRECISION;
 use crate::math::safe_math::SafeMath;
 use crate::state::bump_events::PoolUpdateEvent;
 use crate::state::infrastructure::fee_reward::FeeReward;
@@ -406,11 +407,10 @@ impl Pool {
     ) -> BumpResult<u128> {
         let pool_token = trade_token_map.get_trade_token_by_mint_ref(&self.mint_key)?;
         let pool_value = self.get_pool_usd_value(trade_token_map, oracle_map, market_vec)?;
-        calculator::div_to_precision_u(
-            pool_value,
-            self.total_supply,
-            10u128.pow(pool_token.decimals.cast::<u32>()?),
-        )
+        pool_value
+            .safe_mul(10u128.pow(pool_token.decimals.cast::<u32>()?))?
+            .safe_div(self.total_supply)?
+            .safe_div(PRICE_TO_USD_PRECISION)
     }
 
     pub fn update_pnl_and_un_hold_pool_amount(
