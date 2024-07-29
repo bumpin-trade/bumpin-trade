@@ -3,8 +3,7 @@ use anchor_lang::prelude::*;
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;
 use crate::math::constants::{
-    PER_TOKEN_PRECISION, PRICE_PRECISION_NUMBER, PRICE_TO_USD_PRECISION,
-    RATE_PRECISION, SMALL_RATE_PRECISION,
+    PER_TOKEN_PRECISION, PRICE_TO_USD_PRECISION, RATE_PRECISION, SMALL_RATE_PRECISION,
 };
 use crate::math::safe_math::SafeMath;
 
@@ -142,17 +141,10 @@ pub fn compute_avg_entry_price(
     let origin_token_amount = usd_to_token_u(origin_size, decimal, origin_entry_price)?;
     let increase_amount = usd_to_token_u(increase_size, decimal, token_price)?;
     let total_size = origin_size.safe_add(increase_size)?;
-    let entry_price = if decimal >= PRICE_PRECISION_NUMBER {
-        total_size
-            .safe_mul(10u128.pow(decimal.safe_sub(PRICE_PRECISION_NUMBER)?.cast()?))?
-            .safe_div(origin_token_amount.safe_add(increase_amount)?)?
-            .safe_div(PRICE_TO_USD_PRECISION)?
-    } else {
-        total_size
-            .safe_div(10u128.pow(PRICE_PRECISION_NUMBER.safe_sub(decimal)?.cast()?))?
-            .safe_div(origin_token_amount.safe_add(increase_amount)?)?
-            .safe_div(PRICE_TO_USD_PRECISION)?
-    };
+    let entry_price = total_size
+        .safe_mul(10u128.pow(decimal.cast()?))?
+        .safe_div(origin_token_amount.safe_add(increase_amount)?)?
+        .safe_div(PRICE_TO_USD_PRECISION)?;
     format_to_ticker_size(entry_price, ticker_size, up)
 }
 
@@ -168,17 +160,10 @@ pub fn compute_decrease_avg_entry_price(
     let origin_token_amount = usd_to_token_u(origin_size, decimal, origin_entry_price)?;
     let increase_amount = usd_to_token_u(increase_size, decimal, token_price)?;
     let total_size = origin_size.safe_sub(increase_size)?;
-    let entry_price = if decimal >= PRICE_PRECISION_NUMBER {
-        total_size
-            .safe_mul(10u128.pow(decimal.safe_sub(PRICE_PRECISION_NUMBER)?.cast()?))?
-            .safe_div(origin_token_amount.safe_sub(increase_amount)?)?
-            .safe_div(PRICE_TO_USD_PRECISION)?
-    } else {
-        total_size
-            .safe_div(10u128.pow(PRICE_PRECISION_NUMBER.safe_sub(decimal)?.cast()?))?
-            .safe_div(origin_token_amount.safe_sub(increase_amount)?)?
-            .safe_div(PRICE_TO_USD_PRECISION)?
-    };
+    let entry_price = total_size
+        .safe_mul(10u128.pow(decimal.cast()?))?
+        .safe_div(origin_token_amount.safe_sub(increase_amount)?)?
+        .safe_div(PRICE_TO_USD_PRECISION)?;
     format_to_ticker_size(entry_price, ticker_size, up)
 }
 
