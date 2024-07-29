@@ -25,32 +25,6 @@ pub struct FeeReward {
     pub last_rewards_per_stake_token_deltas: [u128; 3],
 }
 
-struct FixedSizeQueue {
-    data: [u128; 3],
-    start: usize,
-    size: usize,
-}
-
-impl FixedSizeQueue {
-    fn new(vec: [u128; 3]) -> Self {
-        Self { data: vec, start: 0, size: 0 }
-    }
-
-    fn push(&mut self, value: u128) {
-        if self.size < 3 {
-            self.data[(self.start + self.size) % 3] = value;
-            self.size += 1;
-        } else {
-            self.data[self.start] = value;
-            self.start = (self.start + 1) % 3;
-        }
-    }
-
-    fn to_vec(&self) -> [u128; 3] {
-        self.data.clone()
-    }
-}
-
 impl FeeReward {
     pub fn get_rewards_delta_limit(&self) -> BumpResult<u128> {
         let mut delta_limit = 0u128;
@@ -90,9 +64,13 @@ impl FeeReward {
     }
 
     pub fn push_last_rewards_per_stake_token_deltas(&mut self, delta: u128) -> BumpResult<()> {
-        let mut queue = FixedSizeQueue::new(self.last_rewards_per_stake_token_deltas.clone());
-        queue.push(delta);
-        self.last_rewards_per_stake_token_deltas = queue.to_vec();
+        // Shift elements to the right
+        for i in (1..self.last_rewards_per_stake_token_deltas.len()).rev() {
+            self.last_rewards_per_stake_token_deltas[i] =
+                self.last_rewards_per_stake_token_deltas[i - 1];
+        }
+        // Insert the new delta at the first position
+        self.last_rewards_per_stake_token_deltas[0] = delta;
         Ok(())
     }
 }
