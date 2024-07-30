@@ -75,10 +75,6 @@ pub fn handle_execute_order<'info>(
     market.deref_mut().update_market_funding_fee_rate(
         state_account,
         margin_token_price,
-        match use_base_token(&user_order.position_side, &user_order.order_side)? {
-            true => trade_token.decimals,
-            false => stable_trade_token.decimals,
-        },
     )?;
     match use_base_token(&user_order.position_side, &user_order.order_side)? {
         true => base_token_pool.deref_mut().update_pool_borrowing_fee_rate()?,

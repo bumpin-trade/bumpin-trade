@@ -1,4 +1,4 @@
-import {PublicKey} from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import {
     BorrowingFeeAccount,
@@ -24,11 +24,11 @@ import {
     UserTokenAccount,
     UserTokenStatusAccount,
 } from '../typedef';
-import {C} from '../consts';
-import {BumpinUtils} from '../utils/utils';
-import {isEqual} from 'lodash';
-import {BumpinTokenUtils} from '../utils/token';
-import {BumpinPoolUtils} from '../utils/pool';
+import { C } from '../consts';
+import { BumpinUtils } from '../utils/utils';
+import { isEqual } from 'lodash';
+import { BumpinTokenUtils } from '../utils/token';
+import { BumpinPoolUtils } from '../utils/pool';
 
 export class State {
     public admin: PublicKey;
@@ -174,11 +174,11 @@ export class MarketFundingFee {
             );
         this.longFundingFeeRate =
             marketFundingFee.longFundingFeeRate.toBigNumberWithDecimals(
-                C.RATE_MULTIPLIER_EXPONENT
+                C.SMALL_RATE_MULTIPLIER_NUMBER,
             );
         this.shortFundingFeeRate =
             marketFundingFee.shortFundingFeeRate.toBigNumberWithDecimals(
-                C.RATE_MULTIPLIER_EXPONENT,
+                C.SMALL_RATE_MULTIPLIER_NUMBER,
             );
         this.updatedAt = marketFundingFee.updatedAt.toBigNumber();
     }
@@ -292,11 +292,11 @@ export class FeeReward {
             feeReward.unSettleFeeAmount.toBigNumberWithDecimals(coinDecimals);
         this.cumulativeRewardsPerStakeToken =
             feeReward.cumulativeRewardsPerStakeToken.toBigNumberWithDecimals(
-                C.SMALL_RATE_MULTIPLIER_NUMBER,
+                C.FUNDING_OR_BORROWING_RATE_MULTIPLIER_NUMBER,
             );
         this.lastRewardsPerStakeTokenDeltas =
             feeReward.lastRewardsPerStakeTokenDeltas.map((delta) =>
-                delta.toBigNumberWithDecimals(C.SMALL_RATE_MULTIPLIER_NUMBER),
+                delta.toBigNumberWithDecimals(C.FUNDING_OR_BORROWING_RATE_MULTIPLIER_NUMBER),
             );
     }
 }
@@ -397,8 +397,8 @@ export class Pool {
         this.status = isEqual(pool.status, PoolStatus.NORMAL)
             ? PoolStatus.NORMAL
             : isEqual(pool.status, PoolStatus.StakePaused)
-                ? PoolStatus.StakePaused
-                : PoolStatus.UnStakePaused;
+            ? PoolStatus.StakePaused
+            : PoolStatus.UnStakePaused;
     }
 }
 
@@ -478,7 +478,7 @@ export class UserRewards {
             );
         this.openRewardsPerStakeToken =
             userRewards.openRewardsPerStakeToken.toBigNumberWithDecimals(
-                C.SMALL_RATE_MULTIPLIER_NUMBER,
+                C.FUNDING_OR_BORROWING_RATE_MULTIPLIER_NUMBER,
             );
         this.tokenKey = userRewards.tokenKey;
     }
@@ -642,7 +642,7 @@ export class UserPosition {
             );
         this.openBorrowingFeePerToken =
             userPosition.openBorrowingFeePerToken.toBigNumberWithDecimals(
-                C.SMALL_RATE_MULTIPLIER_NUMBER,
+                C.FUNDING_OR_BORROWING_RATE_MULTIPLIER_NUMBER,
             );
         this.realizedFundingFee =
             userPosition.realizedFundingFee.toBigNumberWithDecimals(
@@ -654,7 +654,7 @@ export class UserPosition {
             );
         this.openFundingFeeAmountPerSize =
             userPosition.openFundingFeeAmountPerSize.toBigNumberWithDecimals(
-                C.SMALL_RATE_MULTIPLIER_NUMBER,
+                C.FUNDING_OR_BORROWING_RATE_MULTIPLIER_NUMBER,
             );
         this.closeFeeInUsd = userPosition.closeFeeInUsd.toBigNumberWithDecimals(
             C.USD_EXPONENT_NUMBER,
@@ -786,28 +786,28 @@ export class UserOrder {
         this.orderSide = isEqual(userOrder.orderSide, OrderSide.LONG)
             ? OrderSide.LONG
             : isEqual(userOrder.orderSide, OrderSide.SHORT)
-                ? OrderSide.SHORT
-                : OrderSide.NONE;
+            ? OrderSide.SHORT
+            : OrderSide.NONE;
         this.positionSide = isEqual(
             userOrder.positionSide,
             PositionSide.INCREASE,
         )
             ? PositionSide.INCREASE
             : isEqual(userOrder.positionSide, PositionSide.DECREASE)
-                ? PositionSide.DECREASE
-                : PositionSide.NONE;
+            ? PositionSide.DECREASE
+            : PositionSide.NONE;
         this.orderType = isEqual(userOrder.orderType, OrderType.MARKET)
             ? OrderType.MARKET
             : isEqual(userOrder.orderType, OrderType.LIMIT)
-                ? OrderType.LIMIT
-                : isEqual(userOrder.orderType, OrderType.STOP)
-                    ? OrderType.STOP
-                    : OrderType.NONE;
+            ? OrderType.LIMIT
+            : isEqual(userOrder.orderType, OrderType.STOP)
+            ? OrderType.STOP
+            : OrderType.NONE;
         this.stopType = isEqual(userOrder.stopType, StopType.StopLoss)
             ? StopType.StopLoss
             : isEqual(userOrder.stopType, StopType.TakeProfit)
-                ? StopType.TakeProfit
-                : StopType.NONE;
+            ? StopType.TakeProfit
+            : StopType.NONE;
         this.status = isEqual(userOrder.status, OrderStatus.INIT)
             ? OrderStatus.INIT
             : OrderStatus.USING;
@@ -915,7 +915,7 @@ export class User {
         this.status = isEqual(user.status, UserStatus.NORMAL)
             ? UserStatus.NORMAL
             : isEqual(user.status, UserStatus.LIQUIDATION)
-                ? UserStatus.LIQUIDATION
-                : UserStatus.DISABLE;
+            ? UserStatus.LIQUIDATION
+            : UserStatus.DISABLE;
     }
 }

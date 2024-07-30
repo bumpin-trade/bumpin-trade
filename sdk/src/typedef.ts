@@ -1,11 +1,11 @@
-import {PublicKey} from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 // import BN from "bn.js";
-import {BN} from '@coral-xyz/anchor';
-import {PriceData} from '@pythnetwork/client';
-import {BumpinUtils} from './utils/utils';
-import {BumpinInvalidParameter, BumpinTokenNotFound} from './errors';
+import { BN } from '@coral-xyz/anchor';
+import { PriceData } from '@pythnetwork/client';
+import { BumpinUtils } from './utils/utils';
+import { BumpinInvalidParameter, BumpinTokenNotFound } from './errors';
 import BigNumber from 'bignumber.js';
-import {isEqual} from 'lodash';
+import { isEqual } from 'lodash';
 import {
     MarketConfig,
     MarketFundingFee,
@@ -25,13 +25,13 @@ import {
 } from './beans/beans';
 
 export class OracleSource {
-    static readonly PYTH = {pyth: {}};
-    static readonly PYTH_1K = {pyth1K: {}};
-    static readonly PYTH_1M = {pyth1M: {}};
-    static readonly SWITCHBOARD = {switchboard: {}};
-    static readonly QUOTE_ASSET = {quoteAsset: {}};
-    static readonly PYTH_STABLE_COIN = {pythStableCoin: {}};
-    static readonly Prelaunch = {prelaunch: {}};
+    static readonly PYTH = { pyth: {} };
+    static readonly PYTH_1K = { pyth1K: {} };
+    static readonly PYTH_1M = { pyth1M: {} };
+    static readonly SWITCHBOARD = { switchboard: {} };
+    static readonly QUOTE_ASSET = { quoteAsset: {} };
+    static readonly PYTH_STABLE_COIN = { pythStableCoin: {} };
+    static readonly Prelaunch = { prelaunch: {} };
 }
 
 export type InitializeMarketParams = {
@@ -190,16 +190,16 @@ export type PoolConfigAccount = {
 };
 
 export class PoolStatusAccount {
-    static readonly NORMAL = {init: {}};
-    static readonly StakePaused = {stakePaused: {}};
-    static readonly UnStakePaused = {unStakePaused: {}};
+    static readonly NORMAL = { init: {} };
+    static readonly StakePaused = { stakePaused: {} };
+    static readonly UnStakePaused = { unStakePaused: {} };
 
     toString() {
         return isEqual(this, PoolStatusAccount.NORMAL)
             ? 'Normal'
             : isEqual(this, PoolStatusAccount.StakePaused)
-                ? 'StakePaused'
-                : 'UnStakePaused';
+            ? 'StakePaused'
+            : 'UnStakePaused';
     }
 
     public static from(o: PoolStatus) {
@@ -257,8 +257,8 @@ export type TradeTokenAccount = {
 };
 
 export class UserStakeStatusAccount {
-    static readonly INIT = {init: {}};
-    static readonly USING = {using: {}};
+    static readonly INIT = { init: {} };
+    static readonly USING = { using: {} };
 
     toString() {
         return isEqual(this, UserStakeStatusAccount.INIT) ? 'Init' : 'Using';
@@ -288,8 +288,8 @@ export type UserStakeAccount = {
 };
 
 export class UserTokenStatusAccount {
-    static readonly INIT = {init: {}};
-    static readonly USING = {using: {}};
+    static readonly INIT = { init: {} };
+    static readonly USING = { using: {} };
 
     toString() {
         return isEqual(this, UserTokenStatusAccount.INIT) ? 'Init' : 'Using';
@@ -314,8 +314,8 @@ export type UserTokenAccount = {
 };
 
 export class PositionStatusAccount {
-    static readonly INIT = {init: {}};
-    static readonly USING = {using: {}};
+    static readonly INIT = { init: {} };
+    static readonly USING = { using: {} };
 
     toString() {
         return isEqual(this, PositionStatusAccount.INIT) ? 'Init' : 'Using';
@@ -361,16 +361,16 @@ export type UserPositionAccount = {
 };
 
 export class OrderSideAccount {
-    static readonly NONE = {none: {}};
-    static readonly LONG = {long: {}};
-    static readonly SHORT = {short: {}};
+    static readonly NONE = { none: {} };
+    static readonly LONG = { long: {} };
+    static readonly SHORT = { short: {} };
 
     toString() {
         return isEqual(this, OrderSideAccount.NONE)
             ? 'None'
             : isEqual(this, OrderSideAccount.LONG)
-                ? 'Long'
-                : 'Short';
+            ? 'Long'
+            : 'Short';
     }
 
     public static from(o: OrderSide) {
@@ -385,8 +385,8 @@ export class OrderSideAccount {
 }
 
 export class OrderStatusAccount {
-    static readonly INIT = {init: {}};
-    static readonly USING = {using: {}};
+    static readonly INIT = { init: {} };
+    static readonly USING = { using: {} };
 
     toString() {
         return isEqual(this, OrderStatusAccount.INIT) ? 'Init' : 'Using';
@@ -402,16 +402,16 @@ export class OrderStatusAccount {
 }
 
 export class PositionSideAccount {
-    static readonly NONE = {none: {}};
-    static readonly INCREASE = {increase: {}};
-    static readonly DECREASE = {decrease: {}};
+    static readonly NONE = { none: {} };
+    static readonly INCREASE = { increase: {} };
+    static readonly DECREASE = { decrease: {} };
 
     toString() {
         return isEqual(this, PositionSideAccount.NONE)
             ? 'None'
             : isEqual(this, PositionSideAccount.INCREASE)
-                ? 'Increase'
-                : 'Decrease';
+            ? 'Increase'
+            : 'Decrease';
     }
 
     public static from(o: PositionSide) {
@@ -426,19 +426,19 @@ export class PositionSideAccount {
 }
 
 export class OrderTypeAccount {
-    static readonly NONE = {none: {}};
-    static readonly MARKET = {market: {}};
-    static readonly LIMIT = {limit: {}};
-    static readonly STOP = {stop: {}};
+    static readonly NONE = { none: {} };
+    static readonly MARKET = { market: {} };
+    static readonly LIMIT = { limit: {} };
+    static readonly STOP = { stop: {} };
 
     toString() {
         return isEqual(this, OrderTypeAccount.NONE)
             ? 'None'
             : isEqual(this, OrderTypeAccount.MARKET)
-                ? 'Market'
-                : isEqual(this, OrderTypeAccount.LIMIT)
-                    ? 'Limit'
-                    : 'Stop';
+            ? 'Market'
+            : isEqual(this, OrderTypeAccount.LIMIT)
+            ? 'Limit'
+            : 'Stop';
     }
 
     public static from(o: OrderType) {
@@ -455,16 +455,16 @@ export class OrderTypeAccount {
 }
 
 export class StopTypeAccount {
-    static readonly NONE = {none: {}};
-    static readonly StopLoss = {stopLoss: {}};
-    static readonly TakeProfit = {takeProfit: {}};
+    static readonly NONE = { none: {} };
+    static readonly StopLoss = { stopLoss: {} };
+    static readonly TakeProfit = { takeProfit: {} };
 
     toString() {
         return isEqual(this, StopTypeAccount.NONE)
             ? 'None'
             : isEqual(this, StopTypeAccount.StopLoss)
-                ? 'StopLoss'
-                : 'TakeProfit';
+            ? 'StopLoss'
+            : 'TakeProfit';
     }
 
     public static from(o: StopType) {
@@ -523,16 +523,16 @@ export type UserOrderAccount = {
 };
 
 export class UserStatusAccount {
-    static readonly NORMAL = {normal: {}};
-    static readonly LIQUIDATION = {liquidation: {}};
-    static readonly DISABLE = {disable: {}};
+    static readonly NORMAL = { normal: {} };
+    static readonly LIQUIDATION = { liquidation: {} };
+    static readonly DISABLE = { disable: {} };
 
     toString() {
         return isEqual(this, UserStatusAccount.NORMAL)
             ? 'Normal'
             : isEqual(this, UserStatusAccount.LIQUIDATION)
-                ? 'Liquidation'
-                : 'Disable';
+            ? 'Liquidation'
+            : 'Disable';
     }
 
     public static from(o: UserStatus) {
@@ -651,8 +651,8 @@ export type UserSummary = {
     pnl: BigNumber;
     earn: BigNumber;
     tokens: UserTokenSummary[];
-    liabilityRatio: BigNumber,
-    apr: BigNumber,
+    liabilityRatio: BigNumber;
+    apr: BigNumber;
 };
 export type UserTokenSummary = {
     token: TradeToken;

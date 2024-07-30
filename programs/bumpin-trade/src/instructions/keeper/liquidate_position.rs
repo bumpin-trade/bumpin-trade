@@ -170,7 +170,6 @@ fn update_borrowing_fee_and_funding_fee(
     market.update_market_funding_fee_rate(
         state,
         oracle_map.get_price_data(&trade_token.oracle_key)?.price,
-        trade_token.decimals,
     )?;
 
     pool.update_pool_borrowing_fee_rate()?;

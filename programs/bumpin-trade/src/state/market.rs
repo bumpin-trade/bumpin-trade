@@ -1,7 +1,7 @@
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::instructions::calculator;
 use crate::math::casting::Cast;
-use crate::math::constants::SMALL_RATE_TO_PER_TOKEN_PRECISION;
+use crate::math::constants::{PRICE_PRECISION, SMALL_RATE_TO_PER_TOKEN_PRECISION};
 use crate::math::safe_math::SafeMath;
 use crate::state::infrastructure::market_funding_fee::MarketFundingFee;
 use crate::state::oracle_map::OracleMap;
@@ -114,7 +114,6 @@ impl Market {
         &mut self,
         state: &State,
         price: u128,
-        decimals: u16,
     ) -> BumpResult<()> {
         let (
             update_time_only,
@@ -161,7 +160,7 @@ impl Market {
                             total_funding_fee.safe_div(long.open_interest)?,
                             1u128,
                             SMALL_RATE_TO_PER_TOKEN_PRECISION,
-                        )? //^15
+                        )? //^18
                     } else {
                         calculator::div_to_precision_u(
                             state
@@ -170,12 +169,12 @@ impl Market {
                                 .min(total_funding_fee.safe_div(long.open_interest)?),
                             1u128,
                             SMALL_RATE_TO_PER_TOKEN_PRECISION,
-                        )? //^15
+                        )? //^18
                     };
-                    long_funding_fee_per_qty_delta = calculator::usd_to_token_u(
-                        current_long_funding_fee_per_qty,
-                        decimals,
+                    long_funding_fee_per_qty_delta = calculator::mul_div_u(
+                        current_long_funding_fee_per_qty,//^18
                         price,
+                        PRICE_PRECISION,
                     )?
                     .cast::<i128>()?;
                     long_funding_fee_per_qty_delta = if long_pay_short {

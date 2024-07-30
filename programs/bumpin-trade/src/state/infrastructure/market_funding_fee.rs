@@ -4,7 +4,7 @@ use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;
-use crate::math::constants::RATE_TO_PER_TOKEN_PRECISION;
+use crate::math::constants::{SMALL_RATE_TO_PER_TOKEN_PRECISION};
 use crate::math::safe_math::SafeMath;
 
 #[bumpin_zero_copy_unsafe]
@@ -39,12 +39,12 @@ impl MarketFundingFee {
         self.long_funding_fee_rate = long_funding_fee_amount_per_size_delta
             .safe_mul(3600i128)?
             .safe_div(fee_durations.cast::<i128>()?)?
-            .safe_div(RATE_TO_PER_TOKEN_PRECISION.cast::<i128>()?)?;
+            .safe_div(SMALL_RATE_TO_PER_TOKEN_PRECISION.cast::<i128>()?)?;
 
         self.short_funding_fee_rate = short_funding_fee_amount_per_size_delta
             .safe_mul(3600i128)?
             .safe_div(fee_durations.cast::<i128>()?)?
-            .safe_div(RATE_TO_PER_TOKEN_PRECISION.cast::<i128>()?)?;
+            .safe_div(SMALL_RATE_TO_PER_TOKEN_PRECISION.cast::<i128>()?)?;
         self.update_last_update()?;
         Ok(())
     }

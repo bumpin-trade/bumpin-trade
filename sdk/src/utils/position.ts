@@ -1,11 +1,11 @@
-import {PositionBalance, PositionFee} from '../typedef';
-import {BN} from '@coral-xyz/anchor';
-import {BumpinTokenUtils} from './token';
+import { PositionBalance, PositionFee } from '../typedef';
+import { BN } from '@coral-xyz/anchor';
+import { BumpinTokenUtils } from './token';
 // @ts-ignore
-import {isEqual} from 'lodash';
-import {BumpinMarketNotFound, BumpinPoolNotFound} from '../errors';
-import {BumpinMarketUtils} from './market';
-import {BumpinPoolUtils} from './pool';
+import { isEqual } from 'lodash';
+import { BumpinMarketNotFound, BumpinPoolNotFound } from '../errors';
+import { BumpinMarketUtils } from './market';
+import { BumpinPoolUtils } from './pool';
 import {
     Market,
     Pool,
@@ -15,7 +15,8 @@ import {
     UserPosition,
 } from '../beans/beans';
 import BigNumber from 'bignumber.js';
-import {TradeTokenComponent} from '../componets/tradeToken';
+import { TradeTokenComponent } from '../componets/tradeToken';
+import {BumpinUtils} from "./utils";
 
 export class BumpinPositionUtils {
     // public static async reducePositionPortfolioBalance(
@@ -43,7 +44,7 @@ export class BumpinPositionUtils {
         tradeTokens: TradeToken[],
         markets: Market[],
         pools: Pool[],
-        positionValue: boolean = true
+        positionValue: boolean = true,
     ): Promise<PositionBalance> {
         let totalBalance = {
             initialMarginUsd: BigNumber(0),
@@ -54,7 +55,10 @@ export class BumpinPositionUtils {
         };
 
         for (let userPosition of user.positions) {
-            if (isEqual(userPosition.status, PositionStatus.INIT) || !userPosition.isPortfolioMargin) {
+            if (
+                isEqual(userPosition.status, PositionStatus.INIT) ||
+                !userPosition.isPortfolioMargin
+            ) {
                 continue;
             }
             const indexTradeToken =
@@ -71,13 +75,9 @@ export class BumpinPositionUtils {
                 tradeTokenComponent,
                 indexTradeToken,
                 marginTradeToken,
-                userPosition, positionValue
+                userPosition,
+                positionValue,
             );
-            if (unPnlValue.gt(0)){
-                unPnlValue = unPnlValue.multipliedBy(marginTradeToken.discount);
-            }else {
-                unPnlValue = unPnlValue.multipliedBy(1+marginTradeToken.liquidationFactor);
-            }
             const market = BumpinMarketUtils.getMarketBySymbol(
                 userPosition.symbol,
                 markets,
@@ -99,7 +99,6 @@ export class BumpinPositionUtils {
                 userPosition,
                 market,
                 pool,
-                marginTradeToken,
             );
 
             totalBalance.positionUnPnl =
@@ -127,7 +126,7 @@ export class BumpinPositionUtils {
         indexTradeToken: TradeToken,
         marginTradeToken: TradeToken,
         position: UserPosition,
-        positionValue: boolean = true
+        positionValue: boolean = true,
     ): Promise<BigNumber> {
         const price = tradeTokenComponent.getTradeTokenPricesByOracleKey(
             indexTradeToken.oracleKey,
@@ -163,7 +162,6 @@ export class BumpinPositionUtils {
         position: UserPosition,
         market: Market,
         pool: Pool,
-        marginTradeToken: TradeToken,
     ): Promise<PositionFee> {
         let positionFee = {
             fundingFee: BigNumber(0),
@@ -173,6 +171,7 @@ export class BumpinPositionUtils {
             closeFeeUsd: BigNumber(0),
             totalUsd: BigNumber(0),
         };
+        console.log("???????????????????getPositionFee start?????????????????");
 
         const price = (
             await tradeTokenComponent.getTradeTokenPricesByMintKey(
@@ -192,8 +191,7 @@ export class BumpinPositionUtils {
                 market.fundingFee.shortFundingFeeAmountPerSize
                     .minus(position.openFundingFeeAmountPerSize)
                     .multipliedBy(position.positionSize);
-            positionFee.fundingFee =
-                positionFee.fundingFeeUsd.multipliedBy(price);
+            positionFee.fundingFee = positionFee.fundingFeeUsd.dividedBy(price);
         }
 
         positionFee.borrowingFee =
@@ -205,7 +203,11 @@ export class BumpinPositionUtils {
         positionFee.closeFeeUsd = position.closeFeeInUsd;
         positionFee.totalUsd = positionFee.fundingFeeUsd
             .plus(positionFee.borrowingFeeUsd)
-            .plus(positionFee.closeFeeUsd);
+            .plus(positionFee.closeFeeUsd)
+            .plus(position.realizedBorrowingFeeInUsd)
+            .plus(position.realizedFundingFeeInUsd);
+        BumpinUtils.prettyPrintParam(positionFee);
+        console.log("???????????????????getPositionFee end?????????????????");
         return positionFee;
     }
 }

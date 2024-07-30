@@ -169,7 +169,13 @@ export class UserComponent extends Component {
                 authority: this.publicKey,
                 bumpSigner: (await this.getState()).bumpSigner,
             })
-            .remainingAccounts(BumpinUtils.removeDuplicateAccounts(remainingAccounts.concat(await this.essentialRemainingAccounts())))
+            .remainingAccounts(
+                BumpinUtils.removeDuplicateAccounts(
+                    remainingAccounts.concat(
+                        await this.essentialRemainingAccounts(),
+                    ),
+                ),
+            )
             .signers([])
             .instruction();
         await this.sendAndConfirm([ix]);
@@ -237,7 +243,13 @@ export class UserComponent extends Component {
                 authority: wallet,
                 userTokenAccount: tokenAccount.address,
             })
-            .remainingAccounts(BumpinUtils.removeDuplicateAccounts(remainingAccounts.concat(await this.essentialRemainingAccounts())))
+            .remainingAccounts(
+                BumpinUtils.removeDuplicateAccounts(
+                    remainingAccounts.concat(
+                        await this.essentialRemainingAccounts(),
+                    ),
+                ),
+            )
             .signers([])
             .instruction();
         await this.sendAndConfirm([ix]);
@@ -327,7 +339,13 @@ export class UserComponent extends Component {
                     userTokenAccount: tokenAccount.address,
                     bumpSigner: (await this.getState()).bumpSigner,
                 })
-                .remainingAccounts(BumpinUtils.removeDuplicateAccounts(remainingAccounts.concat(await this.essentialRemainingAccounts())))
+                .remainingAccounts(
+                    BumpinUtils.removeDuplicateAccounts(
+                        remainingAccounts.concat(
+                            await this.essentialRemainingAccounts(),
+                        ),
+                    ),
+                )
                 .signers([])
                 .instruction();
             await this.sendAndConfirm([ix]);
@@ -578,8 +596,9 @@ export class UserComponent extends Component {
                 C.PRICE_EXPONENT_NUMBER,
             ),
         };
-        let accountMetas =
-            BumpinUtils.removeDuplicateAccounts((await this.essentialRemainingAccounts()).concat(remainingAccounts));
+        let accountMetas = BumpinUtils.removeDuplicateAccounts(
+            (await this.essentialRemainingAccounts()).concat(remainingAccounts),
+        );
 
         await this.placePerpOrderValidation(
             order,
@@ -672,12 +691,16 @@ export class UserComponent extends Component {
             accountNetValue: BigNumber(0),
             totalMM: BigNumber(0),
         };
+        console.log("=====================start==============");
+
         let balanceOfUserTradeTokens =
             await BumpinTokenUtils.getUserTradeTokenBalance(
                 this.tradeTokenComponent,
                 user,
                 tradeTokens,
             );
+        BumpinUtils.prettyPrintParam(balanceOfUserTradeTokens);
+
         let balanceOfUserPositions =
             await BumpinPositionUtils.getUserPositionValue(
                 this.tradeTokenComponent,
@@ -686,6 +709,8 @@ export class UserComponent extends Component {
                 markets,
                 pools,
             );
+        BumpinUtils.prettyPrintParam(balanceOfUserPositions);
+
         accountNetValue.accountNetValue = balanceOfUserTradeTokens.tokenNetValue
             .plus(balanceOfUserPositions.initialMarginUsd)
             .plus(user.hold)
@@ -697,6 +722,7 @@ export class UserComponent extends Component {
             )
             .minus(balanceOfUserPositions.positionFee);
         accountNetValue.totalMM = balanceOfUserPositions.mmUsd;
+        console.log("=====================start==============");
         return accountNetValue;
     }
 
@@ -1160,7 +1186,7 @@ export class UserComponent extends Component {
         return remainingAccounts;
     }
 
-    private async essentialRemainingAccounts(){
+    private async essentialRemainingAccounts() {
         const pools = await this.poolComponent.getPools();
         const tradeTokens = await this.tradeTokenComponent.getTradeTokens();
         const markets = await this.marketComponent.getMarkets();
@@ -1202,7 +1228,10 @@ export class UserComponent extends Component {
 
         //markets
         markets.forEach((market) => {
-            let marketPda = BumpinUtils.getMarketPda(this.program, market.index)[0];
+            let marketPda = BumpinUtils.getMarketPda(
+                this.program,
+                market.index,
+            )[0];
             remainingAccounts.push({
                 pubkey: marketPda,
                 isWritable: false,
