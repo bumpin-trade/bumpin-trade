@@ -13,12 +13,15 @@ solana airdrop 100000 $(solana-keygen pubkey ./keys/player3.json) --url localhos
 solana airdrop 100000 $(solana-keygen pubkey ./keys/player4.json) --url localhost> /dev/null
 solana airdrop 100000 $(solana-keygen pubkey ./keys/player5.json) --url localhost> /dev/null
 solana airdrop 100000 $(solana-keygen pubkey ./keys/reward.json) --url localhost> /dev/null
+coin_names=("sol" "stable" "btc" "eth" "bnb" "bonk")
 decimals=(9 6 8 8 8 5)
 mint_amounts=(1000 1000000 10 100 1000000000 1000)
 results="================================================\n"
-
+results_code="\n================================================\n"
+results_vault_code="\n================================================\n"
 for ((i=1; i<=num_loops; i++))
 do
+  coin_name=${coin_names[$((i-1))]}
   decimals_value=${decimals[$((i-1))]}
   mint_amount_value=${mint_amounts[$((i-1))]}
   # Step 2: Create a new SPL token and extract the token address
@@ -47,6 +50,10 @@ do
   spl-token mint $token $mint_amount_value $account5 > /dev/null
 
   results+="Token Mint: $token  Amount: $mint_amount  Decimals: $decimals_value  Reward Token Account: $account_reward\n"
+  results_code+="const ${coin_name}CoinMint = \"$token\";\n"
+  results_vault_code+="const ${coin_name}CoinDaoVault = \"$account_reward\";\n"
 done
 
 echo  "$results"
+echo  "$results_code"
+echo  "$results_vault_code"

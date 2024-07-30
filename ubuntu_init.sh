@@ -35,15 +35,17 @@ solana airdrop 100000 "$player3_pubkey" --url localhost > /dev/null
 solana airdrop 100000 "$player4_pubkey" --url localhost > /dev/null
 solana airdrop 100000 "$player5_pubkey" --url localhost > /dev/null
 
-
+coin_names=("sol" "stable" "btc" "eth" "bnb" "bonk")
 # SOL USDC WBTC WHETH BNB BONK
 decimals=(9 6 8 8 8 5)
 mint_amounts=(10000 10000000 100 1000 10000 10000000000)
 
 results="================================================\n"
-
+results_code="\n================================================\n"
+results_vault_code="\n================================================\n"
 for ((i=1; i<=num_loops; i++))
 do
+  coin_name=${coin_names[$((i-1))]}
   decimals_value=${decimals[$((i-1))]}
   mint_amount_value=${mint_amounts[$((i-1))]}
 
@@ -82,7 +84,10 @@ token=$(spl-token create-token --decimals "$decimals_value" --output json --url 
   spl-token mint "$token" "$mint_amount_value" "$account5" --url localhost> /dev/null
 
   results+="Token Mint: $token\nReward Token Account: $account_reward\n================================================\n"
-
+  results_code+="const ${coin_name}CoinMint = \"$token\";\n"
+  results_vault_code+="const ${coin_name}CoinDaoVault = \"$account_reward\";\n"
 done
 
 echo -e "$results"
+echo -e "$results_code"
+echo -e "$results_vault_code"
