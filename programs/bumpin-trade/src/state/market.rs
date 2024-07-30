@@ -149,13 +149,13 @@ impl Market {
                     }
                     calculator::mul_div_u(diff, state.funding_fee_base_rate, open_interest)?
                 };
-                msg!("=============update_market_funding_fee_rate, funding_rate_per_second",funding_rate_per_second);
+                msg!("=============update_market_funding_fee_rate, funding_rate_per_second:{}",funding_rate_per_second);
                 let total_funding_fee = long
                     .open_interest //^10
                     .max(short.open_interest)
                     .safe_mul(funding_fee_duration_in_seconds.abs().cast::<u128>()?)?
                     .safe_mul(funding_rate_per_second)?; //^10
-                msg!("=============update_market_funding_fee_rate, total_funding_fee",total_funding_fee);
+                msg!("=============update_market_funding_fee_rate, total_funding_fee:{}",total_funding_fee);
                 if long.open_interest > 0 {
                     let current_long_funding_fee_per_qty = if long_pay_short {
                         calculator::div_to_precision_u(
@@ -173,9 +173,9 @@ impl Market {
                             SMALL_RATE_TO_PER_TOKEN_PRECISION,
                         )? //^18
                     };
-                    msg!("=============update_market_funding_fee_rate, current_long_funding_fee_per_qty",current_long_funding_fee_per_qty);
-                    msg!("=============update_market_funding_fee_rate, price",price);
-                    msg!("=============update_market_funding_fee_rate, funding_fee_duration_in_seconds",funding_fee_duration_in_seconds);
+                    msg!("=============update_market_funding_fee_rate, current_long_funding_fee_per_qty:{}",current_long_funding_fee_per_qty);
+                    msg!("=============update_market_funding_fee_rate, price:{}",price);
+                    msg!("=============update_market_funding_fee_rate, funding_fee_duration_in_seconds:{}",funding_fee_duration_in_seconds);
                     long_funding_fee_per_qty_delta = calculator::mul_div_u(
                         current_long_funding_fee_per_qty,//^18
                         price,
@@ -188,7 +188,7 @@ impl Market {
                     } else {
                         -long_funding_fee_per_qty_delta
                     };
-                    msg!("=============update_market_funding_fee_rate, long_funding_fee_per_qty_delta",long_funding_fee_per_qty_delta);
+                    msg!("=============update_market_funding_fee_rate, long_funding_fee_per_qty_delta:{}",long_funding_fee_per_qty_delta);
 
                 }
                 if short.open_interest > 0 {
