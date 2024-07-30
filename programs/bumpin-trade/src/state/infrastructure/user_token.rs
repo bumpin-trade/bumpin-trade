@@ -77,7 +77,7 @@ impl UserToken {
                 oracle_price_data.price,
             )?
             .safe_mul_rate(if trade_token.liquidation_factor > 0 {
-                trade_token.liquidation_factor as u128
+                (trade_token.liquidation_factor as u128).safe_add(RATE_PRECISION)?
             } else {
                 RATE_PRECISION
             })?;

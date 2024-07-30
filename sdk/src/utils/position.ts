@@ -67,12 +67,17 @@ export class BumpinPositionUtils {
                     userPosition.marginMintKey,
                     tradeTokens,
                 );
-            const unPnlValue = await BumpinPositionUtils.getPositionUnPnlValue(
+            let unPnlValue = await BumpinPositionUtils.getPositionUnPnlValue(
                 tradeTokenComponent,
                 indexTradeToken,
                 marginTradeToken,
                 userPosition, positionValue
             );
+            if (unPnlValue.gt(0)){
+                unPnlValue = unPnlValue.multipliedBy(marginTradeToken.discount);
+            }else {
+                unPnlValue = unPnlValue.multipliedBy(1+marginTradeToken.liquidationFactor);
+            }
             const market = BumpinMarketUtils.getMarketBySymbol(
                 userPosition.symbol,
                 markets,
