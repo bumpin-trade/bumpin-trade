@@ -122,7 +122,12 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         user.deref_mut().add_order_hold_in_usd(order.order_margin)?;
     }
 
-    if !user.make_order_is_allowed(order.symbol, order.is_portfolio_margin, ctx.program_id)? {
+    if !user.make_order_is_allowed(
+        order.symbol,
+        order.is_portfolio_margin,
+        use_base_token(&order.position_side, &order.order_side)?,
+        ctx.program_id,
+    )? {
         return Err(BumpErrorCode::OnlyOneTypeOrderAllowed.into());
     }
 

@@ -4,6 +4,7 @@ use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
 use crate::errors::BumpResult;
 use crate::instructions::calculator;
+use crate::math::constants::RATE_PRECISION;
 use crate::math::safe_math::SafeMath;
 use crate::state::oracle::OraclePriceData;
 use crate::state::trade_token::TradeToken;
@@ -75,7 +76,11 @@ impl UserToken {
                 trade_token.decimals,
                 oracle_price_data.price,
             )?
-            .safe_mul_rate(1u32.safe_add(trade_token.liquidation_factor)? as u128)?;
+            .safe_mul_rate(if trade_token.liquidation_factor > 0 {
+                trade_token.liquidation_factor as u128
+            } else {
+                RATE_PRECISION
+            })?;
             return Ok(token_used_value);
         }
         Ok(0u128)
@@ -93,21 +98,18 @@ impl UserToken {
         oracle_price_data: &OraclePriceData,
         trade_token: &TradeToken,
     ) -> BumpResult<u128> {
-        if self.used_amount < self.amount {
+        if self.used_amount.safe_sub(self.liability_amount)? < self.amount {
             return Ok(0u128);
         }
 
         let borrowing_amount =
-            self.used_amount.safe_sub(self.amount)?.safe_sub(self.liability_amount)?;
+            self.used_amount.safe_sub(self.liability_amount)?.safe_sub(self.amount)?;
 
-        if borrowing_amount > 0 {
-            let token_borrowing_value = calculator::token_to_usd_u(
-                borrowing_amount,
-                trade_token.decimals,
-                oracle_price_data.price,
-            )?;
-            return Ok(token_borrowing_value);
-        }
-        Ok(0u128)
+        let token_borrowing_value = calculator::token_to_usd_u(
+            borrowing_amount,
+            trade_token.decimals,
+            oracle_price_data.price,
+        )?;
+        return Ok(token_borrowing_value);
     }
 }

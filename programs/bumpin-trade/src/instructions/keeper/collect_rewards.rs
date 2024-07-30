@@ -137,7 +137,6 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
             // todo swap stable to un_stable token, using jup_swap.
             // let amount = swap::jup_swap()?;
             total_fee_amount = total_fee_amount.safe_add(transfer_amount)?;
-            stable_fee_reward.sub_un_settle_amount(fee_amount)?
         }
     }
 
