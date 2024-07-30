@@ -1,12 +1,12 @@
-import { Connection, PublicKey } from '@solana/web3.js';
-import { TradeTokenBalance, UserTokenAccount } from '../typedef';
-import { BumpinAccountNotFound, BumpinTokenNotFound } from '../errors';
-import { Account, getAccount, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { OracleClient, OraclePriceData } from '../oracles/types';
+import {Connection, PublicKey} from '@solana/web3.js';
+import {TradeTokenBalance, UserTokenAccount} from '../typedef';
+import {BumpinAccountNotFound, BumpinTokenNotFound} from '../errors';
+import {Account, getAccount, TOKEN_PROGRAM_ID} from '@solana/spl-token';
+import {OracleClient, OraclePriceData} from '../oracles/types';
 // @ts-ignore
-import { isEqual } from 'lodash';
-import { TradeToken, User, UserToken, UserTokenStatus } from '../beans/beans';
-import { TradeTokenComponent } from '../componets/tradeToken';
+import {isEqual} from 'lodash';
+import {TradeToken, User, UserToken, UserTokenStatus} from '../beans/beans';
+import {TradeTokenComponent} from '../componets/tradeToken';
 import BigNumber from 'bignumber.js';
 
 export class BumpinTokenUtils {
@@ -80,12 +80,13 @@ export class BumpinTokenUtils {
         let tokenBorrowingValue = BigNumber(0);
         let tokenUsedValue = BigNumber(0);
 
-        if (userToken.usedAmount.gt(userToken.amount)) {
+        if (userToken.usedAmount.minus(userToken.liabilityAmount).gt(userToken.amount)) {
             tokenBorrowingValue = userToken.usedAmount
                 .minus(userToken.amount)
                 .minus(userToken.liabilityAmount)
                 .multipliedBy(price);
-
+        }
+        if (userToken.usedAmount.gt(userToken.amount)) {
             tokenUsedValue = userToken.usedAmount
                 .minus(userToken.amount)
                 .multipliedBy(price)

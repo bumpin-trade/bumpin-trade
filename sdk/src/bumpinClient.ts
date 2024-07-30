@@ -457,7 +457,7 @@ export class BumpinClient {
             if (userToken) {
                 userTokenSummary.amount = userToken.amount;
                 userTokenSummary.used = userToken.usedAmount;
-                userTokenSummary.borrow = userToken.usedAmount.gt(
+                userTokenSummary.borrow = userToken.usedAmount.minus(userToken.liabilityAmount).gt(
                     userToken.amount,
                 )
                     ? userToken.usedAmount
