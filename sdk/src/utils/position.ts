@@ -179,6 +179,7 @@ export class BumpinPositionUtils {
             )
         ).price!;
 
+        // todo need call real_per_size
         if (position.isLong) {
             positionFee.fundingFee =
                 market.fundingFee.longFundingFeeAmountPerSize
