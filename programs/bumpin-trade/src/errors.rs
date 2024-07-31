@@ -7,6 +7,10 @@ pub type BumpResult<T = ()> = std::result::Result<T, BumpErrorCode>;
 pub enum BumpErrorCode {
     #[msg("AmountNotEnough")]
     AmountNotEnough,
+    #[msg("StandardPoolValueNotEnough")]
+    StandardPoolValueNotEnough,
+    #[msg("OrderMarginUSDTooSmall")]
+    OrderMarginUSDTooSmall,
     #[msg("PoolAvailableLiquidityNotEnough")]
     PoolAvailableLiquidityNotEnough,
     #[msg("Invalid transfer")] // 6004

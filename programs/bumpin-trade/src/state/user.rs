@@ -714,7 +714,10 @@ impl User {
             self.get_total_used_value(&trade_token_map, &mut oracle_map)?;
         msg!("=================get_available_value, portfolio_net_value:{}", portfolio_net_value);
         msg!("=================get_available_value, used_value:{}", used_value);
-        msg!("=================get_available_value, total_token_borrowing_value:{}", total_token_borrowing_value);
+        msg!(
+            "=================get_available_value, total_token_borrowing_value:{}",
+            total_token_borrowing_value
+        );
         let (
             total_im_usd,
             total_un_pnl_usd,
@@ -724,7 +727,10 @@ impl User {
         ) = self.get_user_cross_position_available_value(&mut oracle_map, trade_token_map)?;
         msg!("=================get_available_value, total_im_usd:{}", total_im_usd);
         msg!("=================get_available_value, total_un_pnl_usd:{}", total_un_pnl_usd);
-        msg!("=================get_available_value, total_im_from_portfolio_value:{}", total_im_from_portfolio_value);
+        msg!(
+            "=================get_available_value, total_im_from_portfolio_value:{}",
+            total_im_from_portfolio_value
+        );
         let available_value = portfolio_net_value
             .safe_add(total_im_usd)?
             .safe_add(self.hold.cast()?)?
