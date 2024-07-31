@@ -767,8 +767,8 @@ export class BumpinClient {
         if (price == undefined){
             price = 1;
         }
-        let long = market.fundingFee.longFundingFeeRate.multipliedBy(price);
-        let short = market.fundingFee.shortFundingFeeRate;
+        let long = market.fundingFee.longFundingFeeRate.multipliedBy(price).multipliedBy(3600);
+        let short = market.fundingFee.shortFundingFeeRate.multipliedBy(3600);
         if (long.isNaN()) {
             long = new BigNumber(0);
         }
