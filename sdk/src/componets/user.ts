@@ -691,7 +691,7 @@ export class UserComponent extends Component {
             accountNetValue: BigNumber(0),
             totalMM: BigNumber(0),
         };
-        console.log("=====================start==============");
+        console.log('=====================start==============');
 
         let balanceOfUserTradeTokens =
             await BumpinTokenUtils.getUserTradeTokenBalance(
@@ -722,7 +722,7 @@ export class UserComponent extends Component {
             )
             .minus(balanceOfUserPositions.positionFee);
         accountNetValue.totalMM = balanceOfUserPositions.mmUsd;
-        console.log("=====================start==============");
+        console.log('=====================start==============');
         return accountNetValue;
     }
 

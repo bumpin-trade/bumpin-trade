@@ -776,6 +776,49 @@ export class BumpinClient {
         };
     }
 
+    public async getPoolLiquidate(
+        poolIndex: number,
+        sync: boolean = false,
+    ): Promise<BigNumber> {
+        this.checkInitialization();
+        const pool = await this.getPoolByIndex(poolIndex, sync);
+        const price = (await this.getTradeTokenPriceByMintKey(pool.mintKey))
+            .price!;
+        const stableCoinPrice = (
+            await this.getTradeTokenPriceByMintKey(pool.stableMintKey)
+        ).price!;
+
+        let baseTokenAmount = pool.balance.amount
+            .plus(pool.balance.unSettleAmount)
+            .minus(pool.balance.holdAmount);
+        if (baseTokenAmount.lt(0)) {
+            return BigNumber(0);
+        }
+
+        const stableTokenAmount = pool.stableBalance.amount
+            .plus(pool.stableBalance.unSettleAmount)
+            .minus(pool.stableBalance.holdAmount);
+        if (stableTokenAmount.lt(0)) {
+            const equivalentBaseToken = stableTokenAmount
+                .multipliedBy(stableCoinPrice)
+                .div(price);
+            if (baseTokenAmount.gt(equivalentBaseToken)) {
+                baseTokenAmount = baseTokenAmount.minus(equivalentBaseToken);
+            } else {
+                baseTokenAmount = BigNumber(0);
+            }
+        }
+
+        const availableTokenAmount = baseTokenAmount.multipliedBy(
+            pool.config.poolLiquidityLimit,
+        );
+        if (availableTokenAmount.gt(pool.balance.holdAmount)) {
+            return availableTokenAmount.minus(pool.balance.holdAmount);
+        } else {
+            return BigNumber(0);
+        }
+    }
+
     public async getBorrowingFeeRate(
         marketIndex: number,
         sync: boolean = false,

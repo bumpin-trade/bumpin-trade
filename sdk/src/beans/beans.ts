@@ -296,7 +296,9 @@ export class FeeReward {
             );
         this.lastRewardsPerStakeTokenDeltas =
             feeReward.lastRewardsPerStakeTokenDeltas.map((delta) =>
-                delta.toBigNumberWithDecimals(C.FUNDING_OR_BORROWING_RATE_MULTIPLIER_NUMBER),
+                delta.toBigNumberWithDecimals(
+                    C.FUNDING_OR_BORROWING_RATE_MULTIPLIER_NUMBER,
+                ),
             );
     }
 }

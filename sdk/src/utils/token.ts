@@ -90,10 +90,19 @@ export class BumpinTokenUtils {
                 .minus(userToken.liabilityAmount)
                 .multipliedBy(price);
         }
-        console.log("==========getTradeTokenBalance, userToken.usedAmount:",userToken.usedAmount);
-        console.log("==========getTradeTokenBalance, userToken.amount:",userToken.amount);
-        console.log("==========getTradeTokenBalance, price:",price);
-        console.log("==========getTradeTokenBalance, tradeToken.liquidationFactor:",tradeToken.liquidationFactor);
+        console.log(
+            '==========getTradeTokenBalance, userToken.usedAmount:',
+            userToken.usedAmount,
+        );
+        console.log(
+            '==========getTradeTokenBalance, userToken.amount:',
+            userToken.amount,
+        );
+        console.log('==========getTradeTokenBalance, price:', price);
+        console.log(
+            '==========getTradeTokenBalance, tradeToken.liquidationFactor:',
+            tradeToken.liquidationFactor,
+        );
         if (userToken.usedAmount.gt(userToken.amount)) {
             tokenUsedValue = userToken.usedAmount
                 .minus(userToken.amount)
