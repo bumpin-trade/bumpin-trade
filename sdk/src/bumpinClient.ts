@@ -61,6 +61,7 @@ import {
 import { isEqual } from 'lodash';
 import { BumpinPositionUtils } from './utils/position';
 import { BumpinUserUtils } from './utils/user';
+import BN from 'bn.js';
 
 export class BumpinClient {
     readonly config: BumpinClientConfig;
@@ -584,6 +585,21 @@ export class BumpinClient {
         );
     }
 
+
+    public async cancelOrder(
+        orderId: BN,
+        poolIndex: number,
+        sync: boolean = false,
+    ) {
+        this.checkInitialization(true);
+
+        await this.userComponent!.cancelOrder(
+           orderId,
+            poolIndex,
+            sync
+        );
+    }
+
     public async getUser(sync: boolean = false): Promise<User> {
         this.checkInitialization(true);
         return this.userComponent!.getUser(sync);
@@ -762,7 +778,12 @@ export class BumpinClient {
             marketIndex,
         )[0];
         const market = await this.getMarket(marketKey, sync);
-        let long = market.fundingFee.longFundingFeeRate;
+        let baseTokenPriceData = await this.tradeTokenComponent?.getTradeTokenPricesByMintKey(market.poolMintKey);
+        let price = baseTokenPriceData?.price;
+        if (price == undefined){
+            price = 1;
+        }
+        let long = market.fundingFee.longFundingFeeRate.multipliedBy(price);
         let short = market.fundingFee.shortFundingFeeRate;
         if (long.isNaN()) {
             long = new BigNumber(0);

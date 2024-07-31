@@ -72,10 +72,7 @@ pub fn handle_execute_order<'info>(
         .map_err(|_e| BumpErrorCode::OracleNotFound)?
         .price;
     //update funding_fee_rate and borrowing_fee_rate
-    market.deref_mut().update_market_funding_fee_rate(
-        state_account,
-        margin_token_price,
-    )?;
+    market.deref_mut().update_market_funding_fee_rate(state_account, margin_token_price)?;
     match use_base_token(&user_order.position_side, &user_order.order_side)? {
         true => base_token_pool.deref_mut().update_pool_borrowing_fee_rate()?,
         false => stable_pool.deref_mut().update_pool_borrowing_fee_rate()?,
@@ -321,7 +318,7 @@ fn execute_increase_order_margin(
             calculator::token_to_usd_u(order.order_margin, decimals, margin_token_price)?;
         validate!(
             order_margin_in_usd >= state.minimum_order_margin_usd,
-            BumpErrorCode::AmountNotEnough
+            BumpErrorCode::OrderMarginUSDTooSmall
         )?;
         order_margin = order.order_margin;
         order_margin_from_balance = order.order_margin;
@@ -1415,7 +1412,10 @@ pub fn increase_position(
                 .map_err(|_e| BumpErrorCode::OracleNotFound)?
                 .price,
         )?;
-        validate!(base_token_pool_value >= increase_hold_value, BumpErrorCode::AmountNotEnough)?;
+        validate!(
+            base_token_pool_value >= increase_hold_value,
+            BumpErrorCode::StandardPoolValueNotEnough
+        )?;
         stable_pool.hold_pool_amount(
             increase_hold,
             oracle_map,
