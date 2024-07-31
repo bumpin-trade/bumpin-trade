@@ -585,7 +585,6 @@ export class BumpinClient {
         );
     }
 
-
     public async cancelOrder(
         orderId: BN,
         poolIndex: number,
@@ -594,9 +593,10 @@ export class BumpinClient {
         this.checkInitialization(true);
 
         await this.userComponent!.cancelOrder(
-           orderId,
+            orderId,
             poolIndex,
-            sync
+            this.wallet.publicKey,
+            sync,
         );
     }
 
@@ -778,12 +778,17 @@ export class BumpinClient {
             marketIndex,
         )[0];
         const market = await this.getMarket(marketKey, sync);
-        let baseTokenPriceData = await this.tradeTokenComponent?.getTradeTokenPricesByMintKey(market.poolMintKey);
+        let baseTokenPriceData =
+            await this.tradeTokenComponent?.getTradeTokenPricesByMintKey(
+                market.poolMintKey,
+            );
         let price = baseTokenPriceData?.price;
-        if (price == undefined){
+        if (price == undefined) {
             price = 1;
         }
-        let long = market.fundingFee.longFundingFeeRate.multipliedBy(price).multipliedBy(3600);
+        let long = market.fundingFee.longFundingFeeRate
+            .multipliedBy(price)
+            .multipliedBy(3600);
         let short = market.fundingFee.shortFundingFeeRate.multipliedBy(3600);
         if (long.isNaN()) {
             long = new BigNumber(0);

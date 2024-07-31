@@ -1,10 +1,6 @@
 {
   "name": "@bumpin-trade/sdk",
-<<<<<<< HEAD
-  "version": "0.0.160",
-=======
-  "version": " 0.0.161",
->>>>>>> 81a907217f76cb6574427244d251159ec6c93770
+  "version": " 0.0.162",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "license": "Apache-2.0",
