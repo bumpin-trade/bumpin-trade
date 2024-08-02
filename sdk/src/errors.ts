@@ -1,5 +1,5 @@
-import { BN } from '@coral-xyz/anchor';
-import { PublicKey } from '@solana/web3.js';
+import {BN} from '@coral-xyz/anchor';
+import {PublicKey} from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 
 export class BumpinClientNotInitialized extends Error {
@@ -23,6 +23,20 @@ export class BumpinUserNotLogin extends Error {
     constructor() {
         super(`User not login`);
         Object.setPrototypeOf(this, BumpinUserNotLogin.prototype);
+    }
+}
+
+export class BumpinPositionNotFound extends Error {
+    positionKey: PublicKey;
+
+    constructor(positionKey: PublicKey) {
+        super(`Pool not found: ${positionKey.toString()}`);
+        this.positionKey = positionKey;
+        Object.setPrototypeOf(this, BumpinPositionNotFound.prototype);
+    }
+
+    public getPositionKey(): PublicKey {
+        return this.positionKey;
     }
 }
 

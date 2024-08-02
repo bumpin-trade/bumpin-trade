@@ -1,11 +1,11 @@
-import { PositionBalance, PositionFee } from '../typedef';
-import { BN } from '@coral-xyz/anchor';
-import { BumpinTokenUtils } from './token';
+import {PositionBalance, PositionFee} from '../typedef';
+import {BN} from '@coral-xyz/anchor';
+import {BumpinTokenUtils} from './token';
 // @ts-ignore
-import { isEqual } from 'lodash';
-import { BumpinMarketNotFound, BumpinPoolNotFound } from '../errors';
-import { BumpinMarketUtils } from './market';
-import { BumpinPoolUtils } from './pool';
+import {isEqual} from 'lodash';
+import {BumpinMarketNotFound, BumpinPoolNotFound, BumpinPositionNotFound} from '../errors';
+import {BumpinMarketUtils} from './market';
+import {BumpinPoolUtils} from './pool';
 import {
     Market,
     Pool,
@@ -15,8 +15,9 @@ import {
     UserPosition,
 } from '../beans/beans';
 import BigNumber from 'bignumber.js';
-import { TradeTokenComponent } from '../componets/tradeToken';
-import { BumpinUtils } from './utils';
+import {TradeTokenComponent} from '../componets/tradeToken';
+import {BumpinUtils} from './utils';
+import {PublicKey} from "@solana/web3.js";
 
 export class BumpinPositionUtils {
     // public static async reducePositionPortfolioBalance(
@@ -37,6 +38,16 @@ export class BumpinPositionUtils {
     //     return amount;
     //   }
     // }
+    public static getUserPosition(
+        positionKey: PublicKey,
+        user: User
+    ): UserPosition {
+        let position = user.positions.find(userPosition => userPosition.positionKey.equals(positionKey));
+        if (position === undefined) {
+            throw new BumpinPositionNotFound(positionKey);
+        }
+        return position;
+    }
 
     public static async getUserPositionValue(
         tradeTokenComponent: TradeTokenComponent,
