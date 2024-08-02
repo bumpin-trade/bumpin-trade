@@ -431,8 +431,7 @@ export class UserComponent extends Component {
     }
 
     public async cancelOrder(
-        orderId: BN,
-        poolIndex: number,
+        orderId: number,
         wallet: PublicKey,
         sync: boolean = false,
     ) {
@@ -462,6 +461,7 @@ export class UserComponent extends Component {
                 market.poolMintKey,
             )
         ).address;
+        let pool = await this.poolComponent.getPool(market.poolKey);
 
         //todo: refactor this, do better
         if (
@@ -477,11 +477,16 @@ export class UserComponent extends Component {
                     market.stablePoolMintKey,
                 )
             ).address;
+            pool = await this.poolComponent.getPool(market.stablePoolKey);
         }
         let uta = userTokenAccount;
 
+        let params = {
+            poolIndex: pool.index,
+            orderId: new BN(orderId),
+        };
         const ix = await this.program.methods
-            .cancelOrder(orderId, poolIndex)
+            .cancelOrder(params)
             .accounts({
                 userTokenAccount: uta,
                 authority: wallet,
@@ -754,7 +759,6 @@ export class UserComponent extends Component {
             accountNetValue: BigNumber(0),
             totalMM: BigNumber(0),
         };
-        // console.log('=====================start==============');
 
         let balanceOfUserTradeTokens =
             await BumpinTokenUtils.getUserTradeTokenBalance(
@@ -783,7 +787,6 @@ export class UserComponent extends Component {
             )
             .minus(balanceOfUserPositions.positionFee);
         accountNetValue.totalMM = balanceOfUserPositions.mmUsd;
-        // console.log('=====================start==============');
         return accountNetValue;
     }
 

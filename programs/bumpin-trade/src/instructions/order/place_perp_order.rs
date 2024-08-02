@@ -89,7 +89,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         true => &market.pool_mint_key,
         false => &market.stable_pool_mint_key,
     };
-    validate!(ctx.accounts.user_token_account.mint.eq(margin_token), BumpErrorCode::InvalidParam)?;
+    validate!(ctx.accounts.user_token_account.mint.eq(margin_token), BumpErrorCode::InvalidTokenAccount)?;
 
     let token_price = oracle_map
         .get_price_data(&market.index_mint_oracle)
@@ -106,6 +106,7 @@ pub fn handle_place_order<'a, 'b, 'c: 'info, 'info>(
         )?,
         BumpErrorCode::InvalidParam
     )?;
+    msg!("==========handle_place_order, validate_place_order");
 
     if order.position_side.eq(&PositionSide::INCREASE) && !order.is_portfolio_margin {
         //isolate order, transfer order_margin into pool
