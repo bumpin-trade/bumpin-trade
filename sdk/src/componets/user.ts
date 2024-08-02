@@ -369,7 +369,7 @@ export class UserComponent extends Component {
         );
 
         console.log('Deposit:\namount: ' + amount.toString());
-        BumpinUtils.prettyPrintParam(targetTradeToken);
+        // BumpinUtils.prettyPrintParam(targetTradeToken);
         const ix = await this.program.methods
             .deposit(targetTradeToken.index, amount)
             .accounts({
@@ -408,7 +408,7 @@ export class UserComponent extends Component {
         });
 
         console.log('Withdraw:\namount: ' + amount.toString());
-        BumpinUtils.prettyPrintParam(targetTradeToken);
+        // BumpinUtils.prettyPrintParam(targetTradeToken);
         const ix = await this.program.methods
             .withdraw(targetTradeToken.index, amount)
             .accounts({
@@ -487,7 +487,6 @@ export class UserComponent extends Component {
                 authority: wallet,
                 bumpSigner: (await this.getState()).bumpSigner,
             })
-            .remainingAccounts(await this.essentialRemainingAccounts())
             .signers([])
             .instruction();
         await this.sendAndConfirm([ix]);
@@ -755,7 +754,7 @@ export class UserComponent extends Component {
             accountNetValue: BigNumber(0),
             totalMM: BigNumber(0),
         };
-        console.log('=====================start==============');
+        // console.log('=====================start==============');
 
         let balanceOfUserTradeTokens =
             await BumpinTokenUtils.getUserTradeTokenBalance(
@@ -784,7 +783,7 @@ export class UserComponent extends Component {
             )
             .minus(balanceOfUserPositions.positionFee);
         accountNetValue.totalMM = balanceOfUserPositions.mmUsd;
-        console.log('=====================start==============');
+        // console.log('=====================start==============');
         return accountNetValue;
     }
 

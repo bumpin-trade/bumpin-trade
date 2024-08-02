@@ -47,7 +47,6 @@ pub struct CancelOrderCtx<'info> {
 
     #[account(
         mut,
-        constraint = pool_vault.mint.eq(& user_token_account.mint),
         token::authority = authority
     )]
     pub user_token_account: Account<'info, TokenAccount>,
