@@ -774,6 +774,8 @@ export class UserComponent extends Component {
                 tradeTokens,
                 markets,
                 pools,
+                true,
+                await this.getState()
             );
 
         accountNetValue.accountNetValue = balanceOfUserTradeTokens.tokenNetValue
@@ -809,6 +811,8 @@ export class UserComponent extends Component {
                 tradeTokens,
                 markets,
                 pools,
+                true,
+                await this.getState(),
             );
         return balanceOfUserTradeTokens.tokenNetValue
             .plus(balanceOfUserPositions.initialMarginUsd)

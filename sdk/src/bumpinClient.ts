@@ -441,6 +441,7 @@ export class BumpinClient {
                 markets,
                 pools,
                 false,
+                await this.getState(),
             );
         userSummary.accountNetValue = accountNetValue.accountNetValue;
         userSummary.pnl = balanceOfUserPositions.positionUnPnl;
