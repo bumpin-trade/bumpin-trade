@@ -1,10 +1,3 @@
-import {
-    UserAccount,
-    UserOrderAccount,
-    UserPositionAccount,
-    UserStakeAccount,
-    UserTokenAccount,
-} from '../typedef';
 // @ts-ignore
 import { isEqual } from 'lodash';
 import {
@@ -54,7 +47,7 @@ export class BumpinUserUtils {
             if (!isEqual(position.status, PositionStatus.USING)) {
                 return false;
             }
-            if (isPortfolioMargin) {
+            if (isPortfolioMargin != null) {
                 return position.isPortfolioMargin === isPortfolioMargin;
             }
             return true;
@@ -69,7 +62,7 @@ export class BumpinUserUtils {
             if (!isEqual(order.status, OrderStatus.USING)) {
                 return false;
             }
-            if (isPortfolioMargin) {
+            if (isPortfolioMargin != null) {
                 return order.isPortfolioMargin === isPortfolioMargin;
             }
             return true;
