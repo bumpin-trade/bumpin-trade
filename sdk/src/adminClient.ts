@@ -144,7 +144,7 @@ export class BumpinAdmin {
                     bumpSigner: pda,
                 })
                 .signers([])
-                .rpc(BumpinUtils.getRootConfirmOptions());
+                .rpc(BumpinUtils.getDefaultConfirmOptions());
             console.log(
                 'Pool initialized: ',
                 BumpinUtils.decodeString(poolParam.param.name),
@@ -162,7 +162,7 @@ export class BumpinAdmin {
                     bumpSigner: pda,
                 })
                 .signers([])
-                .rpc(BumpinUtils.getRootConfirmOptions());
+                .rpc(BumpinUtils.getDefaultConfirmOptions());
             console.log('Reward initialized: ', rewardsPram.poolIndex);
         }
 
@@ -196,8 +196,8 @@ export class BumpinAdmin {
             .signers([])
             .rpc({
                 skipPreflight: false,
-                commitment: 'root', //default commitment: confirmed
-                preflightCommitment: 'root',
+                commitment: 'confirmed', //default commitment: confirmed
+                preflightCommitment: 'confirmed',
                 maxRetries: 0,
                 minContextSlot: undefined,
             });
@@ -226,7 +226,7 @@ export class BumpinAdmin {
                 bumpSigner: pda,
             })
             .signers([])
-            .rpc(BumpinUtils.getRootConfirmOptions());
+            .rpc(BumpinUtils.getDefaultConfirmOptions());
     }
 
     public async DEV_TEST_ONLY__INIT_ORACLE(
@@ -301,7 +301,7 @@ export class BumpinAdmin {
                 bumpSigner: pda,
             })
             .signers([])
-            .rpc(BumpinUtils.getRootConfirmOptions());
+            .rpc(BumpinUtils.getDefaultConfirmOptions());
         return oraclePublicKey;
     }
 
@@ -322,7 +322,7 @@ export class BumpinAdmin {
                 daoRewardsVault: daoRewardsPublicKey,
             })
             .signers([])
-            .rpc(BumpinUtils.getRootConfirmOptions());
+            .rpc(BumpinUtils.getDefaultConfirmOptions());
     }
 
     public async initMarket(

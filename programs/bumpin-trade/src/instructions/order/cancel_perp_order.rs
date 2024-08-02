@@ -7,10 +7,11 @@ use crate::state::user::User;
 use crate::validate;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
+use crate::instructions::CancelOrderParams;
 
 #[derive(Accounts)]
 #[instruction(
-    _pool_index: u16,
+    params: CancelOrderParams,
 )]
 pub struct CancelOrderCtx<'info> {
     #[account(
@@ -30,15 +31,14 @@ pub struct CancelOrderCtx<'info> {
     pub authority: Signer<'info>,
 
     #[account(
-        mut,
-        seeds = [b"pool", _pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool".as_ref(), params.pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
         mut,
-        seeds = [b"pool_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_vault".as_ref(), params.pool_index.to_le_bytes().as_ref()],
         bump,
         token::mint = pool.load() ?.mint_key,
         token::authority = bump_signer
@@ -47,7 +47,6 @@ pub struct CancelOrderCtx<'info> {
 
     #[account(
         mut,
-        constraint = pool_vault.mint.eq(& user_token_account.mint),
         token::authority = authority
     )]
     pub user_token_account: Account<'info, TokenAccount>,
@@ -62,19 +61,20 @@ pub struct CancelOrderCtx<'info> {
     pub token_program: Program<'info, Token>,
 }
 
+#[track_caller]
 pub fn handle_cancel_order(
     ctx: Context<CancelOrderCtx>,
-    order_id: u64,
-    _pool_index: u16,
+    params: CancelOrderParams,
 ) -> Result<()> {
     let mut user = ctx.accounts.user.load_mut()?;
-    let order = *user.get_user_order_ref(order_id)?;
+    let order = *user.get_user_order_ref(params.order_id)?;
+    let pool = ctx.accounts.pool.load()?;
     if order.status.eq(&OrderStatus::INIT) {
         return Err(BumpErrorCode::InvalidParam.into());
     }
     //validate pool is correct
     validate!(
-        order.margin_mint_key.eq(&ctx.accounts.pool.load()?.mint_key),
+        params.pool_index == pool.index && order.margin_mint_key.eq(&pool.mint_key),
         BumpErrorCode::InvalidParam
     )?;
     user.cancel_order(

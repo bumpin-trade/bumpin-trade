@@ -270,7 +270,7 @@ export class BumpinClient {
                 payer: this.wallet.publicKey,
             })
             .signers([])
-            .rpc(BumpinUtils.getRootConfirmOptions());
+            .rpc(BumpinUtils.getDefaultConfirmOptions());
     }
 
     public async getWalletBalance(
@@ -441,6 +441,7 @@ export class BumpinClient {
                 markets,
                 pools,
                 false,
+                await this.getState(),
             );
         userSummary.accountNetValue = accountNetValue.accountNetValue;
         userSummary.pnl = balanceOfUserPositions.positionUnPnl;
@@ -585,16 +586,10 @@ export class BumpinClient {
         );
     }
 
-    public async cancelOrder(
-        orderId: BN,
-        poolIndex: number,
-        sync: boolean = false,
-    ) {
+    public async cancelOrder(orderId: number, sync: boolean = false) {
         this.checkInitialization(true);
-
         await this.userComponent!.cancelOrder(
             orderId,
-            poolIndex,
             this.wallet.publicKey,
             sync,
         );
@@ -786,10 +781,8 @@ export class BumpinClient {
         if (price == undefined) {
             price = 1;
         }
-        let long = market.fundingFee.longFundingFeeRate
-            .multipliedBy(price)
-            .multipliedBy(3600);
-        let short = market.fundingFee.shortFundingFeeRate.multipliedBy(3600);
+        let long = market.fundingFee.longFundingFeeRate.multipliedBy(price);
+        let short = market.fundingFee.shortFundingFeeRate;
         if (long.isNaN()) {
             long = new BigNumber(0);
         }

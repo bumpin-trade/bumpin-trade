@@ -260,7 +260,7 @@ impl User {
     }
 
     pub fn sub_order_hold_in_usd(&mut self, amount: u128) -> BumpResult<()> {
-        validate!(self.hold >= amount, BumpErrorCode::AmountNotEnough.into())?;
+        validate!(self.hold >= amount, BumpErrorCode::OrderHoldUsdSmallThanHoldUsd)?;
         let pre_hold = self.hold;
         self.hold = calculator::sub_u128(self.hold, amount)?;
         emit!(UserHoldUpdateEvent {

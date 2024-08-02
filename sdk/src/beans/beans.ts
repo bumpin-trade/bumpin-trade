@@ -7,13 +7,17 @@ import {
     MarketConfigAccount,
     MarketFundingFeeAccount,
     MarketPositionAccount,
+    OrderSideAccount,
     OrderStatusAccount,
+    OrderTypeAccount,
     PoolAccount,
     PoolBalanceAccount,
     PoolConfigAccount,
+    PositionSideAccount,
     PositionStatusAccount,
     RewardsAccount,
     StateAccount,
+    StopTypeAccount,
     TradeTokenAccount,
     UserAccount,
     UserOrderAccount,
@@ -785,32 +789,32 @@ export class UserOrder {
         this.authority = userOrder.authority;
         this.symbol = BumpinUtils.decodeString(userOrder.symbol);
         this.leverage = userOrder.leverage / C.RATE_MULTIPLIER_NUMBER;
-        this.orderSide = isEqual(userOrder.orderSide, OrderSide.LONG)
+        this.orderSide = isEqual(userOrder.orderSide, OrderSideAccount.LONG)
             ? OrderSide.LONG
-            : isEqual(userOrder.orderSide, OrderSide.SHORT)
+            : isEqual(userOrder.orderSide, OrderSideAccount.SHORT)
             ? OrderSide.SHORT
             : OrderSide.NONE;
         this.positionSide = isEqual(
             userOrder.positionSide,
-            PositionSide.INCREASE,
+            PositionSideAccount.INCREASE,
         )
             ? PositionSide.INCREASE
-            : isEqual(userOrder.positionSide, PositionSide.DECREASE)
+            : isEqual(userOrder.positionSide, PositionSideAccount.DECREASE)
             ? PositionSide.DECREASE
             : PositionSide.NONE;
-        this.orderType = isEqual(userOrder.orderType, OrderType.MARKET)
+        this.orderType = isEqual(userOrder.orderType, OrderTypeAccount.MARKET)
             ? OrderType.MARKET
-            : isEqual(userOrder.orderType, OrderType.LIMIT)
+            : isEqual(userOrder.orderType, OrderTypeAccount.LIMIT)
             ? OrderType.LIMIT
-            : isEqual(userOrder.orderType, OrderType.STOP)
+            : isEqual(userOrder.orderType, OrderTypeAccount.STOP)
             ? OrderType.STOP
             : OrderType.NONE;
-        this.stopType = isEqual(userOrder.stopType, StopType.StopLoss)
+        this.stopType = isEqual(userOrder.stopType, StopTypeAccount.StopLoss)
             ? StopType.StopLoss
-            : isEqual(userOrder.stopType, StopType.TakeProfit)
+            : isEqual(userOrder.stopType, StopTypeAccount.TakeProfit)
             ? StopType.TakeProfit
             : StopType.NONE;
-        this.status = isEqual(userOrder.status, OrderStatus.INIT)
+        this.status = isEqual(userOrder.status, OrderStatusAccount.INIT)
             ? OrderStatus.INIT
             : OrderStatus.USING;
         this.isPortfolioMargin = userOrder.isPortfolioMargin;

@@ -84,8 +84,6 @@ pub fn handle_execute_order<'info>(
         user_order.is_portfolio_margin,
         program_id,
     )?;
-
-    user_order.print();
     // //do execute order and change position
     match user_order.position_side {
         PositionSide::NONE => Err(BumpErrorCode::PositionSideNotSupport),
@@ -303,7 +301,7 @@ fn execute_increase_order_margin(
         if available_value < 0i128 {
             let fix_order_margin_in_usd =
                 order.order_margin.cast::<i128>()?.safe_add(available_value)?;
-            validate!(fix_order_margin_in_usd > 0i128, BumpErrorCode::BalanceNotEnough.into())?;
+            validate!(fix_order_margin_in_usd > 0i128, BumpErrorCode::BalanceNotEnough)?;
             user.sub_order_hold_in_usd(order.order_margin)?;
             order_margin_temp = fix_order_margin_in_usd.abs().cast::<u128>()?;
         } else {
