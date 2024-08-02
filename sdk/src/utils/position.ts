@@ -1,23 +1,28 @@
-import {PositionBalance, PositionFee} from '../typedef';
-import {BN} from '@coral-xyz/anchor';
-import {BumpinTokenUtils} from './token';
+import { PositionBalance, PositionFee } from '../typedef';
+import { BN } from '@coral-xyz/anchor';
+import { BumpinTokenUtils } from './token';
 // @ts-ignore
-import {isEqual} from 'lodash';
-import {BumpinMarketNotFound, BumpinPoolNotFound, BumpinPositionNotFound} from '../errors';
-import {BumpinMarketUtils} from './market';
-import {BumpinPoolUtils} from './pool';
+import { isEqual } from 'lodash';
+import {
+    BumpinMarketNotFound,
+    BumpinPoolNotFound,
+    BumpinPositionNotFound,
+} from '../errors';
+import { BumpinMarketUtils } from './market';
+import { BumpinPoolUtils } from './pool';
 import {
     Market,
     Pool,
-    PositionStatus, State,
+    PositionStatus,
+    State,
     TradeToken,
     User,
     UserPosition,
 } from '../beans/beans';
 import BigNumber from 'bignumber.js';
-import {TradeTokenComponent} from '../componets/tradeToken';
-import {BumpinUtils} from './utils';
-import {PublicKey} from "@solana/web3.js";
+import { TradeTokenComponent } from '../componets/tradeToken';
+import { BumpinUtils } from './utils';
+import { PublicKey } from '@solana/web3.js';
 
 export class BumpinPositionUtils {
     // public static async reducePositionPortfolioBalance(
@@ -40,9 +45,11 @@ export class BumpinPositionUtils {
     // }
     public static getUserPosition(
         positionKey: PublicKey,
-        user: User
+        user: User,
     ): UserPosition {
-        let position = user.positions.find(userPosition => userPosition.positionKey.equals(positionKey));
+        let position = user.positions.find((userPosition) =>
+            userPosition.positionKey.equals(positionKey),
+        );
         if (position === undefined) {
             throw new BumpinPositionNotFound(positionKey);
         }
@@ -56,7 +63,7 @@ export class BumpinPositionUtils {
         markets: Market[],
         pools: Pool[],
         positionValue: boolean = true,
-        state:State,
+        state: State,
     ): Promise<PositionBalance> {
         let totalBalance = {
             initialMarginUsd: BigNumber(0),
@@ -111,7 +118,7 @@ export class BumpinPositionUtils {
                 userPosition,
                 market,
                 pool,
-                state
+                state,
             );
 
             totalBalance.positionUnPnl =
@@ -175,7 +182,7 @@ export class BumpinPositionUtils {
         position: UserPosition,
         market: Market,
         pool: Pool,
-        state:State,
+        state: State,
     ): Promise<PositionFee> {
         let positionFee = {
             fundingFee: BigNumber(0),
@@ -191,7 +198,16 @@ export class BumpinPositionUtils {
                 position.marginMintKey,
             )
         ).price!;
-        let {longDelta,shortDelta} = BumpinMarketUtils.getMarketPerTokenDelta(market,state,(await tradeTokenComponent.getTradeTokenPricesByMintKey(market.poolMintKey)).price!);
+        let { longDelta, shortDelta } =
+            BumpinMarketUtils.getMarketPerTokenDelta(
+                market,
+                state,
+                (
+                    await tradeTokenComponent.getTradeTokenPricesByMintKey(
+                        market.poolMintKey,
+                    )
+                ).price!,
+            );
         if (position.isLong) {
             positionFee.fundingFee =
                 market.fundingFee.longFundingFeeAmountPerSize

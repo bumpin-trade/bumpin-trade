@@ -88,7 +88,10 @@ export abstract class Component {
     ) {
         let lastBlockHash =
             await this.program.provider.connection.getLatestBlockhash();
-        console.log("   ✅ - Fetched latest blockhash. Last valid height:", lastBlockHash.lastValidBlockHeight);
+        console.log(
+            '   ✅ - Fetched latest blockhash. Last valid height:',
+            lastBlockHash.lastValidBlockHeight,
+        );
         let blockhash = lastBlockHash.blockhash;
         const messageV0 = new TransactionMessage({
             payerKey: this.wallet!.publicKey,
@@ -97,7 +100,11 @@ export abstract class Component {
         }).compileToV0Message(this.essentialAccounts);
         const transactionV0 = new VersionedTransaction(messageV0);
         const options = opts || this.defaultConfirmOptions;
-        const txid = await this.program.provider.sendAndConfirm!(transactionV0, [], options);
+        const txid = await this.program.provider.sendAndConfirm!(
+            transactionV0,
+            [],
+            options,
+        );
         console.log(`🎉 Transaction succesfully confirmed! (${txid})`);
     }
 }

@@ -1,5 +1,6 @@
 use crate::errors::BumpErrorCode;
 use crate::instructions::constraints::*;
+use crate::instructions::CancelOrderParams;
 use crate::state::infrastructure::user_order::OrderStatus;
 use crate::state::pool::Pool;
 use crate::state::state::State;
@@ -7,7 +8,6 @@ use crate::state::user::User;
 use crate::validate;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
-use crate::instructions::CancelOrderParams;
 
 #[derive(Accounts)]
 #[instruction(
@@ -62,10 +62,7 @@ pub struct CancelOrderCtx<'info> {
 }
 
 #[track_caller]
-pub fn handle_cancel_order(
-    ctx: Context<CancelOrderCtx>,
-    params: CancelOrderParams,
-) -> Result<()> {
+pub fn handle_cancel_order(ctx: Context<CancelOrderCtx>, params: CancelOrderParams) -> Result<()> {
     let mut user = ctx.accounts.user.load_mut()?;
     let order = *user.get_user_order_ref(params.order_id)?;
     let pool = ctx.accounts.pool.load()?;

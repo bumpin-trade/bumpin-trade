@@ -775,7 +775,7 @@ export class UserComponent extends Component {
                 markets,
                 pools,
                 true,
-                await this.getState()
+                await this.getState(),
             );
 
         accountNetValue.accountNetValue = balanceOfUserTradeTokens.tokenNetValue

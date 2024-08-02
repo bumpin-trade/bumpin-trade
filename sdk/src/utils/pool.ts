@@ -1,7 +1,7 @@
 import { PublicKey } from '@solana/web3.js';
 import { BumpinPoolNotFound } from '../errors';
-import {Pool, State} from '../beans/beans';
-import BigNumber from "bignumber.js";
+import { Pool, State } from '../beans/beans';
+import BigNumber from 'bignumber.js';
 
 export class BumpinPoolUtils {
     private static getGapInSeconds = (lastUpdate: number): number => {
@@ -37,15 +37,23 @@ export class BumpinPoolUtils {
         return pool;
     }
 
-    public static getPoolBorrowingFeeDelta(pool:Pool){
-        if (pool.balance.amount.isZero() && pool.balance.unSettleAmount.isZero()){
+    public static getPoolBorrowingFeeDelta(pool: Pool) {
+        if (
+            pool.balance.amount.isZero() &&
+            pool.balance.unSettleAmount.isZero()
+        ) {
             return new BigNumber(0);
         }
-        let gapInSeconds = BumpinPoolUtils.getGapInSeconds(pool.borrowingFee.updatedAt.toNumber());
-        let total_amount = pool.balance.amount.plus(pool.balance.unSettleAmount);
+        let gapInSeconds = BumpinPoolUtils.getGapInSeconds(
+            pool.borrowingFee.updatedAt.toNumber(),
+        );
+        let total_amount = pool.balance.amount.plus(
+            pool.balance.unSettleAmount,
+        );
         let hold_rate = pool.balance.holdAmount.dividedBy(total_amount);
-        let borrowing_fee_rate_per_second =
-            hold_rate.multipliedBy(pool.config.borrowingInterestRate);
+        let borrowing_fee_rate_per_second = hold_rate.multipliedBy(
+            pool.config.borrowingInterestRate,
+        );
         return borrowing_fee_rate_per_second.multipliedBy(gapInSeconds);
     }
 }

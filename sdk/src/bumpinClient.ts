@@ -5,18 +5,19 @@ import {
     PublicKey,
 } from '@solana/web3.js';
 import * as anchor from '@coral-xyz/anchor';
-import {AnchorProvider, Program, Wallet} from '@coral-xyz/anchor';
+import { AnchorProvider, Program, Wallet } from '@coral-xyz/anchor';
 import idlBumpinTrade from './idl/bumpin_trade.json';
 import idlPyth from './idl/pyth.json';
-import {BumpinClientConfig, NetType} from './bumpinClientConfig';
-import {BumpinUtils} from './utils/utils';
-import {BumpinTrade} from './types/bumpin_trade';
+import { BumpinClientConfig, NetType } from './bumpinClientConfig';
+import { BumpinUtils } from './utils/utils';
+import { BumpinTrade } from './types/bumpin_trade';
 import {
     AccountValue,
     MarketUnPnlUsd,
     MarketWithIndexTradeTokenPrices,
     PlaceOrderParams,
-    PoolSummary, PositionSettle,
+    PoolSummary,
+    PositionSettle,
     RewardsAccount,
     TokenBalance,
     UserAccount,
@@ -33,22 +34,22 @@ import {
     BumpinSubscriptionFailed,
     BumpinUserNotLogin,
 } from './errors';
-import {PollingUserAccountSubscriber} from './account/pollingUserAccountSubscriber';
-import {BulkAccountLoader} from './account/bulkAccountLoader';
-import {DataAndSlot} from './account/types';
-import {PollingStateAccountSubscriber} from './account/pollingStateAccountSubscriber';
-import {PoolComponent} from './componets/pool';
-import {Pyth} from './types/pyth';
-import {UserComponent} from './componets/user';
-import {TradeTokenComponent} from './componets/tradeToken';
-import {MarketComponent} from './componets/market';
-import {BumpinTokenUtils} from './utils/token';
-import {BumpinPoolUtils} from './utils/pool';
-import {BumpinMarketUtils} from './utils/market';
-import {PriceData} from '@pythnetwork/client';
+import { PollingUserAccountSubscriber } from './account/pollingUserAccountSubscriber';
+import { BulkAccountLoader } from './account/bulkAccountLoader';
+import { DataAndSlot } from './account/types';
+import { PollingStateAccountSubscriber } from './account/pollingStateAccountSubscriber';
+import { PoolComponent } from './componets/pool';
+import { Pyth } from './types/pyth';
+import { UserComponent } from './componets/user';
+import { TradeTokenComponent } from './componets/tradeToken';
+import { MarketComponent } from './componets/market';
+import { BumpinTokenUtils } from './utils/token';
+import { BumpinPoolUtils } from './utils/pool';
+import { BumpinMarketUtils } from './utils/market';
+import { PriceData } from '@pythnetwork/client';
 import BigNumber from 'bignumber.js';
-import {AccountLayout, TOKEN_PROGRAM_ID} from '@solana/spl-token';
-import {RewardsComponent} from './componets/rewards';
+import { AccountLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { RewardsComponent } from './componets/rewards';
 import './types/bnExt';
 import {
     Market,
@@ -58,9 +59,9 @@ import {
     User,
     UserStakeStatus,
 } from './beans/beans';
-import {isEqual} from 'lodash';
-import {BumpinPositionUtils} from './utils/position';
-import {BumpinUserUtils} from './utils/user';
+import { isEqual } from 'lodash';
+import { BumpinPositionUtils } from './utils/position';
+import { BumpinUserUtils } from './utils/user';
 import BN from 'bn.js';
 
 export class BumpinClient {
@@ -253,9 +254,9 @@ export class BumpinClient {
         } catch (e) {
             throw new BumpinAccountNotFound(
                 'User Account, pda: ' +
-                pda.toString() +
-                ' wallet: ' +
-                this.wallet.publicKey.toString(),
+                    pda.toString() +
+                    ' wallet: ' +
+                    this.wallet.publicKey.toString(),
             );
         }
         //TODO: Maybe has another error type
@@ -463,8 +464,8 @@ export class BumpinClient {
                     .minus(userToken.liabilityAmount)
                     .gt(userToken.amount)
                     ? userToken.usedAmount
-                        .minus(userToken.amount)
-                        .minus(userToken.liabilityAmount)
+                          .minus(userToken.amount)
+                          .minus(userToken.liabilityAmount)
                     : new BigNumber(0);
             }
             userSummary.tokens.push(userTokenSummary);
@@ -890,7 +891,7 @@ export class BumpinClient {
         if (!price.price) {
             throw new BumpinInvalidParameter(
                 'Price not found(undefined) for mint: ' +
-                pool.mintKey.toString(),
+                    pool.mintKey.toString(),
             );
         }
         const relativeMarkets = BumpinMarketUtils.getMarketsByPoolKey(
@@ -924,7 +925,7 @@ export class BumpinClient {
                 if (!stablePrice.price) {
                     throw new BumpinInvalidParameter(
                         'Stable Price not found(undefined) for mint: ' +
-                        pool.mintKey.toString(),
+                            pool.mintKey.toString(),
                     );
                 }
                 rawValue = rawValue.plus(
@@ -936,16 +937,22 @@ export class BumpinClient {
         return rawValue;
     }
 
-    public async settlePosition(positionKey: PublicKey, settleValue: BigNumber): Promise<PositionSettle> {
+    public async settlePosition(
+        positionKey: PublicKey,
+        settleValue: BigNumber,
+    ): Promise<PositionSettle> {
         let user = await this.getUser(true);
         let markets = await this.getMarkets(true);
         let pools = await this.getPools(true);
 
         let positionSettle = {
             settleMargin: new BigNumber(0),
-            positionFee: new BigNumber(0)
+            positionFee: new BigNumber(0),
         };
-        let userPosition = BumpinPositionUtils.getUserPosition(positionKey, user);
+        let userPosition = BumpinPositionUtils.getUserPosition(
+            positionKey,
+            user,
+        );
         let percentage = new BigNumber(1);
         if (userPosition) {
             if (settleValue.gte(userPosition.positionSize)) {
@@ -953,15 +960,41 @@ export class BumpinClient {
             } else {
                 percentage = settleValue.dividedBy(userPosition.positionSize);
             }
-            let market = BumpinMarketUtils.getMarketBySymbol(userPosition.symbol, markets);
-            let pool = BumpinPoolUtils.getPoolByPublicKey(market.poolKey, pools);
-            let positionFee = await BumpinPositionUtils.getPositionFee(this.tradeTokenComponent!, userPosition, market, pool);
-            let indexTradeToken = await this.getTradeToken(userPosition.indexMintOracle);
-            let marginToken = await this.getTradeToken(userPosition.marginMintKey);
-            let marginTokenPrice = this.getTradeTokenPrice(marginToken.oracleKey);
-            let unPnl = await BumpinPositionUtils.getPositionUnPnlValue(this.tradeTokenComponent!, indexTradeToken, marginToken, userPosition, false);
+            let market = BumpinMarketUtils.getMarketBySymbol(
+                userPosition.symbol,
+                markets,
+            );
+            let pool = BumpinPoolUtils.getPoolByPublicKey(
+                market.poolKey,
+                pools,
+            );
+            let positionFee = await BumpinPositionUtils.getPositionFee(
+                this.tradeTokenComponent!,
+                userPosition,
+                market,
+                pool,
+            );
+            let indexTradeToken = await this.getTradeToken(
+                userPosition.indexMintOracle,
+            );
+            let marginToken = await this.getTradeToken(
+                userPosition.marginMintKey,
+            );
+            let marginTokenPrice = this.getTradeTokenPrice(
+                marginToken.oracleKey,
+            );
+            let unPnl = await BumpinPositionUtils.getPositionUnPnlValue(
+                this.tradeTokenComponent!,
+                indexTradeToken,
+                marginToken,
+                userPosition,
+                false,
+            );
             let totalPosFee = positionFee.totalUsd.multipliedBy(percentage);
-            let settleMargin = settleValue.plus(unPnl.multipliedBy(percentage)).minus(totalPosFee).dividedBy(new BigNumber(marginTokenPrice.price!));
+            let settleMargin = settleValue
+                .plus(unPnl.multipliedBy(percentage))
+                .minus(totalPosFee)
+                .dividedBy(new BigNumber(marginTokenPrice.price!));
             positionSettle.settleMargin = settleMargin;
             positionSettle.positionFee = totalPosFee;
         }
@@ -984,7 +1017,7 @@ export class BumpinClient {
         if (!price.price) {
             throw new BumpinInvalidParameter(
                 'Price not found(undefined) for oracle: ' +
-                market.indexMintOracle.toString(),
+                    market.indexMintOracle.toString(),
             );
         }
 

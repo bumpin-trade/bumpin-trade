@@ -91,11 +91,10 @@ export class BumpinMarketUtils {
                       total_funding_fee.dividedBy(long.openInterest),
                   );
             long_funding_fee_per_qty_delta = long_pay_short
-                ? current_long_funding_fee_per_qty
-                      .dividedBy(baseTokenPrice)
+                ? current_long_funding_fee_per_qty.dividedBy(baseTokenPrice)
                 : current_long_funding_fee_per_qty
                       .dividedBy(baseTokenPrice)
-                      .negated()
+                      .negated();
         }
 
         if (short.openInterest.gt(new BigNumber(0))) {
@@ -105,8 +104,7 @@ export class BumpinMarketUtils {
                           funding_fee_duration_in_seconds,
                       ),
                       total_funding_fee.div(short.openInterest),
-                  )
-                      .negated()
+                  ).negated()
                 : total_funding_fee.div(short.openInterest);
         }
         return {

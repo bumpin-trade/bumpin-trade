@@ -150,10 +150,7 @@ pub mod bumpin_trade {
     }
 
     #[track_caller]
-    pub fn cancel_order(
-        ctx: Context<CancelOrderCtx>,
-        params: CancelOrderParams,
-    ) -> Result<()> {
+    pub fn cancel_order(ctx: Context<CancelOrderCtx>, params: CancelOrderParams) -> Result<()> {
         handle_cancel_order(ctx, params)
     }
 

@@ -1,5 +1,5 @@
-import {BN} from '@coral-xyz/anchor';
-import {PublicKey} from '@solana/web3.js';
+import { BN } from '@coral-xyz/anchor';
+import { PublicKey } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 
 export class BumpinClientNotInitialized extends Error {
