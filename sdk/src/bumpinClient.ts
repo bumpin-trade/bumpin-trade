@@ -973,6 +973,7 @@ export class BumpinClient {
                 userPosition,
                 market,
                 pool,
+                await this.getState(),
             );
             let indexTradeToken = await this.getTradeToken(
                 userPosition.indexMintOracle,
