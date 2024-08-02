@@ -270,7 +270,7 @@ export class BumpinClient {
                 payer: this.wallet.publicKey,
             })
             .signers([])
-            .rpc(BumpinUtils.getRootConfirmOptions());
+            .rpc(BumpinUtils.getDefaultConfirmOptions());
     }
 
     public async getWalletBalance(
