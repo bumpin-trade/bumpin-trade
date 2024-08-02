@@ -9,7 +9,7 @@ import { BumpinPoolUtils } from './pool';
 import {
     Market,
     Pool,
-    PositionStatus,
+    PositionStatus, State,
     TradeToken,
     User,
     UserPosition,
@@ -45,6 +45,7 @@ export class BumpinPositionUtils {
         markets: Market[],
         pools: Pool[],
         positionValue: boolean = true,
+        state:State,
     ): Promise<PositionBalance> {
         let totalBalance = {
             initialMarginUsd: BigNumber(0),
@@ -99,6 +100,7 @@ export class BumpinPositionUtils {
                 userPosition,
                 market,
                 pool,
+                state
             );
 
             totalBalance.positionUnPnl =
@@ -162,6 +164,7 @@ export class BumpinPositionUtils {
         position: UserPosition,
         market: Market,
         pool: Pool,
+        state:State,
     ): Promise<PositionFee> {
         let positionFee = {
             fundingFee: BigNumber(0),
@@ -177,11 +180,11 @@ export class BumpinPositionUtils {
                 position.marginMintKey,
             )
         ).price!;
-
-        // todo need call real_per_size
+        let {longDelta,shortDelta} = BumpinMarketUtils.getMarketPerTokenDelta(market,state,(await tradeTokenComponent.getTradeTokenPricesByMintKey(market.poolMintKey)).price!);
         if (position.isLong) {
             positionFee.fundingFee =
                 market.fundingFee.longFundingFeeAmountPerSize
+                    .plus(longDelta)
                     .minus(position.openFundingFeeAmountPerSize)
                     .multipliedBy(position.positionSize);
             positionFee.fundingFeeUsd =
@@ -189,6 +192,7 @@ export class BumpinPositionUtils {
         } else {
             positionFee.fundingFeeUsd =
                 market.fundingFee.shortFundingFeeAmountPerSize
+                    .plus(shortDelta)
                     .minus(position.openFundingFeeAmountPerSize)
                     .multipliedBy(position.positionSize);
             positionFee.fundingFee = positionFee.fundingFeeUsd.dividedBy(price);
@@ -196,6 +200,7 @@ export class BumpinPositionUtils {
 
         positionFee.borrowingFee =
             pool.borrowingFee.cumulativeBorrowingFeePerToken
+                .plus(BumpinPoolUtils.getPoolBorrowingFeeDelta(pool))
                 .minus(position.openBorrowingFeePerToken)
                 .multipliedBy(position.holdPoolAmount);
         positionFee.borrowingFeeUsd =
