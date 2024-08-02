@@ -1,16 +1,11 @@
-import {
-    AddressLookupTableAccount,
-    ConfirmOptions,
-    Connection,
-    PublicKey,
-} from '@solana/web3.js';
+import {AddressLookupTableAccount, ConfirmOptions, Connection, PublicKey,} from '@solana/web3.js';
 import * as anchor from '@coral-xyz/anchor';
-import { AnchorProvider, Program, Wallet } from '@coral-xyz/anchor';
+import {AnchorProvider, Program, Wallet} from '@coral-xyz/anchor';
 import idlBumpinTrade from './idl/bumpin_trade.json';
 import idlPyth from './idl/pyth.json';
-import { BumpinClientConfig, NetType } from './bumpinClientConfig';
-import { BumpinUtils } from './utils/utils';
-import { BumpinTrade } from './types/bumpin_trade';
+import {BumpinClientConfig, NetType} from './bumpinClientConfig';
+import {BumpinUtils} from './utils/utils';
+import {BumpinTrade} from './types/bumpin_trade';
 import {
     AccountValue,
     MarketUnPnlUsd,
@@ -34,35 +29,27 @@ import {
     BumpinSubscriptionFailed,
     BumpinUserNotLogin,
 } from './errors';
-import { PollingUserAccountSubscriber } from './account/pollingUserAccountSubscriber';
-import { BulkAccountLoader } from './account/bulkAccountLoader';
-import { DataAndSlot } from './account/types';
-import { PollingStateAccountSubscriber } from './account/pollingStateAccountSubscriber';
-import { PoolComponent } from './componets/pool';
-import { Pyth } from './types/pyth';
-import { UserComponent } from './componets/user';
-import { TradeTokenComponent } from './componets/tradeToken';
-import { MarketComponent } from './componets/market';
-import { BumpinTokenUtils } from './utils/token';
-import { BumpinPoolUtils } from './utils/pool';
-import { BumpinMarketUtils } from './utils/market';
-import { PriceData } from '@pythnetwork/client';
+import {PollingUserAccountSubscriber} from './account/pollingUserAccountSubscriber';
+import {BulkAccountLoader} from './account/bulkAccountLoader';
+import {DataAndSlot} from './account/types';
+import {PollingStateAccountSubscriber} from './account/pollingStateAccountSubscriber';
+import {PoolComponent} from './componets/pool';
+import {Pyth} from './types/pyth';
+import {UserComponent} from './componets/user';
+import {TradeTokenComponent} from './componets/tradeToken';
+import {MarketComponent} from './componets/market';
+import {BumpinTokenUtils} from './utils/token';
+import {BumpinPoolUtils} from './utils/pool';
+import {BumpinMarketUtils} from './utils/market';
+import {PriceData} from '@pythnetwork/client';
 import BigNumber from 'bignumber.js';
-import { AccountLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { RewardsComponent } from './componets/rewards';
+import {AccountLayout, TOKEN_PROGRAM_ID} from '@solana/spl-token';
+import {RewardsComponent} from './componets/rewards';
 import './types/bnExt';
-import {
-    Market,
-    Pool,
-    State,
-    TradeToken,
-    User,
-    UserStakeStatus,
-} from './beans/beans';
-import { isEqual } from 'lodash';
-import { BumpinPositionUtils } from './utils/position';
-import { BumpinUserUtils } from './utils/user';
-import BN from 'bn.js';
+import {Market, Pool, State, TradeToken, User, UserStakeStatus,} from './beans/beans';
+import {isEqual} from 'lodash';
+import {BumpinPositionUtils} from './utils/position';
+import {BumpinUserUtils} from './utils/user';
 
 export class BumpinClient {
     readonly config: BumpinClientConfig;
@@ -975,28 +962,24 @@ export class BumpinClient {
                 pool,
                 await this.getState(),
             );
-            let indexTradeToken = await this.getTradeToken(
-                userPosition.indexMintOracle,
-            );
-            let marginToken = await this.getTradeToken(
+
+            let marginToken = await this.getTradeTokenByMintKey(
                 userPosition.marginMintKey,
             );
-            let marginTokenPrice = this.getTradeTokenPrice(
-                marginToken.oracleKey,
+            let marginTokenPrice = await this.getTradeTokenPriceByMintKey(
+                userPosition.marginMintKey,
             );
             let unPnl = await BumpinPositionUtils.getPositionUnPnlValue(
                 this.tradeTokenComponent!,
-                indexTradeToken,
                 marginToken,
                 userPosition,
                 false,
             );
             let totalPosFee = positionFee.totalUsd.multipliedBy(percentage);
-            let settleMargin = settleValue
+            positionSettle.settleMargin = settleValue
                 .plus(unPnl.multipliedBy(percentage))
                 .minus(totalPosFee)
                 .dividedBy(new BigNumber(marginTokenPrice.price!));
-            positionSettle.settleMargin = settleMargin;
             positionSettle.positionFee = totalPosFee;
         }
         return positionSettle;

@@ -80,11 +80,6 @@ export class BumpinPositionUtils {
             ) {
                 continue;
             }
-            const indexTradeToken =
-                BumpinTokenUtils.getTradeTokenByOraclePublicKey(
-                    userPosition.indexMintOracle,
-                    tradeTokens,
-                );
             const marginTradeToken =
                 BumpinTokenUtils.getTradeTokenByMintPublicKey(
                     userPosition.marginMintKey,
@@ -92,7 +87,6 @@ export class BumpinPositionUtils {
                 );
             let unPnlValue = await BumpinPositionUtils.getPositionUnPnlValue(
                 tradeTokenComponent,
-                indexTradeToken,
                 marginTradeToken,
                 userPosition,
                 positionValue,
@@ -143,13 +137,12 @@ export class BumpinPositionUtils {
     //TODO, Jax: check this
     public static async getPositionUnPnlValue(
         tradeTokenComponent: TradeTokenComponent,
-        indexTradeToken: TradeToken,
         marginTradeToken: TradeToken,
         position: UserPosition,
         positionValue: boolean = true,
     ): Promise<BigNumber> {
         const price = tradeTokenComponent.getTradeTokenPricesByOracleKey(
-            indexTradeToken.oracleKey,
+            position.indexMintOracle,
             1,
         )[0].price!;
         let unPnl = BigNumber(0);
