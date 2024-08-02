@@ -872,7 +872,7 @@ export class BumpinClient {
         }
     }
 
-    //TODO: Dean, check this
+    //TODO: Jax, check this
     public async getPoolValueUsd(
         poolKey: PublicKey,
         sync: boolean = false,
@@ -1002,7 +1002,7 @@ export class BumpinClient {
         return positionSettle;
     }
 
-    //TODO: Dean, check this
+    //TODO: Jax, check this
     public async getMarketUnPnlUsd(market: Market): Promise<MarketUnPnlUsd> {
         this.checkInitialization();
         let longUnPnl = BigNumber(0);
@@ -1043,7 +1043,7 @@ export class BumpinClient {
         return new MarketUnPnlUsd(longUnPnl, shortUnPnl);
     }
 
-    //TODO: Dean, check this
+    //TODO: Jax, check this
     public async getUserAccountNetValue(
         sync: boolean = false,
     ): Promise<AccountValue> {
@@ -1065,7 +1065,7 @@ export class BumpinClient {
         return accountValue;
     }
 
-    //TODO: Dean, check this
+    //TODO: Jax, check this
     public async getUserAvailableValue(
         sync: boolean = false,
     ): Promise<BigNumber> {
@@ -1079,7 +1079,7 @@ export class BumpinClient {
         );
     }
 
-    //TODO: Dean, check this
+    //TODO: Jax, check this
     public async claimUserRewards(): Promise<UserClaimResult> {
         this.checkInitialization(true);
         let user = await this.getUser();

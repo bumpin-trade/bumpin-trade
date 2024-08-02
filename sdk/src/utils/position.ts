@@ -140,7 +140,7 @@ export class BumpinPositionUtils {
         return totalBalance;
     }
 
-    //TODO, Dean: check this
+    //TODO, Jax: check this
     public static async getPositionUnPnlValue(
         tradeTokenComponent: TradeTokenComponent,
         indexTradeToken: TradeToken,
@@ -176,7 +176,7 @@ export class BumpinPositionUtils {
         return unPnl;
     }
 
-    //TODO: Dean: check this
+    //TODO: Jax: check this
     public static async getPositionFee(
         tradeTokenComponent: TradeTokenComponent,
         position: UserPosition,
