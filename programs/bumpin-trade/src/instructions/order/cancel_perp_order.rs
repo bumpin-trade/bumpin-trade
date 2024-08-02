@@ -61,6 +61,7 @@ pub struct CancelOrderCtx<'info> {
     pub token_program: Program<'info, Token>,
 }
 
+#[track_caller]
 pub fn handle_cancel_order(
     ctx: Context<CancelOrderCtx>,
     params: CancelOrderParams,
