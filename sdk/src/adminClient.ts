@@ -110,30 +110,30 @@ export class BumpinAdmin {
         console.log(
             'Initializing All, From state, confirm level: root (may need many time)',
         );
-        await this.initState(stateParam);
+        // await this.initState(stateParam);
         console.log('State initialized');
 
         let tradeTokenOracleMap = new Map<string, string>();
 
         // ////////// init tradeToken
         // //TODO: remove oracle init when using Prod env.
-        for (let p of tradeTokenParams) {
-            let oracleKey = await this.initTradeToken(
-                p.tradeTokenName,
-                p.tradeTokenMint,
-                p.discount,
-                p.liquidationFactor,
-                p.exponent,
-                p.trueOraclePublicKey,
-            );
-            tradeTokenOracleMap.set(p.tradeTokenMint, oracleKey.toString());
-            console.log(
-                'TradeToken initialized: ',
-                p.tradeTokenName,
-                ' oracle: ',
-                oracleKey.toString(),
-            );
-        }
+        // for (let p of tradeTokenParams) {
+        //     let oracleKey = await this.initTradeToken(
+        //         p.tradeTokenName,
+        //         p.tradeTokenMint,
+        //         p.discount,
+        //         p.liquidationFactor,
+        //         p.exponent,
+        //         p.trueOraclePublicKey,
+        //     );
+        //     tradeTokenOracleMap.set(p.tradeTokenMint, oracleKey.toString());
+        //     console.log(
+        //         'TradeToken initialized: ',
+        //         p.tradeTokenName,
+        //         ' oracle: ',
+        //         oracleKey.toString(),
+        //     );
+        // }
 
         ///////// init pools
         for (let poolParam of poolParams) {
@@ -178,7 +178,7 @@ export class BumpinAdmin {
                     bumpSigner: pda,
                 })
                 .signers([])
-                .rpc(BumpinUtils.getRootConfirmOptions());
+                .rpc(BumpinUtils.getDefaultConfirmOptions());
             console.log(
                 'Market initialized: ',
                 BumpinUtils.decodeString(marketParam.params.symbol),
@@ -196,8 +196,8 @@ export class BumpinAdmin {
             .signers([])
             .rpc({
                 skipPreflight: false,
-                commitment: 'confirmed', //default commitment: confirmed
-                preflightCommitment: 'confirmed',
+                commitment: 'root', //default commitment: confirmed
+                preflightCommitment: 'root',
                 maxRetries: 0,
                 minContextSlot: undefined,
             });
