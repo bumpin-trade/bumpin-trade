@@ -761,15 +761,7 @@ export class BumpinClient {
             marketIndex,
         )[0];
         const market = await this.getMarket(marketKey, sync);
-        let baseTokenPriceData =
-            await this.tradeTokenComponent?.getTradeTokenPricesByMintKey(
-                market.poolMintKey,
-            );
-        let price = baseTokenPriceData?.price;
-        if (price == undefined) {
-            price = 1;
-        }
-        let long = market.fundingFee.longFundingFeeRate.multipliedBy(price);
+        let long = market.fundingFee.longFundingFeeRate;
         let short = market.fundingFee.shortFundingFeeRate;
         if (long.isNaN()) {
             long = new BigNumber(0);
