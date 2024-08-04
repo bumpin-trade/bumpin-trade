@@ -82,11 +82,6 @@ export class BumpinClient {
     constructor(config: BumpinClientConfig) {
         this.config = config;
         this.netType = config.netType;
-        this.connection = new Connection(
-            config.endpoint,
-            config.connectionConfig,
-        );
-        this.wallet = config.wallet;
         let opt: ConfirmOptions = {
             skipPreflight: false,
             commitment: 'confirmed', //default commitment: confirmed
@@ -94,6 +89,12 @@ export class BumpinClient {
             maxRetries: 0,
             minContextSlot: undefined,
         };
+        this.connection = new Connection(
+            config.endpoint,
+            config.connectionConfig,
+        );
+        this.wallet = config.wallet;
+
         this.provider = new anchor.AnchorProvider(
             this.connection,
             this.wallet,

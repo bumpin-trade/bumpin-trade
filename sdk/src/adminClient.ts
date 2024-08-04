@@ -43,9 +43,8 @@ export class BumpinAdmin {
     pools: PoolAccount[] = [];
     market: MarketAccount[] = [];
 
+    // https://github.com/coral-xyz/anchor/issues/3146
     constructor(config: BumpinAdminConfig) {
-        this.connection = new Connection(config.endpoint);
-        this.wallet = config.wallet;
         let opt: ConfirmOptions = {
             skipPreflight: false,
             commitment: 'confirmed', //default commitment: confirmed
@@ -53,6 +52,9 @@ export class BumpinAdmin {
             maxRetries: 0,
             minContextSlot: undefined,
         };
+        this.connection = new Connection(config.endpoint, opt);
+        this.wallet = config.wallet;
+
         this.provider = new anchor.AnchorProvider(
             this.connection,
             this.wallet,
@@ -110,30 +112,30 @@ export class BumpinAdmin {
         console.log(
             'Initializing All, From state, confirm level: root (may need many time)',
         );
-        // await this.initState(stateParam);
+        await this.initState(stateParam);
         console.log('State initialized');
 
         let tradeTokenOracleMap = new Map<string, string>();
 
         // ////////// init tradeToken
         // //TODO: remove oracle init when using Prod env.
-        // for (let p of tradeTokenParams) {
-        //     let oracleKey = await this.initTradeToken(
-        //         p.tradeTokenName,
-        //         p.tradeTokenMint,
-        //         p.discount,
-        //         p.liquidationFactor,
-        //         p.exponent,
-        //         p.trueOraclePublicKey,
-        //     );
-        //     tradeTokenOracleMap.set(p.tradeTokenMint, oracleKey.toString());
-        //     console.log(
-        //         'TradeToken initialized: ',
-        //         p.tradeTokenName,
-        //         ' oracle: ',
-        //         oracleKey.toString(),
-        //     );
-        // }
+        for (let p of tradeTokenParams) {
+            let oracleKey = await this.initTradeToken(
+                p.tradeTokenName,
+                p.tradeTokenMint,
+                p.discount,
+                p.liquidationFactor,
+                p.exponent,
+                p.trueOraclePublicKey,
+            );
+            tradeTokenOracleMap.set(p.tradeTokenMint, oracleKey.toString());
+            console.log(
+                'TradeToken initialized: ',
+                p.tradeTokenName,
+                ' oracle: ',
+                oracleKey.toString(),
+            );
+        }
 
         ///////// init pools
         for (let poolParam of poolParams) {
@@ -196,8 +198,8 @@ export class BumpinAdmin {
             .signers([])
             .rpc({
                 skipPreflight: false,
-                commitment: 'root', //default commitment: confirmed
-                preflightCommitment: 'root',
+                commitment: 'confirmed', //default commitment: confirmed
+                preflightCommitment: 'confirmed',
                 maxRetries: 0,
                 minContextSlot: undefined,
             });
