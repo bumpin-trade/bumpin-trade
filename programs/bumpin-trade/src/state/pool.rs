@@ -92,7 +92,7 @@ impl Pool {
     }
 
     pub fn sub_amount(&mut self, amount: u128) -> BumpResult<()> {
-        validate!(self.balance.amount >= amount, BumpErrorCode::AmountNotEnough.into())?;
+        validate!(self.balance.amount >= amount, BumpErrorCode::SubPoolAmountBiggerThanAmount.into())?;
         self.balance.amount = self.balance.amount.safe_sub(amount)?;
         Ok(())
     }
@@ -106,8 +106,8 @@ impl Pool {
     }
 
     pub fn sub_amount_and_supply(&mut self, amount: u128, supply_amount: u128) -> BumpResult<()> {
-        validate!(self.balance.amount >= amount, BumpErrorCode::AmountNotEnough.into())?;
-        validate!(self.total_supply >= amount, BumpErrorCode::AmountNotEnough.into())?;
+        validate!(self.balance.amount >= amount, BumpErrorCode::SubPoolAmountBiggerThanAmount.into())?;
+        validate!(self.total_supply >= amount, BumpErrorCode::SubPoolAmountBiggerThanAmount.into())?;
         let pre_pool = self.clone();
         self.balance.amount = self.balance.amount.safe_sub(amount)?;
         self.total_supply = self.total_supply.safe_sub(supply_amount)?;
@@ -139,7 +139,7 @@ impl Pool {
 
     pub fn un_hold_pool(&mut self, amount: u128) -> BumpResult<()> {
         let pre_pool = self.clone();
-        validate!(self.balance.hold_amount >= amount, BumpErrorCode::AmountNotEnough.into())?;
+        validate!(self.balance.hold_amount >= amount, BumpErrorCode::SubHoldPoolBiggerThanHold.into())?;
         self.balance.hold_amount = sub_u128(self.balance.hold_amount, amount)?;
         self.emit_pool_update_event(&pre_pool);
         Ok(())
@@ -186,7 +186,7 @@ impl Pool {
     }
 
     pub fn sub_stable_amount(&mut self, amount: u128) -> BumpResult<()> {
-        validate!(self.stable_balance.amount >= amount, BumpErrorCode::AmountNotEnough)?;
+        validate!(self.stable_balance.amount >= amount, BumpErrorCode::SubPoolStableAmountBiggerThanStableAmount)?;
         let pre_pool = self.clone();
         self.stable_balance.amount = sub_u128(self.stable_balance.amount, amount)?;
         self.emit_pool_update_event(&pre_pool);
@@ -452,9 +452,9 @@ impl Pool {
                         self.add_stable_balance_unsettle(token_pnl.abs().cast::<u128>()?)?;
                         base_token_pool.add_stable_loss_amount(token_pnl.abs().cast::<u128>()?)?;
                     }
-                    self.sub_stable_amount(token_pnl.abs().cast::<u128>()?)?;
+                    self.sub_amount(token_pnl.abs().cast::<u128>()?)?;
                 } else if add_liability == 0u128 {
-                    base_token_pool.add_amount(token_pnl.cast::<u128>()?)?
+                    base_token_pool.add_stable_amount(token_pnl.cast::<u128>()?)?
                 } else {
                     let u_token_pnl = token_pnl.abs().cast::<u128>()?;
                     base_token_pool.add_stable_amount(if u_token_pnl > add_liability {
