@@ -7,6 +7,8 @@ pub type BumpResult<T = ()> = std::result::Result<T, BumpErrorCode>;
 pub enum BumpErrorCode {
     #[msg("AmountNotEnough")]
     AmountNotEnough,
+    #[msg("PositionShouldBeLiquidation")]
+    PositionShouldBeLiquidation,
     #[msg("OrderHoldUsdSmallThanHoldUsd")]
     OrderHoldUsdSmallThanHoldUsd,
     #[msg("StandardPoolValueNotEnough")]

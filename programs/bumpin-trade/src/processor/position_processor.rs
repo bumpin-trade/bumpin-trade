@@ -492,10 +492,11 @@ pub fn decrease_position<'info>(
             &trade_token,
             position,
         )?;
+        msg!("==========decrease_position,{:?}", response);
 
         if response.settle_margin < 0i128 && !params.is_liquidation && !position.is_portfolio_margin
         {
-            return Err(BumpErrorCode::AmountNotEnough);
+            return Err(BumpErrorCode::PositionShouldBeLiquidation);
         }
         let position_deletion = if params.decrease_size != position.position_size {
             update_decrease_position(position, params.decrease_size, &response)?;
