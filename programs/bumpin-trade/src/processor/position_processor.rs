@@ -45,6 +45,7 @@ pub fn handle_execute_order<'info>(
     oracle_map: &mut OracleMap,
     user_order: &UserOrder,
 ) -> BumpResult<()> {
+    msg!("===========handle_execute_order start");
     let user_key = user.key;
     let mut market = market_map.get_mut_ref(&user_order.symbol)?;
     let mut base_token_pool = pool_map.get_mut_ref(&market.pool_key)?;
@@ -84,6 +85,7 @@ pub fn handle_execute_order<'info>(
         user_order.is_portfolio_margin,
         program_id,
     )?;
+    msg!("===========handle_execute_order start1111");
     // //do execute order and change position
     match user_order.position_side {
         PositionSide::NONE => Err(BumpErrorCode::PositionSideNotSupport),
@@ -228,6 +230,7 @@ pub fn handle_execute_order<'info>(
                 if position_side == is_long {
                     return Err(BumpErrorCode::InvalidParam.into());
                 }
+                msg!("===========handle_execute_order start2222");
                 decrease_position(
                     DecreasePositionParams {
                         order_id: user_order.order_id,
@@ -462,6 +465,7 @@ pub fn decrease_position<'info>(
     oracle_map: &mut OracleMap,
     position_key: &Pubkey,
 ) -> BumpResult<()> {
+    msg!("===========decrease_position start");
     let (is_long, position_deletion, pre_position, response) = {
         let position = user.get_user_position_mut_ref(position_key)?;
         let pre_position = *position;
