@@ -270,7 +270,6 @@ pub fn handle_execute_order<'info>(
     Ok(())
 }
 
-#[track_caller]
 pub fn use_base_token(position_side: &PositionSide, order_side: &OrderSide) -> BumpResult<bool> {
     match (position_side, order_side) {
         (PositionSide::INCREASE, OrderSide::LONG) => Ok(true),
@@ -403,6 +402,10 @@ pub fn update_funding_fee(
     } else {
         realized_funding_fee =
             calculator::usd_to_token_i(realized_funding_fee_delta, token.decimals, token_price)?;
+        msg!("======update_funding_fee, realized_funding_fee_delta:{}",realized_funding_fee_delta);
+        msg!("======update_funding_fee, realized_funding_fee:{}",realized_funding_fee);
+        msg!("======update_funding_fee, token.decimals:{}",token.decimals);
+        msg!("======update_funding_fee, token_price:{}",token_price);
         position.add_realized_funding_fee(realized_funding_fee)?;
         position.add_realized_funding_fee_in_usd(realized_funding_fee_delta)?
     }
