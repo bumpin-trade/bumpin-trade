@@ -465,7 +465,6 @@ pub fn decrease_position<'info>(
     oracle_map: &mut OracleMap,
     position_key: &Pubkey,
 ) -> BumpResult<()> {
-    msg!("===========decrease_position start");
     let (is_long, position_deletion, pre_position, response) = {
         let position = user.get_user_position_mut_ref(position_key)?;
         let pre_position = *position;
@@ -496,7 +495,6 @@ pub fn decrease_position<'info>(
             &trade_token,
             position,
         )?;
-        msg!("==========decrease_position,{:?}", response);
 
         if response.settle_margin < 0i128 && !params.is_liquidation && !position.is_portfolio_margin
         {
@@ -1418,6 +1416,9 @@ pub fn increase_position(
                 .map_err(|_e| BumpErrorCode::OracleNotFound)?
                 .price,
         )?;
+        msg!("==============increase_hold:{}", increase_hold);
+        msg!("==============increase_hold_value:{}", increase_hold_value);
+        msg!("==============stable_trade_token.decimals:{}", stable_trade_token.decimals);
         validate!(
             base_token_pool_value >= increase_hold_value,
             BumpErrorCode::StandardPoolValueNotEnough

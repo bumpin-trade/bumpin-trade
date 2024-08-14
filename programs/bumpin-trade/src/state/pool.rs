@@ -396,6 +396,7 @@ impl Pool {
                 pool_value = add_i128(pool_value, stable_usd_value)?;
             }
         }
+        msg!("========get_pool_usd_value, pool_value: {}",pool_value);
         Ok(if pool_value <= 0i128 { 0u128 } else { pool_value.abs().cast::<u128>()? })
     }
 
@@ -449,7 +450,7 @@ impl Pool {
                 if token_pnl < 0i128 {
                     if self.stable {
                         // need count loss on base_token_pool
-                        self.add_stable_balance_unsettle(token_pnl.abs().cast::<u128>()?)?;
+                        self.add_unsettle(token_pnl.abs().cast::<u128>()?)?;
                         base_token_pool.add_stable_loss_amount(token_pnl.abs().cast::<u128>()?)?;
                     }
                     self.sub_amount(token_pnl.abs().cast::<u128>()?)?;
