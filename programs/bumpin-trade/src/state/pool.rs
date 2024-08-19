@@ -92,7 +92,10 @@ impl Pool {
     }
 
     pub fn sub_amount(&mut self, amount: u128) -> BumpResult<()> {
-        validate!(self.balance.amount >= amount, BumpErrorCode::SubPoolAmountBiggerThanAmount.into())?;
+        validate!(
+            self.balance.amount >= amount,
+            BumpErrorCode::SubPoolAmountBiggerThanAmount.into()
+        )?;
         self.balance.amount = self.balance.amount.safe_sub(amount)?;
         Ok(())
     }
@@ -106,8 +109,14 @@ impl Pool {
     }
 
     pub fn sub_amount_and_supply(&mut self, amount: u128, supply_amount: u128) -> BumpResult<()> {
-        validate!(self.balance.amount >= amount, BumpErrorCode::SubPoolAmountBiggerThanAmount.into())?;
-        validate!(self.total_supply >= amount, BumpErrorCode::SubPoolAmountBiggerThanAmount.into())?;
+        validate!(
+            self.balance.amount >= amount,
+            BumpErrorCode::SubPoolAmountBiggerThanAmount.into()
+        )?;
+        validate!(
+            self.total_supply >= amount,
+            BumpErrorCode::SubPoolAmountBiggerThanAmount.into()
+        )?;
         let pre_pool = self.clone();
         self.balance.amount = self.balance.amount.safe_sub(amount)?;
         self.total_supply = self.total_supply.safe_sub(supply_amount)?;
@@ -129,9 +138,11 @@ impl Pool {
         oracle_map: &mut OracleMap,
         base_trade_token: &TradeToken,
         stable_trade_token: &TradeToken,
+        max_pool_liquidity_share_rate: u32,
     ) -> BumpResult<()> {
-        let available_liquidity =
-            self.get_pool_available_liquidity(oracle_map, base_trade_token, stable_trade_token)?;
+        let available_liquidity = self
+            .get_pool_available_liquidity(oracle_map, base_trade_token, stable_trade_token)?
+            .safe_mul_rate(max_pool_liquidity_share_rate.cast::<u128>()?)?;
         validate!(amount < available_liquidity, BumpErrorCode::PoolAvailableLiquidityNotEnough)?;
         self.hold_pool(amount)?;
         Ok(())
@@ -139,7 +150,10 @@ impl Pool {
 
     pub fn un_hold_pool(&mut self, amount: u128) -> BumpResult<()> {
         let pre_pool = self.clone();
-        validate!(self.balance.hold_amount >= amount, BumpErrorCode::SubHoldPoolBiggerThanHold.into())?;
+        validate!(
+            self.balance.hold_amount >= amount,
+            BumpErrorCode::SubHoldPoolBiggerThanHold.into()
+        )?;
         self.balance.hold_amount = sub_u128(self.balance.hold_amount, amount)?;
         self.emit_pool_update_event(&pre_pool);
         Ok(())
@@ -186,7 +200,10 @@ impl Pool {
     }
 
     pub fn sub_stable_amount(&mut self, amount: u128) -> BumpResult<()> {
-        validate!(self.stable_balance.amount >= amount, BumpErrorCode::SubPoolStableAmountBiggerThanStableAmount)?;
+        validate!(
+            self.stable_balance.amount >= amount,
+            BumpErrorCode::SubPoolStableAmountBiggerThanStableAmount
+        )?;
         let pre_pool = self.clone();
         self.stable_balance.amount = sub_u128(self.stable_balance.amount, amount)?;
         self.emit_pool_update_event(&pre_pool);
@@ -396,7 +413,7 @@ impl Pool {
                 pool_value = add_i128(pool_value, stable_usd_value)?;
             }
         }
-        msg!("========get_pool_usd_value, pool_value: {}",pool_value);
+        msg!("========get_pool_usd_value, pool_value: {}", pool_value);
         Ok(if pool_value <= 0i128 { 0u128 } else { pool_value.abs().cast::<u128>()? })
     }
 

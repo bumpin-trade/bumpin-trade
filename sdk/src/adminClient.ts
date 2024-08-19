@@ -348,6 +348,7 @@ export class BumpinAdmin {
             minimumLeverage: 10000,
             poolIndex: poolIndex,
             stablePoolIndex: stablePoolIndex,
+            maxPoolLiquidityShareRate: 10000,
         };
         await this.program.methods
             .initializeMarket(params)

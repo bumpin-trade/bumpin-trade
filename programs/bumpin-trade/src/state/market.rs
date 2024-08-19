@@ -284,7 +284,8 @@ pub struct MarketConfig {
     pub long_short_oi_bottom_limit: u128,
     pub maximum_leverage: u32,
     pub minimum_leverage: u32,
-    pub padding: [u8; 8],
+    pub max_pool_liquidity_share_rate: u32,
+    pub padding: [u8; 4],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Default, Copy)]

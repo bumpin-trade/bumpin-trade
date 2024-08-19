@@ -405,10 +405,10 @@ pub fn update_funding_fee(
     } else {
         realized_funding_fee =
             calculator::usd_to_token_i(realized_funding_fee_delta, token.decimals, token_price)?;
-        msg!("======update_funding_fee, realized_funding_fee_delta:{}",realized_funding_fee_delta);
-        msg!("======update_funding_fee, realized_funding_fee:{}",realized_funding_fee);
-        msg!("======update_funding_fee, token.decimals:{}",token.decimals);
-        msg!("======update_funding_fee, token_price:{}",token_price);
+        msg!("======update_funding_fee, realized_funding_fee_delta:{}", realized_funding_fee_delta);
+        msg!("======update_funding_fee, realized_funding_fee:{}", realized_funding_fee);
+        msg!("======update_funding_fee, token.decimals:{}", token.decimals);
+        msg!("======update_funding_fee, token_price:{}", token_price);
         position.add_realized_funding_fee(realized_funding_fee)?;
         position.add_realized_funding_fee_in_usd(realized_funding_fee_delta)?
     }
@@ -929,6 +929,7 @@ pub fn execute_reduce_position_margin(
             oracle_map,
             base_trade_token,
             stable_trade_token,
+            market.config.max_pool_liquidity_share_rate
         )?
     } else {
         let base_token_pool_value =
@@ -950,6 +951,7 @@ pub fn execute_reduce_position_margin(
             oracle_map,
             base_trade_token,
             stable_trade_token,
+            market.config.max_pool_liquidity_share_rate
         )?
     }
     emit!(AddOrDecreaseMarginEvent { user_key, position: *position, pre_position, is_add: false });
@@ -1397,6 +1399,7 @@ pub fn increase_position(
             oracle_map,
             trade_token.deref_mut(),
             stable_trade_token.deref_mut(),
+            market.config.max_pool_liquidity_share_rate
         )?
     } else {
         drop(trade_token);
@@ -1428,6 +1431,7 @@ pub fn increase_position(
             oracle_map,
             stable_trade_token.deref(),
             stable_trade_token.deref(),
+            market.config.max_pool_liquidity_share_rate
         )?
     }
 

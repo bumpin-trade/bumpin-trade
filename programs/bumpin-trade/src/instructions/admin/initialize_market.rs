@@ -81,7 +81,8 @@ pub fn handle_initialize_market(
         long_short_oi_bottom_limit: params.long_short_oi_bottom_limit,
         maximum_leverage: params.maximum_leverage,
         minimum_leverage: params.minimum_leverage,
-        padding: [0; 8],
+        max_pool_liquidity_share_rate: params.max_pool_liquidity_share_rate,
+        padding: [0; 4],
     };
 
     market.index = state.market_sequence;
@@ -112,4 +113,5 @@ pub struct InitializeMarketParams {
     pub minimum_leverage: u32,
     pub pool_index: u16,
     pub stable_pool_index: u16,
+    pub max_pool_liquidity_share_rate: u32,
 }

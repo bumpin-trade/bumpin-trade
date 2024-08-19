@@ -1,10 +1,10 @@
-use anchor_lang::prelude::msg;
 use crate::errors::BumpResult;
 use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::state::market::Market;
 use crate::state::pool::Pool;
 use crate::state::state::State;
+use anchor_lang::prelude::msg;
 
 #[track_caller]
 pub fn charge_staking_fee(stake_pool: &mut Pool, amount: u128) -> BumpResult<u128> {
@@ -125,10 +125,10 @@ pub fn settle_funding_fee(
     is_long: bool,
     is_cross: bool,
 ) -> BumpResult<()> {
-    msg!("=======settle_funding_fee, fee_amount_usd:{}",fee_amount_usd);
-    msg!("=======settle_funding_fee, fee_amount:{}",fee_amount);
-    msg!("=======settle_funding_fee, is_long:{}",is_long);
-    msg!("=======settle_funding_fee, is_cross:{}",is_cross);
+    msg!("=======settle_funding_fee, fee_amount_usd:{}", fee_amount_usd);
+    msg!("=======settle_funding_fee, fee_amount:{}", fee_amount);
+    msg!("=======settle_funding_fee, is_long:{}", is_long);
+    msg!("=======settle_funding_fee, is_cross:{}", is_cross);
     if !is_long {
         if fee_amount_usd <= 0i128 {
             //stable_pool should pay to user, count loss on base_token_pool
