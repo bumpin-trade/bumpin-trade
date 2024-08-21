@@ -929,7 +929,7 @@ pub fn execute_reduce_position_margin(
             oracle_map,
             base_trade_token,
             stable_trade_token,
-            market.config.max_pool_liquidity_share_rate
+            market.config.max_pool_liquidity_share_rate,
         )?
     } else {
         let base_token_pool_value =
@@ -951,7 +951,7 @@ pub fn execute_reduce_position_margin(
             oracle_map,
             base_trade_token,
             stable_trade_token,
-            market.config.max_pool_liquidity_share_rate
+            market.config.max_pool_liquidity_share_rate,
         )?
     }
     emit!(AddOrDecreaseMarginEvent { user_key, position: *position, pre_position, is_add: false });
@@ -1399,7 +1399,7 @@ pub fn increase_position(
             oracle_map,
             trade_token.deref_mut(),
             stable_trade_token.deref_mut(),
-            market.config.max_pool_liquidity_share_rate
+            market.config.max_pool_liquidity_share_rate,
         )?
     } else {
         drop(trade_token);
@@ -1431,7 +1431,7 @@ pub fn increase_position(
             oracle_map,
             stable_trade_token.deref(),
             stable_trade_token.deref(),
-            market.config.max_pool_liquidity_share_rate
+            market.config.max_pool_liquidity_share_rate,
         )?
     }
 

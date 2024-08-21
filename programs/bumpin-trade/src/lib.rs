@@ -170,16 +170,15 @@ pub mod bumpin_trade {
         handle_update_position_leverage(ctx, params)
     }
 
-    pub fn liquidate_position<'a, 'b, 'c: 'info, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, LiquidatePosition>,
+    pub fn liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, LiquidateIsolatePosition>,
         position_key: Pubkey,
-        liquidation_price: u128,
         _market_index: u16,
         _pool_index: u16,
         _stable_pool_index: u16,
         _user_authority_key: Pubkey,
     ) -> Result<()> {
-        handle_liquidate_position(ctx, position_key, liquidation_price)
+        handle_liquidate_isolate_position(ctx, position_key)
     }
 
     #[track_caller]
