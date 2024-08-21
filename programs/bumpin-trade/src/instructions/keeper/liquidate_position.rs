@@ -13,7 +13,6 @@ use crate::processor::position_processor;
 use crate::processor::position_processor::DecreasePositionParams;
 use crate::state::infrastructure::user_position::UserPosition;
 use crate::state::market::Market;
-use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
 use crate::state::pool::Pool;
 use crate::state::state::State;
@@ -59,11 +58,8 @@ pub struct LiquidateCrossPosition<'info> {
 
 pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, LiquidateCrossPosition<'c>>,
-    _user_authority_key: Pubkey,
 ) -> Result<()> {
     let mut user = ctx.accounts.user.load_mut()?;
-    let state = &ctx.accounts.state;
-
     let remaining_accounts = ctx.remaining_accounts;
 
     let AccountMaps {

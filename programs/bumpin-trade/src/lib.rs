@@ -181,6 +181,13 @@ pub mod bumpin_trade {
         handle_liquidate_isolate_position(ctx, position_key)
     }
 
+    pub fn liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, LiquidateCrossPosition<'info>>,
+        _user_authority_key: Pubkey,
+    ) -> Result<()> {
+        handle_liquidate_cross_position(ctx)
+    }
+
     #[track_caller]
     pub fn adl<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ADL<'info>>,
