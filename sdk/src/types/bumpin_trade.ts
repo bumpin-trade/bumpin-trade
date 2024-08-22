@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/bumpin_trade.json`.
  */
 export type BumpinTrade = {
-    address: 'Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR';
+    address: 'AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca';
     metadata: {
         name: 'bumpinTrade';
         version: '0.1.0';
@@ -1832,12 +1832,73 @@ export type BumpinTrade = {
             args: [];
         },
         {
-            name: 'liquidatePosition';
-            discriminator: [187, 74, 229, 149, 102, 81, 221, 68];
+            name: 'liquidateCrossPosition';
+            discriminator: [40, 173, 153, 195, 116, 68, 144, 117];
             accounts: [
                 {
                     name: 'state';
+                    pda: {
+                        seeds: [
+                            {
+                                kind: 'const';
+                                value: [
+                                    98,
+                                    117,
+                                    109,
+                                    112,
+                                    95,
+                                    115,
+                                    116,
+                                    97,
+                                    116,
+                                    101,
+                                ];
+                            },
+                        ];
+                    };
+                },
+                {
+                    name: 'user';
                     writable: true;
+                    pda: {
+                        seeds: [
+                            {
+                                kind: 'const';
+                                value: [117, 115, 101, 114];
+                            },
+                            {
+                                kind: 'arg';
+                                path: 'userAuthorityKey';
+                            },
+                        ];
+                    };
+                },
+                {
+                    name: 'keeperKey';
+                    signer: true;
+                    relations: ['state'];
+                },
+                {
+                    name: 'bumpSigner';
+                },
+                {
+                    name: 'tokenProgram';
+                    address: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+                },
+            ];
+            args: [
+                {
+                    name: 'userAuthorityKey';
+                    type: 'pubkey';
+                },
+            ];
+        },
+        {
+            name: 'liquidateIsolatePosition';
+            discriminator: [88, 101, 146, 105, 53, 188, 251, 89];
+            accounts: [
+                {
+                    name: 'state';
                     pda: {
                         seeds: [
                             {
@@ -2041,8 +2102,9 @@ export type BumpinTrade = {
                     };
                 },
                 {
-                    name: 'keeperSigner';
+                    name: 'keeperKey';
                     signer: true;
+                    relations: ['state'];
                 },
                 {
                     name: 'bumpSigner';
@@ -2056,10 +2118,6 @@ export type BumpinTrade = {
                 {
                     name: 'positionKey';
                     type: 'pubkey';
-                },
-                {
-                    name: 'liquidationPrice';
-                    type: 'u128';
                 },
                 {
                     name: 'marketIndex';

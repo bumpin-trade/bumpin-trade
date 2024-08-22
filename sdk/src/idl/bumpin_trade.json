@@ -1487,12 +1487,65 @@
             "args": []
         },
         {
-            "name": "liquidate_position",
-            "discriminator": [187, 74, 229, 149, 102, 81, 221, 68],
+            "name": "liquidate_cross_position",
+            "discriminator": [40, 173, 153, 195, 116, 68, 144, 117],
             "accounts": [
                 {
                     "name": "state",
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "const",
+                                "value": [
+                                    98, 117, 109, 112, 95, 115, 116, 97, 116,
+                                    101
+                                ]
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "user",
                     "writable": true,
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "const",
+                                "value": [117, 115, 101, 114]
+                            },
+                            {
+                                "kind": "arg",
+                                "path": "_user_authority_key"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "keeper_key",
+                    "signer": true,
+                    "relations": ["state"]
+                },
+                {
+                    "name": "bump_signer"
+                },
+                {
+                    "name": "token_program",
+                    "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+                }
+            ],
+            "args": [
+                {
+                    "name": "_user_authority_key",
+                    "type": "pubkey"
+                }
+            ]
+        },
+        {
+            "name": "liquidate_isolate_position",
+            "discriminator": [88, 101, 146, 105, 53, 188, 251, 89],
+            "accounts": [
+                {
+                    "name": "state",
                     "pda": {
                         "seeds": [
                             {
@@ -1648,8 +1701,9 @@
                     }
                 },
                 {
-                    "name": "keeper_signer",
-                    "signer": true
+                    "name": "keeper_key",
+                    "signer": true,
+                    "relations": ["state"]
                 },
                 {
                     "name": "bump_signer"
@@ -1663,10 +1717,6 @@
                 {
                     "name": "position_key",
                     "type": "pubkey"
-                },
-                {
-                    "name": "liquidation_price",
-                    "type": "u128"
                 },
                 {
                     "name": "_market_index",
