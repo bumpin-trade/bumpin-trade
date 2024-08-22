@@ -61,6 +61,8 @@ pub enum BumpErrorCode {
     CouldNotFindUserOrder,
     #[msg("CouldNotFindUserPosition")]
     CouldNotFindUserPosition,
+    #[msg("LiquidatePositionIgnore")]
+    LiquidatePositionIgnore,
     #[msg("OnlyLiquidateIsolatePosition")]
     OnlyLiquidateIsolatePosition,
     #[msg("OnlyIsolatePositionAllowed")]

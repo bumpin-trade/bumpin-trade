@@ -172,13 +172,9 @@ pub mod bumpin_trade {
 
     pub fn liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, LiquidateIsolatePosition>,
-        position_key: Pubkey,
-        _market_index: u16,
-        _pool_index: u16,
-        _stable_pool_index: u16,
-        _user_authority_key: Pubkey,
+        params: LiquidateIsolatePositionParams,
     ) -> Result<()> {
-        handle_liquidate_isolate_position(ctx, position_key)
+        handle_liquidate_isolate_position(ctx, params)
     }
 
     pub fn liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(

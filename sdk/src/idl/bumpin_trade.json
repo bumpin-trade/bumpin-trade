@@ -1560,6 +1560,7 @@
                 },
                 {
                     "name": "user",
+                    "writable": true,
                     "pda": {
                         "seeds": [
                             {
@@ -1568,7 +1569,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "_user_authority_key"
+                                "path": "params.user_authority_key"
                             }
                         ]
                     }
@@ -1588,7 +1589,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "_market_index"
+                                "path": "params.market_index"
                             }
                         ]
                     }
@@ -1604,7 +1605,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "_pool_index"
+                                "path": "params.pool_index"
                             }
                         ]
                     }
@@ -1620,7 +1621,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "_stable_pool_index"
+                                "path": "params.stable_pool_index"
                             }
                         ]
                     }
@@ -1639,7 +1640,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "_pool_index"
+                                "path": "params.pool_index"
                             }
                         ]
                     }
@@ -1658,7 +1659,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "_stable_pool_index"
+                                "path": "params.stable_pool_index"
                             }
                         ]
                     }
@@ -1677,7 +1678,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "_trade_token_index"
+                                "path": "params.trade_token_index"
                             }
                         ]
                     }
@@ -1695,7 +1696,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "_trade_token_index"
+                                "path": "params.trade_token_index"
                             }
                         ]
                     }
@@ -1715,24 +1716,12 @@
             ],
             "args": [
                 {
-                    "name": "position_key",
-                    "type": "pubkey"
-                },
-                {
-                    "name": "_market_index",
-                    "type": "u16"
-                },
-                {
-                    "name": "_pool_index",
-                    "type": "u16"
-                },
-                {
-                    "name": "_stable_pool_index",
-                    "type": "u16"
-                },
-                {
-                    "name": "_user_authority_key",
-                    "type": "pubkey"
+                    "name": "params",
+                    "type": {
+                        "defined": {
+                            "name": "LiquidateIsolatePositionParams"
+                        }
+                    }
                 }
             ]
         },
@@ -2798,201 +2787,206 @@
         },
         {
             "code": 6028,
+            "name": "LiquidatePositionIgnore",
+            "msg": "LiquidatePositionIgnore"
+        },
+        {
+            "code": 6029,
             "name": "OnlyLiquidateIsolatePosition",
             "msg": "OnlyLiquidateIsolatePosition"
         },
         {
-            "code": 6029,
+            "code": 6030,
             "name": "OnlyIsolatePositionAllowed",
             "msg": "OnlyIsolatePositionAllowed"
         },
         {
-            "code": 6030,
+            "code": 6031,
             "name": "CouldNotFindUserStake",
             "msg": "CouldNotFindUserStake"
         },
         {
-            "code": 6031,
+            "code": 6032,
             "name": "OracleNotFound",
             "msg": "OracleNotFound"
         },
         {
-            "code": 6032,
+            "code": 6033,
             "name": "OraclePriceToOld",
             "msg": "OraclePriceToOld"
         },
         {
-            "code": 6033,
+            "code": 6034,
             "name": "UnableToLoadOracle",
             "msg": "Unable To Load Oracles"
         },
         {
-            "code": 6034,
+            "code": 6035,
             "name": "InvalidOracle",
             "msg": "InvalidOracle"
         },
         {
-            "code": 6035,
+            "code": 6036,
             "name": "BnConversionError",
             "msg": "Conversion to u128/u128 failed with an overflow or underflow"
         },
         {
-            "code": 6036,
+            "code": 6037,
             "name": "MathError",
             "msg": "Math Error"
         },
         {
-            "code": 6037,
+            "code": 6038,
             "name": "CastingFailure",
             "msg": "Casting Failure"
         },
         {
-            "code": 6038,
+            "code": 6039,
             "name": "CouldNotLoadMarketData",
             "msg": "CouldNotLoadMarketData"
         },
         {
-            "code": 6039,
+            "code": 6040,
             "name": "CouldNotFindMarket",
             "msg": "CouldNotFindMarket"
         },
         {
-            "code": 6040,
+            "code": 6041,
             "name": "InvalidMarketAccount",
             "msg": "InvalidMarketAccount"
         },
         {
-            "code": 6041,
+            "code": 6042,
             "name": "MarketWrongMutability",
             "msg": "MarketWrongMutability"
         },
         {
-            "code": 6042,
+            "code": 6043,
             "name": "MarketNumberNotEqual2Pool",
             "msg": "MarketNumberNotEqual2Pool"
         },
         {
-            "code": 6043,
+            "code": 6044,
             "name": "FailedUnwrap",
             "msg": "Failed Unwrap"
         },
         {
-            "code": 6044,
+            "code": 6045,
             "name": "UserNotEnoughValue",
             "msg": "User Not Enough Value"
         },
         {
-            "code": 6045,
+            "code": 6046,
             "name": "AmountZero",
             "msg": "AmountZero"
         },
         {
-            "code": 6046,
+            "code": 6047,
             "name": "CouldNotLoadTokenAccountData",
             "msg": "CouldNotLoadTokenAccountData"
         },
         {
-            "code": 6047,
+            "code": 6048,
             "name": "CouldNotLoadTradeTokenData",
             "msg": "CouldNotLoadTradeTokenData"
         },
         {
-            "code": 6048,
+            "code": 6049,
             "name": "CouldNotLoadPoolData",
             "msg": "CouldNotLoadPoolData"
         },
         {
-            "code": 6049,
+            "code": 6050,
             "name": "InvalidTradeTokenAccount",
             "msg": "InvalidTradeTokenAccount"
         },
         {
-            "code": 6050,
+            "code": 6051,
             "name": "InvalidTokenAccount",
             "msg": "InvalidTokenAccount"
         },
         {
-            "code": 6051,
+            "code": 6052,
             "name": "InvalidPoolAccount",
             "msg": "InvalidPoolAccount"
         },
         {
-            "code": 6052,
+            "code": 6053,
             "name": "TradeTokenNotFind",
             "msg": "CanNotFindTradeToken"
         },
         {
-            "code": 6053,
+            "code": 6054,
             "name": "VaultNotFind",
             "msg": "CanNotFindVault"
         },
         {
-            "code": 6054,
+            "code": 6055,
             "name": "MarketNotFind",
             "msg": "CanNotFindMarket"
         },
         {
-            "code": 6055,
+            "code": 6056,
             "name": "StakePaused",
             "msg": "StakePaused"
         },
         {
-            "code": 6056,
+            "code": 6057,
             "name": "StakeToSmall",
             "msg": "StakeToSmall"
         },
         {
-            "code": 6057,
+            "code": 6058,
             "name": "UnStakeTooSmall",
             "msg": "UnStakeTooSmall"
         },
         {
-            "code": 6058,
+            "code": 6059,
             "name": "UnStakeWithAmountNotEnough",
             "msg": "UnStakeWithAmountNotEnough"
         },
         {
-            "code": 6059,
+            "code": 6060,
             "name": "UnStakeTooLarge",
             "msg": "UnStakeTooLarge"
         },
         {
-            "code": 6060,
+            "code": 6061,
             "name": "PositionSideNotSupport",
             "msg": "PositionSideNotSupport"
         },
         {
-            "code": 6061,
+            "code": 6062,
             "name": "RewardsNotFound",
             "msg": "RewardsNotFound"
         },
         {
-            "code": 6062,
+            "code": 6063,
             "name": "UserNotFound",
             "msg": "UserNotFound"
         },
         {
-            "code": 6063,
+            "code": 6064,
             "name": "CouldNotLoadUserData",
             "msg": "CouldNotLoadUserData"
         },
         {
-            "code": 6064,
+            "code": 6065,
             "name": "PoolSubUnsettleNotEnough",
             "msg": "PoolSubUnsettleNotEnough"
         },
         {
-            "code": 6065,
+            "code": 6066,
             "name": "TimestampNotFound",
             "msg": "TimestampNotFound"
         },
         {
-            "code": 6066,
+            "code": 6067,
             "name": "ClaimUnqualified",
             "msg": "ClaimUnqualified"
         },
         {
-            "code": 6067,
+            "code": 6068,
             "name": "PoolMintSupplyIsZero",
             "msg": "PoolMintSupplyIsZero"
         }
@@ -3423,6 +3417,38 @@
                     {
                         "name": "pool_fee_reward_ratio",
                         "type": "u32"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "LiquidateIsolatePositionParams",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "position_key",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "market_index",
+                        "type": "u16"
+                    },
+                    {
+                        "name": "trade_token_index",
+                        "type": "u16"
+                    },
+                    {
+                        "name": "pool_index",
+                        "type": "u16"
+                    },
+                    {
+                        "name": "stable_pool_index",
+                        "type": "u16"
+                    },
+                    {
+                        "name": "user_authority_key",
+                        "type": "pubkey"
                     }
                 ]
             }
