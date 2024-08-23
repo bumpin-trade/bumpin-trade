@@ -63,8 +63,8 @@ pub enum BumpErrorCode {
     CouldNotFindUserPosition,
     #[msg("LiquidatePositionIgnore")]
     LiquidatePositionIgnore,
-    #[msg("OnlyLiquidateIsolatePosition")]
-    OnlyLiquidateIsolatePosition,
+    #[msg("OnlyCrossPositionAllowed")]
+    OnlyCrossPositionAllowed,
     #[msg("OnlyIsolatePositionAllowed")]
     OnlyIsolatePositionAllowed,
     #[msg("CouldNotFindUserStake")]

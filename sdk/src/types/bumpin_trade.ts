@@ -181,8 +181,8 @@ export type BumpinTrade = {
             ];
         },
         {
-            name: 'adl';
-            discriminator: [54, 233, 120, 58, 42, 177, 121, 5];
+            name: 'adlCross';
+            discriminator: [253, 180, 240, 79, 122, 82, 161, 237];
             accounts: [
                 {
                     name: 'state';
@@ -207,6 +207,22 @@ export type BumpinTrade = {
                     };
                 },
                 {
+                    name: 'user';
+                    writable: true;
+                    pda: {
+                        seeds: [
+                            {
+                                kind: 'const';
+                                value: [117, 115, 101, 114];
+                            },
+                            {
+                                kind: 'arg';
+                                path: 'params.user_authority_key';
+                            },
+                        ];
+                    };
+                },
+                {
                     name: 'market';
                     writable: true;
                     pda: {
@@ -217,7 +233,7 @@ export type BumpinTrade = {
                             },
                             {
                                 kind: 'arg';
-                                path: 'marketIndex';
+                                path: 'params.market_index';
                             },
                         ];
                     };
@@ -233,7 +249,7 @@ export type BumpinTrade = {
                             },
                             {
                                 kind: 'arg';
-                                path: 'poolIndex';
+                                path: 'params.pool_index';
                             },
                         ];
                     };
@@ -249,7 +265,7 @@ export type BumpinTrade = {
                             },
                             {
                                 kind: 'arg';
-                                path: 'stablePoolIndex';
+                                path: 'params.stable_pool_index';
                             },
                         ];
                     };
@@ -276,7 +292,7 @@ export type BumpinTrade = {
                             },
                             {
                                 kind: 'arg';
-                                path: 'poolIndex';
+                                path: 'params.pool_index';
                             },
                         ];
                     };
@@ -303,7 +319,7 @@ export type BumpinTrade = {
                             },
                             {
                                 kind: 'arg';
-                                path: 'stablePoolIndex';
+                                path: 'params.stable_pool_index';
                             },
                         ];
                     };
@@ -330,7 +346,7 @@ export type BumpinTrade = {
                             },
                             {
                                 kind: 'arg';
-                                path: 'tradeTokenIndex';
+                                path: 'params.trade_token_index';
                             },
                         ];
                     };
@@ -364,10 +380,15 @@ export type BumpinTrade = {
                             },
                             {
                                 kind: 'arg';
-                                path: 'tradeTokenIndex';
+                                path: 'params.trade_token_index';
                             },
                         ];
                     };
+                },
+                {
+                    name: 'keeperKey';
+                    signer: true;
+                    relations: ['state'];
                 },
                 {
                     name: 'bumpSigner';
@@ -379,32 +400,244 @@ export type BumpinTrade = {
             ];
             args: [
                 {
-                    name: 'poolIndex';
-                    type: 'u16';
+                    name: 'params';
+                    type: {
+                        defined: {
+                            name: 'adlParams';
+                        };
+                    };
+                },
+            ];
+        },
+        {
+            name: 'adlIsolate';
+            discriminator: [67, 168, 137, 7, 149, 22, 242, 41];
+            accounts: [
+                {
+                    name: 'state';
+                    pda: {
+                        seeds: [
+                            {
+                                kind: 'const';
+                                value: [
+                                    98,
+                                    117,
+                                    109,
+                                    112,
+                                    95,
+                                    115,
+                                    116,
+                                    97,
+                                    116,
+                                    101,
+                                ];
+                            },
+                        ];
+                    };
                 },
                 {
-                    name: 'stablePoolIndex';
-                    type: 'u16';
+                    name: 'user';
+                    writable: true;
+                    pda: {
+                        seeds: [
+                            {
+                                kind: 'const';
+                                value: [117, 115, 101, 114];
+                            },
+                            {
+                                kind: 'arg';
+                                path: 'params.user_authority_key';
+                            },
+                        ];
+                    };
                 },
                 {
-                    name: 'marketIndex';
-                    type: 'u16';
+                    name: 'userTokenAccount';
+                    writable: true;
                 },
                 {
-                    name: 'tradeTokenIndex';
-                    type: 'u16';
+                    name: 'market';
+                    writable: true;
+                    pda: {
+                        seeds: [
+                            {
+                                kind: 'const';
+                                value: [109, 97, 114, 107, 101, 116];
+                            },
+                            {
+                                kind: 'arg';
+                                path: 'params.market_index';
+                            },
+                        ];
+                    };
                 },
+                {
+                    name: 'pool';
+                    writable: true;
+                    pda: {
+                        seeds: [
+                            {
+                                kind: 'const';
+                                value: [112, 111, 111, 108];
+                            },
+                            {
+                                kind: 'arg';
+                                path: 'params.pool_index';
+                            },
+                        ];
+                    };
+                },
+                {
+                    name: 'stablePool';
+                    writable: true;
+                    pda: {
+                        seeds: [
+                            {
+                                kind: 'const';
+                                value: [112, 111, 111, 108];
+                            },
+                            {
+                                kind: 'arg';
+                                path: 'params.stable_pool_index';
+                            },
+                        ];
+                    };
+                },
+                {
+                    name: 'poolVault';
+                    writable: true;
+                    pda: {
+                        seeds: [
+                            {
+                                kind: 'const';
+                                value: [
+                                    112,
+                                    111,
+                                    111,
+                                    108,
+                                    95,
+                                    118,
+                                    97,
+                                    117,
+                                    108,
+                                    116,
+                                ];
+                            },
+                            {
+                                kind: 'arg';
+                                path: 'params.pool_index';
+                            },
+                        ];
+                    };
+                },
+                {
+                    name: 'stablePoolVault';
+                    writable: true;
+                    pda: {
+                        seeds: [
+                            {
+                                kind: 'const';
+                                value: [
+                                    112,
+                                    111,
+                                    111,
+                                    108,
+                                    95,
+                                    118,
+                                    97,
+                                    117,
+                                    108,
+                                    116,
+                                ];
+                            },
+                            {
+                                kind: 'arg';
+                                path: 'params.stable_pool_index';
+                            },
+                        ];
+                    };
+                },
+                {
+                    name: 'tradeToken';
+                    pda: {
+                        seeds: [
+                            {
+                                kind: 'const';
+                                value: [
+                                    116,
+                                    114,
+                                    97,
+                                    100,
+                                    101,
+                                    95,
+                                    116,
+                                    111,
+                                    107,
+                                    101,
+                                    110,
+                                ];
+                            },
+                            {
+                                kind: 'arg';
+                                path: 'params.trade_token_index';
+                            },
+                        ];
+                    };
+                },
+                {
+                    name: 'tradeTokenVault';
+                    writable: true;
+                    pda: {
+                        seeds: [
+                            {
+                                kind: 'const';
+                                value: [
+                                    116,
+                                    114,
+                                    97,
+                                    100,
+                                    101,
+                                    95,
+                                    116,
+                                    111,
+                                    107,
+                                    101,
+                                    110,
+                                    95,
+                                    118,
+                                    97,
+                                    117,
+                                    108,
+                                    116,
+                                ];
+                            },
+                            {
+                                kind: 'arg';
+                                path: 'params.trade_token_index';
+                            },
+                        ];
+                    };
+                },
+                {
+                    name: 'keeperKey';
+                    signer: true;
+                    relations: ['state'];
+                },
+                {
+                    name: 'bumpSigner';
+                },
+                {
+                    name: 'tokenProgram';
+                    address: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+                },
+            ];
+            args: [
                 {
                     name: 'params';
                     type: {
-                        array: [
-                            {
-                                defined: {
-                                    name: 'adlParams';
-                                };
-                            },
-                            10,
-                        ];
+                        defined: {
+                            name: 'adlParams';
+                        };
                     };
                 },
             ];
@@ -3400,8 +3633,8 @@ export type BumpinTrade = {
         },
         {
             code: 6029;
-            name: 'onlyLiquidateIsolatePosition';
-            msg: 'onlyLiquidateIsolatePosition';
+            name: 'onlyCrossPositionAllowed';
+            msg: 'onlyCrossPositionAllowed';
         },
         {
             code: 6030;
@@ -3606,11 +3839,27 @@ export type BumpinTrade = {
                 kind: 'struct';
                 fields: [
                     {
+                        name: 'poolIndex';
+                        type: 'u16';
+                    },
+                    {
+                        name: 'stablePoolIndex';
+                        type: 'u16';
+                    },
+                    {
+                        name: 'marketIndex';
+                        type: 'u16';
+                    },
+                    {
+                        name: 'tradeTokenIndex';
+                        type: 'u16';
+                    },
+                    {
                         name: 'positionKey';
                         type: 'pubkey';
                     },
                     {
-                        name: 'userKey';
+                        name: 'userAuthorityKey';
                         type: 'pubkey';
                     },
                 ];

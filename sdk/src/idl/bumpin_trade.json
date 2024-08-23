@@ -150,8 +150,8 @@
             ]
         },
         {
-            "name": "adl",
-            "discriminator": [54, 233, 120, 58, 42, 177, 121, 5],
+            "name": "adl_cross",
+            "discriminator": [253, 180, 240, 79, 122, 82, 161, 237],
             "accounts": [
                 {
                     "name": "state",
@@ -168,6 +168,22 @@
                     }
                 },
                 {
+                    "name": "user",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "const",
+                                "value": [117, 115, 101, 114]
+                            },
+                            {
+                                "kind": "arg",
+                                "path": "params.user_authority_key"
+                            }
+                        ]
+                    }
+                },
+                {
                     "name": "market",
                     "writable": true,
                     "pda": {
@@ -178,7 +194,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "_market_index"
+                                "path": "params.market_index"
                             }
                         ]
                     }
@@ -194,7 +210,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "_pool_index"
+                                "path": "params.pool_index"
                             }
                         ]
                     }
@@ -210,7 +226,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "_stable_pool_index"
+                                "path": "params.stable_pool_index"
                             }
                         ]
                     }
@@ -229,7 +245,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "_pool_index"
+                                "path": "params.pool_index"
                             }
                         ]
                     }
@@ -248,7 +264,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "_stable_pool_index"
+                                "path": "params.stable_pool_index"
                             }
                         ]
                     }
@@ -266,7 +282,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "_trade_token_index"
+                                "path": "params.trade_token_index"
                             }
                         ]
                     }
@@ -285,10 +301,15 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "_trade_token_index"
+                                "path": "params.trade_token_index"
                             }
                         ]
                     }
+                },
+                {
+                    "name": "keeper_key",
+                    "signer": true,
+                    "relations": ["state"]
                 },
                 {
                     "name": "bump_signer"
@@ -300,32 +321,196 @@
             ],
             "args": [
                 {
-                    "name": "_pool_index",
-                    "type": "u16"
+                    "name": "params",
+                    "type": {
+                        "defined": {
+                            "name": "ADLParams"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "adl_isolate",
+            "discriminator": [67, 168, 137, 7, 149, 22, 242, 41],
+            "accounts": [
+                {
+                    "name": "state",
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "const",
+                                "value": [
+                                    98, 117, 109, 112, 95, 115, 116, 97, 116,
+                                    101
+                                ]
+                            }
+                        ]
+                    }
                 },
                 {
-                    "name": "_stable_pool_index",
-                    "type": "u16"
+                    "name": "user",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "const",
+                                "value": [117, 115, 101, 114]
+                            },
+                            {
+                                "kind": "arg",
+                                "path": "params.user_authority_key"
+                            }
+                        ]
+                    }
                 },
                 {
-                    "name": "_market_index",
-                    "type": "u16"
+                    "name": "user_token_account",
+                    "writable": true
                 },
                 {
-                    "name": "_trade_token_index",
-                    "type": "u16"
+                    "name": "market",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "const",
+                                "value": [109, 97, 114, 107, 101, 116]
+                            },
+                            {
+                                "kind": "arg",
+                                "path": "params.market_index"
+                            }
+                        ]
+                    }
                 },
+                {
+                    "name": "pool",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "const",
+                                "value": [112, 111, 111, 108]
+                            },
+                            {
+                                "kind": "arg",
+                                "path": "params.pool_index"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "stable_pool",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "const",
+                                "value": [112, 111, 111, 108]
+                            },
+                            {
+                                "kind": "arg",
+                                "path": "params.stable_pool_index"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "pool_vault",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "const",
+                                "value": [
+                                    112, 111, 111, 108, 95, 118, 97, 117, 108,
+                                    116
+                                ]
+                            },
+                            {
+                                "kind": "arg",
+                                "path": "params.pool_index"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "stable_pool_vault",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "const",
+                                "value": [
+                                    112, 111, 111, 108, 95, 118, 97, 117, 108,
+                                    116
+                                ]
+                            },
+                            {
+                                "kind": "arg",
+                                "path": "params.stable_pool_index"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "trade_token",
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "const",
+                                "value": [
+                                    116, 114, 97, 100, 101, 95, 116, 111, 107,
+                                    101, 110
+                                ]
+                            },
+                            {
+                                "kind": "arg",
+                                "path": "params.trade_token_index"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "trade_token_vault",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "const",
+                                "value": [
+                                    116, 114, 97, 100, 101, 95, 116, 111, 107,
+                                    101, 110, 95, 118, 97, 117, 108, 116
+                                ]
+                            },
+                            {
+                                "kind": "arg",
+                                "path": "params.trade_token_index"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "keeper_key",
+                    "signer": true,
+                    "relations": ["state"]
+                },
+                {
+                    "name": "bump_signer"
+                },
+                {
+                    "name": "token_program",
+                    "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+                }
+            ],
+            "args": [
                 {
                     "name": "params",
                     "type": {
-                        "array": [
-                            {
-                                "defined": {
-                                    "name": "ADLParams"
-                                }
-                            },
-                            10
-                        ]
+                        "defined": {
+                            "name": "ADLParams"
+                        }
                     }
                 }
             ]
@@ -2792,8 +2977,8 @@
         },
         {
             "code": 6029,
-            "name": "OnlyLiquidateIsolatePosition",
-            "msg": "OnlyLiquidateIsolatePosition"
+            "name": "OnlyCrossPositionAllowed",
+            "msg": "OnlyCrossPositionAllowed"
         },
         {
             "code": 6030,
@@ -2998,11 +3183,27 @@
                 "kind": "struct",
                 "fields": [
                     {
+                        "name": "pool_index",
+                        "type": "u16"
+                    },
+                    {
+                        "name": "stable_pool_index",
+                        "type": "u16"
+                    },
+                    {
+                        "name": "market_index",
+                        "type": "u16"
+                    },
+                    {
+                        "name": "trade_token_index",
+                        "type": "u16"
+                    },
+                    {
                         "name": "position_key",
                         "type": "pubkey"
                     },
                     {
-                        "name": "user_key",
+                        "name": "user_authority_key",
                         "type": "pubkey"
                     }
                 ]

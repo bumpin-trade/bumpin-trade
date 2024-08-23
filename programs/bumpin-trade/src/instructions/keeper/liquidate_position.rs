@@ -152,7 +152,10 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
             )?;
 
             validate!(bankruptcy_price > 0, BumpErrorCode::PriceIsNotAllowed)?;
-            let mm_rate = calculator::get_mm_rate(market.config.maximum_leverage, state.maximum_maintenance_margin_rate)?;
+            let mm_rate = calculator::get_mm_rate(
+                market.config.maximum_leverage,
+                state.maximum_maintenance_margin_rate,
+            )?;
             let liquidation_price = calculator::format_to_ticker_size(
                 if pos_info.is_long {
                     calculator::div_rate_u(bankruptcy_price, RATE_PRECISION.safe_sub(mm_rate)?)?
@@ -215,7 +218,6 @@ fn get_position_info(position: &UserPosition) -> BumpResult<PosInfos> {
         margin_mint: position.margin_mint_key,
         position_size: position.position_size,
         user_key: position.user_key,
-        mm: position.mm_usd,
     })
 }
 
@@ -227,7 +229,6 @@ struct PosInfos {
     pub margin_mint: Pubkey,
     pub position_size: u128,
     pub user_key: Pubkey,
-    pub mm: u128,
 }
 
 #[derive(Accounts)]
@@ -397,7 +398,7 @@ fn cal_liquidation_price(
     let user_position = user.get_user_position_ref(position_key)?;
     let pool = if user_position.is_long { base_token_pool } else { stable_pool };
 
-    validate!(!user_position.is_portfolio_margin, BumpErrorCode::OnlyLiquidateIsolatePosition)?;
+    validate!(!user_position.is_portfolio_margin, BumpErrorCode::OnlyIsolatePositionAllowed)?;
     market.update_market_funding_fee_rate(
         state,
         oracle_map.get_price_data(&trade_token.oracle_key)?.price,

@@ -12,7 +12,6 @@ pub mod trade_token;
 pub mod trade_token_map;
 pub mod traits;
 pub mod user;
-pub mod user_map;
 pub mod vault_map;
 
 pub use user::*;

@@ -185,15 +185,19 @@ pub mod bumpin_trade {
     }
 
     #[track_caller]
-    pub fn adl<'a, 'b, 'c: 'info, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, ADL<'info>>,
-        _pool_index: u16,
-        _stable_pool_index: u16,
-        _market_index: u16,
-        _trade_token_index: u16,
-        params: [ADLParams; 10],
+    pub fn adl_isolate<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, ADLIsolate<'info>>,
+        params: ADLParams
     ) -> Result<()> {
-        handle_adl(ctx, params)
+        handle_adl_isolate(ctx, params)
+    }
+
+    #[track_caller]
+    pub fn adl_cross<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, ADLCross<'info>>,
+        params: ADLParams
+    ) -> Result<()> {
+        handle_adl_cross(ctx, params)
     }
 
     #[track_caller]
