@@ -457,9 +457,11 @@ impl UserPosition {
         let position_fee_usd =
             self.get_position_fee(market, pool, margin_token_price, margin_token_decimals)?;
         let position_value = if self.is_long {
-            position_fee_usd.safe_add(
-                self.position_size.safe_sub(self.initial_margin_usd)?.safe_add(mm_usd)?.cast()?,
-            )?
+            self.position_size
+                .safe_sub(self.initial_margin_usd)?
+                .safe_add(mm_usd)?
+                .cast::<i128>()?
+                .safe_add(position_fee_usd)?
         } else {
             self.position_size
                 .safe_add(self.initial_margin_usd)?
@@ -471,6 +473,7 @@ impl UserPosition {
             Ok(0)
         } else {
             let liquidation_price = position_value
+                .abs()
                 .cast::<u128>()?
                 .safe_mul(self.entry_price)?
                 .safe_div(self.position_size)?;

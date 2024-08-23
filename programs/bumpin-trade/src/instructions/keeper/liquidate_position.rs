@@ -60,6 +60,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, LiquidateCrossPosition<'c>>,
 ) -> Result<()> {
     let mut user = ctx.accounts.user.load_mut()?;
+    let state = &ctx.accounts.state;
     let remaining_accounts = ctx.remaining_accounts;
 
     let AccountMaps {
@@ -75,17 +76,21 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
 
     let mut pos_infos: Vec<PosInfos> = Vec::new();
     for position in &user.positions {
+        //only cross margin position support
+        if !position.is_portfolio_margin {
+            continue;
+        }
         let infos = get_position_info(position)?;
         pos_infos.push(infos)
     }
     for pos_info in &pos_infos {
-        //only cross margin position support
-        if !pos_info.is_portfolio_margin {
-            continue;
-        }
-
         let market = market_map.get_ref(&pos_info.symbol)?;
-        let mut pool = pool_key_map.get_mut_ref(&market.pool_key)?;
+        if pos_info.is_long {}
+        let mut pool = if pos_info.is_long {
+            pool_key_map.get_mut_ref(&market.pool_key)?
+        } else {
+            pool_key_map.get_mut_ref(&market.stable_pool_key)?
+        };
         pool.update_pool_borrowing_fee_rate()?;
 
         let market = &mut market_map.get_mut_ref(&pos_info.symbol)?;
@@ -110,8 +115,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         cross_net_value,
         total_size.cast::<i128>()?,
         SMALL_RATE_PRECISION.cast::<i128>()?,
-    )?
-        .max(0i128);
+    )?;
 
     if cross_net_value <= 0i128 || cross_net_value.abs().cast::<u128>()? <= total_position_mm {
         for pos_info in &pos_infos {
@@ -148,11 +152,12 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
             )?;
 
             validate!(bankruptcy_price > 0, BumpErrorCode::PriceIsNotAllowed)?;
+            let mm_rate = calculator::get_mm_rate(market.config.maximum_leverage, state.maximum_maintenance_margin_rate)?;
             let liquidation_price = calculator::format_to_ticker_size(
                 if pos_info.is_long {
-                    calculator::div_rate_u(bankruptcy_price, RATE_PRECISION.safe_sub(pos_info.mm)?)?
+                    calculator::div_rate_u(bankruptcy_price, RATE_PRECISION.safe_sub(mm_rate)?)?
                 } else {
-                    calculator::div_rate_u(bankruptcy_price, RATE_PRECISION.safe_add(pos_info.mm)?)?
+                    calculator::div_rate_u(bankruptcy_price, RATE_PRECISION.safe_add(mm_rate)?)?
                 },
                 market.config.tick_size,
                 pos_info.is_long,

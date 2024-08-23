@@ -184,3 +184,7 @@ pub fn get_mm(size: u128, leverage: u32, max_mm_rate: u32) -> BumpResult<u128> {
         .safe_div_rate(leverage.safe_mul(2)? as u128)?
         .min(size.safe_mul_rate(max_mm_rate as u128)?))
 }
+
+pub fn get_mm_rate(leverage: u32, max_mm_rate: u32) -> BumpResult<u128> {
+    Ok(div_rate_u(RATE_PRECISION, leverage.safe_mul(2)? as u128)?.min(max_mm_rate as u128))
+}
