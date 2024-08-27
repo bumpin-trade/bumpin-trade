@@ -10,7 +10,7 @@ use anchor_spl::token::{Token, TokenAccount};
 #[instruction(
     user_key: Pubkey
 )]
-pub struct ExecuteOrder<'info> {
+pub struct ExecuteWalletOrder<'info> {
     #[account(
         seeds = [b"bump_state".as_ref()],
         bump,
@@ -43,8 +43,8 @@ pub struct ExecuteOrder<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle_execute_order<'a, 'b, 'c: 'info, 'info>(
-    ctx: Context<'a, 'b, 'c, 'info, ExecuteOrder<'c>>,
+pub fn handle_execute_wallet_order<'a, 'b, 'c: 'info, 'info>(
+    ctx: Context<'a, 'b, 'c, 'info, ExecuteWalletOrder<'c>>,
     order_id: u64,
 ) -> Result<()> {
     let user = &mut ctx.accounts.user.load_mut()?;

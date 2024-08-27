@@ -45,8 +45,6 @@ pub struct PortfolioCancelOrder<'info> {
     )]
     pub pool_vault: Box<Account<'info, TokenAccount>>,
 
-
-
     #[account(
         constraint = state.bump_signer.eq(& bump_signer.key())
     )]

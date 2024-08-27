@@ -21,6 +21,9 @@ declare_id!("Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR");
 #[program]
 pub mod bumpin_trade {
     use super::*;
+    use crate::instructions::execute_portfolio_order::{
+        handle_execute_portfolio_order, ExecutePortfolioOrder,
+    };
 
     #[track_caller]
     pub fn initialize_state<'a, 'b, 'c: 'info, 'info>(
@@ -148,12 +151,21 @@ pub mod bumpin_trade {
     }
 
     #[track_caller]
-    pub fn execute_order<'a, 'b, 'c: 'info, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, ExecuteOrder<'c>>,
+    pub fn execute_wallet_order<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, ExecuteWalletOrder<'c>>,
         order_id: u64,
         _user_key: Pubkey,
     ) -> Result<()> {
-        handle_execute_order(ctx, order_id)
+        handle_execute_wallet_order(ctx, order_id)
+    }
+
+    #[track_caller]
+    pub fn execute_portfolio_order<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, ExecutePortfolioOrder<'c>>,
+        order_id: u64,
+        _user_key: Pubkey,
+    ) -> Result<()> {
+        handle_execute_portfolio_order(ctx, order_id)
     }
 
     #[track_caller]

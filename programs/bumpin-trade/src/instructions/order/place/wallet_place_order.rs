@@ -10,9 +10,7 @@ use crate::instructions::{calculator, PlaceOrderParams};
 use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::processor::position_processor;
 use crate::processor::position_processor::use_base_token;
-use crate::state::infrastructure::user_order::{
-    OrderStatus, OrderType, PositionSide, UserOrder,
-};
+use crate::state::infrastructure::user_order::{OrderStatus, OrderType, PositionSide, UserOrder};
 use crate::state::state::State;
 use crate::state::user::User;
 use crate::utils::token;
