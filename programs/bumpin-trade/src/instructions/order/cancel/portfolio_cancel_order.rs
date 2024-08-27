@@ -45,11 +45,7 @@ pub struct PortfolioCancelOrder<'info> {
     )]
     pub pool_vault: Box<Account<'info, TokenAccount>>,
 
-    #[account(
-        mut,
-        token::authority = authority
-    )]
-    pub user_token_account: Account<'info, TokenAccount>,
+
 
     #[account(
         constraint = state.bump_signer.eq(& bump_signer.key())
@@ -81,7 +77,7 @@ pub fn handle_portfolio_cancel_order(
         &order,
         &ctx.accounts.token_program,
         &ctx.accounts.pool_vault,
-        Some(&ctx.accounts.user_token_account),
+        None,
         &ctx.accounts.bump_signer,
         &ctx.accounts.state,
     )?;

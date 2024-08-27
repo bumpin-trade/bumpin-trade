@@ -46,6 +46,12 @@ pub struct WalletCancelOrder<'info> {
     pub pool_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
+        mut,
+        token::authority = authority
+    )]
+    pub user_token_account: Account<'info, TokenAccount>,
+
+    #[account(
         constraint = state.bump_signer.eq(& bump_signer.key())
     )]
     /// CHECK: ?
@@ -75,7 +81,7 @@ pub fn handle_wallet_cancel_order(
         &order,
         &ctx.accounts.token_program,
         &ctx.accounts.pool_vault,
-        None,
+        Some(&ctx.accounts.user_token_account),
         &ctx.accounts.bump_signer,
         &ctx.accounts.state,
     )?;

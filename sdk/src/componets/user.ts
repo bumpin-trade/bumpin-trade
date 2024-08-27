@@ -485,16 +485,31 @@ export class UserComponent extends Component {
             poolIndex: pool.index,
             orderId: new BN(orderId),
         };
-        const ix = await this.program.methods
-            .cancelOrder(params)
-            .accounts({
-                userTokenAccount: uta,
-                authority: wallet,
-                bumpSigner: (await this.getState()).bumpSigner,
-            })
-            .signers([])
-            .instruction();
-        await this.sendAndConfirm([ix]);
+        if (order.isPortfolioMargin){
+            const ix = await this.program.methods
+                .portfolioCancelOrder(params)
+                .accounts({
+                    authority: wallet,
+                    bumpSigner: (await this.getState()).bumpSigner,
+                })
+                .signers([])
+                .instruction();
+            await this.sendAndConfirm([ix]);
+
+        }else{
+            const ix = await this.program.methods
+                .walletCancelOrder(params)
+                .accounts({
+                    userTokenAccount: uta,
+                    authority: wallet,
+                    bumpSigner: (await this.getState()).bumpSigner,
+                })
+                .signers([])
+                .instruction();
+            await this.sendAndConfirm([ix]);
+
+        }
+
     }
 
     public async placePerpOrder(
@@ -675,17 +690,31 @@ export class UserComponent extends Component {
         );
 
         BumpinUtils.prettyPrintParam(order);
-        const ix = await this.program.methods
-            .placeOrder(order)
-            .accounts({
-                userTokenAccount: uta,
-                authority: wallet,
-                bumpSigner: (await this.getState()).bumpSigner,
-            })
-            .remainingAccounts(accountMetas)
-            .signers([])
-            .instruction();
-        await this.sendAndConfirm([ix]);
+        if(param.isPortfolioMargin){
+            const ix = await this.program.methods
+                .placePortfolioOrder(order)
+                .accounts({
+                    authority: wallet,
+                    bumpSigner: (await this.getState()).bumpSigner,
+                })
+                .remainingAccounts(accountMetas)
+                .signers([])
+                .instruction();
+            await this.sendAndConfirm([ix]);
+        }else{
+            const ix = await this.program.methods
+                .placeWalletOrder(order)
+                .accounts({
+                    userTokenAccount: uta,
+                    authority: wallet,
+                    bumpSigner: (await this.getState()).bumpSigner,
+                })
+                .remainingAccounts(accountMetas)
+                .signers([])
+                .instruction();
+            await this.sendAndConfirm([ix]);
+        }
+
     }
 
     //TODO: recheck this conditions
