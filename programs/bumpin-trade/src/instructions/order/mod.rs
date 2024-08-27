@@ -1,9 +1,9 @@
-pub mod cancel_perp_order;
-pub mod place_perp_order;
+pub mod cancel;
+pub mod place;
 
 use anchor_lang::prelude::*;
-pub use cancel_perp_order::*;
-pub use place_perp_order::*;
+pub use cancel::*;
+pub use place::*;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Eq, PartialEq)]
 pub struct CancelOrderParams {

@@ -13,7 +13,7 @@ use anchor_spl::token::{Token, TokenAccount};
 #[instruction(
     params: CancelOrderParams,
 )]
-pub struct CancelOrderCtx<'info> {
+pub struct PortfolioCancelOrder<'info> {
     #[account(
         seeds = [b"bump_state".as_ref()],
         bump,
@@ -62,7 +62,10 @@ pub struct CancelOrderCtx<'info> {
 }
 
 #[track_caller]
-pub fn handle_cancel_order(ctx: Context<CancelOrderCtx>, params: CancelOrderParams) -> Result<()> {
+pub fn handle_portfolio_cancel_order(
+    ctx: Context<PortfolioCancelOrder>,
+    params: CancelOrderParams,
+) -> Result<()> {
     let mut user = ctx.accounts.user.load_mut()?;
     let order = *user.get_user_order_ref(params.order_id)?;
     let pool = ctx.accounts.pool.load()?;
@@ -78,7 +81,7 @@ pub fn handle_cancel_order(ctx: Context<CancelOrderCtx>, params: CancelOrderPara
         &order,
         &ctx.accounts.token_program,
         &ctx.accounts.pool_vault,
-        &ctx.accounts.user_token_account,
+        Some(&ctx.accounts.user_token_account),
         &ctx.accounts.bump_signer,
         &ctx.accounts.state,
     )?;

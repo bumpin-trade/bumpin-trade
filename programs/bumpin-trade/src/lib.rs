@@ -132,12 +132,19 @@ pub mod bumpin_trade {
     }
 
     #[track_caller]
-    pub fn place_order<'a, 'b, 'c: 'info, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, PlaceOrder<'c>>,
+    pub fn place_portfolio_order<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, PortfolioPlaceOrder<'c>>,
         order: PlaceOrderParams,
     ) -> Result<()> {
-        handle_place_order(ctx, order).unwrap();
-        Ok(())
+        handle_place_portfolio_order(ctx, order)
+    }
+
+    #[track_caller]
+    pub fn place_wallet_order<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, WalletPlaceOrder<'c>>,
+        order: PlaceOrderParams,
+    ) -> Result<()> {
+        handle_place_wallet_order(ctx, order)
     }
 
     #[track_caller]
@@ -150,8 +157,19 @@ pub mod bumpin_trade {
     }
 
     #[track_caller]
-    pub fn cancel_order(ctx: Context<CancelOrderCtx>, params: CancelOrderParams) -> Result<()> {
-        handle_cancel_order(ctx, params)
+    pub fn portfolio_cancel_order(
+        ctx: Context<PortfolioCancelOrder>,
+        params: CancelOrderParams,
+    ) -> Result<()> {
+        handle_portfolio_cancel_order(ctx, params)
+    }
+
+    #[track_caller]
+    pub fn wallet_cancel_order(
+        ctx: Context<WalletCancelOrder>,
+        params: CancelOrderParams,
+    ) -> Result<()> {
+        handle_wallet_cancel_order(ctx, params)
     }
 
     #[track_caller]
@@ -187,7 +205,7 @@ pub mod bumpin_trade {
     #[track_caller]
     pub fn adl_isolate<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ADLIsolate<'info>>,
-        params: ADLParams
+        params: ADLParams,
     ) -> Result<()> {
         handle_adl_isolate(ctx, params)
     }
@@ -195,7 +213,7 @@ pub mod bumpin_trade {
     #[track_caller]
     pub fn adl_cross<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ADLCross<'info>>,
-        params: ADLParams
+        params: ADLParams,
     ) -> Result<()> {
         handle_adl_cross(ctx, params)
     }

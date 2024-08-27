@@ -63,7 +63,7 @@ pub fn handle_execute_order<'a, 'b, 'c: 'info, 'info>(
         &market_map,
         &pool_map,
         state_account,
-        user_token_account,
+        Some(user_token_account),
         &vault_map,
         bump_signer_account_info,
         token_program,

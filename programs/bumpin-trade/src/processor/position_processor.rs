@@ -36,7 +36,7 @@ pub fn handle_execute_order<'info>(
     market_map: &MarketMap,
     pool_map: &PoolMap,
     state_account: &Account<'info, State>,
-    user_token_account: &Account<'info, TokenAccount>,
+    user_token_account: Option<&Account<'info, TokenAccount>>,
     vault_map: &VaultMap<'info>,
     bump_signer: &AccountInfo<'info>,
     token_program: &Program<'info, Token>,
@@ -102,7 +102,6 @@ pub fn handle_execute_order<'info>(
                 drop(stable_trade_token);
                 //calculate real order_margin with validation
                 let (order_margin, order_margin_from_balance) = execute_increase_order_margin(
-                    user_token_account.to_account_info().key,
                     &user_order,
                     &margin_token,
                     match use_base_token(&user_order.position_side, &user_order.order_side)? {
@@ -249,7 +248,7 @@ pub fn handle_execute_order<'info>(
                     base_token_pool.deref_mut(),
                     stable_pool.deref_mut(),
                     state_account,
-                    Some(user_token_account),
+                    user_token_account,
                     match use_base_token(&user_order.position_side, &user_order.order_side)? {
                         true => vault_map.get_account(&pool_vault)?,
                         false => vault_map.get_account(&stable_pool_vault)?,
@@ -285,7 +284,6 @@ pub fn use_base_token(position_side: &PositionSide, order_side: &OrderSide) -> B
 
 #[track_caller]
 fn execute_increase_order_margin(
-    user_token_account_key: &Pubkey,
     order: &UserOrder,
     margin_token: &Pubkey,
     decimals: u16,
@@ -312,7 +310,7 @@ fn execute_increase_order_margin(
         }
         order_margin = calculator::usd_to_token_u(order_margin_temp, decimals, margin_token_price)?;
         order_margin_from_balance =
-            user.use_token(margin_token, order_margin, user_token_account_key, false)?;
+            user.use_token(margin_token, order_margin, &Pubkey::default(), false)?;
     } else {
         let order_margin_in_usd =
             calculator::token_to_usd_u(order.order_margin, decimals, margin_token_price)?;

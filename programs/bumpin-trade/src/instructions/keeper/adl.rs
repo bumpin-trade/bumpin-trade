@@ -170,8 +170,6 @@ pub fn handle_adl_isolate<'a, 'b, 'c: 'info, 'info>(
     Ok(())
 }
 
-
-
 #[derive(Accounts)]
 #[instruction(
     params: ADLParams
@@ -261,7 +259,6 @@ pub struct ADLCross<'info> {
     #[account(address = Token::id())]
     pub token_program: Program<'info, Token>,
 }
-
 
 pub fn handle_adl_cross<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, ADLCross<'info>>,

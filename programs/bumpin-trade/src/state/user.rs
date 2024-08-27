@@ -829,18 +829,21 @@ impl User {
         order: &UserOrder,
         token_program: &Program<'info, Token>,
         pool_vault: &Account<'info, TokenAccount>,
-        user_token_account: &Account<'info, TokenAccount>,
+        user_token_account: Option<&Account<'info, TokenAccount>>,
         bump_signer: &AccountInfo<'info>,
         state: &Account<'info, State>,
     ) -> BumpResult<()> {
         self.delete_order(order.order_id)?;
         if order.position_side.eq(&PositionSide::INCREASE) && order.is_portfolio_margin {
             self.sub_order_hold_in_usd(order.order_margin)?;
-        } else if order.position_side.eq(&PositionSide::INCREASE) && !order.is_portfolio_margin {
+        } else if order.position_side.eq(&PositionSide::INCREASE)
+            && !order.is_portfolio_margin
+            && user_token_account.is_some()
+        {
             token::send_from_program_vault(
                 token_program,
                 pool_vault,
-                user_token_account,
+                user_token_account.unwrap(),
                 bump_signer,
                 state.bump_signer_nonce,
                 order.order_margin,
