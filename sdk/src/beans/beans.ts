@@ -110,6 +110,7 @@ export class MarketConfig {
     public maximumShortOpenInterestCap: BigNumber;
     public longShortRatioLimit: BigNumber;
     public longShortOiBottomLimit: BigNumber;
+    public maxPoolLiquidityShareRate: number;
     public maximumLeverage: number;
     public minimumLeverage: number;
 
@@ -143,6 +144,8 @@ export class MarketConfig {
             marketConfig.maximumLeverage / C.RATE_MULTIPLIER_NUMBER;
         this.minimumLeverage =
             marketConfig.minimumLeverage / C.RATE_MULTIPLIER_NUMBER;
+        this.maxPoolLiquidityShareRate =
+            marketConfig.maxPoolLiquidityShareRate / C.RATE_MULTIPLIER_NUMBER;
     }
 }
 
@@ -538,7 +541,6 @@ export class UserToken {
     public usedAmount: BigNumber;
     public liabilityAmount: BigNumber;
     public tokenMintKey: PublicKey;
-    public userTokenAccountKey: PublicKey;
     public userTokenStatus: UserTokenStatus;
 
     constructor(userToken: UserTokenAccount, coinDecimals: number) {
@@ -548,7 +550,6 @@ export class UserToken {
         this.liabilityAmount =
             userToken.liabilityAmount.toBigNumberWithDecimals(coinDecimals);
         this.tokenMintKey = userToken.tokenMintKey;
-        this.userTokenAccountKey = userToken.userTokenAccountKey;
         this.userTokenStatus = isEqual(
             userToken.userTokenStatus,
             UserTokenStatusAccount.INIT,
@@ -563,7 +564,6 @@ export class UserToken {
             usedAmount: new BigNumber(0),
             liabilityAmount: new BigNumber(0),
             tokenMintKey: PublicKey.default,
-            userTokenAccountKey: PublicKey.default,
             userTokenStatus: UserTokenStatus.INIT,
         };
     }
@@ -602,6 +602,7 @@ export class UserPosition {
     public isLong: boolean;
     public isPortfolioMargin: boolean;
     public status: PositionStatus;
+    public userTokenAccountKey: PublicKey;
 
     constructor(
         userPosition: UserPositionAccount,
@@ -680,6 +681,7 @@ export class UserPosition {
         this.status = isEqual(userPosition.status, PositionStatusAccount.INIT)
             ? PositionStatus.INIT
             : PositionStatus.USING;
+        this.userTokenAccountKey = userPosition.userTokenAccount;
     }
 
     public static newEmpty(): UserPosition {
@@ -711,6 +713,7 @@ export class UserPosition {
             isLong: false,
             isPortfolioMargin: false,
             status: PositionStatus.INIT,
+            userTokenAccountKey: PublicKey.default,
         };
     }
 }
@@ -768,6 +771,7 @@ export class UserOrder {
     public stopType: StopType;
     public status: OrderStatus;
     public isPortfolioMargin: boolean;
+    public userTokenAccountKey: PublicKey;
 
     constructor(userOrder: UserOrderAccount, coinDecimals: number) {
         this.orderMargin = userOrder.orderMargin.toBigNumberWithDecimals(
@@ -818,6 +822,7 @@ export class UserOrder {
             ? OrderStatus.INIT
             : OrderStatus.USING;
         this.isPortfolioMargin = userOrder.isPortfolioMargin;
+        this.userTokenAccountKey = userOrder.userTokenAccount;
     }
 
     public static newEmpty(): UserOrder {
@@ -838,6 +843,7 @@ export class UserOrder {
             stopType: StopType.NONE,
             status: OrderStatus.INIT,
             isPortfolioMargin: false,
+            userTokenAccountKey: PublicKey.default,
         };
     }
 }

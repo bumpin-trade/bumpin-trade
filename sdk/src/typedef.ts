@@ -130,6 +130,7 @@ export type MarketConfigAccount = {
     longShortOiBottomLimit: BN;
     maximumLeverage: number;
     minimumLeverage: number;
+    maxPoolLiquidityShareRate: number;
 };
 
 export type MarketFundingFeeAccount = {
@@ -310,7 +311,6 @@ export type UserTokenAccount = {
     usedAmount: BN;
     liabilityAmount: BN;
     tokenMintKey: PublicKey;
-    userTokenAccountKey: PublicKey;
     userTokenStatus: UserTokenStatusAccount;
 };
 
@@ -358,6 +358,7 @@ export type UserPositionAccount = {
     leverage: number;
     isLong: boolean;
     isPortfolioMargin: boolean;
+    userTokenAccount: PublicKey;
     status: PositionStatusAccount;
 };
 
@@ -521,6 +522,7 @@ export type UserOrderAccount = {
     stopType: StopTypeAccount;
     status: OrderStatusAccount;
     isPortfolioMargin: boolean;
+    userTokenAccount: PublicKey;
 };
 
 export class UserStatusAccount {
