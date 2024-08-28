@@ -5441,6 +5441,10 @@
                         "type": "bool"
                     },
                     {
+                        "name": "user_token_account",
+                        "type": "pubkey"
+                    },
+                    {
                         "name": "padding",
                         "type": {
                             "array": ["u8", 6]
@@ -5576,6 +5580,10 @@
                                 "name": "PositionStatus"
                             }
                         }
+                    },
+                    {
+                        "name": "user_token_account",
+                        "type": "pubkey"
                     },
                     {
                         "name": "padding",
@@ -5760,10 +5768,6 @@
                     },
                     {
                         "name": "token_mint_key",
-                        "type": "pubkey"
-                    },
-                    {
-                        "name": "user_token_account_key",
                         "type": "pubkey"
                     },
                     {

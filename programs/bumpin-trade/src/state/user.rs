@@ -109,24 +109,18 @@ impl User {
     pub fn force_get_user_token_mut_ref(
         &mut self,
         token_mint: &Pubkey,
-        user_token_account_key: &Pubkey,
     ) -> BumpResult<&mut UserToken> {
         self.get_user_token_index(token_mint)
-            .or_else(|_| self.add_user_token(token_mint, user_token_account_key))
+            .or_else(|_| self.add_user_token(token_mint))
             .map(move |user_token_index| &mut self.tokens[user_token_index])
     }
 
-    pub fn add_user_token(
-        &mut self,
-        token_mint: &Pubkey,
-        user_token_account_key: &Pubkey,
-    ) -> BumpResult<usize> {
+    pub fn add_user_token(&mut self, token_mint: &Pubkey) -> BumpResult<usize> {
         let new_user_token_index = self.next_usable_user_token_index()?;
 
         let new_user_token = UserToken {
             user_token_status: UserTokenStatus::USING,
             token_mint_key: *token_mint,
-            user_token_account_key: *user_token_account_key,
             ..UserToken::default()
         };
         self.tokens[new_user_token_index] = new_user_token;
@@ -282,15 +276,9 @@ impl User {
         Ok(())
     }
 
-    pub fn use_token(
-        &mut self,
-        token: &Pubkey,
-        amount: u128,
-        user_token_account_key: &Pubkey,
-        is_check: bool,
-    ) -> BumpResult<u128> {
+    pub fn use_token(&mut self, token: &Pubkey, amount: u128, is_check: bool) -> BumpResult<u128> {
         let use_from_balance;
-        let user_token = self.force_get_user_token_mut_ref(&token, user_token_account_key)?;
+        let user_token = self.force_get_user_token_mut_ref(&token)?;
         if is_check {
             validate!(
                 user_token.amount >= user_token.used_amount,

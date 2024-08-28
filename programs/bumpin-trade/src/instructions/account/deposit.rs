@@ -60,10 +60,7 @@ pub fn handle_deposit(ctx: Context<Deposit>, _token_index: u16, amount: u128) ->
 
     trade_token.add_total_amount(amount)?;
     //check user token exist, if not create new user token
-    user.force_get_user_token_mut_ref(
-        &token_mint,
-        ctx.accounts.user_token_account.to_account_info().key,
-    )?;
+    user.force_get_user_token_mut_ref(&token_mint)?;
 
     user.add_user_token_amount(&token_mint, amount, &UserTokenUpdateReason::DEPOSIT)?;
 

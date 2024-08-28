@@ -41,6 +41,7 @@ pub struct UserPosition {
     pub is_long: bool,
     pub is_portfolio_margin: bool,
     pub status: PositionStatus,
+    pub user_token_account: Pubkey,
     pub padding: [u8; 1],
     pub reserve_padding: [u8; 16],
 }
@@ -65,6 +66,11 @@ impl UserPosition {
 
     pub fn set_entry_price(&mut self, entry_price: u128) -> BumpResult {
         self.entry_price = entry_price;
+        Ok(())
+    }
+
+    pub fn set_user_token_account(&mut self, user_token_account: Pubkey) -> BumpResult {
+        self.user_token_account = user_token_account;
         Ok(())
     }
 

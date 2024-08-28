@@ -132,6 +132,7 @@ pub fn handle_place_wallet_order<'a, 'b, 'c: 'info, 'info>(
         acceptable_price: order.acceptable_price,
         created_at: calculator::current_time(),
         status: OrderStatus::USING,
+        user_token_account: ctx.accounts.user_token_account.key(),
         ..Default::default()
     };
     if order.order_type.eq(&OrderType::MARKET) {

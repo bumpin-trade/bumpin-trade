@@ -19,6 +19,7 @@ pub struct UserOrder {
     pub stop_type: StopType,
     pub status: OrderStatus,
     pub is_portfolio_margin: bool,
+    pub user_token_account: Pubkey,
     pub padding: [u8; 6],
     pub reserve_padding: [u8; 16],
 }

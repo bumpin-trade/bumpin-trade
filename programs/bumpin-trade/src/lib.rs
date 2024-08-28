@@ -272,7 +272,7 @@ pub mod bumpin_trade {
         _pool_index: u16,
         _stable_pool_index: u16,
         _trade_token_index: u16,
-    )-> Result<()> {
+    ) -> Result<()> {
         handle_auto_reblance(ctx)
     }
 }

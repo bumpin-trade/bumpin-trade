@@ -6177,6 +6177,10 @@ export type BumpinTrade = {
                         type: 'bool';
                     },
                     {
+                        name: 'userTokenAccount';
+                        type: 'pubkey';
+                    },
+                    {
                         name: 'padding';
                         type: {
                             array: ['u8', 6];
@@ -6312,6 +6316,10 @@ export type BumpinTrade = {
                                 name: 'positionStatus';
                             };
                         };
+                    },
+                    {
+                        name: 'userTokenAccount';
+                        type: 'pubkey';
                     },
                     {
                         name: 'padding';
@@ -6496,10 +6504,6 @@ export type BumpinTrade = {
                     },
                     {
                         name: 'tokenMintKey';
-                        type: 'pubkey';
-                    },
-                    {
-                        name: 'userTokenAccountKey';
                         type: 'pubkey';
                     },
                     {

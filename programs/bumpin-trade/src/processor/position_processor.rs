@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
+use anchor_lang::emit;
 use anchor_lang::prelude::*;
-use anchor_lang::{emit, ToAccountInfo};
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::errors::{BumpErrorCode, BumpResult};
@@ -309,8 +309,7 @@ fn execute_increase_order_margin(
             user.sub_order_hold_in_usd(order.order_margin)?;
         }
         order_margin = calculator::usd_to_token_u(order_margin_temp, decimals, margin_token_price)?;
-        order_margin_from_balance =
-            user.use_token(margin_token, order_margin, &Pubkey::default(), false)?;
+        order_margin_from_balance = user.use_token(margin_token, order_margin, false)?;
     } else {
         let order_margin_in_usd =
             calculator::token_to_usd_u(order.order_margin, decimals, margin_token_price)?;
@@ -1280,6 +1279,7 @@ pub fn increase_position(
         position.set_portfolio_margin(order.is_portfolio_margin)?;
         position.set_margin_mint(order.margin_mint_key)?;
         position.set_entry_price(execute_price)?;
+        position.set_user_token_account(order.user_token_account)?;
         position.add_initial_margin(increase_margin)?;
         position.add_initial_margin_usd(calculator::token_to_usd_u(
             increase_margin,
@@ -1517,7 +1517,6 @@ pub fn update_leverage<'info>(
                         stable_trade_token.mint_key
                     },
                     add_margin_amount,
-                    user_token_account.to_account_info().key,
                     false,
                 )?;
             } else {
