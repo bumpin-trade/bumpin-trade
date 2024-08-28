@@ -485,7 +485,7 @@ export class UserComponent extends Component {
             poolIndex: pool.index,
             orderId: new BN(orderId),
         };
-        if (order.isPortfolioMargin){
+        if (order.isPortfolioMargin) {
             const ix = await this.program.methods
                 .portfolioCancelOrder(params)
                 .accounts({
@@ -495,8 +495,7 @@ export class UserComponent extends Component {
                 .signers([])
                 .instruction();
             await this.sendAndConfirm([ix]);
-
-        }else{
+        } else {
             const ix = await this.program.methods
                 .walletCancelOrder(params)
                 .accounts({
@@ -507,9 +506,7 @@ export class UserComponent extends Component {
                 .signers([])
                 .instruction();
             await this.sendAndConfirm([ix]);
-
         }
-
     }
 
     public async placePerpOrder(
@@ -690,7 +687,7 @@ export class UserComponent extends Component {
         );
 
         BumpinUtils.prettyPrintParam(order);
-        if(param.isPortfolioMargin){
+        if (param.isPortfolioMargin) {
             const ix = await this.program.methods
                 .placePortfolioOrder(order)
                 .accounts({
@@ -701,7 +698,7 @@ export class UserComponent extends Component {
                 .signers([])
                 .instruction();
             await this.sendAndConfirm([ix]);
-        }else{
+        } else {
             const ix = await this.program.methods
                 .placeWalletOrder(order)
                 .accounts({
@@ -714,7 +711,6 @@ export class UserComponent extends Component {
                 .instruction();
             await this.sendAndConfirm([ix]);
         }
-
     }
 
     //TODO: recheck this conditions

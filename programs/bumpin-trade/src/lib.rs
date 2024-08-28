@@ -265,4 +265,14 @@ pub mod bumpin_trade {
     ) -> Result<()> {
         handle_collect_rewards(ctx)
     }
+
+    #[track_caller]
+    pub fn auto_reblance<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, AutoRebalance<'info>>,
+        _pool_index: u16,
+        _stable_pool_index: u16,
+        _trade_token_index: u16,
+    )-> Result<()> {
+        handle_auto_reblance(ctx)
+    }
 }

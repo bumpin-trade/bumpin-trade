@@ -125,9 +125,6 @@ pub struct RewardsRebalance<'info> {
 
 pub fn handle_auto_reblance<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, AutoRebalance<'info>>,
-    _pool_index: u16,
-    _stable_pool_index: u16,
-    _trade_token_index: u16,
 ) -> Result<()> {
     rebalance_processor::rebalance_pool_unsettle(
         &ctx.accounts.state,
