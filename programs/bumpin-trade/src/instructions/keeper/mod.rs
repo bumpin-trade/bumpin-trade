@@ -4,7 +4,6 @@ pub mod execute_portfolio_order;
 pub mod execute_wallet_order;
 pub mod liquidate_position;
 pub mod rebalance;
-pub mod update_user_status;
 
 pub use adl::*;
 use anchor_lang::prelude::*;
@@ -13,7 +12,6 @@ pub use execute_portfolio_order::*;
 pub use execute_wallet_order::*;
 pub use liquidate_position::*;
 pub use rebalance::*;
-pub use update_user_status::*;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Eq, PartialEq)]
 pub struct LiquidateIsolatePositionParams {
@@ -32,5 +30,11 @@ pub struct ADLParams {
     market_index: u16,
     trade_token_index: u16,
     position_key: Pubkey,
+    user_authority_key: Pubkey,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Copy, Eq, PartialEq)]
+pub struct ExecuteOrderParams {
+    order_id: u64,
     user_authority_key: Pubkey,
 }

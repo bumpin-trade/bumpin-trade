@@ -14,7 +14,7 @@ use crate::state::bump_events::{
     AddOrDecreaseMarginEvent, AddOrDeleteUserPositionEvent, UpdateUserPositionEvent,
 };
 use crate::state::infrastructure::user_order::{
-    OrderSide, OrderStatus, OrderType, PositionSide, StopType, UserOrder,
+    OrderSide, OrderType, PositionSide, StopType, UserOrder,
 };
 use crate::state::infrastructure::user_position::UserPosition;
 use crate::state::market::{Market, UpdateOIParams};
@@ -91,6 +91,7 @@ pub fn handle_execute_order<'info>(
         PositionSide::NONE => Err(BumpErrorCode::PositionSideNotSupport),
         PositionSide::INCREASE => {
             {
+                msg!("===========INCREASE start");
                 let margin_token =
                     match use_base_token(&user_order.position_side, &user_order.order_side)? {
                         true => market.pool_mint_key,
@@ -152,13 +153,12 @@ pub fn handle_execute_order<'info>(
                         &UserTokenUpdateReason::SettleFee,
                     )?;
                 }
-                let trade_token_vault = trade_token.vault_key;
-                let stable_trade_token_vault = stable_trade_token.vault_key;
                 drop(base_token_pool);
                 drop(stable_pool);
                 drop(market);
                 drop(trade_token);
                 drop(stable_trade_token);
+                msg!("===========INCREASE start1111");
                 //increase position
                 increase_position(
                     &user_order.symbol,
@@ -176,37 +176,6 @@ pub fn handle_execute_order<'info>(
                     market_map,
                     state_account,
                 )?;
-
-                let mut need_delete_order_ids = Vec::new();
-                //find user order in this position
-                for user_order in &user.orders {
-                    if user_order.status.eq(&OrderStatus::INIT) {
-                        continue;
-                    }
-                    let order_position_key = pda::generate_position_key(
-                        &user.key,
-                        user_order.symbol,
-                        user_order.is_portfolio_margin,
-                        program_id,
-                    )?;
-                    if order_position_key.eq(&position_key) {
-                        need_delete_order_ids.push(user_order.order_id);
-                    }
-                }
-                for order_id in need_delete_order_ids {
-                    let order = *user.get_user_order_ref(order_id)?;
-                    user.cancel_order(
-                        &order,
-                        token_program,
-                        match use_base_token(&user_order.position_side, &user_order.order_side)? {
-                            true => vault_map.get_account(&trade_token_vault)?,
-                            false => vault_map.get_account(&stable_trade_token_vault)?,
-                        },
-                        user_token_account,
-                        bump_signer,
-                        state_account,
-                    )?;
-                }
                 Ok(())
             }
         },
@@ -1230,6 +1199,7 @@ pub fn increase_position(
     market_map: &MarketMap,
     state: &Account<State>,
 ) -> BumpResult<()> {
+    msg!("===========increase_position start");
     let mut market = market_map.get_mut_ref(symbol)?;
     let mut base_token_pool = pool_map.get_mut_ref(&market.pool_key)?;
     let mut stable_pool = pool_map.get_mut_ref(&market.stable_pool_key)?;
@@ -1271,6 +1241,7 @@ pub fn increase_position(
 
     if position.position_size == 0u128 {
         //new position
+        msg!("===========increase_position start1111");
         position.set_index_mint(market.index_mint_oracle)?;
         position.set_symbol(order.symbol)?;
         position.set_margin_mint(order.margin_mint_key)?;
@@ -1323,6 +1294,7 @@ pub fn increase_position(
         position.set_mm_usd(position.get_position_mm(market.deref(), state)?)?;
         emit!(AddOrDeleteUserPositionEvent { position: position.clone(), is_add: true });
     } else {
+        msg!("===========increase_position start222");
         validate!(is_long.eq(&position.is_long), BumpErrorCode::OnlyOneDirectionPositionIsAllowed)?;
         //increase position
         let pre_position = *position;
@@ -1378,6 +1350,7 @@ pub fn increase_position(
         position.set_mm_usd(position.get_position_mm(market.deref(), state)?)?;
         emit!(UpdateUserPositionEvent { pre_position, position: position.clone() });
     }
+    msg!("===========increase_position start333");
     // update market io
     market.update_oi(
         true,
@@ -1390,6 +1363,7 @@ pub fn increase_position(
         },
     )?;
 
+    msg!("===========increase_position start444");
     //lock pool amount
     if is_long {
         base_token_pool.hold_pool_amount(

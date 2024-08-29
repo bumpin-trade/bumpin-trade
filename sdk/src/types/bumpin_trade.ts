@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/bumpin_trade.json`.
  */
 export type BumpinTrade = {
-    address: 'AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca';
+    address: 'Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR';
     metadata: {
         name: 'bumpinTrade';
         version: '0.1.0';
@@ -1519,7 +1519,7 @@ export type BumpinTrade = {
                             },
                             {
                                 kind: 'arg';
-                                path: 'userKey';
+                                path: 'params.user_authority_key';
                             },
                         ];
                     };
@@ -1538,12 +1538,12 @@ export type BumpinTrade = {
             ];
             args: [
                 {
-                    name: 'orderId';
-                    type: 'u64';
-                },
-                {
-                    name: 'userKey';
-                    type: 'pubkey';
+                    name: 'params';
+                    type: {
+                        defined: {
+                            name: 'executeOrderParams';
+                        };
+                    };
                 },
             ];
         },
@@ -1584,7 +1584,7 @@ export type BumpinTrade = {
                             },
                             {
                                 kind: 'arg';
-                                path: 'userKey';
+                                path: 'params.user_authority_key';
                             },
                         ];
                     };
@@ -1607,12 +1607,12 @@ export type BumpinTrade = {
             ];
             args: [
                 {
-                    name: 'orderId';
-                    type: 'u64';
-                },
-                {
-                    name: 'userKey';
-                    type: 'pubkey';
+                    name: 'params';
+                    type: {
+                        defined: {
+                            name: 'executeOrderParams';
+                        };
+                    };
                 },
             ];
         },
@@ -3282,69 +3282,6 @@ export type BumpinTrade = {
             ];
         },
         {
-            name: 'updateUserStatus';
-            discriminator: [4, 129, 231, 220, 216, 44, 151, 55];
-            accounts: [
-                {
-                    name: 'state';
-                    writable: true;
-                    pda: {
-                        seeds: [
-                            {
-                                kind: 'const';
-                                value: [
-                                    98,
-                                    117,
-                                    109,
-                                    112,
-                                    95,
-                                    115,
-                                    116,
-                                    97,
-                                    116,
-                                    101,
-                                ];
-                            },
-                        ];
-                    };
-                },
-                {
-                    name: 'user';
-                    pda: {
-                        seeds: [
-                            {
-                                kind: 'const';
-                                value: [117, 115, 101, 114];
-                            },
-                            {
-                                kind: 'arg';
-                                path: 'userAuthorityKey';
-                            },
-                        ];
-                    };
-                },
-                {
-                    name: 'keeperKey';
-                    signer: true;
-                    relations: ['state'];
-                },
-            ];
-            args: [
-                {
-                    name: 'userStatus';
-                    type: {
-                        defined: {
-                            name: 'userStatus';
-                        };
-                    };
-                },
-                {
-                    name: 'userAuthorityKey';
-                    type: 'pubkey';
-                },
-            ];
-        },
-        {
             name: 'walletCancelOrder';
             discriminator: [88, 166, 154, 153, 63, 80, 209, 200];
             accounts: [
@@ -4464,6 +4401,22 @@ export type BumpinTrade = {
                     },
                     {
                         name: 'stake';
+                    },
+                ];
+            };
+        },
+        {
+            name: 'executeOrderParams';
+            type: {
+                kind: 'struct';
+                fields: [
+                    {
+                        name: 'orderId';
+                        type: 'u64';
+                    },
+                    {
+                        name: 'userAuthorityKey';
+                        type: 'pubkey';
                     },
                 ];
             };

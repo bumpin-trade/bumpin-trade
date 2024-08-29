@@ -1190,7 +1190,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "user_key"
+                                "path": "params.user_authority_key"
                             }
                         ]
                     }
@@ -1209,12 +1209,12 @@
             ],
             "args": [
                 {
-                    "name": "order_id",
-                    "type": "u64"
-                },
-                {
-                    "name": "_user_key",
-                    "type": "pubkey"
+                    "name": "params",
+                    "type": {
+                        "defined": {
+                            "name": "ExecuteOrderParams"
+                        }
+                    }
                 }
             ]
         },
@@ -1247,7 +1247,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "user_key"
+                                "path": "params.user_authority_key"
                             }
                         ]
                     }
@@ -1270,12 +1270,12 @@
             ],
             "args": [
                 {
-                    "name": "order_id",
-                    "type": "u64"
-                },
-                {
-                    "name": "_user_key",
-                    "type": "pubkey"
+                    "name": "params",
+                    "type": {
+                        "defined": {
+                            "name": "ExecuteOrderParams"
+                        }
+                    }
                 }
             ]
         },
@@ -2650,61 +2650,6 @@
             ]
         },
         {
-            "name": "update_user_status",
-            "discriminator": [4, 129, 231, 220, 216, 44, 151, 55],
-            "accounts": [
-                {
-                    "name": "state",
-                    "writable": true,
-                    "pda": {
-                        "seeds": [
-                            {
-                                "kind": "const",
-                                "value": [
-                                    98, 117, 109, 112, 95, 115, 116, 97, 116,
-                                    101
-                                ]
-                            }
-                        ]
-                    }
-                },
-                {
-                    "name": "user",
-                    "pda": {
-                        "seeds": [
-                            {
-                                "kind": "const",
-                                "value": [117, 115, 101, 114]
-                            },
-                            {
-                                "kind": "arg",
-                                "path": "_user_authority_key"
-                            }
-                        ]
-                    }
-                },
-                {
-                    "name": "keeper_key",
-                    "signer": true,
-                    "relations": ["state"]
-                }
-            ],
-            "args": [
-                {
-                    "name": "user_status",
-                    "type": {
-                        "defined": {
-                            "name": "UserStatus"
-                        }
-                    }
-                },
-                {
-                    "name": "user_authority_key",
-                    "type": "pubkey"
-                }
-            ]
-        },
-        {
             "name": "wallet_cancel_order",
             "discriminator": [88, 166, 154, 153, 63, 80, 209, 200],
             "accounts": [
@@ -3728,6 +3673,22 @@
                     },
                     {
                         "name": "STAKE"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "ExecuteOrderParams",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "order_id",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "user_authority_key",
+                        "type": "pubkey"
                     }
                 ]
             }
