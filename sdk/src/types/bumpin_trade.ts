@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/bumpin_trade.json`.
  */
 export type BumpinTrade = {
-    address: 'Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR';
+    address: 'AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca';
     metadata: {
         name: 'bumpinTrade';
         version: '0.1.0';
@@ -6027,7 +6027,7 @@ export type BumpinTrade = {
                                         name: 'userOrder';
                                     };
                                 },
-                                10,
+                                8,
                             ];
                         };
                     },
@@ -6051,12 +6051,6 @@ export type BumpinTrade = {
                         name: 'padding';
                         type: {
                             array: ['u8', 7];
-                        };
-                    },
-                    {
-                        name: 'reservePadding';
-                        type: {
-                            array: ['u8', 288];
                         };
                     },
                 ];
@@ -6123,6 +6117,10 @@ export type BumpinTrade = {
                         type: 'pubkey';
                     },
                     {
+                        name: 'userTokenAccount';
+                        type: 'pubkey';
+                    },
+                    {
                         name: 'symbol';
                         type: {
                             array: ['u8', 32];
@@ -6175,10 +6173,6 @@ export type BumpinTrade = {
                     {
                         name: 'isPortfolioMargin';
                         type: 'bool';
-                    },
-                    {
-                        name: 'userTokenAccount';
-                        type: 'pubkey';
                     },
                     {
                         name: 'padding';
@@ -6276,6 +6270,10 @@ export type BumpinTrade = {
                         type: 'pubkey';
                     },
                     {
+                        name: 'userTokenAccount';
+                        type: 'pubkey';
+                    },
+                    {
                         name: 'marginMintKey';
                         type: 'pubkey';
                     },
@@ -6316,10 +6314,6 @@ export type BumpinTrade = {
                                 name: 'positionStatus';
                             };
                         };
-                    },
-                    {
-                        name: 'userTokenAccount';
-                        type: 'pubkey';
                     },
                     {
                         name: 'padding';

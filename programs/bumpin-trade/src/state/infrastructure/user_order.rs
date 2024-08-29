@@ -11,6 +11,7 @@ pub struct UserOrder {
     pub order_id: u64,
     pub margin_mint_key: Pubkey,
     pub authority: Pubkey,
+    pub user_token_account: Pubkey,
     pub symbol: [u8; 32],
     pub leverage: u32,
     pub order_side: OrderSide,
@@ -19,7 +20,6 @@ pub struct UserOrder {
     pub stop_type: StopType,
     pub status: OrderStatus,
     pub is_portfolio_margin: bool,
-    pub user_token_account: Pubkey,
     pub padding: [u8; 6],
     pub reserve_padding: [u8; 16],
 }

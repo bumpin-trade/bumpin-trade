@@ -5291,7 +5291,7 @@
                                         "name": "UserOrder"
                                     }
                                 },
-                                10
+                                8
                             ]
                         }
                     },
@@ -5315,12 +5315,6 @@
                         "name": "padding",
                         "type": {
                             "array": ["u8", 7]
-                        }
-                    },
-                    {
-                        "name": "reserve_padding",
-                        "type": {
-                            "array": ["u8", 288]
                         }
                     }
                 ]
@@ -5387,6 +5381,10 @@
                         "type": "pubkey"
                     },
                     {
+                        "name": "user_token_account",
+                        "type": "pubkey"
+                    },
+                    {
                         "name": "symbol",
                         "type": {
                             "array": ["u8", 32]
@@ -5439,10 +5437,6 @@
                     {
                         "name": "is_portfolio_margin",
                         "type": "bool"
-                    },
-                    {
-                        "name": "user_token_account",
-                        "type": "pubkey"
                     },
                     {
                         "name": "padding",
@@ -5540,6 +5534,10 @@
                         "type": "pubkey"
                     },
                     {
+                        "name": "user_token_account",
+                        "type": "pubkey"
+                    },
+                    {
                         "name": "margin_mint_key",
                         "type": "pubkey"
                     },
@@ -5580,10 +5578,6 @@
                                 "name": "PositionStatus"
                             }
                         }
-                    },
-                    {
-                        "name": "user_token_account",
-                        "type": "pubkey"
                     },
                     {
                         "name": "padding",

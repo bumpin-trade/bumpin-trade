@@ -350,6 +350,7 @@ export type UserPositionAccount = {
     closeFeeInUsd: BN;
     realizedPnl: BN;
     userKey: PublicKey;
+    userTokenAccount: PublicKey;
     marginMintKey: PublicKey;
     indexMintOracle: PublicKey;
     positionKey: PublicKey;
@@ -358,7 +359,6 @@ export type UserPositionAccount = {
     leverage: number;
     isLong: boolean;
     isPortfolioMargin: boolean;
-    userTokenAccount: PublicKey;
     status: PositionStatusAccount;
 };
 
@@ -514,6 +514,7 @@ export type UserOrderAccount = {
     orderId: BN;
     marginMintKey: PublicKey;
     authority: PublicKey;
+    userTokenAccount: PublicKey;
     symbol: number[];
     leverage: number;
     orderSide: OrderSideAccount;
@@ -522,7 +523,6 @@ export type UserOrderAccount = {
     stopType: StopTypeAccount;
     status: OrderStatusAccount;
     isPortfolioMargin: boolean;
-    userTokenAccount: PublicKey;
 };
 
 export class UserStatusAccount {

@@ -37,12 +37,11 @@ pub struct User {
     pub tokens: [UserToken; 10],
     pub stakes: [UserStake; 10],
     pub positions: [UserPosition; 10],
-    pub orders: [UserOrder; 10],
+    pub orders: [UserOrder; 8],
     pub authority: Pubkey,
     pub created_at: i64,
     pub user_status: UserStatus,
     pub padding: [u8; 7],
-    pub reserve_padding: [u8; 288],
 }
 
 impl Default for User {
@@ -54,13 +53,12 @@ impl Default for User {
             tokens: [UserToken::default(); 10],
             stakes: [UserStake::default(); 10],
             positions: [UserPosition::default(); 10],
-            orders: [UserOrder::default(); 10],
+            orders: [UserOrder::default(); 8],
             key: Pubkey::default(),
             authority: Pubkey::default(),
             created_at: calculator::current_time(),
             user_status: UserStatus::NORMAL,
             padding: [0u8; 7],
-            reserve_padding: [0u8; 288],
         }
     }
 }

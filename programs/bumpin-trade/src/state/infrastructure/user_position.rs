@@ -32,6 +32,7 @@ pub struct UserPosition {
     pub close_fee_in_usd: u128,
     pub realized_pnl: i128,
     pub user_key: Pubkey,
+    pub user_token_account: Pubkey,
     pub margin_mint_key: Pubkey,
     pub index_mint_oracle: Pubkey,
     pub position_key: Pubkey,
@@ -41,7 +42,6 @@ pub struct UserPosition {
     pub is_long: bool,
     pub is_portfolio_margin: bool,
     pub status: PositionStatus,
-    pub user_token_account: Pubkey,
     pub padding: [u8; 1],
     pub reserve_padding: [u8; 16],
 }
