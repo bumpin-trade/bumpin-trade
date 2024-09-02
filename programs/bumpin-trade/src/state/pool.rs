@@ -227,6 +227,22 @@ impl Pool {
         Ok(())
     }
 
+    pub fn settle_pool_funding_fee(&mut self, amount: i128, is_cross_margin: bool) -> BumpResult<()> {
+        if amount == 0i128 {
+            return Ok(())
+        }
+        self.balance.settle_funding_fee = self.balance.settle_funding_fee.safe_sub(amount)?;
+        if amount > 0i128 && is_cross_margin {
+            self.balance.un_settle_amount = self.balance.un_settle_amount.safe_add(amount.abs().cast::<u128>()?)?;
+        }else if amount > 0i128  && !is_cross_margin{
+            self.balance.amount = self.balance.amount.safe_add(amount.abs().cast::<u128>()?)?;
+        }else {
+            validate!(self.balance.amount > amount.abs().cast::<u128>()?, BumpErrorCode::SubPoolAmountBiggerThanAmount)?;
+            self.balance.amount = self.balance.amount.safe_sub(amount.abs().cast::<u128>()?)?;
+        }
+        Ok(())
+    }
+
     pub fn get_pool_available_liquidity(
         &self,
         oracle_map: &mut OracleMap,
@@ -307,7 +323,7 @@ impl Pool {
                 token_balance.amount.safe_add(token_balance.un_settle_amount)?,
                 pool_liquidity_limit,
             )?
-            .safe_sub(token_balance.hold_amount)?
+                .safe_sub(token_balance.hold_amount)?
                 >= amount)
         };
     }
@@ -456,7 +472,7 @@ impl Pool {
                         u_token_pnl
                     })?;
                 }
-            },
+            }
             Some(base_token_pool) => {
                 //short
                 if token_pnl < 0i128 {
@@ -479,7 +495,7 @@ impl Pool {
                         if u_token_pnl > add_liability { add_liability } else { u_token_pnl },
                     )?;
                 }
-            },
+            }
         })
     }
 }
