@@ -381,7 +381,7 @@ pub fn update_funding_fee(
 
     position.set_open_funding_fee_amount_per_size(market_funding_fee_per_size)?;
     market.update_market_total_funding_fee(realized_funding_fee, position.is_long)?;
-    pool.update_pool_funding_fee(realized_funding_fee_delta, true)?;
+    pool.update_pool_funding_fee(realized_funding_fee_delta)?;
     Ok(())
 }
 
