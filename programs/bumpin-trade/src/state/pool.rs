@@ -63,7 +63,6 @@ pub struct PoolBalance {
     pub amount: u128,
     pub hold_amount: u128,
     pub un_settle_amount: u128,
-    pub settle_funding_fee_amount: u128,
     pub loss_amount: u128,
 }
 
