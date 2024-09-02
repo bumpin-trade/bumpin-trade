@@ -223,12 +223,8 @@ impl Pool {
         Ok(())
     }
 
-    pub fn update_pool_funding_fee(&mut self, amount: i128, is_add: bool) -> BumpResult {
-        self.balance.settle_funding_fee = if is_add {
-            self.balance.settle_funding_fee.safe_add(amount)?
-        } else {
-            self.balance.settle_funding_fee.safe_sub(amount)?
-        };
+    pub fn update_pool_funding_fee(&mut self, amount: i128) -> BumpResult {
+        self.balance.settle_funding_fee = self.balance.settle_funding_fee.safe_add(amount)?;
         Ok(())
     }
 
@@ -242,8 +238,7 @@ impl Pool {
             .balance
             .amount
             .cast::<i128>()?
-            .safe_add(self.balance.un_settle_amount.cast::<i128>()?)?
-            .safe_sub(self.balance.hold_amount.cast::<i128>()?)?;
+            .safe_add(self.balance.un_settle_amount.cast::<i128>()?)?;
         if base_token_amount <= 0i128 {
             return Ok(0u128);
         }
@@ -366,8 +361,8 @@ impl Pool {
             self.balance
                 .amount
                 .safe_add(self.balance.un_settle_amount)?
-                .safe_add(self.balance.settle_funding_fee_amount)?
-                .cast::<i128>()?,
+                .cast::<i128>()?
+                .safe_add(self.balance.settle_funding_fee)?,
             trade_token.decimals,
             trade_token_price,
         )?;
@@ -398,9 +393,10 @@ impl Pool {
                 .stable_balance
                 .amount
                 .safe_add(self.stable_balance.un_settle_amount)?
-                .safe_add(self.stable_balance.settle_funding_fee_amount)?
-                .safe_sub(self.stable_balance.loss_amount)?;
-            if stable_amount > 0u128 {
+                .safe_sub(self.stable_balance.loss_amount)?
+                .cast::<i128>()?
+                .safe_add(self.stable_balance.settle_funding_fee)?;
+            if stable_amount > 0i128 {
                 let stable_trade_token =
                     trade_token_map.get_trade_token_by_mint_ref(&self.stable_mint_key)?;
                 let stable_trade_token_price =

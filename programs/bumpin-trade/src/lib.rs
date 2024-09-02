@@ -2,7 +2,6 @@ use anchor_lang::prelude::*;
 
 use instructions::*;
 
-
 pub mod errors;
 pub mod ids;
 pub mod instructions;
