@@ -162,7 +162,6 @@ export type PoolBalanceAccount = {
     amount: BN;
     holdAmount: BN;
     unSettleAmount: BN;
-    settleFundingFeeAmount: BN;
     lossAmount: BN;
 };
 

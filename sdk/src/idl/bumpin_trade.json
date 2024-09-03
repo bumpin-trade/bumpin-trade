@@ -1,5 +1,5 @@
 {
-    "address": "Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR",
+    "address": "AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca",
     "metadata": {
         "name": "bumpin_trade",
         "version": "0.1.0",
@@ -4569,10 +4569,6 @@
                     },
                     {
                         "name": "un_settle_amount",
-                        "type": "u128"
-                    },
-                    {
-                        "name": "settle_funding_fee_amount",
                         "type": "u128"
                     },
                     {

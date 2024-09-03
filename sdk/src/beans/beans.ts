@@ -232,7 +232,6 @@ export class PoolBalance {
     public amount: BigNumber;
     public holdAmount: BigNumber;
     public unSettleAmount: BigNumber;
-    public settleFundingFeeAmount: BigNumber;
     public lossAmount: BigNumber;
 
     constructor(
@@ -251,10 +250,6 @@ export class PoolBalance {
         );
         this.unSettleAmount =
             poolBalance.unSettleAmount.toBigNumberWithDecimals(
-                poolMintTradeTokenDecimals,
-            );
-        this.settleFundingFeeAmount =
-            poolBalance.settleFundingFeeAmount.toBigNumberWithDecimals(
                 poolMintTradeTokenDecimals,
             );
         this.lossAmount = poolBalance.lossAmount.toBigNumberWithDecimals(
