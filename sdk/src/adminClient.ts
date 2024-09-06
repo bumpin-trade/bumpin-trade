@@ -52,7 +52,10 @@ export class BumpinAdmin {
             maxRetries: 0,
             minContextSlot: undefined,
         };
-        this.connection = new Connection(config.endpoint, opt);
+        this.connection = new Connection(
+            config.endpoint,
+            config.connectionConfig,
+        );
         this.wallet = config.wallet;
 
         this.provider = new anchor.AnchorProvider(
