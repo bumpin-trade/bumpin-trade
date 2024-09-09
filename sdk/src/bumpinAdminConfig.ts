@@ -5,17 +5,15 @@ import { ConnectionConfig } from '@solana/web3.js';
 export type BumpinAdminConfig = {
     endpoint: string;
     wallet: Wallet;
-    connectionConfig?: ConnectionConfig;
 };
 
 export class BumpinAdminConfigBuilder {
     private readonly config: BumpinAdminConfig;
 
-    private constructor(endpoint: string, connectionConfig?: ConnectionConfig) {
+    private constructor(endpoint: string) {
         this.config = {
             endpoint,
             wallet: new NoneWallet(),
-            connectionConfig: connectionConfig,
         };
     }
 
@@ -33,9 +31,8 @@ export class BumpinAdminConfigBuilder {
 
     public static customNet(
         endpoint: string,
-        connectionConfig?: ConnectionConfig,
     ): BumpinAdminConfigBuilder {
-        return new BumpinAdminConfigBuilder(endpoint, connectionConfig);
+        return new BumpinAdminConfigBuilder(endpoint);
     }
 
     public wallet(wallet: Wallet): BumpinAdminConfigBuilder {

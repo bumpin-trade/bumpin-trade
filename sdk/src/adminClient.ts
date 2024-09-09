@@ -54,7 +54,7 @@ export class BumpinAdmin {
         };
         this.connection = new Connection(
             config.endpoint,
-            config.connectionConfig,
+            opt,
         );
         this.wallet = config.wallet;
 
