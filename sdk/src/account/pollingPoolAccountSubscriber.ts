@@ -158,10 +158,6 @@ export class PollingPoolAccountSubscriber implements AccountSubscriber<Pool> {
             data.mintKey,
             tradeTokens,
         );
-        const stableToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
-            data.stableMintKey,
-            tradeTokens,
-        );
-        return new Pool(data, tradeToken.decimals, stableToken.decimals);
+        return new Pool(data, tradeToken.decimals);
     }
 }

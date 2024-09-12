@@ -352,10 +352,8 @@ export class Pool {
     public insuranceFundAmount: BigNumber;
     public totalSupply: BigNumber;
     public balance: PoolBalance;
-    public stableBalance: PoolBalance;
     public borrowingFee: BorrowingFee;
     public feeReward: FeeReward;
-    public stableFeeReward: FeeReward;
     public config: PoolConfig;
     public poolVaultKey: PublicKey;
     public key: PublicKey;
@@ -368,7 +366,6 @@ export class Pool {
     constructor(
         pool: PoolAccount,
         baseCoinDecimals: number,
-        stableCoinDecimals: number,
     ) {
         this.name = BumpinUtils.decodeString(pool.name);
         this.pnl = pool.pnl.toBigNumberWithDecimals(C.USD_EXPONENT_NUMBER);
@@ -378,19 +375,11 @@ export class Pool {
         this.totalSupply =
             pool.totalSupply.toBigNumberWithDecimals(baseCoinDecimals);
         this.balance = new PoolBalance(pool.balance, baseCoinDecimals);
-        this.stableBalance = new PoolBalance(
-            pool.stableBalance,
-            stableCoinDecimals,
-        );
         this.borrowingFee = new BorrowingFee(
             pool.borrowingFee,
             baseCoinDecimals,
         );
         this.feeReward = new FeeReward(pool.feeReward, baseCoinDecimals);
-        this.stableFeeReward = new FeeReward(
-            pool.stableFeeReward,
-            stableCoinDecimals,
-        );
         this.config = new PoolConfig(pool.config);
         this.poolVaultKey = pool.poolVaultKey;
         this.key = pool.key;

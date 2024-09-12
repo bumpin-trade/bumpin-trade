@@ -807,20 +807,6 @@ export class BumpinClient {
             return BigNumber(0);
         }
 
-        const stableTokenAmount = pool.stableBalance.amount
-            .plus(pool.stableBalance.unSettleAmount)
-            .minus(pool.stableBalance.holdAmount);
-        if (stableTokenAmount.lt(0)) {
-            const equivalentBaseToken = stableTokenAmount
-                .multipliedBy(stableCoinPrice)
-                .div(price);
-            if (baseTokenAmount.gt(equivalentBaseToken)) {
-                baseTokenAmount = baseTokenAmount.minus(equivalentBaseToken);
-            } else {
-                baseTokenAmount = BigNumber(0);
-            }
-        }
-
         const availableTokenAmount = baseTokenAmount.multipliedBy(
             pool.config.poolLiquidityLimit,
         );
@@ -903,26 +889,6 @@ export class BumpinClient {
                 rawValue = rawValue
                     .plus(marketUnPnlUsd.longUnPnl)
                     .plus(marketUnPnlUsd.shortUnPnl);
-            }
-            // relative stable pool gain and loss
-            const stableAmount = pool.stableBalance.amount
-                .plus(pool.stableBalance.unSettleAmount)
-                .minus(pool.stableBalance.lossAmount);
-            if (stableAmount.gt(BigNumber(0))) {
-                const stablePrice =
-                    await this.tradeTokenComponent!.getTradeTokenPricesByMintKey(
-                        pool.stableMintKey,
-                        sync,
-                    );
-                if (!stablePrice.price) {
-                    throw new BumpinInvalidParameter(
-                        'Stable Price not found(undefined) for mint: ' +
-                            pool.mintKey.toString(),
-                    );
-                }
-                rawValue = rawValue.plus(
-                    stableAmount.multipliedBy(stablePrice.price),
-                );
             }
         }
 

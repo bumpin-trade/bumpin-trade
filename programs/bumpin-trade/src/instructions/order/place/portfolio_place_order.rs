@@ -84,14 +84,15 @@ pub fn handle_place_portfolio_order<'a, 'b, 'c: 'info, 'info>(
         user.deref_mut().add_order_hold_in_usd(order.order_margin)?;
     }
 
-    if !user.make_order_is_allowed(
-        order.symbol,
-        order.is_portfolio_margin,
-        use_base_token(&order.position_side, &order.order_side)?,
-        ctx.program_id,
-    )? {
-        return Err(BumpErrorCode::OnlyOneTypeOrderAllowed.into());
-    }
+    validate!(
+        user.make_order_is_allowed(
+            order.symbol,
+            order.is_portfolio_margin,
+            use_base_token(&order.position_side, &order.order_side)?,
+            ctx.program_id,
+        )?,
+        BumpErrorCode::OnlyOneTypeOrderAllowed
+    )?;
 
     let order_id = get_then_update_id!(user, next_order_id);
     let user_order = UserOrder {

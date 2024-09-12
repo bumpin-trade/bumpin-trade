@@ -221,10 +221,8 @@ export type PoolAccount = {
     insuranceFundAmount: BN;
     totalSupply: BN;
     balance: PoolBalanceAccount;
-    stableBalance: PoolBalanceAccount;
     borrowingFee: BorrowingFeeAccount;
     feeReward: FeeRewardAccount;
-    stableFeeReward: FeeRewardAccount;
     config: PoolConfigAccount;
     poolVaultKey: PublicKey;
     key: PublicKey;

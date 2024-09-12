@@ -5189,14 +5189,6 @@ export type BumpinTrade = {
                         };
                     },
                     {
-                        name: 'stableBalance';
-                        type: {
-                            defined: {
-                                name: 'poolBalance';
-                            };
-                        };
-                    },
-                    {
                         name: 'borrowingFee';
                         type: {
                             defined: {
@@ -5206,14 +5198,6 @@ export type BumpinTrade = {
                     },
                     {
                         name: 'feeReward';
-                        type: {
-                            defined: {
-                                name: 'feeReward';
-                            };
-                        };
-                    },
-                    {
-                        name: 'stableFeeReward';
                         type: {
                             defined: {
                                 name: 'feeReward';
@@ -5394,14 +5378,6 @@ export type BumpinTrade = {
                         };
                     },
                     {
-                        name: 'stableBalance';
-                        type: {
-                            defined: {
-                                name: 'poolBalance';
-                            };
-                        };
-                    },
-                    {
                         name: 'borrowingFee';
                         type: {
                             defined: {
@@ -5411,14 +5387,6 @@ export type BumpinTrade = {
                     },
                     {
                         name: 'feeReward';
-                        type: {
-                            defined: {
-                                name: 'feeReward';
-                            };
-                        };
-                    },
-                    {
-                        name: 'stableFeeReward';
                         type: {
                             defined: {
                                 name: 'feeReward';
@@ -5450,14 +5418,6 @@ export type BumpinTrade = {
                         };
                     },
                     {
-                        name: 'preStableBalance';
-                        type: {
-                            defined: {
-                                name: 'poolBalance';
-                            };
-                        };
-                    },
-                    {
                         name: 'preBorrowingFee';
                         type: {
                             defined: {
@@ -5467,14 +5427,6 @@ export type BumpinTrade = {
                     },
                     {
                         name: 'preFeeReward';
-                        type: {
-                            defined: {
-                                name: 'feeReward';
-                            };
-                        };
-                    },
-                    {
-                        name: 'preStableFeeReward';
                         type: {
                             defined: {
                                 name: 'feeReward';

@@ -98,10 +98,8 @@ pub struct PoolUpdateEvent {
 
     //current info
     pub pool_balance: PoolBalance,
-    pub stable_balance: PoolBalance,
     pub borrowing_fee: BorrowingFee,
     pub fee_reward: FeeReward,
-    pub stable_fee_reward: FeeReward,
     pub total_supply: u128,
     pub pnl: i128,
     pub apr: u128,
@@ -109,10 +107,8 @@ pub struct PoolUpdateEvent {
 
     //pre info
     pub pre_pool_balance: PoolBalance,
-    pub pre_stable_balance: PoolBalance,
     pub pre_borrowing_fee: BorrowingFee,
     pub pre_fee_reward: FeeReward,
-    pub pre_stable_fee_reward: FeeReward,
     pub pre_total_supply: u128,
     pub pre_pnl: i128,
     pub pre_apr: u128,

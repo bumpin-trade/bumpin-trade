@@ -68,39 +68,6 @@ pub fn rebalance_pool_unsettle<'a>(
     Ok(())
 }
 
-pub fn rebalance_stable_pool<'a>(
-    _state: &Account<'a, State>,
-    pool_account_loader: &AccountLoader<'a, Pool>,
-    _pool_vault: &Account<'a, TokenAccount>,
-    _stable_pool_vault: &Account<'a, TokenAccount>,
-    _bump_signer: &AccountInfo<'a>,
-    _token_program: &Program<'a, Token>,
-) -> BumpResult {
-    let mut pool =
-        pool_account_loader.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadPoolData)?;
-    let pre_balance = pool.stable_balance;
-    if pre_balance.amount >= pre_balance.loss_amount {
-        pool.sub_amount(pre_balance.loss_amount)?;
-        pool.sub_loss_amount(pre_balance.loss_amount)?;
-
-        let _transfer_amount = pre_balance.amount.safe_sub(pre_balance.loss_amount)?;
-        // let swap_amount = swap::jup_swap()?;
-        //
-        // pool.add_amount(swap_amount)?;
-        // pool.add_pnl(swap_amount.cast()?)?;
-    } else {
-        pool.sub_amount(pre_balance.amount)?;
-        pool.sub_loss_amount(pre_balance.amount)?;
-
-        let _transfer_amount = pre_balance.loss_amount.safe_sub(pre_balance.amount)?;
-        // let swap_amount = swap::jup_swap()?;
-        //
-        // pool.sub_amount(swap_amount)?;
-        // pool.add_pnl(-swap_amount.cast::<i128>()?)?;
-    }
-    Ok(())
-}
-
 pub fn rebalance_rewards<'a>(
     state: &Account<'a, State>,
     pool_account_loader: &AccountLoader<'a, Pool>,
@@ -131,7 +98,7 @@ pub fn auto_rebalance<'a>(
     trade_token_account_loader: &AccountLoader<'a, TradeToken>,
     pool_vault: &Account<'a, TokenAccount>,
     trade_token_vault: &Account<'a, TokenAccount>,
-    stable_pool_vault: &Account<'a, TokenAccount>,
+    _stable_pool_vault: &Account<'a, TokenAccount>,
     bump_signer: &AccountInfo<'a>,
     token_program: &Program<'a, Token>,
 ) -> BumpResult {
@@ -149,14 +116,6 @@ pub fn auto_rebalance<'a>(
         pool_account_loader,
         pool_vault,
         trade_token_vault,
-        bump_signer,
-        token_program,
-    )?;
-    rebalance_stable_pool(
-        state,
-        pool_account_loader,
-        pool_vault,
-        stable_pool_vault,
         bump_signer,
         token_program,
     )?;

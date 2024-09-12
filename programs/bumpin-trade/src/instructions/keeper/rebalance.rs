@@ -143,14 +143,6 @@ pub fn handle_auto_reblance<'a, 'b, 'c: 'info, 'info>(
         &ctx.accounts.bump_signer,
         &ctx.accounts.token_program,
     )?;
-    rebalance_processor::rebalance_stable_pool(
-        &ctx.accounts.state,
-        &ctx.accounts.pool,
-        &ctx.accounts.pool_vault,
-        &ctx.accounts.stable_pool_vault,
-        &ctx.accounts.bump_signer,
-        &ctx.accounts.token_program,
-    )?;
     Ok(())
 }
 

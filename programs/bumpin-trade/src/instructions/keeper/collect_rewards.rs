@@ -5,7 +5,6 @@ use crate::errors::BumpErrorCode;
 use crate::instructions::calculator;
 use crate::math::constants::PER_TOKEN_PRECISION;
 use crate::math::safe_math::SafeMath;
-use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::state::pool::Pool;
 use crate::state::rewards::Rewards;
 use crate::state::state::State;
@@ -100,45 +99,13 @@ pub struct CollectRewards<'info> {
 pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, CollectRewards<'info>>,
 ) -> Result<()> {
-    let remaining_accounts = ctx.remaining_accounts;
-
-    let AccountMaps { mut oracle_map, .. } = load_maps(remaining_accounts)?;
     let mut pool = ctx.accounts.pool.load_mut()?;
-    let trade_token = ctx.accounts.trade_token.load()?;
-    let stable_trade_token = ctx.accounts.trade_token.load()?;
     let total_supply = pool.total_supply;
     let fee_reward = &pool.fee_reward;
 
     validate!(total_supply > 0u128, BumpErrorCode::PoolMintSupplyIsZero)?;
 
-    let mut total_fee_amount = fee_reward.fee_amount;
-    let token_decimal = trade_token.decimals;
-    if !pool.stable {
-        //need swap stable_fee_reward to amount
-        let stable_fee_reward = &mut pool.stable_fee_reward;
-        let fee_amount = stable_fee_reward.fee_amount;
-        if fee_amount != 0u128 {
-            let stable_token_price = oracle_map
-                .get_price_data(&stable_trade_token.oracle_key)
-                .map_err(|_e| BumpErrorCode::OracleNotFound)?
-                .price;
-            let transfer_usd = calculator::token_to_usd_u(
-                fee_amount,
-                stable_trade_token.decimals,
-                stable_token_price,
-            )?;
-            let token_price = oracle_map
-                .get_price_data(&trade_token.oracle_key)
-                .map_err(|_e| BumpErrorCode::OracleNotFound)?
-                .price;
-            let transfer_amount =
-                calculator::usd_to_token_u(transfer_usd, token_decimal, token_price)?;
-            // todo swap stable to un_stable token, using jup_swap.
-            // let amount = swap::jup_swap()?;
-            total_fee_amount = total_fee_amount.safe_add(transfer_amount)?;
-        }
-    }
-
+    let total_fee_amount = fee_reward.fee_amount;
     //split fee to pool_rewards & dao_rewards
     let pool_rewards_amount =
         calculator::mul_rate_u(total_fee_amount, ctx.accounts.state.pool_fee_reward_ratio as u128)?;

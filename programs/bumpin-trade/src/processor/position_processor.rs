@@ -121,23 +121,16 @@ pub fn handle_execute_order<'info>(
                 let mut stable_trade_token = trade_token_map
                     .get_trade_token_by_mint_ref_mut(&market.stable_pool_mint_key)?;
                 //collect open fee
-                let fee = if user_order.order_side.eq(&OrderSide::LONG) {
-                    fee_processor::collect_long_open_position_fee(
-                        &market,
-                        base_token_pool.deref_mut(),
-                        order_margin.safe_mul_rate(user_order.leverage.cast()?)?,
-                        user_order.is_portfolio_margin,
-                    )?
-                } else {
-                    fee_processor::collect_short_open_position_fee(
-                        &market,
-                        base_token_pool.deref_mut(),
-                        stable_pool.deref_mut(),
-                        state_account,
-                        order_margin.safe_mul_rate(user_order.leverage.cast()?)?,
-                        user_order.is_portfolio_margin,
-                    )?
-                };
+                let fee = fee_processor::collect_open_position_fee(
+                    &market,
+                    if user_order.order_side.eq(&OrderSide::LONG) {
+                        base_token_pool.deref_mut()
+                    } else {
+                        stable_pool.deref_mut()
+                    },
+                    order_margin.safe_mul_rate(user_order.leverage.cast()?)?,
+                    user_order.is_portfolio_margin,
+                )?;
 
                 //record fee in user
                 if user_order.is_portfolio_margin {
@@ -483,7 +476,6 @@ pub fn decrease_position<'info>(
         stake_token_pool,
         stable_pool,
         market,
-        state_account,
         pre_position.is_portfolio_margin,
         response.settle_close_fee,
         response.settle_borrowing_fee,
@@ -538,7 +530,6 @@ fn collect_decrease_fee(
     base_token_pool: &mut Pool,
     stable_pool: &mut Pool,
     market: &mut Market,
-    state_account: &Account<State>,
     is_portfolio_margin: bool,
     settle_close_fee: u128,
     settle_borrowing_fee: u128,
@@ -549,21 +540,11 @@ fn collect_decrease_fee(
     entry_price: u128,
     token_decimal: u16,
 ) -> BumpResult {
-    if is_long {
-        fee_processor::collect_long_close_position_fee(
-            if is_long { base_token_pool } else { stable_pool },
-            settle_close_fee,
-            is_portfolio_margin,
-        )?;
-    } else {
-        fee_processor::collect_short_close_position_fee(
-            stable_pool,
-            base_token_pool,
-            state_account,
-            settle_close_fee,
-            is_portfolio_margin,
-        )?;
-    }
+    fee_processor::collect_close_position_fee(
+        if is_long { base_token_pool } else { stable_pool },
+        settle_close_fee,
+        is_portfolio_margin,
+    )?;
     fee_processor::collect_borrowing_fee(
         if is_long { base_token_pool } else { stable_pool },
         settle_borrowing_fee,
@@ -629,11 +610,8 @@ fn settle<'info>(
     position: &UserPosition,
 ) -> BumpResult<()> {
     fee_processor::settle_funding_fee(
-        base_token_pool,
-        stable_pool,
-        response.settle_funding_fee_in_usd,
+        if position.is_long { base_token_pool } else { stable_pool },
         response.settle_funding_fee,
-        position.is_long,
         position.is_portfolio_margin,
     )?;
     let mut add_liability = 0u128;
@@ -667,14 +645,12 @@ fn settle<'info>(
             response.un_hold_pool_amount,
             response.pool_pnl_token,
             add_liability,
-            None,
         )?;
     } else {
         stable_pool.update_pnl_and_un_hold_pool_amount(
             response.un_hold_pool_amount,
             response.pool_pnl_token,
             add_liability,
-            Some(base_token_pool),
         )?;
     }
     Ok(())
@@ -1175,7 +1151,7 @@ pub fn execute_add_position_margin(
 
     let sub_amount = params.update_margin_amount.min(position.hold_pool_amount);
     position.sub_hold_pool_amount(sub_amount)?;
-    pool.update_pnl_and_un_hold_pool_amount(sub_amount, 0i128, 0u128, None)?;
+    pool.update_pnl_and_un_hold_pool_amount(sub_amount, 0i128, 0u128)?;
 
     add_or_decrease_margin_event.position = *position;
     emit!(add_or_decrease_margin_event);
@@ -1372,41 +1348,16 @@ pub fn increase_position(
             trade_token.deref_mut(),
             stable_trade_token.deref_mut(),
             market.config.max_pool_liquidity_share_rate,
-        )?
+        )?;
     } else {
-        drop(trade_token);
-        drop(stable_trade_token);
-        drop(market);
-        let base_token_pool_value =
-            base_token_pool.get_pool_usd_value(trade_token_map, oracle_map, market_map)?;
-
-        let market = market_map.get_mut_ref(symbol)?;
-        let stable_trade_token =
-            trade_token_map.get_trade_token_by_mint_ref(&market.stable_pool_mint_key)?;
-        let increase_hold_value = calculator::token_to_usd_u(
-            increase_hold,
-            stable_trade_token.decimals,
-            oracle_map
-                .get_price_data(&stable_trade_token.oracle_key)
-                .map_err(|_e| BumpErrorCode::OracleNotFound)?
-                .price,
-        )?;
-        msg!("==============increase_hold:{}", increase_hold);
-        msg!("==============increase_hold_value:{}", increase_hold_value);
-        msg!("==============stable_trade_token.decimals:{}", stable_trade_token.decimals);
-        validate!(
-            base_token_pool_value >= increase_hold_value,
-            BumpErrorCode::StandardPoolValueNotEnough
-        )?;
         stable_pool.hold_pool_amount(
             increase_hold,
             oracle_map,
-            stable_trade_token.deref(),
-            stable_trade_token.deref(),
+            trade_token.deref_mut(),
+            stable_trade_token.deref_mut(),
             market.config.max_pool_liquidity_share_rate,
-        )?
+        )?;
     }
-
     Ok(())
 }
 
