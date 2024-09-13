@@ -85,7 +85,6 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
     }
     for pos_info in &pos_infos {
         let market = market_map.get_ref(&pos_info.symbol)?;
-        if pos_info.is_long {}
         let mut pool = if pos_info.is_long {
             pool_key_map.get_mut_ref(&market.pool_key)?
         } else {
