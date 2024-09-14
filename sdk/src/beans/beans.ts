@@ -363,10 +363,7 @@ export class Pool {
     public status: PoolStatus;
     public stable: boolean;
 
-    constructor(
-        pool: PoolAccount,
-        baseCoinDecimals: number,
-    ) {
+    constructor(pool: PoolAccount, baseCoinDecimals: number) {
         this.name = BumpinUtils.decodeString(pool.name);
         this.pnl = pool.pnl.toBigNumberWithDecimals(C.USD_EXPONENT_NUMBER);
         this.apr = pool.apr.toBigNumberWithDecimals(C.RATE_MULTIPLIER_EXPONENT);
@@ -561,6 +558,7 @@ export enum PositionStatus {
 export class UserPosition {
     public positionSize: BigNumber;
     public entryPrice: BigNumber;
+    public marginTokenEntryPrice: BigNumber;
     public initialMargin: BigNumber;
     public initialMarginUsd: BigNumber;
     public initialMarginUsdFromPortfolio: BigNumber;
@@ -599,6 +597,10 @@ export class UserPosition {
         this.entryPrice = userPosition.entryPrice.toBigNumberWithDecimals(
             C.PRICE_EXPONENT_NUMBER,
         );
+        this.marginTokenEntryPrice =
+            userPosition.marginTokenEntryPrice.toBigNumberWithDecimals(
+                C.PRICE_EXPONENT_NUMBER,
+            );
         this.initialMargin = userPosition.initialMargin.toBigNumberWithDecimals(
             userPosition.isLong ? baseCoinDecimals : stableCoinDecimals,
         );
@@ -672,6 +674,7 @@ export class UserPosition {
         return {
             positionSize: new BigNumber(0),
             entryPrice: new BigNumber(0),
+            marginTokenEntryPrice: new BigNumber(0),
             initialMargin: new BigNumber(0),
             initialMarginUsd: new BigNumber(0),
             initialMarginUsdFromPortfolio: new BigNumber(0),

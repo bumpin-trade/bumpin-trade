@@ -16,6 +16,7 @@ use crate::state::trade_token::TradeToken;
 pub struct UserPosition {
     pub position_size: u128,
     pub entry_price: u128,
+    pub margin_token_entry_price: u128,
     pub initial_margin: u128,
     pub initial_margin_usd: u128,
     pub initial_margin_usd_from_portfolio: u128,
@@ -66,6 +67,11 @@ impl UserPosition {
 
     pub fn set_entry_price(&mut self, entry_price: u128) -> BumpResult {
         self.entry_price = entry_price;
+        Ok(())
+    }
+
+    pub fn set_margin_token_entry_price(&mut self, entry_price: u128) -> BumpResult {
+        self.margin_token_entry_price = entry_price;
         Ok(())
     }
 

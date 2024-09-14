@@ -631,10 +631,27 @@ export class UserComponent extends Component {
                 markets[marketIndex].indexMintOracle,
                 0,
             )[0];
+        let marginToken = isEqual(param.positionSide, PositionSide.INCREASE)
+            ? isEqual(param.orderSide, OrderSide.LONG)
+                ? tradeToken
+                : stableTradeToken
+            : isEqual(param.orderSide, OrderSide.LONG)
+            ? stableTradeToken
+            : tradeToken;
+        let marginPrice =
+            this.tradeTokenComponent.getTradeTokenPricesByOracleKey(
+                marginToken.oracleKey,
+                0,
+            )[0];
         if (!indexPrice.price) {
             throw new BumpinInvalidParameter(
                 'Price not found(undefined) for mint: ' +
-                    pool.mintKey.toString(),
+                    markets[marketIndex].indexMintOracle,
+            );
+        }
+        if (!marginPrice.price) {
+            throw new BumpinInvalidParameter(
+                'Price not found(undefined) for mint: ' + marginToken.oracleKey,
             );
         }
 
@@ -663,7 +680,7 @@ export class UserComponent extends Component {
                           : tradeToken.decimals,
                   )
                 : BumpinUtils.number2Precision(
-                      param.orderMargin * indexPrice.price,
+                      param.orderMargin * marginPrice.price,
                       C.USD_EXPONENT_NUMBER,
                   ),
             leverage: param.leverage * C.RATE_MULTIPLIER,

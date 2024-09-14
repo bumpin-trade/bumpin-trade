@@ -331,6 +331,7 @@ export class PositionStatusAccount {
 export type UserPositionAccount = {
     positionSize: BN;
     entryPrice: BN;
+    marginTokenEntryPrice: BN;
     initialMargin: BN;
     initialMarginUsd: BN;
     initialMarginUsdFromPortfolio: BN;

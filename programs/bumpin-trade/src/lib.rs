@@ -186,11 +186,19 @@ pub mod bumpin_trade {
     }
 
     #[track_caller]
-    pub fn update_position_leverage<'a, 'b, 'c: 'info, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, UpdatePositionLeverage>,
+    pub fn update_cross_position_leverage<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, UpdateCrossPositionLeverage>,
         params: UpdatePositionLeverageParams,
     ) -> Result<()> {
-        handle_update_position_leverage(ctx, params)
+        handle_update_cross_position_leverage(ctx, params)
+    }
+
+    #[track_caller]
+    pub fn update_isolate_position_leverage<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, UpdateIsolatePositionLeverage>,
+        params: UpdatePositionLeverageParams,
+    ) -> Result<()> {
+        handle_update_isolate_position_leverage(ctx, params)
     }
 
     pub fn liquidate_isolate_position<'a, 'b, 'c: 'info, 'info>(
