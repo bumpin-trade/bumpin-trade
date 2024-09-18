@@ -171,7 +171,7 @@ pub fn handle_execute_order<'info>(
                 )?;
                 Ok(())
             }
-        }
+        },
 
         PositionSide::DECREASE => {
             {
@@ -227,7 +227,7 @@ pub fn handle_execute_order<'info>(
                 )?;
                 Ok(())
             }
-        }
+        },
     }?;
     //delete order
     user.delete_order(user_order.order_id)?;
@@ -314,7 +314,7 @@ fn get_execution_price(index_price: u128, order: &UserOrder) -> BumpResult<u128>
     if order.order_type.eq(&OrderType::STOP)
         && order.stop_type.eq(&StopType::StopLoss)
         && ((long && order.trigger_price <= index_price)
-        || (!long && order.trigger_price >= index_price))
+            || (!long && order.trigger_price >= index_price))
     {
         return Ok(index_price);
     }
@@ -714,7 +714,7 @@ fn settle_cross<'info>(
             state_account.bump_signer_nonce,
             response.pool_pnl_token.abs().cast::<u128>()?,
         )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
     } else if response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)? > 0i128 {
         token::send_from_program_vault(
             token_program,
@@ -724,7 +724,7 @@ fn settle_cross<'info>(
             state_account.bump_signer_nonce,
             response.pool_pnl_token.safe_sub(add_liability.cast::<i128>()?)?.cast::<u128>()?,
         )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
     }
 
     if !response.is_liquidation {
@@ -763,7 +763,7 @@ fn settle_isolate<'info>(
         state_account.bump_signer_nonce,
         response.settle_margin.abs().cast::<u128>()?,
     )
-        .map_err(|_e| BumpErrorCode::TransferFailed)?;
+    .map_err(|_e| BumpErrorCode::TransferFailed)?;
     Ok(())
 }
 
@@ -839,7 +839,7 @@ pub fn execute_reduce_position_margin(
 
     if position.is_portfolio_margin
         && position.initial_margin_usd.safe_sub(position.initial_margin_usd_from_portfolio)?
-        < reduce_margin_amount
+            < reduce_margin_amount
     {
         position.sub_initial_margin_usd_from_portfolio(
             reduce_margin_amount
@@ -1087,7 +1087,7 @@ fn cal_decrease_close_fee(
                 trade_token.decimals,
                 token_price,
             )
-                .unwrap(),
+            .unwrap(),
             position.close_fee_in_usd,
         ));
     }
@@ -1141,7 +1141,7 @@ pub fn execute_add_position_margin(
         position.add_initial_margin_usd(calculator::token_to_usd_u(
             params.update_margin_amount,
             trade_token.decimals,
-            position.entry_price,
+            position.margin_token_entry_price,
         )?)?;
         position.set_leverage(calculator::div_rate_u(
             position.position_size,
@@ -1522,15 +1522,35 @@ pub fn update_isolate_leverage<'info>(
 
     if position.position_size != 0u128 {
         if position.leverage > params.leverage {
-            let add_margin_amount = params.add_margin_amount;
-            let add_initial_margin_from_portfolio = add_margin_amount;
+            let (position_leverage, position_size, position_entry_price) = {
+                let position = user.get_user_position_mut_ref(position_key)?;
+                position.set_leverage(params.leverage)?;
+                (position.leverage, position.position_size, position.margin_token_entry_price)
+            };
+            let new_initial_margin_in_usd =
+                calculator::div_rate_u(position_size, position_leverage as u128)?;
+            let add_margin_in_usd = if new_initial_margin_in_usd > position.initial_margin_usd {
+                new_initial_margin_in_usd.safe_sub(position.initial_margin_usd)?
+            } else {
+                0u128
+            };
+            let add_margin_amount = calculator::usd_to_token_u(
+                add_margin_in_usd,
+                if position.is_long {
+                    base_trade_token.decimals
+                } else {
+                    stable_trade_token.decimals
+                },
+                position_entry_price,
+            )?;
+
             let position = user.get_user_position_mut_ref(position_key)?;
             execute_add_position_margin(
                 &UpdatePositionMarginParams {
                     position_key: *position_key,
                     is_add: true,
                     update_margin_amount: add_margin_amount,
-                    add_initial_margin_from_portfolio,
+                    add_initial_margin_from_portfolio: add_margin_amount,
                     ..UpdatePositionMarginParams::default()
                 },
                 if position.is_long { &base_trade_token } else { &stable_trade_token },
@@ -1542,9 +1562,9 @@ pub fn update_isolate_leverage<'info>(
                 user_token_account,
                 if position.is_long { pool_vault } else { stable_pool_vault },
                 authority,
-                params.add_margin_amount,
+                add_margin_amount,
             )
-                .map_err(|_e| BumpErrorCode::TransferFailed)?;
+            .map_err(|_e| BumpErrorCode::TransferFailed)?;
         } else {
             let position = user.get_user_position_mut_ref(position_key)?;
             position.set_leverage(params.leverage)?;
@@ -1580,7 +1600,7 @@ pub fn update_isolate_leverage<'info>(
                 state.bump_signer_nonce,
                 reduce_margin_amount,
             )
-                .map_err(|_e| BumpErrorCode::TransferFailed)?
+            .map_err(|_e| BumpErrorCode::TransferFailed)?
         }
     }
     Ok(())

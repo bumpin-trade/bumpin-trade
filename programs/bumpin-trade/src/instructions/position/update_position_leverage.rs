@@ -61,7 +61,6 @@ pub struct UpdatePositionLeverageParams {
     pub is_long: bool,
     pub is_portfolio_margin: bool,
     pub leverage: u32,
-    pub add_margin_amount: u128,
     pub market_index: u16,
     pub pool_index: u16,
     pub stable_pool_index: u16,

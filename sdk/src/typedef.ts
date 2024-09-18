@@ -644,6 +644,7 @@ export type MarketWithIndexTradeTokenPrices = {
 export type PoolSummary = {
     pool: Pool;
     netPrice: BigNumber;
+    availableLiquidate: BigNumber;
     categoryTags: string[];
     markets: MarketWithIndexTradeTokenPrices[];
 };
@@ -663,13 +664,16 @@ export type UserTokenSummary = {
 };
 
 export type UserClaimResult = {
-    total: BigNumber;
-    claimed: BigNumber;
-    unClaim: BigNumber;
+    totalStakingValue: BigNumber;
+    totalApr: BigNumber;
+    totalRewards: BigNumber;
+    totalClaimed: BigNumber;
+    totalUnClaim: BigNumber;
     rewards: Array<UserClaimRewardsResult>;
 };
 export type UserClaimRewardsResult = {
     pool: string;
+    poolIndex: number;
     rewardsAmount: BigNumber;
 };
 

@@ -5911,10 +5911,6 @@ export type BumpinTrade = {
                         type: 'u32';
                     },
                     {
-                        name: 'addMarginAmount';
-                        type: 'u128';
-                    },
-                    {
                         name: 'marketIndex';
                         type: 'u16';
                     },

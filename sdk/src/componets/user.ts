@@ -3,6 +3,7 @@ import {
     AddressLookupTableAccount,
     ConfirmOptions,
     PublicKey,
+    TransactionInstruction,
 } from '@solana/web3.js';
 import {
     AccountNetValue,
@@ -425,6 +426,122 @@ export class UserComponent extends Component {
                     ),
                 ),
             )
+            .signers([])
+            .instruction();
+        await this.sendAndConfirm([ix]);
+    }
+
+    public async updateCrossLeverage(
+        symbol: string,
+        isLong: boolean,
+        isPortfolioMargin: boolean,
+        leverage: number,
+        sync: boolean = false,
+    ) {
+        const user = await this.getUser();
+        const markets = await this.marketComponent.getMarkets(sync);
+        const targetMarkets = markets.filter((market) => {
+            return market.symbol === symbol;
+        });
+        if (targetMarkets.length === 0) {
+            throw new BumpinInvalidParameter('Market not found');
+        }
+        const market = targetMarkets[0];
+        let pool = await this.poolComponent.getPool(market.poolKey);
+        let stablePool = await this.poolComponent.getPool(market.stablePoolKey);
+
+        let params = {
+            symbol: BumpinUtils.encodeString(symbol),
+            isLong: isLong,
+            isPortfolioMargin: isPortfolioMargin,
+            leverage: leverage,
+            marketIndex: market.index,
+            poolIndex: pool.index,
+            stablePoolIndex: stablePool.index,
+        };
+        const ix = await this.program.methods
+            .updateCrossPositionLeverage(params)
+            .accounts({
+                authority: user.authority,
+            })
+            .signers([])
+            .instruction();
+        await this.sendAndConfirm([ix]);
+    }
+
+    public async claimRewards(poolIndexs: number[], sync: boolean = false) {
+        const user = await this.getUser();
+        let ixs: TransactionInstruction[] = [];
+        for (let i = 0; i < poolIndexs.length; i++) {
+            let poolPda = BumpinUtils.getPoolPda(
+                this.program,
+                poolIndexs[i],
+            )[0];
+            let pool = await this.poolComponent.getPool(poolPda, sync);
+
+            const userTokenAccount = (
+                await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(
+                    this.program.provider.connection,
+                    user.authority,
+                    pool.mintKey,
+                )
+            ).address;
+            const ix = await this.program.methods
+                .claimRewards(poolIndexs[i])
+                .accounts({
+                    authority: user.authority,
+                    userTokenAccount: userTokenAccount,
+                    bumpSigner: (await this.getState()).bumpSigner,
+                })
+                .signers([])
+                .instruction();
+            ixs.push(ix);
+        }
+        await this.sendAndConfirm(ixs);
+    }
+
+    public async updateIsolateLeverage(
+        symbol: string,
+        isLong: boolean,
+        isPortfolioMargin: boolean,
+        leverage: number,
+        sync: boolean = false,
+    ) {
+        const user = await this.getUser();
+        const markets = await this.marketComponent.getMarkets(sync);
+        const targetMarkets = markets.filter((market) => {
+            return market.symbol === symbol;
+        });
+        if (targetMarkets.length === 0) {
+            throw new BumpinInvalidParameter('Market not found');
+        }
+        const market = targetMarkets[0];
+        let pool = await this.poolComponent.getPool(market.poolKey);
+        let stablePool = await this.poolComponent.getPool(market.stablePoolKey);
+
+        let params = {
+            symbol: BumpinUtils.encodeString(symbol),
+            isLong: isLong,
+            isPortfolioMargin: isPortfolioMargin,
+            leverage: leverage,
+            marketIndex: market.index,
+            poolIndex: pool.index,
+            stablePoolIndex: stablePool.index,
+        };
+        const userTokenAccount = (
+            await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(
+                this.program.provider.connection,
+                user.authority,
+                isLong ? market.poolMintKey : market.stablePoolMintKey,
+            )
+        ).address;
+        const ix = await this.program.methods
+            .updateIsolatePositionLeverage(params)
+            .accounts({
+                authority: user.authority,
+                bumpSigner: (await this.getState()).bumpSigner,
+                userTokenAccount: userTokenAccount,
+            })
             .signers([])
             .instruction();
         await this.sendAndConfirm([ix]);

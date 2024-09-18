@@ -5167,10 +5167,6 @@
                         "type": "u32"
                     },
                     {
-                        "name": "add_margin_amount",
-                        "type": "u128"
-                    },
-                    {
                         "name": "market_index",
                         "type": "u16"
                     },

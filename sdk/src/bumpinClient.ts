@@ -373,6 +373,10 @@ export class BumpinClient {
             let poolSummary: PoolSummary = {
                 pool: pool,
                 netPrice: await this.getPoolNetPrice(pool.key, sync),
+                availableLiquidate: await this.getPoolLiquidate(
+                    pool.index,
+                    sync,
+                ),
                 categoryTags: [],
                 markets: [],
             };
@@ -596,6 +600,36 @@ export class BumpinClient {
         );
     }
 
+    public async claimRewards(poolIndexs: number[], sync: boolean = false) {
+        this.checkInitialization(true);
+        await this.userComponent!.claimRewards(poolIndexs, sync);
+    }
+
+    public async updateLeverage(
+        symbol: string,
+        isLong: boolean,
+        isPortfolioMargin: boolean,
+        leverage: number,
+        sync: boolean = false,
+    ) {
+        this.checkInitialization(true);
+        isPortfolioMargin
+            ? await this.userComponent!.updateCrossLeverage(
+                  symbol,
+                  isLong,
+                  isPortfolioMargin,
+                  leverage,
+                  sync,
+              )
+            : await this.userComponent!.updateIsolateLeverage(
+                  symbol,
+                  isLong,
+                  isPortfolioMargin,
+                  leverage,
+                  sync,
+              );
+    }
+
     public async getUser(sync: boolean = false): Promise<User> {
         this.checkInitialization(true);
         return this.userComponent!.getUser(sync);
@@ -794,11 +828,6 @@ export class BumpinClient {
     ): Promise<BigNumber> {
         this.checkInitialization();
         const pool = await this.getPoolByIndex(poolIndex, sync);
-        const price = (await this.getTradeTokenPriceByMintKey(pool.mintKey))
-            .price!;
-        const stableCoinPrice = (
-            await this.getTradeTokenPriceByMintKey(pool.stableMintKey)
-        ).price!;
 
         let baseTokenAmount = pool.balance.amount
             .plus(pool.balance.unSettleAmount)
@@ -1034,13 +1063,15 @@ export class BumpinClient {
     }
 
     //TODO: Jax, check this
-    public async claimUserRewards(): Promise<UserClaimResult> {
+    public async summaryClaimUserRewards(): Promise<UserClaimResult> {
         this.checkInitialization(true);
         let user = await this.getUser();
         let claimResult: UserClaimResult = {
-            claimed: BigNumber(0),
-            unClaim: BigNumber(0),
-            total: BigNumber(0),
+            totalStakingValue: BigNumber(0),
+            totalApr: BigNumber(0),
+            totalRewards: BigNumber(0),
+            totalClaimed: BigNumber(0),
+            totalUnClaim: BigNumber(0),
             rewards: [],
         };
         for (const stake of user.stakes) {
@@ -1052,30 +1083,57 @@ export class BumpinClient {
                 const price = this.tradeTokenComponent!.getTradeTokenPrices(
                     stake.userRewards.tokenKey,
                 ).price!;
-                let unRealisedRewards =
+                let unRealisedRewards = BigNumber(0);
+                if (
+                    !stake.userRewards.openRewardsPerStakeToken.eq(
+                        pool.feeReward.cumulativeRewardsPerStakeToken,
+                    ) &&
+                    stake.stakedShare.gt(0) &&
                     pool.feeReward.cumulativeRewardsPerStakeToken
                         .minus(stake.userRewards.openRewardsPerStakeToken)
-                        .multipliedBy(stake.stakedShare);
-
-                claimResult.total = claimResult.total.plus(
-                    unRealisedRewards
-                        .plus(stake.userRewards.totalClaimRewardsAmount)
-                        .multipliedBy(price),
-                );
-                claimResult.claimed = claimResult.claimed.plus(
+                        .gt(
+                            pool.feeReward.lastRewardsPerStakeTokenDeltas.reduce(
+                                (acc, curr) => acc.plus(curr),
+                                BigNumber(0),
+                            ),
+                        )
+                ) {
+                    unRealisedRewards =
+                        pool.feeReward.cumulativeRewardsPerStakeToken.minus(
+                            stake.userRewards.openRewardsPerStakeToken,
+                        );
+                }
+                claimResult.totalStakingValue =
+                    claimResult.totalStakingValue.plus(
+                        stake.stakedShare.multipliedBy(
+                            await this.getPoolNetPrice(pool.key, true),
+                        ),
+                    );
+                claimResult.totalApr = claimResult.totalApr.plus(pool.apr);
+                let claimed =
                     stake.userRewards.totalClaimRewardsAmount.multipliedBy(
                         price,
-                    ),
-                );
-                claimResult.unClaim = claimResult.unClaim.plus(
+                    );
+                claimResult.totalClaimed =
+                    claimResult.totalClaimed.plus(claimed);
+                claimResult.totalUnClaim = claimResult.totalUnClaim.plus(
                     unRealisedRewards.multipliedBy(price),
                 );
+                claimResult.totalRewards = claimResult.totalRewards
+                    .plus(claimed)
+                    .plus(unRealisedRewards.multipliedBy(price));
                 let userClaimRewardsResult: UserClaimRewardsResult = {
                     pool: pool.name,
-                    rewardsAmount: unRealisedRewards.multipliedBy(price),
+                    poolIndex: pool.index,
+                    rewardsAmount: unRealisedRewards,
                 };
                 claimResult.rewards.push(userClaimRewardsResult);
             }
+        }
+        if (claimResult.totalApr.gt(0) && claimResult.rewards.length > 0) {
+            claimResult.totalApr = claimResult.totalApr.multipliedBy(
+                claimResult.rewards.length,
+            );
         }
         return claimResult;
     }

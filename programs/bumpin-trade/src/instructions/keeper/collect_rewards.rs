@@ -2,9 +2,10 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::errors::BumpErrorCode;
-use crate::instructions::calculator;
-use crate::math::constants::PER_TOKEN_PRECISION;
+use crate::instructions::{calculator, div_to_precision_u, token_to_usd_u};
+use crate::math::constants::{PER_TOKEN_PRECISION, RATE_PRECISION};
 use crate::math::safe_math::SafeMath;
+use crate::processor::optional_accounts::{load_maps, AccountMaps};
 use crate::state::pool::Pool;
 use crate::state::rewards::Rewards;
 use crate::state::state::State;
@@ -102,10 +103,19 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
     let mut pool = ctx.accounts.pool.load_mut()?;
     let total_supply = pool.total_supply;
     let fee_reward = &pool.fee_reward;
+    let remaining_accounts = ctx.remaining_accounts;
+    let AccountMaps { mut oracle_map, trade_token_map, market_map, .. } =
+        load_maps(remaining_accounts)?;
+    let trade_token = ctx.accounts.trade_token.load()?;
 
     validate!(total_supply > 0u128, BumpErrorCode::PoolMintSupplyIsZero)?;
 
     let total_fee_amount = fee_reward.fee_amount;
+    let total_fee_value = token_to_usd_u(total_fee_amount, trade_token.decimals, oracle_map.get_price_data(&trade_token.oracle_key)?.price)?;
+
+    let pool_value = pool.get_pool_usd_value(&trade_token_map, &mut oracle_map, &market_map)?;
+    let apr = div_to_precision_u(total_fee_value, pool_value, RATE_PRECISION)?;
+    pool.set_apr(apr)?;
     //split fee to pool_rewards & dao_rewards
     let pool_rewards_amount =
         calculator::mul_rate_u(total_fee_amount, ctx.accounts.state.pool_fee_reward_ratio as u128)?;
@@ -120,7 +130,7 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
         ctx.accounts.state.bump_signer_nonce,
         pool_rewards_amount,
     )
-    .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
     // record pool rewards
     let mut rewards = ctx.accounts.rewards.load_mut()?;
     rewards.add_pool_total_rewards_amount(pool_rewards_amount)?;
@@ -140,7 +150,7 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
         ctx.accounts.state.bump_signer_nonce,
         dao_rewards_amount,
     )
-    .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        .map_err(|_e| BumpErrorCode::TransferFailed)?;
     rewards.add_dao_total_rewards_amount(dao_rewards_amount)?;
     Ok(())
 }

@@ -77,6 +77,10 @@ pub struct PoolConfig {
 }
 
 impl Pool {
+    pub fn set_apr(&mut self, apr: u128) -> BumpResult<()> {
+        self.apr = apr;
+        Ok(())
+    }
     pub fn add_pnl(&mut self, pool_pnl: i128) -> BumpResult<()> {
         self.pnl = self.pnl.safe_add(pool_pnl)?;
         Ok(())
