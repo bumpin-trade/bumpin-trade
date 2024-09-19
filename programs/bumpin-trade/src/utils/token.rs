@@ -21,7 +21,7 @@ pub fn send_from_program_vault<'info>(
     };
     let cpi_program = token_program.to_account_info();
     let cpi_context = CpiContext::new_with_signer(cpi_program, cpi_accounts, signers);
-    token::transfer(cpi_context, amount.cast::<u64>().unwrap())
+    token::transfer(cpi_context, amount.cast::<u64>()?)
 }
 
 pub fn receive<'info>(
