@@ -1147,13 +1147,12 @@ export class BumpinClient {
         };
         for (const stake of user.stakes) {
             if (
-                isEqual(stake.userStakeStatus, UserStakeStatus.USING) &&
-                stake.userRewards.openRewardsPerStakeToken.gt(BigNumber(0))
+                isEqual(stake.userStakeStatus, UserStakeStatus.USING)
             ) {
                 let pool = await this.getPool(stake.poolKey);
-                const price = this.tradeTokenComponent!.getTradeTokenPrices(
-                    stake.userRewards.tokenKey,
-                ).price!;
+                const price = (await this.tradeTokenComponent!.getTradeTokenPricesByMintKey(
+                    pool.mintKey,
+                )).price!;
                 let unRealisedRewards = BigNumber(0);
                 if (
                     !stake.userRewards.openRewardsPerStakeToken.eq(
