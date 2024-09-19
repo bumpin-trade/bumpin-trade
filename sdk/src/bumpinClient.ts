@@ -54,6 +54,7 @@ import './types/bnExt';
 import {
     Market,
     Pool,
+    PositionStatus,
     State,
     TradeToken,
     User,
@@ -415,6 +416,76 @@ export class BumpinClient {
         }
 
         return poolSummaries;
+    }
+
+    public async getPositionLiqPrice(
+        market: Market,
+        isCross: boolean,
+        sync: boolean = false,
+    ): Promise<BigNumber> {
+        let user = await this.getUser(sync);
+        let userPositions = user.positions;
+
+        let positions = userPositions.filter((p) => {
+            return (
+                p.status === PositionStatus.USING &&
+                p.symbol === market.symbol &&
+                p.isPortfolioMargin === isCross
+            );
+        });
+        if (positions.length === 0) {
+            throw new Error('no position find');
+        }
+        const position = userPositions[0];
+        const indexTradeTokenPrice = (
+            await this.getTradeTokenPriceByOracleKey(position.indexMintOracle)
+        ).price!;
+        const state = await this.getState();
+        let liquidationPrice;
+        if (position.isPortfolioMargin) {
+            const userNetValue = await this.getUserAccountNetValue(true);
+            const totalSize = userPositions
+                .filter((position) => position.isPortfolioMargin)
+                .map((position) => {
+                    return position.positionSize;
+                })
+                .reduce((acc, curr) => acc.plus(curr), new BigNumber(0));
+            const bankruptcyMr = userNetValue.netValue.dividedBy(totalSize);
+            liquidationPrice = async () => {
+                const bankruptcyPrice = position.isLong
+                    ? indexTradeTokenPrice * (1 - bankruptcyMr.toNumber())
+                    : indexTradeTokenPrice * (1 + bankruptcyMr.toNumber());
+                const mmRate = Math.min(
+                    1 / (market.config.maximumLeverage / 2),
+                    state.maximumMaintenanceMarginRate,
+                );
+                return position.isLong
+                    ? bankruptcyPrice / (1 - mmRate)
+                    : bankruptcyPrice / (1 + mmRate);
+            };
+        } else {
+            liquidationPrice = async () => {
+                let positionSettle = await this.settlePosition(
+                    position.positionKey,
+                    position.positionSize,
+                );
+                const positionValue = position.isLong
+                    ? position.positionSize
+                          .minus(position.initialMarginUsd)
+                          .plus(position.mmUsd)
+                          .plus(positionSettle.positionFee)
+                    : position.positionSize
+                          .plus(position.initialMarginUsd)
+                          .minus(position.mmUsd)
+                          .minus(positionSettle.positionFee);
+                return positionValue
+                    .multipliedBy(position.entryPrice)
+                    .dividedBy(position.positionSize)
+                    .toNumber();
+            };
+        }
+
+        return BigNumber(await liquidationPrice());
     }
 
     public async getUserSummary(sync: boolean = false): Promise<UserSummary> {
