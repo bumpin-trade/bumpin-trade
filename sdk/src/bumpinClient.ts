@@ -1151,28 +1151,28 @@ export class BumpinClient {
             ) {
                 let pool = await this.getPool(stake.poolKey);
                 const price = (await this.tradeTokenComponent!.getTradeTokenPricesByMintKey(
-                    pool.mintKey,
+                    pool.mintKey,true
                 )).price!;
                 let unRealisedRewards = BigNumber(0);
-                if (
-                    !stake.userRewards.openRewardsPerStakeToken.eq(
-                        pool.feeReward.cumulativeRewardsPerStakeToken,
-                    ) &&
-                    stake.stakedShare.gt(0) &&
-                    pool.feeReward.cumulativeRewardsPerStakeToken
-                        .minus(stake.userRewards.openRewardsPerStakeToken)
-                        .gt(
-                            pool.feeReward.lastRewardsPerStakeTokenDeltas.reduce(
-                                (acc, curr) => acc.plus(curr),
-                                BigNumber(0),
-                            ),
-                        )
-                ) {
+                // if (
+                //     !stake.userRewards.openRewardsPerStakeToken.eq(
+                //         pool.feeReward.cumulativeRewardsPerStakeToken,
+                //     ) &&
+                //     stake.stakedShare.gt(0) &&
+                //     pool.feeReward.cumulativeRewardsPerStakeToken
+                //         .minus(stake.userRewards.openRewardsPerStakeToken)
+                //         .gt(
+                //             pool.feeReward.lastRewardsPerStakeTokenDeltas.reduce(
+                //                 (acc, curr) => acc.plus(curr),
+                //                 BigNumber(0),
+                //             ),
+                //         )
+                // ) {
                     unRealisedRewards =
                         pool.feeReward.cumulativeRewardsPerStakeToken.minus(
                             stake.userRewards.openRewardsPerStakeToken,
                         );
-                }
+                // }
                 claimResult.totalStakingValue =
                     claimResult.totalStakingValue.plus(
                         stake.stakedShare.multipliedBy(
