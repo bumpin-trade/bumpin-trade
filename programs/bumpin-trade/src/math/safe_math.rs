@@ -77,7 +77,7 @@ macro_rules! checked_impl {
             #[track_caller]
             #[inline(always)]
             fn safe_mul_per_rate(self, v: $t) -> BumpResult<$t> {
-                self.safe_mul(v)?.safe_div(PER_TOKEN_PRECISION_NUMBER.cast()?)
+                self.safe_mul(v)?.safe_div(PER_TOKEN_PRECISION.cast()?)
             }
 
             #[track_caller]
