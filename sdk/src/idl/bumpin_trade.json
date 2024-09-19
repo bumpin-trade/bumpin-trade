@@ -1,5 +1,5 @@
 {
-    "address": "Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR",
+    "address": "AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca",
     "metadata": {
         "name": "bumpin_trade",
         "version": "0.1.0",
@@ -819,7 +819,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "_pool_index"
+                                "path": "params.pool_index"
                             }
                         ]
                     }
@@ -839,26 +839,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "_pool_index"
-                            }
-                        ]
-                    }
-                },
-                {
-                    "name": "pool_vault",
-                    "writable": true,
-                    "pda": {
-                        "seeds": [
-                            {
-                                "kind": "const",
-                                "value": [
-                                    112, 111, 111, 108, 95, 118, 97, 117, 108,
-                                    116
-                                ]
-                            },
-                            {
-                                "kind": "arg",
-                                "path": "_pool_index"
+                                "path": "params.pool_index"
                             }
                         ]
                     }
@@ -877,7 +858,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "_pool_index"
+                                "path": "params.pool_index"
                             }
                         ]
                     }
@@ -892,8 +873,12 @@
             ],
             "args": [
                 {
-                    "name": "_pool_index",
-                    "type": "u16"
+                    "name": "params",
+                    "type": {
+                        "defined": {
+                            "name": "ClaimRewardsParams"
+                        }
+                    }
                 }
             ]
         },
@@ -3746,6 +3731,18 @@
                     {
                         "name": "order_id",
                         "type": "u64"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "ClaimRewardsParams",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "pool_index",
+                        "type": "u16"
                     }
                 ]
             }

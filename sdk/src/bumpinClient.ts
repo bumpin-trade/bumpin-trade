@@ -1146,14 +1146,19 @@ export class BumpinClient {
             rewards: [],
         };
         for (const stake of user.stakes) {
-            if (
-                isEqual(stake.userStakeStatus, UserStakeStatus.USING)
-            ) {
+            if (isEqual(stake.userStakeStatus, UserStakeStatus.USING)) {
                 let pool = await this.getPool(stake.poolKey);
-                let tradeToken = (await this.tradeTokenComponent!.getTradeTokenByMintKey(pool.mintKey,true));
-                const price = (await this.tradeTokenComponent!.getTradeTokenPricesByMintKey(
-                    pool.mintKey,true
-                )).price!;
+                let tradeToken =
+                    await this.tradeTokenComponent!.getTradeTokenByMintKey(
+                        pool.mintKey,
+                        true,
+                    );
+                const price = (
+                    await this.tradeTokenComponent!.getTradeTokenPricesByMintKey(
+                        pool.mintKey,
+                        true,
+                    )
+                ).price!;
                 let unRealisedRewards = BigNumber(0);
                 // if (
                 //     !stake.userRewards.openRewardsPerStakeToken.eq(
@@ -1169,10 +1174,10 @@ export class BumpinClient {
                 //             ),
                 //         )
                 // ) {
-                    unRealisedRewards =
-                        pool.feeReward.cumulativeRewardsPerStakeToken.minus(
-                            stake.userRewards.openRewardsPerStakeToken,
-                        );
+                unRealisedRewards =
+                    pool.feeReward.cumulativeRewardsPerStakeToken.minus(
+                        stake.userRewards.openRewardsPerStakeToken,
+                    );
                 // }
                 claimResult.totalStakingValue =
                     claimResult.totalStakingValue.plus(

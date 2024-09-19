@@ -487,7 +487,7 @@ export class UserComponent extends Component {
                 )
             ).address;
             const ix = await this.program.methods
-                .claimRewards(poolIndexs[i])
+                .claimRewards({ poolIndex: poolIndexs[i] })
                 .accounts({
                     authority: user.authority,
                     userTokenAccount: userTokenAccount,

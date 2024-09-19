@@ -4,6 +4,7 @@ use anchor_spl::token::{Token, TokenAccount};
 use crate::errors::BumpErrorCode;
 use crate::instructions::calculator;
 use crate::instructions::constraints::*;
+use crate::instructions::ClaimRewardsParams;
 use crate::processor::user_processor;
 use crate::state::infrastructure::user_stake::UserStakeStatus;
 use crate::state::pool::Pool;
@@ -13,7 +14,7 @@ use crate::state::user::User;
 use crate::{utils, validate};
 
 #[derive(Accounts)]
-#[instruction(_pool_index: u16,)]
+#[instruction(params: ClaimRewardsParams,)]
 pub struct ClaimRewards<'info> {
     #[account(
         seeds = [b"bump_state".as_ref()],
@@ -33,34 +34,27 @@ pub struct ClaimRewards<'info> {
 
     #[account(
         mut,
-        seeds = [b"rewards".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        seeds = [b"rewards".as_ref(), params.pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub rewards: AccountLoader<'info, Rewards>,
 
     #[account(
         mut,
-        constraint = user_token_account.owner.eq(& user.load() ?.authority) && pool_vault.mint.eq(& user_token_account.mint),
+        constraint = user_token_account.owner.eq(& user.load() ?.authority) && pool_rewards_vault.mint.eq(& user_token_account.mint),
     )]
     pub user_token_account: Account<'info, TokenAccount>,
 
     #[account(
         mut,
-        seeds = [b"pool".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool".as_ref(), params.pool_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
         mut,
-        seeds = [b"pool_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
-        bump,
-    )]
-    pub pool_vault: Box<Account<'info, TokenAccount>>,
-
-    #[account(
-        mut,
-        seeds = [b"pool_rewards_vault".as_ref(), _pool_index.to_le_bytes().as_ref()],
+        seeds = [b"pool_rewards_vault".as_ref(), params.pool_index.to_le_bytes().as_ref()],
         bump,
         token::authority = bump_signer
     )]
@@ -78,10 +72,12 @@ pub struct ClaimRewards<'info> {
 
 pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, ClaimRewards<'c>>,
+    params: ClaimRewardsParams,
 ) -> Result<()> {
     let mut user = ctx.accounts.user.load_mut()?;
     let mut pool = ctx.accounts.pool.load_mut()?;
     let mut reward = ctx.accounts.rewards.load_mut()?;
+    validate!(params.pool_index == pool.index, BumpErrorCode::InvalidPoolAccount)?;
     user_processor::update_account_fee_reward(&mut pool, &mut user)?;
     let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
     validate!(

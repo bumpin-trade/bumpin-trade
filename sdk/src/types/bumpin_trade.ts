@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/bumpin_trade.json`.
  */
 export type BumpinTrade = {
-    address: 'Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR';
+    address: 'AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca';
     metadata: {
         name: 'bumpinTrade';
         version: '0.1.0';
@@ -1034,7 +1034,7 @@ export type BumpinTrade = {
                             },
                             {
                                 kind: 'arg';
-                                path: 'poolIndex';
+                                path: 'params.pool_index';
                             },
                         ];
                     };
@@ -1054,34 +1054,7 @@ export type BumpinTrade = {
                             },
                             {
                                 kind: 'arg';
-                                path: 'poolIndex';
-                            },
-                        ];
-                    };
-                },
-                {
-                    name: 'poolVault';
-                    writable: true;
-                    pda: {
-                        seeds: [
-                            {
-                                kind: 'const';
-                                value: [
-                                    112,
-                                    111,
-                                    111,
-                                    108,
-                                    95,
-                                    118,
-                                    97,
-                                    117,
-                                    108,
-                                    116,
-                                ];
-                            },
-                            {
-                                kind: 'arg';
-                                path: 'poolIndex';
+                                path: 'params.pool_index';
                             },
                         ];
                     };
@@ -1116,7 +1089,7 @@ export type BumpinTrade = {
                             },
                             {
                                 kind: 'arg';
-                                path: 'poolIndex';
+                                path: 'params.pool_index';
                             },
                         ];
                     };
@@ -1131,8 +1104,12 @@ export type BumpinTrade = {
             ];
             args: [
                 {
-                    name: 'poolIndex';
-                    type: 'u16';
+                    name: 'params';
+                    type: {
+                        defined: {
+                            name: 'claimRewardsParams';
+                        };
+                    };
                 },
             ];
         },
@@ -4490,6 +4467,18 @@ export type BumpinTrade = {
                     {
                         name: 'orderId';
                         type: 'u64';
+                    },
+                ];
+            };
+        },
+        {
+            name: 'claimRewardsParams';
+            type: {
+                kind: 'struct';
+                fields: [
+                    {
+                        name: 'poolIndex';
+                        type: 'u16';
                     },
                 ];
             };

@@ -1,6 +1,11 @@
 pub mod auto_compound;
 pub mod claim_reward;
 
-pub use crate::instructions::keeper::collect_rewards::*;
+use anchor_lang::prelude::*;
 pub use auto_compound::*;
 pub use claim_reward::*;
+
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Copy, Eq, PartialEq)]
+pub struct ClaimRewardsParams {
+    pool_index: u16,
+}

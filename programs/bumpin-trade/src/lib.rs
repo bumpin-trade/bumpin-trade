@@ -234,9 +234,9 @@ pub mod bumpin_trade {
     #[track_caller]
     pub fn claim_rewards<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, ClaimRewards<'c>>,
-        _pool_index: u16,
+        params: ClaimRewardsParams,
     ) -> Result<()> {
-        handle_claim_rewards(ctx)
+        handle_claim_rewards(ctx, params)
     }
 
     #[track_caller]
