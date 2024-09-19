@@ -1150,6 +1150,7 @@ export class BumpinClient {
                 isEqual(stake.userStakeStatus, UserStakeStatus.USING)
             ) {
                 let pool = await this.getPool(stake.poolKey);
+                let tradeToken = (await this.tradeTokenComponent!.getTradeTokenByMintKey(pool.mintKey,true));
                 const price = (await this.tradeTokenComponent!.getTradeTokenPricesByMintKey(
                     pool.mintKey,true
                 )).price!;
@@ -1195,6 +1196,7 @@ export class BumpinClient {
                 let userClaimRewardsResult: UserClaimRewardsResult = {
                     pool: pool.name,
                     poolIndex: pool.index,
+                    decimals: tradeToken.decimals,
                     rewardsAmount: unRealisedRewards,
                 };
                 claimResult.rewards.push(userClaimRewardsResult);

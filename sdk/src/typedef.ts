@@ -674,6 +674,7 @@ export type UserClaimResult = {
 export type UserClaimRewardsResult = {
     pool: string;
     poolIndex: number;
+    decimals: number;
     rewardsAmount: BigNumber;
 };
 
