@@ -1193,16 +1193,16 @@ export class BumpinClient {
                 claimResult.totalClaimed =
                     claimResult.totalClaimed.plus(claimed);
                 claimResult.totalUnClaim = claimResult.totalUnClaim.plus(
-                    unRealisedRewards.multipliedBy(price),
+                    unRealisedRewards.multipliedBy(stake.stakedShare).multipliedBy(price),
                 );
                 claimResult.totalRewards = claimResult.totalRewards
                     .plus(claimed)
-                    .plus(unRealisedRewards.multipliedBy(price));
+                    .plus(unRealisedRewards.multipliedBy(stake.stakedShare).multipliedBy(price));
                 let userClaimRewardsResult: UserClaimRewardsResult = {
                     pool: pool.name,
                     poolIndex: pool.index,
                     decimals: tradeToken.decimals,
-                    rewardsAmount: unRealisedRewards,
+                    rewardsAmount: unRealisedRewards.multipliedBy(stake.stakedShare),
                 };
                 claimResult.rewards.push(userClaimRewardsResult);
             }
