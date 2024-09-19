@@ -78,6 +78,8 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
     let mut pool = ctx.accounts.pool.load_mut()?;
     let mut reward = ctx.accounts.rewards.load_mut()?;
     validate!(params.pool_index == pool.index, BumpErrorCode::InvalidPoolAccount)?;
+    msg!("=========handle_claim_rewards, user_key:{}", user.authority);
+    msg!("=========handle_claim_rewards, pool_key:{}", pool.key);
     user_processor::update_account_fee_reward(&mut pool, &mut user)?;
     let user_stake = user.get_user_stake_mut_ref(&pool.key)?;
     validate!(
