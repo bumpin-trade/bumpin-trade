@@ -2,7 +2,7 @@ use crate::errors::{BumpErrorCode, BumpResult};
 use crate::math::bn::{U192, U256};
 use crate::math::casting::Cast;
 use crate::math::ceil_div::CheckedCeilDiv;
-use crate::math::constants::{PER_TOKEN_PRECISION_NUMBER, RATE_PRECISION, SMALL_RATE_PRECISION};
+use crate::math::constants::{PER_TOKEN_PRECISION, RATE_PRECISION, SMALL_RATE_PRECISION};
 use crate::math::floor_div::CheckedFloorDiv;
 use anchor_lang::prelude::*;
 use std::panic::Location;
