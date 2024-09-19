@@ -71,6 +71,8 @@ pub enum BumpErrorCode {
     OnlyIsolatePositionAllowed,
     #[msg("CouldNotFindUserStake")]
     CouldNotFindUserStake,
+    #[msg("UserStakeHasNoMoreClaim")]
+    UserStakeHasNoMoreClaim,
     #[msg("OracleNotFound")]
     OracleNotFound,
     #[msg("OraclePriceToOld")]

@@ -85,7 +85,7 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
     validate!(
         user_stake.user_stake_status.eq(&UserStakeStatus::USING)
             && user_stake.user_rewards.realised_rewards_token_amount > 0u128,
-        BumpErrorCode::CouldNotFindUserStake
+        BumpErrorCode::UserStakeHasNoMoreClaim
     )?;
     //transfer token to user wallet
     let bump_signer_nonce = ctx.accounts.state.bump_signer_nonce;
