@@ -389,7 +389,6 @@ export class UserComponent extends Component {
     ) {
         const me = await this.getUser(sync);
         const tradeTokens = await this.tradeTokenComponent.getTradeTokens(sync);
-        const [statePda, _] = BumpinUtils.getBumpinStatePda(this.program);
         let targetTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
             mintPublicKey,
             tradeTokens,
@@ -459,11 +458,15 @@ export class UserComponent extends Component {
             poolIndex: pool.index,
             stablePoolIndex: stablePool.index,
         };
+        let accountMetas = BumpinUtils.removeDuplicateAccounts(
+            (await this.essentialRemainingAccounts()),
+        );
         const ix = await this.program.methods
             .updateCrossPositionLeverage(params)
             .accounts({
                 authority: user.authority,
             })
+            .remainingAccounts(accountMetas)
             .signers([])
             .instruction();
         await this.sendAndConfirm([ix]);

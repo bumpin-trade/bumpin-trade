@@ -1210,7 +1210,9 @@ export class BumpinClient {
                         stake.stakedShare,
                     ),
                 };
-                claimResult.rewards.push(userClaimRewardsResult);
+                if (userClaimRewardsResult.rewardsAmount.gt(0)){
+                    claimResult.rewards.push(userClaimRewardsResult);
+                }
             }
         }
         if (claimResult.totalApr.gt(0) && claimResult.rewards.length > 0) {
