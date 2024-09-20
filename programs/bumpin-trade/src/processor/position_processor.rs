@@ -1423,7 +1423,7 @@ pub fn update_cross_leverage<'info>(
             let cross_available_value = user.get_available_value(trade_token_map, oracle_map)?;
             msg!("=========update_cross_leverage,cross_available_value: {}", cross_available_value);
             validate!(
-                add_margin_in_usd.cast::<i128>()? > cross_available_value,
+                add_margin_in_usd.cast::<i128>()? < cross_available_value,
                 BumpErrorCode::UserAvailableValueNotEnough.into()
             )?;
 
