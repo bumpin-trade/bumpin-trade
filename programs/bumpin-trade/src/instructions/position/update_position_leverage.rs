@@ -34,6 +34,7 @@ pub struct UpdateCrossPositionLeverage<'info> {
     pub state: Box<Account<'info, State>>,
 
     #[account(
+        mut,
         seeds = [b"pool", params.pool_index.to_le_bytes().as_ref()],
         bump,
         constraint = pool.load() ?.key.eq(& market.load()?.pool_key),
@@ -41,6 +42,7 @@ pub struct UpdateCrossPositionLeverage<'info> {
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
+        mut,
         seeds = [b"pool", params.stable_pool_index.to_le_bytes().as_ref()],
         bump,
         constraint = stable_pool.load() ?.key.eq(& market.load()?.stable_pool_key),
@@ -48,6 +50,7 @@ pub struct UpdateCrossPositionLeverage<'info> {
     pub stable_pool: AccountLoader<'info, Pool>,
 
     #[account(
+        mut,
         seeds = [b"market", params.market_index.to_le_bytes().as_ref()],
         bump,
         constraint = market.load()?. symbol.eq(&params.symbol)
@@ -140,6 +143,7 @@ pub struct UpdateIsolatePositionLeverage<'info> {
     pub state: Box<Account<'info, State>>,
 
     #[account(
+        mut,
         seeds = [b"pool", params.pool_index.to_le_bytes().as_ref()],
         bump,
         constraint = pool.load() ?.key.eq(& market.load()?.pool_key),
@@ -147,6 +151,7 @@ pub struct UpdateIsolatePositionLeverage<'info> {
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
+        mut,
         seeds = [b"pool", params.stable_pool_index.to_le_bytes().as_ref()],
         bump,
         constraint = stable_pool.load() ?.key.eq(& market.load()?.stable_pool_key),
@@ -154,6 +159,7 @@ pub struct UpdateIsolatePositionLeverage<'info> {
     pub stable_pool: AccountLoader<'info, Pool>,
 
     #[account(
+        mut,
         seeds = [b"market", params.market_index.to_le_bytes().as_ref()],
         bump,
         constraint = market.load()?. symbol.eq(&params.symbol),
@@ -161,6 +167,7 @@ pub struct UpdateIsolatePositionLeverage<'info> {
     pub market: AccountLoader<'info, Market>,
 
     #[account(
+        mut,
         seeds = [b"pool_vault".as_ref(), params.pool_index.to_le_bytes().as_ref()],
         bump,
         token::mint = pool.load() ?.mint_key,

@@ -2550,6 +2550,7 @@
                 },
                 {
                     "name": "pool",
+                    "writable": true,
                     "pda": {
                         "seeds": [
                             {
@@ -2565,6 +2566,7 @@
                 },
                 {
                     "name": "stable_pool",
+                    "writable": true,
                     "pda": {
                         "seeds": [
                             {
@@ -2580,6 +2582,7 @@
                 },
                 {
                     "name": "market",
+                    "writable": true,
                     "pda": {
                         "seeds": [
                             {
@@ -2649,6 +2652,7 @@
                 },
                 {
                     "name": "pool",
+                    "writable": true,
                     "pda": {
                         "seeds": [
                             {
@@ -2664,6 +2668,7 @@
                 },
                 {
                     "name": "stable_pool",
+                    "writable": true,
                     "pda": {
                         "seeds": [
                             {
@@ -2679,6 +2684,7 @@
                 },
                 {
                     "name": "market",
+                    "writable": true,
                     "pda": {
                         "seeds": [
                             {
@@ -2694,6 +2700,7 @@
                 },
                 {
                     "name": "pool_mint_vault",
+                    "writable": true,
                     "pda": {
                         "seeds": [
                             {
@@ -3393,186 +3400,191 @@
         },
         {
             "code": 6033,
+            "name": "UserStakeHasNoMoreClaim",
+            "msg": "UserStakeHasNoMoreClaim"
+        },
+        {
+            "code": 6034,
             "name": "OracleNotFound",
             "msg": "OracleNotFound"
         },
         {
-            "code": 6034,
+            "code": 6035,
             "name": "OraclePriceToOld",
             "msg": "OraclePriceToOld"
         },
         {
-            "code": 6035,
+            "code": 6036,
             "name": "UnableToLoadOracle",
             "msg": "Unable To Load Oracles"
         },
         {
-            "code": 6036,
+            "code": 6037,
             "name": "InvalidOracle",
             "msg": "InvalidOracle"
         },
         {
-            "code": 6037,
+            "code": 6038,
             "name": "BnConversionError",
             "msg": "Conversion to u128/u128 failed with an overflow or underflow"
         },
         {
-            "code": 6038,
+            "code": 6039,
             "name": "MathError",
             "msg": "Math Error"
         },
         {
-            "code": 6039,
+            "code": 6040,
             "name": "CastingFailure",
             "msg": "Casting Failure"
         },
         {
-            "code": 6040,
+            "code": 6041,
             "name": "CouldNotLoadMarketData",
             "msg": "CouldNotLoadMarketData"
         },
         {
-            "code": 6041,
+            "code": 6042,
             "name": "CouldNotFindMarket",
             "msg": "CouldNotFindMarket"
         },
         {
-            "code": 6042,
+            "code": 6043,
             "name": "InvalidMarketAccount",
             "msg": "InvalidMarketAccount"
         },
         {
-            "code": 6043,
+            "code": 6044,
             "name": "MarketWrongMutability",
             "msg": "MarketWrongMutability"
         },
         {
-            "code": 6044,
+            "code": 6045,
             "name": "MarketNumberNotEqual2Pool",
             "msg": "MarketNumberNotEqual2Pool"
         },
         {
-            "code": 6045,
+            "code": 6046,
             "name": "FailedUnwrap",
             "msg": "Failed Unwrap"
         },
         {
-            "code": 6046,
+            "code": 6047,
             "name": "UserNotEnoughValue",
             "msg": "User Not Enough Value"
         },
         {
-            "code": 6047,
+            "code": 6048,
             "name": "AmountZero",
             "msg": "AmountZero"
         },
         {
-            "code": 6048,
+            "code": 6049,
             "name": "CouldNotLoadTokenAccountData",
             "msg": "CouldNotLoadTokenAccountData"
         },
         {
-            "code": 6049,
+            "code": 6050,
             "name": "CouldNotLoadTradeTokenData",
             "msg": "CouldNotLoadTradeTokenData"
         },
         {
-            "code": 6050,
+            "code": 6051,
             "name": "CouldNotLoadPoolData",
             "msg": "CouldNotLoadPoolData"
         },
         {
-            "code": 6051,
+            "code": 6052,
             "name": "InvalidTradeTokenAccount",
             "msg": "InvalidTradeTokenAccount"
         },
         {
-            "code": 6052,
+            "code": 6053,
             "name": "InvalidTokenAccount",
             "msg": "InvalidTokenAccount"
         },
         {
-            "code": 6053,
+            "code": 6054,
             "name": "InvalidPoolAccount",
             "msg": "InvalidPoolAccount"
         },
         {
-            "code": 6054,
+            "code": 6055,
             "name": "TradeTokenNotFind",
             "msg": "CanNotFindTradeToken"
         },
         {
-            "code": 6055,
+            "code": 6056,
             "name": "VaultNotFind",
             "msg": "CanNotFindVault"
         },
         {
-            "code": 6056,
+            "code": 6057,
             "name": "MarketNotFind",
             "msg": "CanNotFindMarket"
         },
         {
-            "code": 6057,
+            "code": 6058,
             "name": "StakePaused",
             "msg": "StakePaused"
         },
         {
-            "code": 6058,
+            "code": 6059,
             "name": "StakeToSmall",
             "msg": "StakeToSmall"
         },
         {
-            "code": 6059,
+            "code": 6060,
             "name": "UnStakeTooSmall",
             "msg": "UnStakeTooSmall"
         },
         {
-            "code": 6060,
+            "code": 6061,
             "name": "UnStakeWithAmountNotEnough",
             "msg": "UnStakeWithAmountNotEnough"
         },
         {
-            "code": 6061,
+            "code": 6062,
             "name": "UnStakeTooLarge",
             "msg": "UnStakeTooLarge"
         },
         {
-            "code": 6062,
+            "code": 6063,
             "name": "PositionSideNotSupport",
             "msg": "PositionSideNotSupport"
         },
         {
-            "code": 6063,
+            "code": 6064,
             "name": "RewardsNotFound",
             "msg": "RewardsNotFound"
         },
         {
-            "code": 6064,
+            "code": 6065,
             "name": "UserNotFound",
             "msg": "UserNotFound"
         },
         {
-            "code": 6065,
+            "code": 6066,
             "name": "CouldNotLoadUserData",
             "msg": "CouldNotLoadUserData"
         },
         {
-            "code": 6066,
+            "code": 6067,
             "name": "PoolSubUnsettleNotEnough",
             "msg": "PoolSubUnsettleNotEnough"
         },
         {
-            "code": 6067,
+            "code": 6068,
             "name": "TimestampNotFound",
             "msg": "TimestampNotFound"
         },
         {
-            "code": 6068,
+            "code": 6069,
             "name": "ClaimUnqualified",
             "msg": "ClaimUnqualified"
         },
         {
-            "code": 6069,
+            "code": 6070,
             "name": "PoolMintSupplyIsZero",
             "msg": "PoolMintSupplyIsZero"
         }

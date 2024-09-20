@@ -1151,12 +1151,10 @@ export class BumpinClient {
                 let tradeToken =
                     await this.tradeTokenComponent!.getTradeTokenByMintKey(
                         pool.mintKey,
-                        true,
                     );
                 const price = (
                     await this.tradeTokenComponent!.getTradeTokenPricesByMintKey(
                         pool.mintKey,
-                        true,
                     )
                 ).price!;
                 let unRealisedRewards = BigNumber(0);
@@ -1182,7 +1180,7 @@ export class BumpinClient {
                 claimResult.totalStakingValue =
                     claimResult.totalStakingValue.plus(
                         stake.stakedShare.multipliedBy(
-                            await this.getPoolNetPrice(pool.key, true),
+                            await this.getPoolNetPrice(pool.key),
                         ),
                     );
                 claimResult.totalApr = claimResult.totalApr.plus(pool.apr);
@@ -1193,16 +1191,24 @@ export class BumpinClient {
                 claimResult.totalClaimed =
                     claimResult.totalClaimed.plus(claimed);
                 claimResult.totalUnClaim = claimResult.totalUnClaim.plus(
-                    unRealisedRewards.multipliedBy(stake.stakedShare).multipliedBy(price),
+                    unRealisedRewards
+                        .multipliedBy(stake.stakedShare)
+                        .multipliedBy(price),
                 );
                 claimResult.totalRewards = claimResult.totalRewards
                     .plus(claimed)
-                    .plus(unRealisedRewards.multipliedBy(stake.stakedShare).multipliedBy(price));
+                    .plus(
+                        unRealisedRewards
+                            .multipliedBy(stake.stakedShare)
+                            .multipliedBy(price),
+                    );
                 let userClaimRewardsResult: UserClaimRewardsResult = {
                     pool: pool.name,
                     poolIndex: pool.index,
                     decimals: tradeToken.decimals,
-                    rewardsAmount: unRealisedRewards.multipliedBy(stake.stakedShare),
+                    rewardsAmount: unRealisedRewards.multipliedBy(
+                        stake.stakedShare,
+                    ),
                 };
                 claimResult.rewards.push(userClaimRewardsResult);
             }
