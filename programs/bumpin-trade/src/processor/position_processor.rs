@@ -1399,7 +1399,7 @@ pub fn update_cross_leverage<'info>(
                 position.set_leverage(params.leverage)?;
                 (position.leverage, position.position_size, position.margin_token_entry_price)
             };
-
+            msg!("=========update_cross_leverage,available_amount, position_leverage:{}, position_size:{}, position_entry_price:{}",position_leverage,position_size,position_entry_price);
             let available_amount = user
                 .get_user_token_ref(&if position.is_long {
                     base_trade_token.mint_key
