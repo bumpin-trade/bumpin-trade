@@ -93,7 +93,10 @@ pub fn handle_claim_rewards<'a, 'b, 'c: 'info, 'info>(
     let pool_rewards_vault = &ctx.accounts.pool_rewards_vault;
     let user_token_account = &ctx.accounts.user_token_account;
 
-    msg!("=========handle_claim_rewards, stake:{}", user_stake.user_rewards.realised_rewards_token_amount);
+    msg!(
+        "=========handle_claim_rewards, stake:{}",
+        user_stake.user_rewards.realised_rewards_token_amount
+    );
     reward.sub_pool_un_claim_rewards(user_stake.user_rewards.realised_rewards_token_amount)?;
 
     utils::token::send_from_program_vault(
