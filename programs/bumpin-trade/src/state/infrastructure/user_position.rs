@@ -227,7 +227,7 @@ impl UserPosition {
     }
 
     pub fn sub_hold_pool_amount(&mut self, hold_pool_amount: u128) -> BumpResult<()> {
-        self.hold_pool_amount = self.hold_pool_amount.safe_add(hold_pool_amount)?;
+        self.hold_pool_amount = self.hold_pool_amount.safe_sub(hold_pool_amount)?;
         Ok(())
     }
 

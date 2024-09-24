@@ -49,7 +49,6 @@ import { BumpinMarketUtils } from './utils/market';
 import { PriceData } from '@pythnetwork/client';
 import BigNumber from 'bignumber.js';
 import { AccountLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { RewardsComponent } from './componets/rewards';
 import './types/bnExt';
 import {
     Market,
@@ -87,7 +86,6 @@ export class BumpinClient {
 
     // Components
     poolComponent: PoolComponent | undefined;
-    rewardComponent: RewardsComponent | undefined;
     tradeTokenComponent: TradeTokenComponent | undefined;
     marketComponent: MarketComponent | undefined;
     userComponent: UserComponent | undefined;
@@ -205,18 +203,7 @@ export class BumpinClient {
         );
         const p1 = this.marketComponent.subscribe();
 
-        this.rewardComponent = new RewardsComponent(
-            this.config,
-            BumpinUtils.getDefaultConfirmOptions(),
-            this.bulkAccountLoader,
-            this.stateSubscriber,
-            this.program,
-            this.wallet,
-            this.essentialAccounts === null ? [] : [this.essentialAccounts],
-        );
-        const p2 = this.rewardComponent.subscribe();
-
-        await Promise.all([p1, p2]);
+        await Promise.all([p1]);
         this.isInitialized = true;
         console.log('BumpinClient initialized');
     }
@@ -241,7 +228,6 @@ export class BumpinClient {
                     this.tradeTokenComponent!,
                     this.marketComponent!,
                     this.poolComponent!,
-                    this.rewardComponent!,
                     this.program,
                     this.wallet,
                     this.essentialAccounts === null
@@ -727,11 +713,6 @@ export class BumpinClient {
         return this.poolComponent!.getPools(sync);
     }
 
-    public async getRewards(sync: boolean = false): Promise<RewardsAccount[]> {
-        this.checkInitialization();
-        return this.rewardComponent!.getRewards(sync);
-    }
-
     public async getPoolsWithSlot(
         sync: boolean = false,
     ): Promise<DataAndSlot<Pool>[]> {
@@ -1210,7 +1191,7 @@ export class BumpinClient {
                         stake.stakedShare,
                     ),
                 };
-                if (userClaimRewardsResult.rewardsAmount.gt(0)){
+                if (userClaimRewardsResult.rewardsAmount.gt(0)) {
                     claimResult.rewards.push(userClaimRewardsResult);
                 }
             }
@@ -1233,10 +1214,6 @@ export class BumpinClient {
 
         if (!this.poolComponent) {
             throw new BumpinClientNotInitialized('Pool');
-        }
-
-        if (!this.rewardComponent) {
-            throw new BumpinClientNotInitialized('Reward');
         }
 
         if (!this.tradeTokenComponent) {

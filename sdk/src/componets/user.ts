@@ -57,7 +57,6 @@ import { TradeTokenComponent } from './tradeToken';
 import { PoolComponent } from './pool';
 import { BumpinClientConfig } from '../bumpinClientConfig';
 import { MarketComponent } from './market';
-import { RewardsComponent } from './rewards';
 
 export class UserComponent extends Component {
     publicKey: PublicKey;
@@ -66,7 +65,6 @@ export class UserComponent extends Component {
     tradeTokenComponent: TradeTokenComponent;
     poolComponent: PoolComponent;
     marketComponent: MarketComponent;
-    rewardComponent: RewardsComponent;
 
     constructor(
         config: BumpinClientConfig,
@@ -77,7 +75,6 @@ export class UserComponent extends Component {
         tradeTokenComponent: TradeTokenComponent,
         marketComponent: MarketComponent,
         poolComponent: PoolComponent,
-        rewardsComponent: RewardsComponent,
         program: Program<BumpinTrade>,
         wallet?: Wallet,
         essentialAccounts: AddressLookupTableAccount[] = [],
@@ -95,7 +92,6 @@ export class UserComponent extends Component {
         this.tradeTokenComponent = tradeTokenComponent;
         this.marketComponent = marketComponent;
         this.poolComponent = poolComponent;
-        this.rewardComponent = rewardsComponent;
         const [pda, _] = BumpinUtils.getPdaSync(this.program, [
             Buffer.from('user'),
             this.publicKey.toBuffer(),
@@ -453,13 +449,18 @@ export class UserComponent extends Component {
             symbol: BumpinUtils.encodeString(symbol),
             isLong: isLong,
             isPortfolioMargin: isPortfolioMargin,
-            leverage: BumpinUtils.number2Precision(leverage, C.RATE_MULTIPLIER_EXPONENT).toBigNumber().toNumber(),
+            leverage: BumpinUtils.number2Precision(
+                leverage,
+                C.RATE_MULTIPLIER_EXPONENT,
+            )
+                .toBigNumber()
+                .toNumber(),
             marketIndex: market.index,
             poolIndex: pool.index,
             stablePoolIndex: stablePool.index,
         };
         let accountMetas = BumpinUtils.removeDuplicateAccounts(
-            (await this.essentialRemainingAccounts()),
+            await this.essentialRemainingAccounts(),
         );
         const ix = await this.program.methods
             .updateCrossPositionLeverage(params)
@@ -526,7 +527,12 @@ export class UserComponent extends Component {
             symbol: BumpinUtils.encodeString(symbol),
             isLong: isLong,
             isPortfolioMargin: isPortfolioMargin,
-            leverage: BumpinUtils.number2Precision(leverage, C.RATE_MULTIPLIER_EXPONENT).toBigNumber().toNumber(),
+            leverage: BumpinUtils.number2Precision(
+                leverage,
+                C.RATE_MULTIPLIER_EXPONENT,
+            )
+                .toBigNumber()
+                .toNumber(),
             marketIndex: market.index,
             poolIndex: pool.index,
             stablePoolIndex: stablePool.index,
