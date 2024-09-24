@@ -1027,12 +1027,12 @@ export class BumpinClient {
                 userPosition,
                 false,
             );
-            let totalPosFee = positionFee.totalUsd.multipliedBy(percentage);
-            positionSettle.settleMargin = settleValue
-                .plus(unPnl.multipliedBy(percentage))
-                .minus(totalPosFee)
+            positionSettle.settleMargin = userPosition.initialMarginUsd
+                .plus(unPnl)
+                .minus(positionFee.totalUsd)
+                .multipliedBy(percentage)
                 .dividedBy(new BigNumber(marginTokenPrice.price!));
-            positionSettle.positionFee = totalPosFee;
+            positionSettle.positionFee = positionFee.totalUsd.multipliedBy(percentage).dividedBy(new BigNumber(marginTokenPrice.price!));
         }
         return positionSettle;
     }
