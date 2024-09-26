@@ -682,7 +682,7 @@ impl User {
             }
             let trade_token =
                 trade_token_map.get_trade_token_by_mint_ref(&user_token.token_mint_key)?;
-            let oracle_price = oracle_map.get_price_data(&trade_token.oracle_key)?;
+            let oracle_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
             total_token_net_value = total_token_net_value
                 .safe_add(user_token.get_token_net_value(&trade_token, oracle_price)?)?;
         }
@@ -707,13 +707,39 @@ impl User {
         ) = self.get_user_cross_position_available_value(&mut oracle_map, trade_token_map)?;
         let available_value = portfolio_net_value
             .safe_add(total_im_usd)?
-            .safe_add(self.hold.cast()?)?
+            .safe_add(self.hold)?
             .cast::<i128>()?
             .safe_sub(used_value.cast()?)?
             .safe_add(if total_un_pnl_usd > 0 { 0i128 } else { total_un_pnl_usd })?
             .safe_sub(total_im_from_portfolio_value.cast()?)?
             .safe_sub(total_token_borrowing_value.cast()?)?;
         Ok(available_value)
+    }
+
+    //this cross_net_value should sub total_pos_fee
+    pub fn get_cross_net_value_and_pos_size(
+        &mut self,
+        trade_token_map: &TradeTokenMap,
+        mut oracle_map: &mut OracleMap,
+    ) -> BumpResult<(i128, u128)> {
+        let portfolio_net_value =
+            self.get_portfolio_net_value(&trade_token_map, &mut oracle_map)?;
+        let (used_value, _total_token_borrowing_value) =
+            self.get_total_used_value(&trade_token_map, &mut oracle_map)?;
+        let (
+            total_im_usd,
+            total_un_pnl_usd,
+            _total_position_mm,
+            total_size,
+            _total_im_from_portfolio_value,
+        ) = self.get_user_cross_position_available_value(&mut oracle_map, trade_token_map)?;
+        let cross_net_value = portfolio_net_value
+            .safe_add(total_im_usd)?
+            .safe_add(self.hold)?
+            .cast::<i128>()?
+            .safe_add(total_un_pnl_usd)?
+            .safe_sub(used_value.cast()?)?;
+        Ok((cross_net_value, total_size))
     }
 
     pub fn get_user_cross_position_available_value(

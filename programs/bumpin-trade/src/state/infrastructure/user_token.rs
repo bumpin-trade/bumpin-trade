@@ -50,13 +50,13 @@ impl UserToken {
     pub fn get_token_net_value(
         &self,
         trade_token: &TradeToken,
-        oracle_price_data: &OraclePriceData,
+        oracle_price: u128,
     ) -> BumpResult<u128> {
         if self.amount > self.used_amount {
             let token_net_value = calculator::token_to_usd_u(
                 self.amount.safe_sub(self.used_amount)?,
                 trade_token.decimals,
-                oracle_price_data.price,
+                oracle_price,
             )?
             .safe_mul_rate(trade_token.discount as u128)?;
             return Ok(token_net_value);
@@ -109,6 +109,6 @@ impl UserToken {
             trade_token.decimals,
             oracle_price_data.price,
         )?;
-        return Ok(token_borrowing_value);
+        Ok(token_borrowing_value)
     }
 }

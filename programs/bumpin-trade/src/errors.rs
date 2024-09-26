@@ -43,6 +43,8 @@ pub enum BumpErrorCode {
     LeverageIsNotAllowed,
     #[msg("PriceIsNotAllowed")]
     PriceIsNotAllowed,
+    #[msg("LiquidationErrorWithBankruptcyPriceZero")]
+    LiquidationErrorWithBankruptcyPriceZero,
     #[msg("OnlyOneDirectionPositionIsAllowed")]
     OnlyOneDirectionPositionIsAllowed,
     #[msg("BalanceNotEnough")]
