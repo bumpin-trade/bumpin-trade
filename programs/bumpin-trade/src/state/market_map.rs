@@ -40,19 +40,6 @@ impl<'a> MarketMap<'a> {
             },
         }
     }
-
-    #[track_caller]
-    #[inline(always)]
-    pub fn get_account_loader(&self, symbol: &[u8; 32]) -> BumpResult<&AccountLoader<'a, Market>> {
-        let loader = match self.0.get(symbol) {
-            None => {
-                return Err(MarketNotFind);
-            },
-            Some(loader) => loader,
-        };
-        Ok(loader)
-    }
-
     #[track_caller]
     #[inline(always)]
     pub fn get_ref(&self, symbol: &[u8; 32]) -> BumpResult<Ref<Market>> {
@@ -64,7 +51,10 @@ impl<'a> MarketMap<'a> {
         };
         match loader.load() {
             Ok(market) => Ok(market),
-            Err(_e) => Err(CouldNotLoadMarketData),
+            Err(e) => {
+                msg!("{:?}", e);
+                Err(CouldNotLoadMarketData)
+            },
         }
     }
 }

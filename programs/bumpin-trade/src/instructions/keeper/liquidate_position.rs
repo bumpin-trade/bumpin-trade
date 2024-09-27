@@ -68,6 +68,33 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
     user.cancel_all_cross_orders()?;
 
     let mut pos_infos: Vec<PosInfos> = Vec::new();
+    for position in &user.positions {
+        //only cross margin position support
+        if !position.is_portfolio_margin {
+            continue;
+        }
+        let infos = get_position_info(position)?;
+        pos_infos.push(infos)
+    }
+    for pos_info in &pos_infos {
+        let mut market = market_map.get_mut_ref(&pos_info.symbol)?;
+        let mut pool = if pos_info.is_long {
+            pool_map.get_mut_ref(&market.pool_key)?
+        } else {
+            pool_map.get_mut_ref(&market.stable_pool_key)?
+        };
+        pool.update_pool_borrowing_fee_rate()?;
+
+        let trade_token = &trade_token_map.get_trade_token_by_mint_ref(&pos_info.margin_mint)?;
+        market.update_market_funding_fee_rate(
+            &ctx.accounts.state,
+            oracle_map.get_price_data(&trade_token.oracle_key)?.price,
+        )?;
+        msg!(
+            "========handle_liquidate_cross_position44444, market.longPerToken:{}",
+            market.funding_fee.long_funding_fee_amount_per_size
+        );
+    }
     let (total_position_mm, total_position_fee) = {
         let mut total_mm = 0u128;
         let mut total_pos_fee = 0i128;
@@ -92,36 +119,33 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
                 margin_token_price,
                 trade_token.decimals,
             )?)?;
-            let infos = get_position_info(position)?;
-            pos_infos.push(infos)
         }
         (total_mm, total_pos_fee)
     };
-    for pos_info in &pos_infos {
-        let market = market_map.get_ref(&pos_info.symbol)?;
-        let mut pool = if pos_info.is_long {
-            pool_map.get_mut_ref(&market.pool_key)?
-        } else {
-            pool_map.get_mut_ref(&market.stable_pool_key)?
-        };
-        pool.update_pool_borrowing_fee_rate()?;
 
-        let market = &mut market_map.get_mut_ref(&pos_info.symbol)?;
-        let trade_token = &trade_token_map.get_trade_token_by_mint_ref(&pos_info.margin_mint)?;
-        market.update_market_funding_fee_rate(
-            &ctx.accounts.state,
-            oracle_map.get_price_data(&trade_token.oracle_key)?.price,
-        )?;
-    }
+    msg!(
+        "========handle_liquidate_cross_position,total_mm:{}, total_pos_fee:{}",
+        total_position_mm,
+        total_position_fee
+    );
 
     let (mut cross_net_value, total_size) =
         user.get_cross_net_value_and_pos_size(&trade_token_map, &mut oracle_map)?;
+    msg!(
+        "========handle_liquidate_cross_position,cross_net_value without posFee:{}",
+        cross_net_value,
+    );
     cross_net_value = cross_net_value.safe_sub(total_position_fee)?;
     let bankruptcy_mr = calculator::div_to_precision_i(
         cross_net_value,
         total_size.cast::<i128>()?,
         SMALL_RATE_PRECISION.cast::<i128>()?,
     )?;
+    msg!(
+        "========handle_liquidate_cross_position,cross_net_value:{}, total_position_mm:{}",
+        cross_net_value,
+        total_position_mm
+    );
 
     if cross_net_value <= 0i128 || cross_net_value.abs().cast::<u128>()? <= total_position_mm {
         for pos_info in &pos_infos {
@@ -130,7 +154,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
                 continue;
             }
 
-            let market = market_map.get_ref(&pos_info.symbol)?;
+            let mut market = market_map.get_mut_ref(&pos_info.symbol)?;
 
             let index_price = oracle_map.get_price_data(&pos_info.index_mint)?.price;
             let bankruptcy_price = calculator::format_to_ticker_size(
@@ -157,7 +181,10 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
                 pos_info.is_long,
             )?;
 
-            validate!(bankruptcy_price > 0, BumpErrorCode::LiquidationErrorWithBankruptcyPriceZero)?;
+            validate!(
+                bankruptcy_price > 0,
+                BumpErrorCode::LiquidationErrorWithBankruptcyPriceZero
+            )?;
             let mm_rate = calculator::get_mm_rate(
                 market.config.maximum_leverage,
                 state.maximum_maintenance_margin_rate,
@@ -176,6 +203,8 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
             let stable_pool = pool_map.get_ref(&market.stable_pool_key)?;
             let trade_token = trade_token_map.get_trade_token_by_mint_ref(&pos_info.margin_mint)?;
 
+            let pool_key = market.pool_key;
+            let stable_pool_key = market.stable_pool_key;
             position_processor::decrease_position(
                 DecreasePositionParams {
                     order_id: 0,
@@ -186,9 +215,9 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
                     execute_price: liquidation_price,
                 },
                 &mut user,
-                market_map.get_mut_ref(&pos_info.symbol)?.deref_mut(),
-                pool_map.get_mut_ref(&market.pool_key)?.deref_mut(),
-                pool_map.get_mut_ref(&market.stable_pool_key)?.deref_mut(),
+                market.deref_mut(),
+                pool_map.get_mut_ref(&pool_key)?.deref_mut(),
+                pool_map.get_mut_ref(&stable_pool_key)?.deref_mut(),
                 &ctx.accounts.state,
                 None,
                 if pos_info.is_long {

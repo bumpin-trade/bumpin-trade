@@ -724,8 +724,10 @@ impl User {
     ) -> BumpResult<(i128, u128)> {
         let portfolio_net_value =
             self.get_portfolio_net_value(&trade_token_map, &mut oracle_map)?;
+        msg!("============get_cross_net_value_and_pos_size,portfolio_net_value:{}", portfolio_net_value);
         let (used_value, _total_token_borrowing_value) =
             self.get_total_used_value(&trade_token_map, &mut oracle_map)?;
+        msg!("============get_cross_net_value_and_pos_size,used_value:{}", used_value);
         let (
             total_im_usd,
             total_un_pnl_usd,

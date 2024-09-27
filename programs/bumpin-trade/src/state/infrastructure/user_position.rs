@@ -401,8 +401,8 @@ impl UserPosition {
         margin_mint_price: u128,
         trade_token_decimals: u16,
     ) -> BumpResult<i128> {
-        let mut funding_fee_total_usd = self.realized_funding_fee_in_usd;
-        let mut borrowing_fee_total_usd = self.realized_borrowing_fee_in_usd;
+        let mut funding_fee_total_usd = 0i128;
+        let mut borrowing_fee_total_usd = 0u128;
 
         let funding_fee_amount_per_size = if self.is_long {
             market.funding_fee.long_funding_fee_amount_per_size
@@ -413,6 +413,7 @@ impl UserPosition {
             self.position_size.cast::<i128>()?,
             funding_fee_amount_per_size.safe_sub(self.open_funding_fee_amount_per_size)?,
         )?;
+        msg!("==========get_position_fee, position_size:{}, funding_fee_amount_per_size:{}, open_funding_fee_amount_per_size:{}", self.position_size, funding_fee_amount_per_size, self.open_funding_fee_amount_per_size);
 
         if self.is_long {
             let funding_fee_usd =
@@ -438,6 +439,7 @@ impl UserPosition {
             borrowing_fee_total_usd.safe_add(self.realized_borrowing_fee_in_usd)?.safe_add(
                 calculator::token_to_usd_u(borrowing_fee, trade_token_decimals, margin_mint_price)?,
             )?;
+        msg!("==========get_position_fee, funding_fee_total_usd:{}, borrowing_fee_total_usd:{}, close_fee_in_usd:{}", funding_fee_total_usd, borrowing_fee_total_usd, self.close_fee_in_usd);
         Ok(funding_fee_total_usd
             .safe_add(borrowing_fee_total_usd.cast()?)?
             .safe_add(self.close_fee_in_usd.cast()?)?)
