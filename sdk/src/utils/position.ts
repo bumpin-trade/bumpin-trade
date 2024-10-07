@@ -2,7 +2,7 @@ import { PositionBalance, PositionFee } from '../typedef';
 import { BN } from '@coral-xyz/anchor';
 import { BumpinTokenUtils } from './token';
 // @ts-ignore
-import { isEqual } from 'lodash';
+import { eq, isEqual } from 'lodash';
 import {
     BumpinMarketNotFound,
     BumpinPoolNotFound,
@@ -18,6 +18,7 @@ import {
     TradeToken,
     User,
     UserPosition,
+    UserTokenStatus,
 } from '../beans/beans';
 import BigNumber from 'bignumber.js';
 import { TradeTokenComponent } from '../componets/tradeToken';
@@ -43,6 +44,40 @@ export class BumpinPositionUtils {
     //     return amount;
     //   }
     // }
+    public static async getUserAllPositionUnPnl(
+        tradeTokenComponent: TradeTokenComponent,
+        user: User,
+    ): Promise<BigNumber> {
+        let unPnl = new BigNumber(0);
+        for (let position of user.positions) {
+            if (!isEqual(position.status, PositionStatus.INIT)) {
+                const price =
+                    tradeTokenComponent.getTradeTokenPricesByOracleKey(
+                        position.indexMintOracle,
+                        1,
+                    )[0].price!;
+                if (position.isLong) {
+                    unPnl = unPnl.plus(
+                        position.positionSize
+                            .multipliedBy(
+                                price - position.entryPrice.toNumber(),
+                            )
+                            .div(position.entryPrice),
+                    );
+                } else {
+                    unPnl = unPnl.plus(
+                        position.positionSize
+                            .multipliedBy(
+                                position.entryPrice.toNumber() - price,
+                            )
+                            .div(position.entryPrice),
+                    );
+                }
+            }
+        }
+        return unPnl;
+    }
+
     public static getUserPosition(
         positionKey: PublicKey,
         user: User,

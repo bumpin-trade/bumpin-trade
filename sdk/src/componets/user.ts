@@ -393,6 +393,7 @@ export class UserComponent extends Component {
             new BigNumber(size),
             targetTradeToken.decimals,
         );
+
         const marketRemainingAccounts = (
             await this.marketComponent.getMarkets(sync)
         ).map((e) => {
@@ -762,8 +763,8 @@ export class UserComponent extends Component {
                 ? tradeToken
                 : stableTradeToken
             : isEqual(param.orderSide, OrderSide.LONG)
-            ? stableTradeToken
-            : tradeToken;
+              ? stableTradeToken
+              : tradeToken;
         let marginPrice =
             this.tradeTokenComponent.getTradeTokenPricesByOracleKey(
                 marginToken.oracleKey,
@@ -802,8 +803,8 @@ export class UserComponent extends Component {
                               ? tradeToken.decimals
                               : stableTradeToken.decimals
                           : isEqual(param.orderSide, OrderSide.LONG)
-                          ? stableTradeToken.decimals
-                          : tradeToken.decimals,
+                            ? stableTradeToken.decimals
+                            : tradeToken.decimals,
                   )
                 : BumpinUtils.number2Precision(
                       param.orderMargin * marginPrice.price,
@@ -950,11 +951,7 @@ export class UserComponent extends Component {
             .plus(balanceOfUserPositions.initialMarginUsd)
             .plus(user.hold)
             .minus(balanceOfUserTradeTokens.tokenUsedValue)
-            .plus(
-                balanceOfUserPositions.positionUnPnl.gt(BigNumber(0))
-                    ? BigNumber(0)
-                    : balanceOfUserPositions.positionUnPnl,
-            )
+            .plus(balanceOfUserPositions.positionUnPnl)
             .minus(balanceOfUserPositions.positionFee);
         accountNetValue.totalMM = balanceOfUserPositions.mmUsd;
         return accountNetValue;

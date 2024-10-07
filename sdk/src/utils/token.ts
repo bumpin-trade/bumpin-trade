@@ -10,6 +10,33 @@ import { TradeTokenComponent } from '../componets/tradeToken';
 import BigNumber from 'bignumber.js';
 
 export class BumpinTokenUtils {
+    public static async getUserAllTokenEquity(
+        tradeTokenComponent: TradeTokenComponent,
+        user: User,
+        tradeTokens: TradeToken[],
+    ): Promise<BigNumber> {
+        let equity = new BigNumber(0);
+        for (let token of user.tokens) {
+            if (!isEqual(token.userTokenStatus, UserTokenStatus.INIT)) {
+                let tradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
+                    token.tokenMintKey,
+                    tradeTokens,
+                );
+                const price =
+                    tradeTokenComponent.getTradeTokenPricesByOracleKey(
+                        tradeToken.oracleKey,
+                        1,
+                    )[0].price!;
+                equity = equity.plus(
+                    token.amount
+                        .minus(token.liabilityAmount)
+                        .multipliedBy(price),
+                );
+            }
+        }
+        return equity;
+    }
+
     public static async getTradeTokenPrice(
         oracle: OracleClient,
         tradeToken: TradeToken,

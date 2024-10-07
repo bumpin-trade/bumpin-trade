@@ -79,6 +79,6 @@ pub fn settle_funding_fee(pool: &mut Pool, fee_amount: i128, is_cross: bool) -> 
         //user should pay to stable_pool
         pool.add_amount(fee_amount.abs().cast::<u128>()?)?;
     }
-    pool.settle_pool_funding_fee(fee_amount, is_cross)?;
+    pool.settle_pool_funding_fee(fee_amount)?;
     Ok(())
 }

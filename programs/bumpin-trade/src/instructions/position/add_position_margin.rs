@@ -51,14 +51,14 @@ pub struct AddPositionMargin<'info> {
     #[account(
         seeds = [b"pool", params.pool_index.to_le_bytes().as_ref()],
         bump,
-        constraint = pool.load() ?.key.eq(& market.load()?.pool_key),
+        constraint = pool.load() ?.key.eq(& market.load() ?.pool_key),
     )]
     pub pool: AccountLoader<'info, Pool>,
 
     #[account(
         seeds = [b"pool", params.stable_pool_index.to_le_bytes().as_ref()],
         bump,
-        constraint = stable_pool.load() ?.mint_key.eq(& market.load()?.stable_pool_key),
+        constraint = stable_pool.load() ?.mint_key.eq(& market.load() ?.stable_pool_key),
     )]
     pub stable_pool: AccountLoader<'info, Pool>,
 
@@ -103,7 +103,7 @@ pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
     params: UpdatePositionMarginParams,
 ) -> Result<()> {
     validate!(params.update_margin_amount > 0u128, BumpErrorCode::AmountNotEnough)?;
-    let market = ctx.accounts.market.load_mut()?;
+    let mut market = ctx.accounts.market.load_mut()?;
     let remaining_accounts = ctx.remaining_accounts;
     let AccountMaps { trade_token_map, mut oracle_map, market_map, .. } =
         load_maps(remaining_accounts)?;
@@ -139,7 +139,7 @@ pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
         position_processor::execute_add_position_margin(
             &params,
             if position.is_long { &base_trade_token } else { &stable_trade_token },
-            if position.is_long { &mut pool } else { &mut stable_pool },
+            if position.is_long { &mut pool } else { &mut stable_pool }, &mut market,
             position,
         )?;
     } else {

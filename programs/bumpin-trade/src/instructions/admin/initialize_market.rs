@@ -93,6 +93,9 @@ pub fn handle_initialize_market(
     market.stable_pool_mint_key = stable_pool.mint_key;
     market.stable_pool_key = stable_pool.key;
     market.config = config;
+    market.share_short = params.share_short;
+    market.stable_loss = 0i128;
+    market.stable_unsettle_loss = 0i128;
     safe_increment!(state.market_sequence, 1);
     safe_increment!(pool.deref_mut().market_number, 1);
     safe_increment!(stable_pool.deref_mut().market_number, 1);
@@ -114,4 +117,5 @@ pub struct InitializeMarketParams {
     pub pool_index: u16,
     pub stable_pool_index: u16,
     pub max_pool_liquidity_share_rate: u32,
+    pub share_short: bool,
 }

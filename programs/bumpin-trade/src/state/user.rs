@@ -296,7 +296,19 @@ impl User {
 
         Ok(use_from_balance)
     }
-
+    pub fn cross_used(&self) -> BumpResult<bool> {
+        for token in &self.tokens {
+            if token.liability_amount.gt(&0u128) {
+                return Ok(true);
+            }
+        }
+        for position in &self.positions {
+            if position.is_portfolio_margin {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
     pub fn un_use_token(&mut self, token: &Pubkey, amount: u128) -> BumpResult<()> {
         let user_token = self.get_user_token_mut_ref(token)?;
         validate!(user_token.used_amount >= amount, BumpErrorCode::AmountNotEnough.into())?;
@@ -375,10 +387,10 @@ impl User {
                 let order = self.orders[order_index];
                 self.orders[order_index] = UserOrder::default();
                 emit!(AddOrDeleteUserOrderEvent { user_key, order, is_add: false });
-            },
+            }
             Err(_e) => {
                 //order not exist, do nothing
-            },
+            }
         }
         Ok(())
     }
@@ -459,8 +471,8 @@ impl User {
                 && user_order.symbol == symbol
                 && user_order.margin_mint_key.eq(margin_token)
                 && ((is_long_order == is_long
-                    && user_order.position_side.eq(&PositionSide::INCREASE))
-                    || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
+                && user_order.position_side.eq(&PositionSide::INCREASE))
+                || (is_long_order != user_order.position_side.eq(&PositionSide::DECREASE)))
             {
                 user_order.set_leverage(leverage)
             }
@@ -694,26 +706,21 @@ impl User {
         trade_token_map: &TradeTokenMap,
         mut oracle_map: &mut OracleMap,
     ) -> BumpResult<i128> {
-        let portfolio_net_value =
-            self.get_portfolio_net_value(&trade_token_map, &mut oracle_map)?;
-        let (used_value, total_token_borrowing_value) =
-            self.get_total_used_value(&trade_token_map, &mut oracle_map)?;
+        let cross_net_value = self.get_cross_net_value_and_pos_size(trade_token_map, oracle_map)?;
+
         let (
-            total_im_usd,
+            _,
             total_un_pnl_usd,
             _total_position_mm,
-            _total_size,
-            total_im_from_portfolio_value,
+            _,
+            _total_im_from_portfolio_value,
         ) = self.get_user_cross_position_available_value(&mut oracle_map, trade_token_map)?;
-        let available_value = portfolio_net_value
-            .safe_add(total_im_usd)?
-            .safe_add(self.hold)?
-            .cast::<i128>()?
-            .safe_sub(used_value.cast()?)?
-            .safe_add(if total_un_pnl_usd > 0 { 0i128 } else { total_un_pnl_usd })?
-            .safe_sub(total_im_from_portfolio_value.cast()?)?
-            .safe_sub(total_token_borrowing_value.cast()?)?;
-        Ok(available_value)
+
+        let (_, _total_token_borrowing_value) =
+            self.get_total_used_value(&trade_token_map, &mut oracle_map)?;
+        let pnl_usd = if total_un_pnl_usd.gt(&0i128) { total_un_pnl_usd } else { 0i128 };
+        Ok(cross_net_value.0.safe_sub(pnl_usd)?.safe_sub(_total_im_from_portfolio_value.
+            safe_add(_total_token_borrowing_value)?.cast()?)?)
     }
 
     //this cross_net_value should sub total_pos_fee
@@ -850,7 +857,7 @@ impl User {
                 state.bump_signer_nonce,
                 order.order_margin,
             )
-            .map_err(|_e| BumpErrorCode::TransferFailed)?;
+                .map_err(|_e| BumpErrorCode::TransferFailed)?;
         }
         Ok(())
     }

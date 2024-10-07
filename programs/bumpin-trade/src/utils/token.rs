@@ -3,7 +3,9 @@ use anchor_spl::token::{self, CloseAccount, Token, TokenAccount, Transfer};
 
 use crate::math::casting::Cast;
 use crate::utils::signer::get_signer_seeds;
-
+/***
+  TODO common  transfer transaction log
+ */
 pub fn send_from_program_vault<'info>(
     token_program: &Program<'info, Token>,
     from: &Account<'info, TokenAccount>,

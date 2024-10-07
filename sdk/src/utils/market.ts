@@ -85,7 +85,7 @@ export class BumpinMarketUtils {
             let current_long_funding_fee_per_qty = long_pay_short
                 ? total_funding_fee.dividedBy(long.openInterest)
                 : BigNumber.min(
-                      state.fundingFeeBaseRate.multipliedBy(
+                      state.maximumFundingBaseRate.multipliedBy(
                           funding_fee_duration_in_seconds,
                       ),
                       total_funding_fee.dividedBy(long.openInterest),
@@ -100,7 +100,7 @@ export class BumpinMarketUtils {
         if (short.openInterest.gt(new BigNumber(0))) {
             short_funding_fee_per_qty_delta = long_pay_short
                 ? BigNumber.min(
-                      state.fundingFeeBaseRate.multipliedBy(
+                      state.maximumFundingBaseRate.multipliedBy(
                           funding_fee_duration_in_seconds,
                       ),
                       total_funding_fee.div(short.openInterest),

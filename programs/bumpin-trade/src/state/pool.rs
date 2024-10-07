@@ -11,6 +11,7 @@ use crate::math::safe_math::SafeMath;
 use crate::state::bump_events::PoolUpdateEvent;
 use crate::state::infrastructure::fee_reward::FeeReward;
 use crate::state::infrastructure::pool_borrowing_fee::BorrowingFee;
+use crate::state::market::Market;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
 use crate::state::trade_token::TradeToken;
@@ -57,7 +58,7 @@ pub enum PoolStatus {
 
 #[bumpin_zero_copy_unsafe]
 pub struct PoolBalance {
-    pub settle_funding_fee: i128,
+    pub settle_funding_fee: i128,// we should receive funding fee
     pub amount: u128,
     pub hold_amount: u128,
     pub un_settle_amount: u128,
@@ -201,24 +202,23 @@ impl Pool {
     pub fn settle_pool_funding_fee(
         &mut self,
         amount: i128,
-        is_cross_margin: bool,
     ) -> BumpResult<()> {
         if amount == 0i128 {
             return Ok(());
         }
         self.balance.settle_funding_fee = self.balance.settle_funding_fee.safe_sub(amount)?;
-        if amount > 0i128 && is_cross_margin {
-            self.balance.un_settle_amount =
-                self.balance.un_settle_amount.safe_add(amount.abs().cast::<u128>()?)?;
-        } else if amount > 0i128 && !is_cross_margin {
-            self.balance.amount = self.balance.amount.safe_add(amount.abs().cast::<u128>()?)?;
-        } else {
-            validate!(
-                self.balance.amount > amount.abs().cast::<u128>()?,
-                BumpErrorCode::SubPoolAmountBiggerThanAmount
-            )?;
-            self.balance.amount = self.balance.amount.safe_sub(amount.abs().cast::<u128>()?)?;
-        }
+        /*        if amount > 0i128 && is_cross_margin {
+                    self.balance.un_settle_amount =
+                        self.balance.un_settle_amount.safe_add(amount.abs().cast::<u128>()?)?;
+                } else if amount > 0i128 && !is_cross_margin {
+                    self.balance.amount = self.balance.amount.safe_add(amount.abs().cast::<u128>()?)?;
+                } else {
+                    validate!(
+                        self.balance.amount > amount.abs().cast::<u128>()?,
+                        BumpErrorCode::SubPoolAmountBiggerThanAmount
+                    )?;
+                    self.balance.amount = self.balance.amount.safe_sub(amount.abs().cast::<u128>()?)?;
+                }*/
         Ok(())
     }
 
@@ -279,7 +279,7 @@ impl Pool {
                 token_balance.amount.safe_add(token_balance.un_settle_amount)?,
                 pool_liquidity_limit,
             )?
-            .safe_sub(token_balance.hold_amount)?
+                .safe_sub(token_balance.hold_amount)?
                 >= amount)
         }
     }
@@ -324,29 +324,51 @@ impl Pool {
             trade_token.decimals,
             trade_token_price,
         )?;
-        if !self.stable {
-            let markets = market_map.get_all_market(self.market_number)?;
-            let mut market_loaded = vec![];
-            for market_loader in markets {
-                let market =
-                    market_loader.load().map_err(|_e| BumpErrorCode::CouldNotLoadMarketData)?;
-                if self.key.eq(&market.pool_key) {
-                    market_loaded.push(market);
-                }
+
+        let markets = market_map.get_all_market(self.market_number)?;
+        let mut market_loaded = vec![];
+        for market_loader in markets {
+            let market =
+                market_loader.load().map_err(|_e| BumpErrorCode::CouldNotLoadMarketData)?;
+            if self.key.eq(&market.pool_key) {
+                market_loaded.push(market);
             }
-            validate!(
+        }
+        validate!(
                 self.market_number == market_loaded.len() as u16,
                 BumpErrorCode::MarketNumberNotEqual2Pool
             )?;
 
-            for market in market_loaded {
+        for market in market_loaded {
+            if !self.stable {
                 let long_market_un_pnl = market.get_market_un_pnl(true, oracle_map)?;
                 pool_value = add_i128(pool_value, long_market_un_pnl)?;
 
+                if market.share_short {
+                    let stable_trade_token = trade_token_map.get_trade_token_by_mint_ref(&self.stable_mint_key)?;
+                    let stable_trade_token_price = oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
+
+                    let stable_loss_value = calculator::token_to_usd_i(market.stable_loss.safe_add(market.stable_unsettle_loss)?,
+                                                                       stable_trade_token.decimals, stable_trade_token_price)?;
+                    pool_value = add_i128(pool_value, stable_loss_value)?;
+                }
+            } else {
                 let short_market_un_pnl = market.get_market_un_pnl(false, oracle_map)?;
                 pool_value = add_i128(pool_value, short_market_un_pnl)?;
+
+                if market.share_short {
+                    let stable_trade_token = trade_token_map.get_trade_token_by_mint_ref(&self.stable_mint_key)?;
+                    let stable_trade_token_price = oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
+
+                    let stable_loss_value = calculator::token_to_usd_i(market.stable_loss.safe_add(market.stable_unsettle_loss)?,
+                                                                       stable_trade_token.decimals, stable_trade_token_price)?;
+                    if stable_loss_value < 0 {
+                        pool_value = add_i128(pool_value, stable_loss_value.abs().cast()?)?;
+                    }
+                }
             }
         }
+
         msg!("========get_pool_usd_value, pool_value: {}", pool_value);
         Ok(if pool_value <= 0i128 { 0u128 } else { pool_value.abs().cast::<u128>()? })
     }
@@ -364,18 +386,26 @@ impl Pool {
             .safe_div(self.total_supply)?
             .safe_div(PRICE_TO_USD_PRECISION)
     }
-
+    //TODO fuck logic
     pub fn update_pnl_and_un_hold_pool_amount(
         &mut self,
-        amount: u128,
+        market: &mut Market,
+        hold_amount: u128,
         token_pnl: i128,
         user_liability: u128,
     ) -> BumpResult {
-        self.un_hold_pool(amount)?;
+        self.un_hold_pool(hold_amount)?;
         if token_pnl < 0i128 {
             self.sub_amount(token_pnl.abs().cast::<u128>()?)?;
+            if self.stable && market.share_short {
+                msg!("======update_pnl_and_un_hold_pool_amount+token_pnl:{}", token_pnl);
+                market.add_stable_loss(token_pnl)?;
+            }
         } else if user_liability == 0u128 {
             self.add_amount(token_pnl.cast::<u128>()?)?;
+            if self.stable && market.share_short {
+                market.add_stable_loss(token_pnl)?;
+            }
         } else {
             let u_token_pnl = token_pnl.abs().cast::<u128>()?;
             self.add_amount(if u_token_pnl > user_liability {
@@ -383,11 +413,21 @@ impl Pool {
             } else {
                 0u128
             })?;
+            if self.stable && market.share_short && u_token_pnl > user_liability {
+                market.add_stable_loss(u_token_pnl.safe_sub(user_liability)?.cast()?)?;
+            }
             self.add_unsettle(if u_token_pnl > user_liability {
                 user_liability
             } else {
                 u_token_pnl
             })?;
+            if self.stable && market.share_short {
+                market.add_unsettle_stable_loss(if u_token_pnl > user_liability {
+                    user_liability.cast()?
+                } else {
+                    u_token_pnl.cast()?
+                })?;
+            }
         }
         Ok(())
     }

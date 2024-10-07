@@ -474,7 +474,7 @@ export class BumpinClient {
         return BigNumber(await liquidationPrice());
     }
 
-    public async getUserSummary(sync: boolean = false): Promise<UserSummary> {
+    public async getUserSummary(sync: boolean = true): Promise<UserSummary> {
         this.checkInitialization(true);
         const userSummary = {
             accountNetValue: new BigNumber(0),
@@ -483,6 +483,7 @@ export class BumpinClient {
             tokens: [] as UserTokenSummary[],
             liabilityRatio: new BigNumber(0),
             apr: new BigNumber(0),
+            equity: new BigNumber(0),
         };
         const user = await this.getUser(sync);
         const tradeTokens = await this.getTradeTokens();
@@ -495,18 +496,22 @@ export class BumpinClient {
                 markets,
                 pools,
             );
-        const balanceOfUserPositions =
-            await BumpinPositionUtils.getUserPositionValue(
-                this.tradeTokenComponent!,
-                user,
-                tradeTokens,
-                markets,
-                pools,
-                false,
-                await this.getState(),
-            );
+        const unPnl = await BumpinPositionUtils.getUserAllPositionUnPnl(
+            this.tradeTokenComponent!,
+            user,
+        );
+        const tokenEquity = await BumpinTokenUtils.getUserAllTokenEquity(
+            this.tradeTokenComponent!,
+            user,
+            tradeTokens,
+        );
+        let userStaking = await this.summaryClaimUserRewards();
         userSummary.accountNetValue = accountNetValue.accountNetValue;
-        userSummary.pnl = balanceOfUserPositions.positionUnPnl;
+        userSummary.pnl = unPnl;
+        userSummary.equity = tokenEquity
+            .plus(unPnl)
+            .plus(userStaking.totalStakingValue);
+        userSummary.earn = userStaking.totalStakingValue;
         for (const tradeToken of tradeTokens) {
             const userTokenSummary = {
                 token: tradeToken,
@@ -521,13 +526,7 @@ export class BumpinClient {
             if (userToken) {
                 userTokenSummary.amount = userToken.amount;
                 userTokenSummary.used = userToken.usedAmount;
-                userTokenSummary.borrow = userToken.usedAmount
-                    .minus(userToken.liabilityAmount)
-                    .gt(userToken.amount)
-                    ? userToken.usedAmount
-                          .minus(userToken.amount)
-                          .minus(userToken.liabilityAmount)
-                    : new BigNumber(0);
+                userTokenSummary.borrow = userToken.liabilityAmount;
             }
             userSummary.tokens.push(userTokenSummary);
         }
@@ -884,7 +883,7 @@ export class BumpinClient {
         let baseTokenAmount = pool.balance.amount
             .plus(pool.balance.unSettleAmount)
             .minus(pool.balance.holdAmount);
-        if (baseTokenAmount.lt(0)) {
+        if (baseTokenAmount.lt(BigNumber(0))) {
             return BigNumber(0);
         }
 
@@ -917,6 +916,7 @@ export class BumpinClient {
             .multipliedBy(pool.config.borrowingInterestRate)
             .multipliedBy(timePassed)
             .div(timePassed)
+            .multipliedBy(3600)
             .toNumber();
     }
 
@@ -964,9 +964,8 @@ export class BumpinClient {
         if (!pool.stable) {
             // relative market unpnl usd value
             for (let relativeMarket of relativeMarkets) {
-                const marketUnPnlUsd = await this.getMarketUnPnlUsd(
-                    relativeMarket,
-                );
+                const marketUnPnlUsd =
+                    await this.getMarketUnPnlUsd(relativeMarket);
                 rawValue = rawValue
                     .plus(marketUnPnlUsd.longUnPnl)
                     .plus(marketUnPnlUsd.shortUnPnl);
@@ -1032,7 +1031,9 @@ export class BumpinClient {
                 .minus(positionFee.totalUsd)
                 .multipliedBy(percentage)
                 .dividedBy(new BigNumber(marginTokenPrice.price!));
-            positionSettle.positionFee = positionFee.totalUsd.multipliedBy(percentage).dividedBy(new BigNumber(marginTokenPrice.price!));
+            positionSettle.positionFee = positionFee.totalUsd
+                .multipliedBy(percentage)
+                .dividedBy(new BigNumber(marginTokenPrice.price!));
         }
         return positionSettle;
     }
@@ -1102,16 +1103,47 @@ export class BumpinClient {
 
     //TODO: Jax, check this
     public async getUserAvailableValue(
-        sync: boolean = false,
+        sync: boolean = true,
     ): Promise<BigNumber> {
         this.checkInitialization(true);
         const user = await this.getUser(sync);
-        return await this.userComponent!.getUserAvailableValue(
-            user,
-            await this.getTradeTokens(),
-            await this.getMarkets(),
-            await this.getPools(),
-        );
+
+        const accountNetValue =
+            await this.userComponent!.getUserAccountNetValue(
+                user,
+                await this.getTradeTokens(),
+                await this.getMarkets(),
+                await this.getPools(),
+            );
+        let balanceOfUserPositions =
+            await BumpinPositionUtils.getUserPositionValue(
+                this.tradeTokenComponent!,
+                user,
+                await this.getTradeTokens(),
+                await this.getMarkets(),
+                await this.getPools(),
+                true,
+                await this.getState(),
+            );
+        let balanceOfUserTradeTokens =
+            await BumpinTokenUtils.getUserTradeTokenBalance(
+                this.tradeTokenComponent!,
+                user,
+                await this.getTradeTokens(),
+            );
+        let userAvailableValue = accountNetValue.accountNetValue
+            .minus(
+                balanceOfUserPositions.positionUnPnl.gt(BigNumber(0))
+                    ? balanceOfUserPositions.positionUnPnl
+                    : BigNumber(0),
+            )
+            .minus(
+                balanceOfUserTradeTokens.tokenBorrowingValue.plus(
+                    balanceOfUserPositions.initialMarginUsdFromPortfolio,
+                ),
+            );
+        console.log('userAvailableValue:' + userAvailableValue);
+        return userAvailableValue;
     }
 
     //TODO: Jax, check this

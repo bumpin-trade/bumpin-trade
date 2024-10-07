@@ -19,16 +19,18 @@ pub fn withdraw(
     oracle_map: &mut OracleMap,
     trade_tokens: &TradeTokenMap,
 ) -> BumpResult {
-    let trade_token = trade_tokens.get_trade_token_by_mint_ref(token_mint)?;
-    let price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
-    let withdraw_usd = calculator::token_to_usd_u(amount, trade_token.decimals, price)?;
+    if user.cross_used()? {
+        let trade_token = trade_tokens.get_trade_token_by_mint_ref(token_mint)?;
+        let price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
+        let withdraw_usd = calculator::token_to_usd_u(amount, trade_token.decimals, price)?;
 
-    let available_value = user.get_available_value(trade_tokens, oracle_map)?;
+        let available_value = user.get_available_value(trade_tokens, oracle_map)?;
 
-    validate!(
+        validate!(
         available_value.abs().cast::<u128>()? > withdraw_usd,
         BumpErrorCode::UserNotEnoughValue
     )?;
+    }
     user.sub_user_token_amount_ignore_used_amount(
         token_mint,
         amount,
