@@ -19,17 +19,17 @@ pub struct Market {
     pub short_open_interest: MarketPosition,
     pub funding_fee: MarketFundingFee,
     pub config: MarketConfig,
+    pub stable_loss: i128, // short profit mean +/otherwies mean -
     pub pool_key: Pubkey,
     pub pool_mint_key: Pubkey,
     pub index_mint_oracle: Pubkey,
     pub stable_pool_key: Pubkey,
     pub stable_pool_mint_key: Pubkey,
-    pub stable_loss: i128, // short profit mean +/otherwies mean -
     pub stable_unsettle_loss: i128,
     pub index: u16,
     pub market_status: MarketStatus,
     pub share_short: bool,
-    pub padding: [u8; 28],
+    pub padding: [u8; 12],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Copy, Debug, Eq, PartialEq)]
