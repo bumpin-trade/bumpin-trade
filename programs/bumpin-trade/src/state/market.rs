@@ -24,10 +24,12 @@ pub struct Market {
     pub index_mint_oracle: Pubkey,
     pub stable_pool_key: Pubkey,
     pub stable_pool_mint_key: Pubkey,
+    pub stable_loss: i128, // short profit mean +/otherwies mean -
+    pub stable_unsettle_loss: i128,
     pub index: u16,
     pub market_status: MarketStatus,
-    pub padding: [u8; 13],
-    pub reserve_padding: [u8; 32],
+    pub share_short: bool,
+    pub padding: [u8; 28],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Copy, Debug, Eq, PartialEq)]
@@ -170,7 +172,7 @@ impl Market {
                         PRICE_PRECISION,
                         price,
                     )?
-                    .cast::<i128>()?;
+                        .cast::<i128>()?;
 
                     long_funding_fee_per_qty_delta = if long_pay_short {
                         long_funding_fee_per_qty_delta
