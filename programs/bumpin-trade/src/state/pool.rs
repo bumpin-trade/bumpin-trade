@@ -58,7 +58,7 @@ pub enum PoolStatus {
 
 #[bumpin_zero_copy_unsafe]
 pub struct PoolBalance {
-    pub settle_funding_fee: i128,// we should receive funding fee
+    pub settle_funding_fee: i128, // we should receive funding fee
     pub amount: u128,
     pub hold_amount: u128,
     pub un_settle_amount: u128,
@@ -353,9 +353,6 @@ impl Pool {
                     pool_value = add_i128(pool_value, stable_loss_value)?;
                 }
             } else {
-                let short_market_un_pnl = market.get_market_un_pnl(false, oracle_map)?;
-                pool_value = add_i128(pool_value, short_market_un_pnl)?;
-
                 if market.share_short {
                     let stable_trade_token = trade_token_map.get_trade_token_by_mint_ref(&self.stable_mint_key)?;
                     let stable_trade_token_price = oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
@@ -365,6 +362,9 @@ impl Pool {
                     if stable_loss_value < 0 {
                         pool_value = add_i128(pool_value, stable_loss_value.abs().cast()?)?;
                     }
+                } else {
+                    let short_market_un_pnl = market.get_market_un_pnl(false, oracle_map)?;
+                    pool_value = add_i128(pool_value, short_market_un_pnl)?;
                 }
             }
         }
