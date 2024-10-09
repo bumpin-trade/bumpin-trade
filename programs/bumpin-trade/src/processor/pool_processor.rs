@@ -19,7 +19,6 @@ pub fn un_stake(
     market_map: &MarketMap,
 ) -> BumpResult<u128> {
     let base_trade_token = trade_token_map.get_trade_token_by_mint_ref(&pool.mint_key)?;
-    let stable_trade_token = trade_token_map.get_trade_token_by_mint_ref(&pool.stable_mint_key)?;
     let net_price = pool.get_pool_net_price(trade_token_map, oracle_map, market_map)?;
     let un_stake_usd =
         calculator::token_to_usd_u(un_stake_amount, base_trade_token.decimals, net_price)?;
@@ -30,9 +29,9 @@ pub fn un_stake(
     validate!(
         token_amount
             <= pool.get_pool_available_liquidity(
+                market_map,
                 oracle_map,
-                &base_trade_token,
-                &stable_trade_token
+                trade_token_map,
             )?,
         BumpErrorCode::UnStakeWithAmountNotEnough
     )?;

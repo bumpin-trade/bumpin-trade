@@ -19,13 +19,13 @@ pub struct Market {
     pub short_open_interest: MarketPosition,
     pub funding_fee: MarketFundingFee,
     pub config: MarketConfig,
-    pub stable_loss: i128, // short profit mean +/otherwies mean -
+    pub stable_loss: i128, // short profit mean +/ otherwise mean -
     pub pool_key: Pubkey,
     pub pool_mint_key: Pubkey,
     pub index_mint_oracle: Pubkey,
     pub stable_pool_key: Pubkey,
     pub stable_pool_mint_key: Pubkey,
-    pub stable_unsettle_loss: i128,
+    pub stable_unsettle_loss: u128,
     pub index: u16,
     pub market_status: MarketStatus,
     pub share_short: bool,
@@ -49,8 +49,8 @@ impl Market {
         self.stable_loss = calculator::add_i128(self.stable_loss, amount)?;
         Ok(())
     }
-    pub fn add_unsettle_stable_loss(&mut self, amount: i128) -> BumpResult<()>{
-        self.stable_unsettle_loss = calculator::add_i128(self.stable_unsettle_loss, amount)?;
+    pub fn add_unsettle_stable_loss(&mut self, amount: u128) -> BumpResult<()>{
+        self.stable_unsettle_loss = calculator::add_u128(self.stable_unsettle_loss, amount)?;
         Ok(())
     }
     pub fn update_oi(&mut self, add: bool, params: UpdateOIParams) -> BumpResult<()> {

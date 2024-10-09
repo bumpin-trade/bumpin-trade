@@ -4177,7 +4177,7 @@
                     },
                     {
                         "name": "stable_unsettle_loss",
-                        "type": "i128"
+                        "type": "u128"
                     },
                     {
                         "name": "index",

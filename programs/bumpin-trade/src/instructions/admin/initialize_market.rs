@@ -95,7 +95,7 @@ pub fn handle_initialize_market(
     market.config = config;
     market.share_short = params.share_short;
     market.stable_loss = 0i128;
-    market.stable_unsettle_loss = 0i128;
+    market.stable_unsettle_loss = 0u128;
     safe_increment!(state.market_sequence, 1);
     safe_increment!(pool.deref_mut().market_number, 1);
     safe_increment!(stable_pool.deref_mut().market_number, 1);

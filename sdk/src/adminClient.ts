@@ -376,8 +376,9 @@ export class BumpinAdmin {
         }).compileToV0Message();
         const transaction = new VersionedTransaction(messageV0);
         let signedTransaction = await this.wallet.signTransaction(transaction);
-        const signature =
-            await this.provider.connection.sendTransaction(signedTransaction);
+        const signature = await this.provider.connection.sendTransaction(
+            signedTransaction,
+        );
         await this.provider.connection.confirmTransaction(
             {
                 blockhash,

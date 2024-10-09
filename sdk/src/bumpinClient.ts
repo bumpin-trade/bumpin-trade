@@ -34,10 +34,14 @@ import {
     BumpinSubscriptionFailed,
     BumpinUserNotLogin,
 } from './errors';
-import {PollingUserAccountSubscriber} from './account/pollingUserAccountSubscriber';
+import {
+    PollingUserAccountSubscriber
+} from './account/pollingUserAccountSubscriber';
 import {BulkAccountLoader} from './account/bulkAccountLoader';
 import {DataAndSlot} from './account/types';
-import {PollingStateAccountSubscriber} from './account/pollingStateAccountSubscriber';
+import {
+    PollingStateAccountSubscriber
+} from './account/pollingStateAccountSubscriber';
 import {PoolComponent} from './componets/pool';
 import {Pyth} from './types/pyth';
 import {UserComponent} from './componets/user';
@@ -968,23 +972,31 @@ export class BumpinClient {
             .plus(pool.balance.unSettleAmount)
             .multipliedBy(price.price!);
 
-        // relative market unpnl usd value
         for (let relativeMarket of relativeMarkets) {
-            const marketUnPnlUsd =
-                await this.getMarketUnPnlUsd(relativeMarket);
+            const marketUnPnlUsd = await this.getMarketUnPnlUsd(
+                relativeMarket,
+            );
+            const stableTradeTokenPrice =
+                await this.tradeTokenComponent!.getTradeTokenPricesByMintKey(
+                    relativeMarket.stablePoolMintKey,
+                    sync,
+                );
+            if (!stableTradeTokenPrice.price) {
+                throw new BumpinInvalidParameter(
+                    'Price not found(undefined) for mint: ' +
+                    relativeMarket.stablePoolMintKey.toString(),
+                );
+            }
+            let stableLossValue = relativeMarket.stableLoss.plus(relativeMarket.stableUnsettleLoss).multipliedBy(stableTradeTokenPrice.price);
             if (!pool.stable) {
                 rawValue = rawValue.plus(marketUnPnlUsd.longUnPnl);
                 if (relativeMarket.shareShort) {
-                    rawValue = rawValue.plus(marketUnPnlUsd.shortUnPnl);
-                    rawValue = rawValue.plus(relativeMarket.stableLoss.plus(relativeMarket.stableUnsettleLoss).multipliedBy(stablePrice.price!));
+                    rawValue = rawValue.plus(stableLossValue);
                 }
             } else {
+                rawValue = rawValue.plus(marketUnPnlUsd.shortUnPnl);
                 if (relativeMarket.shareShort) {
-                    let stableLossValue = relativeMarket.stableLoss.plus(relativeMarket.stableUnsettleLoss).multipliedBy(stablePrice.price!);
-                    rawValue = rawValue.plus(stableLossValue.lt(BigNumber(0)) ? stableLossValue.abs() : BigNumber(0));
-                } else {
-                    rawValue = rawValue
-                        .plus(marketUnPnlUsd.shortUnPnl);
+                    rawValue = rawValue.minus(stableLossValue);
                 }
             }
         }

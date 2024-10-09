@@ -763,8 +763,8 @@ export class UserComponent extends Component {
                 ? tradeToken
                 : stableTradeToken
             : isEqual(param.orderSide, OrderSide.LONG)
-              ? stableTradeToken
-              : tradeToken;
+            ? stableTradeToken
+            : tradeToken;
         let marginPrice =
             this.tradeTokenComponent.getTradeTokenPricesByOracleKey(
                 marginToken.oracleKey,
@@ -803,8 +803,8 @@ export class UserComponent extends Component {
                               ? tradeToken.decimals
                               : stableTradeToken.decimals
                           : isEqual(param.orderSide, OrderSide.LONG)
-                            ? stableTradeToken.decimals
-                            : tradeToken.decimals,
+                          ? stableTradeToken.decimals
+                          : tradeToken.decimals,
                   )
                 : BumpinUtils.number2Precision(
                       param.orderMargin * marginPrice.price,

@@ -874,31 +874,17 @@ pub fn execute_reduce_position_margin(
     if position.is_long {
         base_token_pool.hold_pool_amount(
             reduce_margin_amount,
+            market_map,
             oracle_map,
-            base_trade_token,
-            stable_trade_token,
+            trade_token_map,
             market.config.max_pool_liquidity_share_rate,
         )?
     } else {
-        let base_token_pool_value =
-            base_token_pool.get_pool_usd_value(trade_token_map, oracle_map, market_map)?;
-        validate!(
-            base_token_pool_value
-                >= calculator::token_to_usd_u(
-                    reduce_margin_amount,
-                    stable_trade_token.decimals,
-                    oracle_map
-                        .get_price_data(&stable_trade_token.oracle_key)
-                        .map_err(|_e| BumpErrorCode::OracleNotFound)?
-                        .price
-                )?,
-            BumpErrorCode::AmountNotEnough
-        )?;
         stable_pool.hold_pool_amount(
             reduce_margin_amount,
+            market_map,
             oracle_map,
-            base_trade_token,
-            stable_trade_token,
+            trade_token_map,
             market.config.max_pool_liquidity_share_rate,
         )?
     }
@@ -1186,8 +1172,8 @@ pub fn increase_position(
     let mut market = market_map.get_mut_ref(symbol)?;
     let mut base_token_pool = pool_map.get_mut_ref(&market.pool_key)?;
     let mut stable_pool = pool_map.get_mut_ref(&market.stable_pool_key)?;
-    let mut trade_token = trade_token_map.get_trade_token_by_mint_ref_mut(&market.pool_mint_key)?;
-    let mut stable_trade_token =
+    let trade_token = trade_token_map.get_trade_token_by_mint_ref_mut(&market.pool_mint_key)?;
+    let stable_trade_token =
         trade_token_map.get_trade_token_by_mint_ref_mut(&market.stable_pool_mint_key)?;
     let position_key = pda::generate_position_key(
         &user.key,
@@ -1362,17 +1348,17 @@ pub fn increase_position(
     if is_long {
         base_token_pool.hold_pool_amount(
             increase_hold,
+            market_map,
             oracle_map,
-            trade_token.deref_mut(),
-            stable_trade_token.deref_mut(),
+            trade_token_map,
             market.config.max_pool_liquidity_share_rate,
         )?;
     } else {
         stable_pool.hold_pool_amount(
             increase_hold,
+            market_map,
             oracle_map,
-            trade_token.deref_mut(),
-            stable_trade_token.deref_mut(),
+            trade_token_map,
             market.config.max_pool_liquidity_share_rate,
         )?;
     }

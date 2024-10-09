@@ -4066,261 +4066,266 @@ export type BumpinTrade = {
         },
         {
             code: 6019;
+            name: 'liquidationErrorWithBankruptcyPriceZero';
+            msg: 'liquidationErrorWithBankruptcyPriceZero';
+        },
+        {
+            code: 6020;
             name: 'onlyOneDirectionPositionIsAllowed';
             msg: 'onlyOneDirectionPositionIsAllowed';
         },
         {
-            code: 6020;
+            code: 6021;
             name: 'balanceNotEnough';
             msg: 'balanceNotEnough';
         },
         {
-            code: 6021;
+            code: 6022;
             name: 'pythOffline';
             msg: 'pythOffline';
         },
         {
-            code: 6022;
+            code: 6023;
             name: 'overflow';
             msg: 'overflow';
         },
         {
-            code: 6023;
+            code: 6024;
             name: 'transferFailed';
             msg: 'transferFailed';
         },
         {
-            code: 6024;
+            code: 6025;
             name: 'unableToLoadAccountLoader';
             msg: 'Unable to load AccountLoader';
         },
         {
-            code: 6025;
+            code: 6026;
             name: 'cantPayUserInitFee';
             msg: 'cantPayUserInitFee';
         },
         {
-            code: 6026;
+            code: 6027;
             name: 'couldNotFindUserToken';
             msg: 'couldNotFindUserToken';
         },
         {
-            code: 6027;
+            code: 6028;
             name: 'couldNotFindUserOrder';
             msg: 'couldNotFindUserOrder';
         },
         {
-            code: 6028;
+            code: 6029;
             name: 'couldNotFindUserPosition';
             msg: 'couldNotFindUserPosition';
         },
         {
-            code: 6029;
+            code: 6030;
             name: 'liquidatePositionIgnore';
             msg: 'liquidatePositionIgnore';
         },
         {
-            code: 6030;
+            code: 6031;
             name: 'onlyCrossPositionAllowed';
             msg: 'onlyCrossPositionAllowed';
         },
         {
-            code: 6031;
+            code: 6032;
             name: 'onlyIsolatePositionAllowed';
             msg: 'onlyIsolatePositionAllowed';
         },
         {
-            code: 6032;
+            code: 6033;
             name: 'couldNotFindUserStake';
             msg: 'couldNotFindUserStake';
         },
         {
-            code: 6033;
+            code: 6034;
             name: 'userStakeHasNoMoreClaim';
             msg: 'userStakeHasNoMoreClaim';
         },
         {
-            code: 6034;
+            code: 6035;
             name: 'oracleNotFound';
             msg: 'oracleNotFound';
         },
         {
-            code: 6035;
+            code: 6036;
             name: 'oraclePriceToOld';
             msg: 'oraclePriceToOld';
         },
         {
-            code: 6036;
+            code: 6037;
             name: 'unableToLoadOracle';
             msg: 'Unable To Load Oracles';
         },
         {
-            code: 6037;
+            code: 6038;
             name: 'invalidOracle';
             msg: 'invalidOracle';
         },
         {
-            code: 6038;
+            code: 6039;
             name: 'bnConversionError';
             msg: 'Conversion to u128/u128 failed with an overflow or underflow';
         },
         {
-            code: 6039;
+            code: 6040;
             name: 'mathError';
             msg: 'Math Error';
         },
         {
-            code: 6040;
+            code: 6041;
             name: 'castingFailure';
             msg: 'Casting Failure';
         },
         {
-            code: 6041;
+            code: 6042;
             name: 'couldNotLoadMarketData';
             msg: 'couldNotLoadMarketData';
         },
         {
-            code: 6042;
+            code: 6043;
             name: 'couldNotFindMarket';
             msg: 'couldNotFindMarket';
         },
         {
-            code: 6043;
+            code: 6044;
             name: 'invalidMarketAccount';
             msg: 'invalidMarketAccount';
         },
         {
-            code: 6044;
+            code: 6045;
             name: 'marketWrongMutability';
             msg: 'marketWrongMutability';
         },
         {
-            code: 6045;
+            code: 6046;
             name: 'marketNumberNotEqual2Pool';
             msg: 'marketNumberNotEqual2Pool';
         },
         {
-            code: 6046;
+            code: 6047;
             name: 'failedUnwrap';
             msg: 'Failed Unwrap';
         },
         {
-            code: 6047;
+            code: 6048;
             name: 'userNotEnoughValue';
             msg: 'User Not Enough Value';
         },
         {
-            code: 6048;
+            code: 6049;
             name: 'amountZero';
             msg: 'amountZero';
         },
         {
-            code: 6049;
+            code: 6050;
             name: 'couldNotLoadTokenAccountData';
             msg: 'couldNotLoadTokenAccountData';
         },
         {
-            code: 6050;
+            code: 6051;
             name: 'couldNotLoadTradeTokenData';
             msg: 'couldNotLoadTradeTokenData';
         },
         {
-            code: 6051;
+            code: 6052;
             name: 'couldNotLoadPoolData';
             msg: 'couldNotLoadPoolData';
         },
         {
-            code: 6052;
+            code: 6053;
             name: 'invalidTradeTokenAccount';
             msg: 'invalidTradeTokenAccount';
         },
         {
-            code: 6053;
+            code: 6054;
             name: 'invalidTokenAccount';
             msg: 'invalidTokenAccount';
         },
         {
-            code: 6054;
+            code: 6055;
             name: 'invalidPoolAccount';
             msg: 'invalidPoolAccount';
         },
         {
-            code: 6055;
+            code: 6056;
             name: 'tradeTokenNotFind';
             msg: 'canNotFindTradeToken';
         },
         {
-            code: 6056;
+            code: 6057;
             name: 'vaultNotFind';
             msg: 'canNotFindVault';
         },
         {
-            code: 6057;
+            code: 6058;
             name: 'marketNotFind';
             msg: 'canNotFindMarket';
         },
         {
-            code: 6058;
+            code: 6059;
             name: 'stakePaused';
             msg: 'stakePaused';
         },
         {
-            code: 6059;
+            code: 6060;
             name: 'stakeToSmall';
             msg: 'stakeToSmall';
         },
         {
-            code: 6060;
+            code: 6061;
             name: 'unStakeTooSmall';
             msg: 'unStakeTooSmall';
         },
         {
-            code: 6061;
+            code: 6062;
             name: 'unStakeWithAmountNotEnough';
             msg: 'unStakeWithAmountNotEnough';
         },
         {
-            code: 6062;
+            code: 6063;
             name: 'unStakeTooLarge';
             msg: 'unStakeTooLarge';
         },
         {
-            code: 6063;
+            code: 6064;
             name: 'positionSideNotSupport';
             msg: 'positionSideNotSupport';
         },
         {
-            code: 6064;
+            code: 6065;
             name: 'rewardsNotFound';
             msg: 'rewardsNotFound';
         },
         {
-            code: 6065;
+            code: 6066;
             name: 'userNotFound';
             msg: 'userNotFound';
         },
         {
-            code: 6066;
+            code: 6067;
             name: 'couldNotLoadUserData';
             msg: 'couldNotLoadUserData';
         },
         {
-            code: 6067;
+            code: 6068;
             name: 'poolSubUnsettleNotEnough';
             msg: 'poolSubUnsettleNotEnough';
         },
         {
-            code: 6068;
+            code: 6069;
             name: 'timestampNotFound';
             msg: 'timestampNotFound';
         },
         {
-            code: 6069;
+            code: 6070;
             name: 'claimUnqualified';
             msg: 'claimUnqualified';
         },
         {
-            code: 6070;
+            code: 6071;
             name: 'poolMintSupplyIsZero';
             msg: 'poolMintSupplyIsZero';
         },
@@ -4678,6 +4683,10 @@ export type BumpinTrade = {
                         name: 'maxPoolLiquidityShareRate';
                         type: 'u32';
                     },
+                    {
+                        name: 'shareShort';
+                        type: 'bool';
+                    },
                 ];
             };
         },
@@ -4879,6 +4888,10 @@ export type BumpinTrade = {
                         };
                     },
                     {
+                        name: 'stableLoss';
+                        type: 'i128';
+                    },
+                    {
                         name: 'poolKey';
                         type: 'pubkey';
                     },
@@ -4899,6 +4912,10 @@ export type BumpinTrade = {
                         type: 'pubkey';
                     },
                     {
+                        name: 'stableUnsettleLoss';
+                        type: 'u128';
+                    },
+                    {
                         name: 'index';
                         type: 'u16';
                     },
@@ -4911,15 +4928,13 @@ export type BumpinTrade = {
                         };
                     },
                     {
-                        name: 'padding';
-                        type: {
-                            array: ['u8', 13];
-                        };
+                        name: 'shareShort';
+                        type: 'bool';
                     },
                     {
-                        name: 'reservePadding';
+                        name: 'padding';
                         type: {
-                            array: ['u8', 32];
+                            array: ['u8', 12];
                         };
                     },
                 ];

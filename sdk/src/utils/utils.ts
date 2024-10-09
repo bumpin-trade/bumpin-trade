@@ -275,8 +275,9 @@ export class BumpinUtils {
         const transaction = new VersionedTransaction(messageV0);
         let signedTransaction = await wallet.signTransaction(transaction);
         signedTransaction.sign([newAccountPk]);
-        const signature =
-            await provider.connection.sendTransaction(signedTransaction);
+        const signature = await provider.connection.sendTransaction(
+            signedTransaction,
+        );
         await provider.connection.confirmTransaction({
             blockhash,
             lastValidBlockHeight,
