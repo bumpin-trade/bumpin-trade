@@ -1,3 +1,4 @@
+use std::panic::Location;
 use anchor_lang::prelude::*;
 
 use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
@@ -221,7 +222,12 @@ impl Pool {
         let mut market_loaded = vec![];
         for market_loader in markets {
             let market =
-                market_loader.load().map_err(|_e| BumpErrorCode::CouldNotLoadMarketData)?;
+                market_loader.load().map_err(|e| {
+                    let caller = Location::caller();
+                    msg!("{:?}", e);
+                    msg!("Could not load trade_token at {}:{}", caller.file(), caller.line());
+                    BumpErrorCode::CouldNotLoadMarketData
+                })?;
             if self.key.eq(&market.pool_key) || self.key.eq(&market.stable_pool_key) {
                 market_loaded.push(market);
             }

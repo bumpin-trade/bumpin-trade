@@ -1348,6 +1348,10 @@ pub fn increase_position(
     )?;
 
     msg!("===========increase_position start444");
+    let max_pool_liquidity_share_rate = market.config.max_pool_liquidity_share_rate;
+    drop(market);
+    drop(trade_token);
+    drop(stable_trade_token);
     //lock pool amount
     if is_long {
         base_token_pool.hold_pool_amount(
@@ -1355,7 +1359,7 @@ pub fn increase_position(
             market_map,
             oracle_map,
             trade_token_map,
-            market.config.max_pool_liquidity_share_rate,
+            max_pool_liquidity_share_rate,
         )?;
     } else {
         stable_pool.hold_pool_amount(
@@ -1363,7 +1367,7 @@ pub fn increase_position(
             market_map,
             oracle_map,
             trade_token_map,
-            market.config.max_pool_liquidity_share_rate,
+            max_pool_liquidity_share_rate,
         )?;
     }
     Ok(())
