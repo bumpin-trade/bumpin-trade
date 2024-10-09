@@ -1,16 +1,15 @@
-use anchor_lang::error;
-use anchor_lang::prelude::Pubkey;
-use anchor_lang::prelude::*;
-use anchor_lang::require_keys_neq;
-use anchor_lang::solana_program::program::invoke;
-use anchor_lang::solana_program::system_instruction::transfer;
-
 use crate::errors::BumpErrorCode;
 use crate::errors::BumpErrorCode::CantPayUserInitFee;
 use crate::state::bump_events::InitUserEvent;
 use crate::state::state::State;
 use crate::state::traits::Size;
 use crate::state::user::User;
+use anchor_lang::error;
+use anchor_lang::prelude::Pubkey;
+use anchor_lang::prelude::*;
+use anchor_lang::require_keys_neq;
+use anchor_lang::solana_program::program::invoke;
+use anchor_lang::solana_program::system_instruction::transfer;
 
 #[derive(Accounts)]
 pub struct InitializeUser<'info> {

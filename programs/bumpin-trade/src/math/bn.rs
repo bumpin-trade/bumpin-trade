@@ -8,7 +8,6 @@ use crate::borsh::maybestd::io::Read;
 use crate::errors::BumpErrorCode::BnConversionError;
 use crate::errors::BumpResult;
 use anchor_lang::prelude::borsh::{BorshDeserialize, BorshSerialize};
-use std::borrow::BorrowMut;
 use std::convert::TryInto;
 use std::io::{Error, ErrorKind, Write};
 use std::mem::size_of;
@@ -82,12 +81,7 @@ impl U256 {
 
     /// Convert to little endian bytes
     pub fn to_le_bytes(self) -> [u8; 32] {
-        let mut buf: Vec<u8> = Vec::with_capacity(size_of::<Self>());
-        self.to_little_endian(buf.borrow_mut());
-
-        let mut bytes: [u8; 32] = [0u8; 32];
-        bytes.copy_from_slice(buf.as_slice());
-        bytes
+        self.to_little_endian()
     }
 }
 
@@ -127,12 +121,7 @@ impl U192 {
 
     /// Convert to little endian bytes
     pub fn to_le_bytes(self) -> [u8; 24] {
-        let mut buf: Vec<u8> = Vec::with_capacity(size_of::<Self>());
-        self.to_little_endian(buf.borrow_mut());
-
-        let mut bytes: [u8; 24] = [0u8; 24];
-        bytes.copy_from_slice(buf.as_slice());
-        bytes
+        self.to_little_endian()
     }
 }
 

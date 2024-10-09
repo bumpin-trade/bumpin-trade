@@ -10,7 +10,7 @@ use crate::state::vault_map::VaultMap;
 pub struct AccountMaps<'a> {
     pub market_map: MarketMap<'a>,
     pub trade_token_map: TradeTokenMap<'a>,
-    pub oracle_map: OracleMap<'a>,
+    pub oracle_map: OracleMap,
     pub pool_map: PoolMap<'a>,
     pub vault_map: VaultMap<'a>,
 }

@@ -1,56 +1,67 @@
 use std::collections::BTreeMap;
 
-use anchor_lang::prelude::*;
-use anchor_lang::Key;
-
 use crate::errors::BumpErrorCode::OracleNotFound;
-use crate::errors::BumpResult;
+use crate::errors::{BumpErrorCode, BumpResult};
 use crate::ids::pyth_program;
 use crate::math::safe_unwrap::SafeUnwrap;
 use crate::state::oracle::{get_oracle_price, OraclePriceData};
+use anchor_lang::prelude::*;
+use anchor_lang::Discriminator;
+use arrayref::array_ref;
+use pyth_solana_receiver_sdk::price_update::{FeedId, PriceUpdateV2};
 
-pub struct AccountInfoAndOracleSource<'a> {
-    /// CHECK: ownders are validated in OracleMap::load
-    pub account_info: AccountInfo<'a>,
+pub struct OracleMap{
+    oracles: BTreeMap<FeedId, PriceUpdateV2>,
+    price_data: BTreeMap<FeedId, OraclePriceData>,
 }
 
-pub struct OracleMap<'a> {
-    oracles: BTreeMap<Pubkey, AccountInfoAndOracleSource<'a>>,
-    price_data: BTreeMap<Pubkey, OraclePriceData>,
-}
-
-impl<'a> OracleMap<'a> {
-    pub fn contains(&self, pubkey: &Pubkey) -> bool {
-        self.oracles.contains_key(pubkey) || pubkey == &Pubkey::default()
+impl OracleMap {
+    pub fn contains(&self, pubkey: &FeedId) -> bool {
+        self.oracles.contains_key(pubkey) || pubkey == &FeedId::default()
     }
 
     pub fn get_price_data(&mut self, pubkey: &Pubkey) -> BumpResult<&OraclePriceData> {
-        if self.price_data.contains_key(pubkey) {
-            return self.price_data.get(pubkey).safe_unwrap().clone();
+        let feed_id: &FeedId = pubkey.as_ref().try_into().or(Err(BumpErrorCode::InvalidOracle))?;
+        if self.price_data.contains_key(feed_id) {
+            return self.price_data.get(feed_id).safe_unwrap().clone();
         }
-        let account_info = match self.oracles.get(pubkey) {
-            Some(AccountInfoAndOracleSource { account_info }) => account_info,
+        let price_update_v2 = match self.oracles.get(feed_id) {
+            Some(price_update_v2) => price_update_v2,
             None => {
-                msg!("oracle pubkey not found in oracle_map: {}", pubkey);
+                msg!("oracle pubkey not found in oracle_map");
                 return Err(OracleNotFound);
             },
         };
-        let price_result = get_oracle_price(account_info)?;
-        self.price_data.insert(*pubkey, price_result);
+        let price_result = get_oracle_price(feed_id, price_update_v2)?;
+        self.price_data.insert(*feed_id, price_result);
 
-        self.price_data.get(pubkey).safe_unwrap()
+        self.price_data.get(feed_id).safe_unwrap()
     }
 
-    pub fn load(remaining_accounts: &'a [AccountInfo<'a>]) -> BumpResult<OracleMap<'a>> {
-        let mut oracles: BTreeMap<Pubkey, AccountInfoAndOracleSource<'a>> = BTreeMap::new();
+    pub fn load<'a>(remaining_accounts: &'a [AccountInfo<'a>]) -> BumpResult<OracleMap> {
+        let mut oracles: BTreeMap<[u8; 32], PriceUpdateV2> = BTreeMap::new();
 
+        let price_update_v2_discriminator: [u8; 8] = PriceUpdateV2::discriminator();
         for account_info in remaining_accounts.iter() {
             if account_info.owner == &pyth_program::id() {
-                let pubkey = account_info.key();
-                oracles.insert(
-                    pubkey,
-                    AccountInfoAndOracleSource { account_info: account_info.clone() },
-                );
+                if let Ok(data) = account_info.try_borrow_data() {
+                    let expected_data_len = PriceUpdateV2::LEN;
+                    if data.len() < expected_data_len {
+                        continue;
+                    }
+                    let account_discriminator = array_ref![data, 0, 8];
+                    if account_discriminator != &price_update_v2_discriminator {
+                        continue;
+                    }
+
+                    let data = &account_info.data.borrow();
+                    let price_update_v2 = PriceUpdateV2::try_from_slice(data).or(Err(BumpErrorCode::InvalidPriceUpdateV2Account))?;
+
+
+                    oracles.insert(price_update_v2.price_message.feed_id.clone(), price_update_v2);
+                } else {
+                    continue;
+                }
             }
         }
 
@@ -58,9 +69,4 @@ impl<'a> OracleMap<'a> {
     }
 }
 
-#[cfg(test)]
-impl<'a> OracleMap<'a> {
-    pub fn empty() -> OracleMap<'a> {
-        OracleMap { oracles: BTreeMap::new(), price_data: BTreeMap::new() }
-    }
-}
+

@@ -95,6 +95,8 @@ pub enum BumpErrorCode {
     CouldNotFindMarket,
     #[msg("InvalidMarketAccount")]
     InvalidMarketAccount,
+    #[msg("InvalidPriceUpdateV2Account")]
+    InvalidPriceUpdateV2Account,
     #[msg("MarketWrongMutability")]
     MarketWrongMutability,
     #[msg("MarketNumberNotEqual2Pool")]
