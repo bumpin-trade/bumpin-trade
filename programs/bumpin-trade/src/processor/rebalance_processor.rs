@@ -1,7 +1,7 @@
-use std::ops::DerefMut;
 use anchor_lang::prelude::Program;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
+use std::ops::DerefMut;
 
 use crate::errors::{BumpErrorCode, BumpResult};
 use crate::math::safe_math::SafeMath;
@@ -23,11 +23,11 @@ pub fn rebalance_pool_unsettle<'a>(
     trade_token_vault: &Account<'a, TokenAccount>,
     bump_signer: &AccountInfo<'a>,
     token_program: &Program<'a, Token>,
-    _oracle_map:&mut OracleMap,
-    market_map:&MarketMap,
-    trade_token_map:&TradeTokenMap,
+    _oracle_map: &mut OracleMap,
+    market_map: &MarketMap,
+    trade_token_map: &TradeTokenMap,
     pool_map: &PoolMap,
-    vault_map: &VaultMap<'a>
+    vault_map: &VaultMap<'a>,
 ) -> BumpResult {
     let mut pool =
         pool_account_loader.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadPoolData)?;
@@ -89,9 +89,9 @@ pub fn rebalance_pool_unsettle<'a>(
             }
         }
         validate!(
-                pool.market_number == market_loaded.len() as u16,
-                BumpErrorCode::MarketNumberNotEqual2Pool
-            )?;
+            pool.market_number == market_loaded.len() as u16,
+            BumpErrorCode::MarketNumberNotEqual2Pool
+        )?;
         for mut market in market_loaded {
             if !market.share_short {
                 continue;
@@ -103,7 +103,7 @@ pub fn rebalance_pool_unsettle<'a>(
                 // todo need do swap
                 let stable_loss = market.stable_loss;
                 market.deref_mut().add_stable_loss(stable_loss.abs())?
-            }else {
+            } else {
                 //pool transfer to stable pool
                 // todo need do swap
                 let stable_loss = market.stable_loss;
@@ -114,8 +114,10 @@ pub fn rebalance_pool_unsettle<'a>(
             if market.stable_unsettle_loss > 0u128 {
                 let stable_trade_pool = pool_map.get_ref(&market.stable_pool_key)?;
                 let stable_pool_vault = vault_map.get_account(&stable_trade_pool.pool_vault_key)?;
-                let stable_trade_token = trade_token_map.get_trade_token_by_mint_ref(&market.stable_pool_mint_key)?;
-                let stable_trade_token_vault = vault_map.get_account(&stable_trade_token.vault_key)?;
+                let stable_trade_token =
+                    trade_token_map.get_trade_token_by_mint_ref(&market.stable_pool_mint_key)?;
+                let stable_trade_token_vault =
+                    vault_map.get_account(&stable_trade_token.vault_key)?;
                 let transfer_amount = market.stable_unsettle_loss;
                 utils::token::send_from_program_vault(
                     token_program,
@@ -125,11 +127,10 @@ pub fn rebalance_pool_unsettle<'a>(
                     state.bump_signer_nonce,
                     transfer_amount,
                 )
-                    .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
+                .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
 
                 market.deref_mut().sub_unsettle_stable_loss(transfer_amount)?;
             }
-
         }
     }
     Ok(())

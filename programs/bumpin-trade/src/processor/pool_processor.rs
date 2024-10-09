@@ -28,11 +28,7 @@ pub fn un_stake(
     validate!(un_stake_usd > pool.config.minimum_un_stake_amount, BumpErrorCode::UnStakeTooSmall)?;
     validate!(
         token_amount
-            <= pool.get_pool_available_liquidity(
-                market_map,
-                oracle_map,
-                trade_token_map,
-            )?,
+            <= pool.get_pool_available_liquidity(market_map, oracle_map, trade_token_map,)?,
         BumpErrorCode::UnStakeWithAmountNotEnough
     )?;
 

@@ -45,16 +45,16 @@ impl Size for Market {
 }
 
 impl Market {
-    pub fn add_stable_loss(&mut self, amount: i128)-> BumpResult<()> {
+    pub fn add_stable_loss(&mut self, amount: i128) -> BumpResult<()> {
         self.stable_loss = calculator::add_i128(self.stable_loss, amount)?;
         Ok(())
     }
-    pub fn add_unsettle_stable_loss(&mut self, amount: u128) -> BumpResult<()>{
+    pub fn add_unsettle_stable_loss(&mut self, amount: u128) -> BumpResult<()> {
         self.stable_unsettle_loss = calculator::add_u128(self.stable_unsettle_loss, amount)?;
         Ok(())
     }
 
-    pub fn sub_unsettle_stable_loss(&mut self, amount: u128) -> BumpResult<()>{
+    pub fn sub_unsettle_stable_loss(&mut self, amount: u128) -> BumpResult<()> {
         self.stable_unsettle_loss = calculator::sub_u128(self.stable_unsettle_loss, amount)?;
         Ok(())
     }
@@ -185,7 +185,7 @@ impl Market {
                         PRICE_PRECISION,
                         price,
                     )?
-                        .cast::<i128>()?;
+                    .cast::<i128>()?;
 
                     long_funding_fee_per_qty_delta = if long_pay_short {
                         long_funding_fee_per_qty_delta
