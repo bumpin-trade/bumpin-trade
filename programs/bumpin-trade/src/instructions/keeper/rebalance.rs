@@ -4,6 +4,7 @@ use crate::state::state::State;
 use crate::state::trade_token::TradeToken;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
+use crate::processor::optional_accounts::{load_maps, AccountMaps};
 
 #[derive(Accounts)]
 #[instruction(
@@ -126,6 +127,9 @@ pub struct RewardsRebalance<'info> {
 pub fn handle_auto_reblance<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, AutoRebalance<'info>>,
 ) -> Result<()> {
+    let remaining_accounts = ctx.remaining_accounts;
+    let AccountMaps { trade_token_map, mut oracle_map, market_map, pool_map, vault_map, .. } =
+        load_maps(remaining_accounts)?;
     rebalance_processor::rebalance_pool_unsettle(
         &ctx.accounts.state,
         &ctx.accounts.pool,
@@ -134,6 +138,11 @@ pub fn handle_auto_reblance<'a, 'b, 'c: 'info, 'info>(
         &ctx.accounts.trade_token_vault,
         &ctx.accounts.bump_signer,
         &ctx.accounts.token_program,
+        &mut oracle_map,
+        &market_map,
+        &trade_token_map,
+        &pool_map,
+        &vault_map,
     )?;
     rebalance_processor::rebalance_rewards(
         &ctx.accounts.state,

@@ -225,7 +225,7 @@ impl Pool {
         for market_loader in markets {
             let market =
                 market_loader.load().map_err(|_e| BumpErrorCode::CouldNotLoadMarketData)?;
-            if self.key.eq(&market.pool_key) {
+            if self.key.eq(&market.pool_key) || self.key.eq(&market.stable_pool_key) {
                 market_loaded.push(market);
             }
         }
@@ -359,7 +359,7 @@ impl Pool {
         for market_loader in markets {
             let market =
                 market_loader.load().map_err(|_e| BumpErrorCode::CouldNotLoadMarketData)?;
-            if self.key.eq(&market.pool_key) {
+            if self.key.eq(&market.pool_key) || self.key.eq(&market.stable_pool_key) {
                 market_loaded.push(market);
             }
         }
