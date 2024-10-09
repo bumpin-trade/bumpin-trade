@@ -374,6 +374,9 @@ impl Pool {
                 pool_value = add_i128(pool_value, long_market_un_pnl)?;
 
                 if market.share_short {
+                    let short_market_un_pnl = market.get_market_un_pnl(false, oracle_map)?;
+                    pool_value = add_i128(pool_value, short_market_un_pnl)?;
+
                     let stable_trade_token = trade_token_map.get_trade_token_by_mint_ref(&self.stable_mint_key)?;
                     let stable_trade_token_price = oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
 
@@ -388,7 +391,10 @@ impl Pool {
 
                     let stable_loss_value = calculator::token_to_usd_i(market.stable_loss.safe_add(market.stable_unsettle_loss.cast()?)?,
                                                                        stable_trade_token.decimals, stable_trade_token_price)?;
-                    pool_value = sub_i128(pool_value, stable_loss_value.abs().cast()?)?;
+                    pool_value = sub_i128(pool_value, stable_loss_value.cast()?)?;
+                } else {
+                    let short_market_un_pnl = market.get_market_un_pnl(false, oracle_map)?;
+                    pool_value = add_i128(pool_value, short_market_un_pnl)?;
                 }
             }
         }

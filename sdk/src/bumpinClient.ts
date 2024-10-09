@@ -991,12 +991,13 @@ export class BumpinClient {
             if (!pool.stable) {
                 rawValue = rawValue.plus(marketUnPnlUsd.longUnPnl);
                 if (relativeMarket.shareShort) {
-                    rawValue = rawValue.plus(stableLossValue);
+                    rawValue = rawValue.plus(stableLossValue).plus(marketUnPnlUsd.shortUnPnl);
                 }
             } else {
-                rawValue = rawValue.plus(marketUnPnlUsd.shortUnPnl);
                 if (relativeMarket.shareShort) {
                     rawValue = rawValue.minus(stableLossValue);
+                } else {
+                    rawValue = rawValue.plus(marketUnPnlUsd.shortUnPnl);
                 }
             }
         }
