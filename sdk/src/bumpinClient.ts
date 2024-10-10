@@ -18,7 +18,6 @@ import {
     PlaceOrderParams,
     PoolSummary,
     PositionSettle,
-    RewardsAccount,
     TokenBalance,
     UserAccount,
     UserClaimResult,
@@ -1160,7 +1159,7 @@ export class BumpinClient {
                 user,
                 await this.getTradeTokens(),
             );
-        let userAvailableValue = accountNetValue.accountNetValue
+        return accountNetValue.accountNetValue
             .minus(
                 balanceOfUserPositions.positionUnPnl.gt(BigNumber(0))
                     ? balanceOfUserPositions.positionUnPnl
@@ -1171,8 +1170,6 @@ export class BumpinClient {
                     balanceOfUserPositions.initialMarginUsdFromPortfolio,
                 ),
             );
-        console.log('userAvailableValue:' + userAvailableValue);
-        return userAvailableValue;
     }
 
     //TODO: Jax, check this

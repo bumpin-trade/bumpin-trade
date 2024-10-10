@@ -733,7 +733,6 @@ impl User {
         );
         let (used_value, _total_token_borrowing_value) =
             self.get_total_used_value(&trade_token_map, &mut oracle_map)?;
-        msg!("============get_cross_net_value_and_pos_size,used_value:{}", used_value);
         let (
             total_im_usd,
             total_un_pnl_usd,
