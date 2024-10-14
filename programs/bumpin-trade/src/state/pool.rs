@@ -240,43 +240,26 @@ impl Pool {
             if !market.share_short {
                 continue;
             }
-            if !self.stable {
-                let stable_trade_token =
-                    trade_token_map.get_trade_token_by_mint_ref(&market.stable_pool_mint_key)?;
-                let stable_trade_token_price =
-                    oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
-                let stable_loss_value = calculator::token_to_usd_i(
-                    market.stable_loss.safe_add(market.stable_unsettle_loss.cast()?)?,
-                    stable_trade_token.decimals,
-                    stable_trade_token_price,
-                )?;
-                let trade_token = trade_token_map.get_trade_token_by_mint_ref(&self.mint_key)?;
-                let trade_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
+            let stable_trade_token =
+                trade_token_map.get_trade_token_by_mint_ref(&market.stable_pool_mint_key)?;
+            let stable_trade_token_price =
+                oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
+            let stable_loss_value = calculator::token_to_usd_i(
+                market.stable_loss.safe_add(market.stable_unsettle_loss.cast()?)?,
+                stable_trade_token.decimals,
+                stable_trade_token_price,
+            )?;
+            let trade_token = trade_token_map.get_trade_token_by_mint_ref(&self.mint_key)?;
+            let trade_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
 
-                let stable_loss_token_amount = calculator::usd_to_token_i(
-                    stable_loss_value,
-                    trade_token.decimals,
-                    trade_token_price,
-                )?;
+            let stable_loss_token_amount = calculator::usd_to_token_i(
+                stable_loss_value,
+                trade_token.decimals,
+                trade_token_price,
+            )?;
+            if !self.stable {
                 base_token_amount = base_token_amount.safe_add(stable_loss_token_amount)?
             } else {
-                let stable_trade_token =
-                    trade_token_map.get_trade_token_by_mint_ref(&market.stable_pool_mint_key)?;
-                let stable_trade_token_price =
-                    oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
-                let stable_loss_value = calculator::token_to_usd_i(
-                    market.stable_loss.safe_add(market.stable_unsettle_loss.cast()?)?,
-                    stable_trade_token.decimals,
-                    stable_trade_token_price,
-                )?;
-                let trade_token = trade_token_map.get_trade_token_by_mint_ref(&self.mint_key)?;
-                let trade_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
-
-                let stable_loss_token_amount = calculator::usd_to_token_i(
-                    stable_loss_value,
-                    trade_token.decimals,
-                    trade_token_price,
-                )?;
                 base_token_amount = base_token_amount.safe_sub(stable_loss_token_amount)?
             }
         }
