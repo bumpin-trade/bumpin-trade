@@ -782,8 +782,8 @@ export type BumpinTrade = {
             ];
         },
         {
-            name: 'autoReblance';
-            discriminator: [249, 239, 0, 145, 152, 147, 245, 63];
+            name: 'autoRebalance';
+            discriminator: [236, 1, 254, 194, 203, 221, 164, 50];
             accounts: [
                 {
                     name: 'state';

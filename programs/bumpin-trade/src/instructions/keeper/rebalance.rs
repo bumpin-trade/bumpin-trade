@@ -66,7 +66,7 @@ pub struct AutoRebalance<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle_auto_reblance<'a, 'b, 'c: 'info, 'info>(
+pub fn handle_auto_rebalance<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, AutoRebalance<'info>>,
 ) -> Result<()> {
     let remaining_accounts = ctx.remaining_accounts;
