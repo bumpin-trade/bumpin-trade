@@ -95,15 +95,6 @@ pub mod bumpin_trade {
     }
 
     #[track_caller]
-    pub fn portfolio_un_stake<'a, 'b, 'c: 'info, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, PortfolioUnStake>,
-        params: UnStakeParams,
-    ) -> Result<()> {
-        handle_portfolio_un_stake(ctx, params).unwrap();
-        Ok(())
-    }
-
-    #[track_caller]
     pub fn wallet_un_stake<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, WalletUnStake>,
         params: UnStakeParams,
@@ -262,9 +253,16 @@ pub mod bumpin_trade {
     pub fn auto_reblance<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, AutoRebalance<'info>>,
         _pool_index: u16,
-        _stable_pool_index: u16,
         _trade_token_index: u16,
     ) -> Result<()> {
         handle_auto_reblance(ctx)
+    }
+
+    #[track_caller]
+    pub fn rebalance_market_stable_loss<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, RebalanceMarketStableLoss<'info>>,
+        _params: RebalanceMarketStableLossParams,
+    ) -> Result<()> {
+        handle_rebalance_market_stable_loss(ctx)
     }
 }

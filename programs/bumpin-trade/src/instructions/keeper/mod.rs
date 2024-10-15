@@ -38,3 +38,12 @@ pub struct ExecuteOrderParams {
     order_id: u64,
     user_authority_key: Pubkey,
 }
+
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Copy, Eq, PartialEq)]
+pub struct RebalanceMarketStableLossParams {
+    pool_index: u16,
+    stable_pool_index: u16,
+    market_index: u16,
+    trade_token_index: u16,
+    stable_trade_token_index: u16,
+}

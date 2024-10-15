@@ -1,9 +1,7 @@
 use anchor_lang::prelude::*;
 
-pub mod portfolio;
 pub mod wallet;
 
-pub use portfolio::*;
 pub use wallet::*;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Eq, PartialEq)]

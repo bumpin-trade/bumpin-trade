@@ -651,23 +651,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "pool_index"
-                            }
-                        ]
-                    }
-                },
-                {
-                    "name": "stable_pool",
-                    "writable": true,
-                    "pda": {
-                        "seeds": [
-                            {
-                                "kind": "const",
-                                "value": [112, 111, 111, 108]
-                            },
-                            {
-                                "kind": "arg",
-                                "path": "stable_pool_index"
+                                "path": "_pool_index"
                             }
                         ]
                     }
@@ -686,26 +670,7 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "pool_index"
-                            }
-                        ]
-                    }
-                },
-                {
-                    "name": "stable_pool_vault",
-                    "writable": true,
-                    "pda": {
-                        "seeds": [
-                            {
-                                "kind": "const",
-                                "value": [
-                                    112, 111, 111, 108, 95, 118, 97, 117, 108,
-                                    116
-                                ]
-                            },
-                            {
-                                "kind": "arg",
-                                "path": "stable_pool_index"
+                                "path": "_pool_index"
                             }
                         ]
                     }
@@ -748,6 +713,10 @@
                     }
                 },
                 {
+                    "name": "keeper_key",
+                    "signer": true
+                },
+                {
                     "name": "bump_signer"
                 },
                 {
@@ -758,10 +727,6 @@
             "args": [
                 {
                     "name": "_pool_index",
-                    "type": "u16"
-                },
-                {
-                    "name": "_stable_pool_index",
                     "type": "u16"
                 },
                 {
@@ -2366,8 +2331,8 @@
             ]
         },
         {
-            "name": "portfolio_un_stake",
-            "discriminator": [38, 230, 213, 92, 0, 48, 190, 42],
+            "name": "rebalance_market_stable_loss",
+            "discriminator": [137, 131, 113, 201, 1, 205, 160, 222],
             "accounts": [
                 {
                     "name": "state",
@@ -2384,33 +2349,17 @@
                     }
                 },
                 {
-                    "name": "user",
+                    "name": "market",
                     "writable": true,
                     "pda": {
                         "seeds": [
                             {
                                 "kind": "const",
-                                "value": [117, 115, 101, 114]
-                            },
-                            {
-                                "kind": "account",
-                                "path": "authority"
-                            }
-                        ]
-                    }
-                },
-                {
-                    "name": "pool",
-                    "writable": true,
-                    "pda": {
-                        "seeds": [
-                            {
-                                "kind": "const",
-                                "value": [112, 111, 111, 108]
+                                "value": [109, 97, 114, 107, 101, 116]
                             },
                             {
                                 "kind": "arg",
-                                "path": "params.pool_index"
+                                "path": "_params.market_index"
                             }
                         ]
                     }
@@ -2429,33 +2378,32 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "params.pool_index"
+                                "path": "_params.pool_index"
                             }
                         ]
                     }
                 },
                 {
-                    "name": "trade_token_vault",
+                    "name": "stable_pool_vault",
                     "writable": true,
                     "pda": {
                         "seeds": [
                             {
                                 "kind": "const",
                                 "value": [
-                                    116, 114, 97, 100, 101, 95, 116, 111, 107,
-                                    101, 110, 95, 118, 97, 117, 108, 116
+                                    112, 111, 111, 108, 95, 118, 97, 117, 108,
+                                    116
                                 ]
                             },
                             {
                                 "kind": "arg",
-                                "path": "params.trade_token_index"
+                                "path": "_params.stable_pool_index"
                             }
                         ]
                     }
                 },
                 {
                     "name": "trade_token",
-                    "writable": true,
                     "pda": {
                         "seeds": [
                             {
@@ -2467,32 +2415,43 @@
                             },
                             {
                                 "kind": "arg",
-                                "path": "params.trade_token_index"
+                                "path": "_params.trade_token_index"
                             }
                         ]
                     }
                 },
                 {
-                    "name": "pool_rewards_vault",
+                    "name": "stable_trade_token",
                     "pda": {
                         "seeds": [
                             {
                                 "kind": "const",
                                 "value": [
-                                    112, 111, 111, 108, 95, 114, 101, 119, 97,
-                                    114, 100, 115, 95, 118, 97, 117, 108, 116
+                                    116, 114, 97, 100, 101, 95, 116, 111, 107,
+                                    101, 110
                                 ]
                             },
                             {
                                 "kind": "arg",
-                                "path": "params.pool_index"
+                                "path": "_params.stable_trade_token_index"
                             }
                         ]
                     }
                 },
                 {
-                    "name": "authority",
+                    "name": "keeper_trade_token_vault",
+                    "writable": true
+                },
+                {
+                    "name": "keeper_stable_trade_token_vault",
+                    "writable": true
+                },
+                {
+                    "name": "keeper_key",
                     "signer": true
+                },
+                {
+                    "name": "bump_signer"
                 },
                 {
                     "name": "token_program",
@@ -2501,10 +2460,10 @@
             ],
             "args": [
                 {
-                    "name": "params",
+                    "name": "_params",
                     "type": {
                         "defined": {
-                            "name": "UnStakeParams"
+                            "name": "RebalanceMarketStableLossParams"
                         }
                     }
                 }
@@ -3580,18 +3539,28 @@
         },
         {
             "code": 6069,
+            "name": "PoolUnsettleSmallThanTokenLiability",
+            "msg": "PoolUnsettleSmallThanTokenLiability"
+        },
+        {
+            "code": 6070,
             "name": "TimestampNotFound",
             "msg": "TimestampNotFound"
         },
         {
-            "code": 6070,
+            "code": 6071,
             "name": "ClaimUnqualified",
             "msg": "ClaimUnqualified"
         },
         {
-            "code": 6071,
+            "code": 6072,
             "name": "PoolMintSupplyIsZero",
             "msg": "PoolMintSupplyIsZero"
+        },
+        {
+            "code": 6073,
+            "name": "RebalanceMarketStableLossIgnore",
+            "msg": "RebalanceMarketStableLossIgnore"
         }
     ],
     "types": [
@@ -4893,6 +4862,34 @@
                     },
                     {
                         "name": "USING"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "RebalanceMarketStableLossParams",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "pool_index",
+                        "type": "u16"
+                    },
+                    {
+                        "name": "stable_pool_index",
+                        "type": "u16"
+                    },
+                    {
+                        "name": "market_index",
+                        "type": "u16"
+                    },
+                    {
+                        "name": "trade_token_index",
+                        "type": "u16"
+                    },
+                    {
+                        "name": "stable_trade_token_index",
+                        "type": "u16"
                     }
                 ]
             }
