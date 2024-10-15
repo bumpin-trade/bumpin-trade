@@ -2917,6 +2917,22 @@ export type BumpinTrade = {
                     };
                 },
                 {
+                    name: 'pool';
+                    writable: true;
+                    pda: {
+                        seeds: [
+                            {
+                                kind: 'const';
+                                value: [112, 111, 111, 108];
+                            },
+                            {
+                                kind: 'arg';
+                                path: '_params.pool_index';
+                            },
+                        ];
+                    };
+                },
+                {
                     name: 'poolVault';
                     writable: true;
                     pda: {

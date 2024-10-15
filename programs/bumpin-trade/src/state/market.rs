@@ -54,9 +54,14 @@ impl Market {
         Ok(())
     }
 
-    pub fn sub_unsettle_stable_loss(&mut self, amount: u128) -> BumpResult<()> {
+    pub fn sub_unsettle_stable_loss(&mut self, amount: u128) -> BumpResult<u128> {
+        if self.stable_unsettle_loss > amount {
+            let gap = calculator::sub_u128(amount, self.stable_unsettle_loss)?;
+            self.stable_unsettle_loss = 0u128;
+            return Ok(gap)
+        }
         self.stable_unsettle_loss = calculator::sub_u128(self.stable_unsettle_loss, amount)?;
-        Ok(())
+        Ok(0u128)
     }
     pub fn update_oi(&mut self, add: bool, params: UpdateOIParams) -> BumpResult<()> {
         if add {

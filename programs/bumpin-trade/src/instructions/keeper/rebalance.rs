@@ -104,6 +104,15 @@ pub struct RebalanceMarketStableLoss<'info> {
 
     #[account(
         mut,
+        seeds = [b"pool".as_ref(), _params.pool_index.to_le_bytes().as_ref()],
+        bump,
+        constraint = pool.load()? .key.eq(& market.load() ?.pool_key)
+    )]
+    pub pool: AccountLoader<'info, Pool>,
+
+
+    #[account(
+        mut,
         seeds = [b"pool_vault".as_ref(), _params.pool_index.to_le_bytes().as_ref()],
         bump,
         token::mint = market.load() ?.pool_mint_key,
@@ -170,6 +179,7 @@ pub fn handle_rebalance_market_stable_loss<'a, 'b, 'c: 'info, 'info>(
     let AccountMaps { mut oracle_map, .. } = load_maps(remaining_accounts)?;
     rebalance_processor::rebalance_market_stable_loss(
         &ctx.accounts.state,
+        &ctx.accounts.pool,
         &ctx.accounts.pool_vault,
         &ctx.accounts.stable_pool_vault,
         &ctx.accounts.trade_token,

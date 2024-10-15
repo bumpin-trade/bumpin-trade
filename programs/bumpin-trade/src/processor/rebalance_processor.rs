@@ -42,8 +42,9 @@ pub fn rebalance_pool_unsettle<'a>(
             state.bump_signer_nonce,
             fee_reward_unsettle,
         )
-        .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
+            .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
         pool.fee_reward.sub_un_settle_amount(fee_reward_unsettle)?;
+        pool.fee_reward.add_fee_amount(fee_reward_unsettle)?;
     }
     validate!(
         pool.balance.un_settle_amount >= trade_token.total_liability,
@@ -60,8 +61,9 @@ pub fn rebalance_pool_unsettle<'a>(
         state.bump_signer_nonce,
         transfer_amount,
     )
-    .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
+        .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
     pool.sub_unsettle(transfer_amount)?;
+    pool.add_amount(transfer_amount)?;
     if pool.stable {
         //settle market stable_loss_unsettle
         let markets = market_map.get_all_market()?;
@@ -81,11 +83,13 @@ pub fn rebalance_pool_unsettle<'a>(
             pool.market_number == market_loaded.len() as u16,
             BumpErrorCode::MarketNumberNotEqual2Pool
         )?;
+        let mut remaining_amount = transfer_amount;
         for mut market in market_loaded {
             if !market.share_short || market.stable_unsettle_loss == 0u128 {
                 continue;
             }
-            market.sub_unsettle_stable_loss(transfer_amount)?;
+            if remaining_amount == 0u128 { break; }
+            remaining_amount = market.sub_unsettle_stable_loss(transfer_amount)?;
         }
     }
     Ok(())
@@ -93,6 +97,7 @@ pub fn rebalance_pool_unsettle<'a>(
 
 pub fn rebalance_market_stable_loss<'a>(
     state: &Account<'a, State>,
+    pool_loader: &AccountLoader<'a, Pool>,
     pool_vault: &Account<'a, TokenAccount>,
     stable_pool_vault: &Account<'a, TokenAccount>,
     trade_token_loader: &AccountLoader<'a, TradeToken>,
@@ -107,6 +112,7 @@ pub fn rebalance_market_stable_loss<'a>(
 ) -> BumpResult {
     let mut market =
         market_account_loader.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadMarketData)?;
+    let mut pool = pool_loader.load_mut().map_err(|_e| BumpErrorCode::CouldNotLoadPoolData)?;
     let trade_token =
         trade_token_loader.load().map_err(|_e| BumpErrorCode::CouldNotLoadTradeTokenData)?;
     let stable_trade_token =
@@ -138,6 +144,7 @@ pub fn rebalance_market_stable_loss<'a>(
             trade_token_amount,
         )
         .map_err(|_e| BumpErrorCode::TransferFailed)?;
+        pool.add_amount(trade_token_amount)?;
 
         //transfer stable_token to keeper
         token::send_from_program_vault(
@@ -185,6 +192,7 @@ pub fn rebalance_market_stable_loss<'a>(
             trade_token_amount,
         )
         .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
+        pool.sub_amount(trade_token_amount)?;
         market.add_stable_loss(stable_loss.abs())?
     }
     Ok(())
