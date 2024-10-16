@@ -1,17 +1,9 @@
-import {
-    AccountMeta,
-    ConfirmOptions,
-    PublicKey,
-    TransactionMessage,
-    VersionedTransaction,
-} from '@solana/web3.js';
+import { AccountMeta, ConfirmOptions, PublicKey, TransactionMessage, VersionedTransaction } from '@solana/web3.js';
 import * as anchor from '@coral-xyz/anchor';
 import { BN, Program, Provider, Wallet } from '@coral-xyz/anchor';
 import { Buffer } from 'buffer';
 import { BumpinTrade } from '../types/bumpin_trade';
 import BigNumber from 'bignumber.js';
-import { OrderSide } from '../beans/beans';
-import { OrderSideAccount } from '../typedef';
 
 export class BumpinUtils {
     public static bigintToUsd(
@@ -81,11 +73,11 @@ export class BumpinUtils {
         return buffer;
     }
 
-    public static encodeString(str: string): number[] {
+    public static encodeString(str: string, length: number = 32): number[] {
         const buffer = Buffer.from(str, 'utf-8');
         const paddedBuffer = Buffer.concat([
             buffer,
-            Buffer.alloc(32 - buffer.length),
+            Buffer.alloc(length - buffer.length),
         ]);
         return Array.from(paddedBuffer);
     }
@@ -275,8 +267,9 @@ export class BumpinUtils {
         const transaction = new VersionedTransaction(messageV0);
         let signedTransaction = await wallet.signTransaction(transaction);
         signedTransaction.sign([newAccountPk]);
-        const signature =
-            await provider.connection.sendTransaction(signedTransaction);
+        const signature = await provider.connection.sendTransaction(
+            signedTransaction,
+        );
         await provider.connection.confirmTransaction({
             blockhash,
             lastValidBlockHeight,

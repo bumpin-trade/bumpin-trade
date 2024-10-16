@@ -1,15 +1,20 @@
 use anchor_lang::prelude::*;
 pub mod pc;
+mod pcv2;
+
+// use crate::pcv2::PriceUpdateV2;
 use pc::Price;
 
 #[cfg(feature = "local-net")]
-declare_id!("AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca");
+declare_id!("8wGG3aH78GhfstWq6VxrCq49uWKzsCa7DKQtLhb7uW2U");
 #[cfg(not(feature = "local-net"))]
 declare_id!("CC1ePebfvPy7QRTimPoVecS2UsBvYv46ynrzWocc92s");
 
 #[program]
 pub mod pyth {
+    use pyth_solana_receiver_sdk::price_update::{PriceFeedMessage, PriceUpdateV2};
     use super::*;
+    use crate::pcv2::VerificationLevel;
 
     pub fn initialize(
         ctx: Context<Initialize>,
@@ -67,6 +72,18 @@ pub mod pyth {
 
         Ok(())
     }
+
+    pub fn initialize_v2(ctx: Context<InitializeV2>, params: InitializeV2Params) -> Result<()> {
+        let mut data = ctx.accounts.price_update_v2.try_borrow_mut_data()?;
+        let size_of_price_update_v2 = std::mem::size_of::<PriceUpdateV2>();
+        msg!("size of price_update_v2: {}", size_of_price_update_v2);
+        let mut price_update_v2 = PriceUpdateV2::try_deserialize(&mut &**data).unwrap();
+        price_update_v2.price_message.feed_id = params.feed_id.clone();
+        price_update_v2.price_message.price = params.price;
+        price_update_v2.price_message.exponent = params.exponent;
+        msg!("PriceUpdateV2 initialized");
+        Ok(())
+    }
 }
 #[derive(Accounts)]
 pub struct SetPrice<'info> {
@@ -80,4 +97,25 @@ pub struct Initialize<'info> {
     /// CHECK: this program is just for testing
     #[account(mut)]
     pub price: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct SetPriceV2<'info> {
+    /// CHECK: this program is just for testing
+    #[account(mut)]
+    pub price: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct InitializeV2<'info> {
+    /// CHECK: this program is just for testing
+    #[account(mut)]
+    pub price_update_v2: AccountInfo<'info>,
+}
+
+#[derive(AnchorDeserialize, AnchorSerialize, Debug, Clone, Copy)]
+pub struct InitializeV2Params {
+    pub feed_id: [u8; 32],
+    pub price: i64,
+    pub exponent: i32,
 }

@@ -23,8 +23,9 @@ export class PythClient implements OracleClient {
     }
 
     public async getPriceData(pricePublicKey: PublicKey): Promise<PriceData> {
-        const accountInfo =
-            await this.connection.getAccountInfo(pricePublicKey);
+        const accountInfo = await this.connection.getAccountInfo(
+            pricePublicKey,
+        );
         if (!accountInfo) {
             throw new BumpinInvalidParameter(
                 'Price account not found, pricePublicKey: ' +
@@ -37,8 +38,9 @@ export class PythClient implements OracleClient {
     public async getOraclePriceData(
         pricePublicKey: PublicKey,
     ): Promise<OraclePriceData> {
-        const accountInfo =
-            await this.connection.getAccountInfo(pricePublicKey);
+        const accountInfo = await this.connection.getAccountInfo(
+            pricePublicKey,
+        );
         if (!accountInfo) {
             throw new BumpinInvalidParameter(
                 'Price account not found, pricePublicKey: ' +

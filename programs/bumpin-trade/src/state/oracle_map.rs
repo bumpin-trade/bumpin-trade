@@ -6,11 +6,9 @@ use crate::ids::pyth_program;
 use crate::math::safe_unwrap::SafeUnwrap;
 use crate::state::oracle::{get_oracle_price, OraclePriceData};
 use anchor_lang::prelude::*;
-use anchor_lang::Discriminator;
-use arrayref::array_ref;
 use pyth_solana_receiver_sdk::price_update::{FeedId, PriceUpdateV2};
 
-pub struct OracleMap{
+pub struct OracleMap {
     oracles: BTreeMap<FeedId, PriceUpdateV2>,
     price_data: BTreeMap<FeedId, OraclePriceData>,
 }
@@ -41,24 +39,35 @@ impl OracleMap {
     pub fn load<'a>(remaining_accounts: &'a [AccountInfo<'a>]) -> BumpResult<OracleMap> {
         let mut oracles: BTreeMap<[u8; 32], PriceUpdateV2> = BTreeMap::new();
 
-        let price_update_v2_discriminator: [u8; 8] = PriceUpdateV2::discriminator();
+        // let price_update_v2_discriminator: [u8; 8] = PriceUpdateV2::discriminator();
         for account_info in remaining_accounts.iter() {
             if account_info.owner == &pyth_program::id() {
-                if let Ok(data) = account_info.try_borrow_data() {
-                    let expected_data_len = PriceUpdateV2::LEN;
-                    if data.len() < expected_data_len {
-                        continue;
+                if let Ok(data) = account_info.try_borrow_mut_data() {
+                    // let expected_data_len = PriceUpdateV2::LEN;
+                    // if data.len() < expected_data_len {
+                    //     continue;
+                    // }
+                    // let account_discriminator = array_ref![data, 0, 8];
+                    // if account_discriminator != &price_update_v2_discriminator {
+                    //     continue;
+                    // }
+
+                    // let data = &account_info.data.borrow_mut();
+                    match PriceUpdateV2::try_deserialize(&mut &**data) {
+                        Ok(price_update_v2) => {
+                            oracles.insert(
+                                price_update_v2.price_message.feed_id.clone(),
+                                price_update_v2,
+                            );
+                            msg!("price_update_v2 inserted");
+                        },
+                        Err(_) => {
+                            continue;
+                        },
                     }
-                    let account_discriminator = array_ref![data, 0, 8];
-                    if account_discriminator != &price_update_v2_discriminator {
-                        continue;
-                    }
+                    // let price_update_v2 = PriceUpdateV2::try_deserialize(&mut &***data).or(Err(BumpErrorCode::InvalidPriceUpdateV2Account))?;
 
-                    let data = &account_info.data.borrow();
-                    let price_update_v2 = PriceUpdateV2::try_from_slice(data).or(Err(BumpErrorCode::InvalidPriceUpdateV2Account))?;
-
-
-                    oracles.insert(price_update_v2.price_message.feed_id.clone(), price_update_v2);
+                    // oracles.insert(price_update_v2.price_message.feed_id.clone(), price_update_v2);
                 } else {
                     continue;
                 }
@@ -68,5 +77,3 @@ impl OracleMap {
         Ok(OracleMap { oracles, price_data: BTreeMap::new() })
     }
 }
-
-

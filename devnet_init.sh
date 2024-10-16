@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-num_loops=6
+num_loops=4
 echo "num_loops: $num_loops"
 echo "Creating... "
 # Step 1: Airdrop SOL to the admin account
@@ -13,12 +13,14 @@ echo "Creating... "
 #solana airdrop 100000 $(solana-keygen pubkey ./keys/player4.json) --url localhost> /dev/null
 #solana airdrop 100000 $(solana-keygen pubkey ./keys/player5.json) --url localhost> /dev/null
 #solana airdrop 100000 $(solana-keygen pubkey ./keys/reward.json) --url localhost> /dev/null
+coin_names=("sol" "stable" "btc" "eth" "bnb" "bonk")
 decimals=(9 6 8 8 8 5)
 mint_amounts=(1000 1000000 10 100 1000000000 1000)
 results="================================================\n"
 
 for ((i=1; i<=num_loops; i++))
 do
+  coin_name=${coin_names[$((i-1))]}
   decimals_value=${decimals[$((i-1))]}
   mint_amount_value=${mint_amounts[$((i-1))]}
   # Step 2: Create a new SPL token and extract the token address
@@ -31,10 +33,10 @@ do
   account2=$(echo "$account_player2_output" | sed -n 's/Creating account \(.*\)/\1/p')
   account_player3_output=$(spl-token create-account $token --owner ./keys/player3.json)
   account3=$(echo "$account_player3_output" | sed -n 's/Creating account \(.*\)/\1/p')
-  account_player4_output=$(spl-token create-account $token --owner ./keys/player4.json)
-  account4=$(echo "$account_player4_output" | sed -n 's/Creating account \(.*\)/\1/p')
-  account_player5_output=$(spl-token create-account $token --owner ./keys/player5.json)
-  account5=$(echo "$account_player5_output" | sed -n 's/Creating account \(.*\)/\1/p')
+#  account_player4_output=$(spl-token create-account $token --owner ./keys/player4.json)
+#  account4=$(echo "$account_player4_output" | sed -n 's/Creating account \(.*\)/\1/p')
+#  account_player5_output=$(spl-token create-account $token --owner ./keys/player5.json)
+#  account5=$(echo "$account_player5_output" | sed -n 's/Creating account \(.*\)/\1/p')
   account_reward_output=$(spl-token create-account $token --owner ./keys/reward.json)
   account_reward=$(echo "$account_reward_output" | sed -n 's/Creating account \(.*\)/\1/p')
 
@@ -43,10 +45,10 @@ do
   spl-token mint $token $mint_amount_value $account > /dev/null
   spl-token mint $token $mint_amount_value $account2 > /dev/null
   spl-token mint $token $mint_amount_value $account3 > /dev/null
-  spl-token mint $token $mint_amount_value $account4 > /dev/null
-  spl-token mint $token $mint_amount_value $account5 > /dev/null
+#  spl-token mint $token $mint_amount_value $account4 > /dev/null
+#  spl-token mint $token $mint_amount_value $account5 > /dev/null
 
-  results+="Token Mint: $token  Amount: $mint_amount  Decimals: $decimals_value  Reward Token Account: $account_reward\n"
+  results+="${coin_name}: Token Mint: $token  Amount: $mint_amount  Decimals: $decimals_value  Reward Token Account: $account_reward\n"
 done
 
 echo  "$results"

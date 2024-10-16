@@ -397,8 +397,8 @@ export class Pool {
         this.status = isEqual(pool.status, PoolStatus.NORMAL)
             ? PoolStatus.NORMAL
             : isEqual(pool.status, PoolStatus.StakePaused)
-              ? PoolStatus.StakePaused
-              : PoolStatus.UnStakePaused;
+            ? PoolStatus.StakePaused
+            : PoolStatus.UnStakePaused;
     }
 }
 
@@ -793,28 +793,28 @@ export class UserOrder {
         this.orderSide = isEqual(userOrder.orderSide, OrderSideAccount.LONG)
             ? OrderSide.LONG
             : isEqual(userOrder.orderSide, OrderSideAccount.SHORT)
-              ? OrderSide.SHORT
-              : OrderSide.NONE;
+            ? OrderSide.SHORT
+            : OrderSide.NONE;
         this.positionSide = isEqual(
             userOrder.positionSide,
             PositionSideAccount.INCREASE,
         )
             ? PositionSide.INCREASE
             : isEqual(userOrder.positionSide, PositionSideAccount.DECREASE)
-              ? PositionSide.DECREASE
-              : PositionSide.NONE;
+            ? PositionSide.DECREASE
+            : PositionSide.NONE;
         this.orderType = isEqual(userOrder.orderType, OrderTypeAccount.MARKET)
             ? OrderType.MARKET
             : isEqual(userOrder.orderType, OrderTypeAccount.LIMIT)
-              ? OrderType.LIMIT
-              : isEqual(userOrder.orderType, OrderTypeAccount.STOP)
-                ? OrderType.STOP
-                : OrderType.NONE;
+            ? OrderType.LIMIT
+            : isEqual(userOrder.orderType, OrderTypeAccount.STOP)
+            ? OrderType.STOP
+            : OrderType.NONE;
         this.stopType = isEqual(userOrder.stopType, StopTypeAccount.StopLoss)
             ? StopType.StopLoss
             : isEqual(userOrder.stopType, StopTypeAccount.TakeProfit)
-              ? StopType.TakeProfit
-              : StopType.NONE;
+            ? StopType.TakeProfit
+            : StopType.NONE;
         this.status = isEqual(userOrder.status, OrderStatusAccount.INIT)
             ? OrderStatus.INIT
             : OrderStatus.USING;
@@ -924,7 +924,7 @@ export class User {
         this.status = isEqual(user.status, UserStatus.NORMAL)
             ? UserStatus.NORMAL
             : isEqual(user.status, UserStatus.LIQUIDATION)
-              ? UserStatus.LIQUIDATION
-              : UserStatus.DISABLE;
+            ? UserStatus.LIQUIDATION
+            : UserStatus.DISABLE;
     }
 }

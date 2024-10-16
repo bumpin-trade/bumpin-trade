@@ -231,6 +231,46 @@ export class BumpinAdmin {
             .rpc(BumpinUtils.getDefaultConfirmOptions());
     }
 
+    public async DEV_TEST_ONLY__INIT_PYTHV2(
+        feedId: number[],
+    ) {
+        let oracleKeypair = anchor.web3.Keypair.generate();
+        await BumpinUtils.manualCreateAccount(
+            this.provider,
+            this.wallet,
+            oracleKeypair,
+            134,
+            await this.TEST_PYTH.provider.connection.getMinimumBalanceForRentExemption(
+                134,
+            ),
+            this.TEST_PYTH.programId,
+        );
+
+        console.log('Price Update V2 Account Address: ', oracleKeypair.publicKey.toString());
+        const params =
+            {
+                feedId: feedId,
+                price: new BN(0),
+                exponent: 8,
+
+            }
+        ;
+        await this.TEST_PYTH.methods
+            .initializeV2(params)
+            .accounts({
+                priceUpdateV2: oracleKeypair.publicKey,
+            })
+            .signers([])
+            .rpc({
+                skipPreflight: true,
+                commitment: 'confirmed',
+                preflightCommitment: 'confirmed',
+                maxRetries: 1,
+                minContextSlot: undefined,
+            });
+        console.log('Price Update V2 Account Initialized');
+    }
+
     public async DEV_TEST_ONLY__INIT_ORACLE(
         initPrice: number,
         confidence: number,
@@ -361,6 +401,27 @@ export class BumpinAdmin {
             .rpc(BumpinUtils.getRootConfirmOptions());
     }
 
+
+    public async tryPythV2(
+        accounts: PublicKey[],
+    ) {
+        let remainingAccounts = [];
+        for (let account of accounts) {
+            remainingAccounts.push({
+                pubkey: account,
+                isWritable: false,
+                isSigner: false,
+            });
+        }
+
+        await this.program.methods
+            .pythv2Test()
+            .accounts({})
+            .remainingAccounts(remainingAccounts)
+            .signers([])
+            .rpc(BumpinUtils.getDefaultConfirmOptions());
+    }
+
     async sendAndConfirmTransaction(
         instructions: Array<TransactionInstruction>,
     ) {
@@ -376,8 +437,9 @@ export class BumpinAdmin {
         }).compileToV0Message();
         const transaction = new VersionedTransaction(messageV0);
         let signedTransaction = await this.wallet.signTransaction(transaction);
-        const signature =
-            await this.provider.connection.sendTransaction(signedTransaction);
+        const signature = await this.provider.connection.sendTransaction(
+            signedTransaction,
+        );
         await this.provider.connection.confirmTransaction(
             {
                 blockhash,
@@ -387,6 +449,7 @@ export class BumpinAdmin {
             'confirmed',
         );
     }
+
 }
 
 export type WrappedInitializePoolParams = {

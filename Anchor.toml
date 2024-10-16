@@ -1,27 +1,18 @@
 [toolchain]
 
 [features]
-seeds = true
 resolution = true
 skip-lint = false
 
-[programs.localnet]
-bumpin_trade = "Ap5HaA55b1SrhMeBeiivgpbpA7ffTUtc64zcUJx7ionR"
-pyth = "AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca"
-
-#[programs.devnet]
-#bumpin_trade = "88ZPYBftFhJLJLXL2hBHkDcXGEW8MbpqhyCtzkCWyUry"
+[programs.devnet]
+bumpin_trade = "6EXVeNZ3VmT1oSWCSd5TuUG9fg3f94utE9DtdUhCvSKE"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "Devnet"
 wallet = "~/.config/solana/id.json"
-
-#[provider]
-#cluster = "devnet"
-#wallet = "./keys/admin.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000"

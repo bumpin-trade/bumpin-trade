@@ -203,8 +203,8 @@ export class PoolStatusAccount {
         return isEqual(this, PoolStatusAccount.NORMAL)
             ? 'Normal'
             : isEqual(this, PoolStatusAccount.StakePaused)
-              ? 'StakePaused'
-              : 'UnStakePaused';
+            ? 'StakePaused'
+            : 'UnStakePaused';
     }
 
     public static from(o: PoolStatus) {
@@ -373,8 +373,8 @@ export class OrderSideAccount {
         return isEqual(this, OrderSideAccount.NONE)
             ? 'None'
             : isEqual(this, OrderSideAccount.LONG)
-              ? 'Long'
-              : 'Short';
+            ? 'Long'
+            : 'Short';
     }
 
     public static from(o: OrderSide) {
@@ -414,8 +414,8 @@ export class PositionSideAccount {
         return isEqual(this, PositionSideAccount.NONE)
             ? 'None'
             : isEqual(this, PositionSideAccount.INCREASE)
-              ? 'Increase'
-              : 'Decrease';
+            ? 'Increase'
+            : 'Decrease';
     }
 
     public static from(o: PositionSide) {
@@ -439,10 +439,10 @@ export class OrderTypeAccount {
         return isEqual(this, OrderTypeAccount.NONE)
             ? 'None'
             : isEqual(this, OrderTypeAccount.MARKET)
-              ? 'Market'
-              : isEqual(this, OrderTypeAccount.LIMIT)
-                ? 'Limit'
-                : 'Stop';
+            ? 'Market'
+            : isEqual(this, OrderTypeAccount.LIMIT)
+            ? 'Limit'
+            : 'Stop';
     }
 
     public static from(o: OrderType) {
@@ -467,8 +467,8 @@ export class StopTypeAccount {
         return isEqual(this, StopTypeAccount.NONE)
             ? 'None'
             : isEqual(this, StopTypeAccount.StopLoss)
-              ? 'StopLoss'
-              : 'TakeProfit';
+            ? 'StopLoss'
+            : 'TakeProfit';
     }
 
     public static from(o: StopType) {
@@ -536,8 +536,8 @@ export class UserStatusAccount {
         return isEqual(this, UserStatusAccount.NORMAL)
             ? 'Normal'
             : isEqual(this, UserStatusAccount.LIQUIDATION)
-              ? 'Liquidation'
-              : 'Disable';
+            ? 'Liquidation'
+            : 'Disable';
     }
 
     public static from(o: UserStatus) {
