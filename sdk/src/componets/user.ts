@@ -310,44 +310,30 @@ export class UserComponent extends Component {
                 isSigner: false,
             });
         }
-
-        if (portfolio) {
-            BumpinUtils.prettyPrintParam(param);
-            const ix = await this.program.methods
-                .portfolioUnStake(param)
-                .accounts({
-                    authority: wallet,
-                })
-                .remainingAccounts(remainingAccounts)
-                .signers([])
-                .instruction();
-            await this.sendAndConfirm([ix]);
-        } else {
-            let tokenAccount =
-                await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(
-                    this.program.provider.connection,
-                    wallet,
-                    tradeToken.mintKey,
-                );
-            BumpinUtils.prettyPrintParam(param);
-            const ix = await this.program.methods
-                .walletUnStake(param)
-                .accounts({
-                    authority: wallet,
-                    userTokenAccount: tokenAccount.address,
-                    bumpSigner: (await this.getState()).bumpSigner,
-                })
-                .remainingAccounts(
-                    BumpinUtils.removeDuplicateAccounts(
-                        remainingAccounts.concat(
-                            await this.essentialRemainingAccounts(),
-                        ),
+        let tokenAccount =
+            await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(
+                this.program.provider.connection,
+                wallet,
+                tradeToken.mintKey,
+            );
+        BumpinUtils.prettyPrintParam(param);
+        const ix = await this.program.methods
+            .walletUnStake(param)
+            .accounts({
+                authority: wallet,
+                userTokenAccount: tokenAccount.address,
+                bumpSigner: (await this.getState()).bumpSigner,
+            })
+            .remainingAccounts(
+                BumpinUtils.removeDuplicateAccounts(
+                    remainingAccounts.concat(
+                        await this.essentialRemainingAccounts(),
                     ),
-                )
-                .signers([])
-                .instruction();
-            await this.sendAndConfirm([ix]);
-        }
+                ),
+            )
+            .signers([])
+            .instruction();
+        await this.sendAndConfirm([ix]);
     }
 
     public async deposit(

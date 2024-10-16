@@ -139,7 +139,8 @@ pub fn handle_add_position_margin<'a, 'b, 'c: 'info, 'info>(
         position_processor::execute_add_position_margin(
             &params,
             if position.is_long { &base_trade_token } else { &stable_trade_token },
-            if position.is_long { &mut pool } else { &mut stable_pool }, &mut market,
+            if position.is_long { &mut pool } else { &mut stable_pool },
+            &mut market,
             position,
         )?;
     } else {

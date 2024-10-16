@@ -18,7 +18,6 @@ import {
     PlaceOrderParams,
     PoolSummary,
     PositionSettle,
-    RewardsAccount,
     TokenBalance,
     UserAccount,
     UserClaimResult,
@@ -29,6 +28,7 @@ import {
 } from './typedef';
 import {
     BumpinAccountNotFound,
+    BumpinClientInternalError,
     BumpinClientNotInitialized,
     BumpinInvalidParameter,
     BumpinSubscriptionFailed,
@@ -886,6 +886,53 @@ export class BumpinClient {
         if (baseTokenAmount.lt(BigNumber(0))) {
             return BigNumber(0);
         }
+        const relativeMarkets = BumpinMarketUtils.getMarketsByPoolKey(
+            pool.key,
+            await this.getMarkets(sync),
+        );
+        for (const market of relativeMarkets) {
+            if (!market.shareShort) {
+                continue;
+            }
+            let stableTradeToken =
+                await this.tradeTokenComponent?.getTradeTokenByMintKey(
+                    market.stablePoolMintKey,
+                );
+            if (!stableTradeToken) {
+                throw new BumpinClientInternalError(
+                    'trade token not fount, trade token mint:' +
+                        market.stablePoolMintKey,
+                );
+            }
+            let stablePrice = (
+                await this.getTradeTokenPriceByMintKey(market.stablePoolMintKey)
+            )?.price;
+
+            let tradeToken =
+                await this.tradeTokenComponent?.getTradeTokenByMintKey(
+                    pool.mintKey,
+                );
+            if (!tradeToken) {
+                throw new BumpinClientInternalError(
+                    'trade token not fount, trade token mint:' + pool.mintKey,
+                );
+            }
+            let price = (
+                await this.getTradeTokenPriceByMintKey(market.poolMintKey)
+            )?.price;
+            let stableLossAmountUsd = market.stableLoss
+                .plus(market.stableUnsettleLoss)
+                .multipliedBy(stablePrice!);
+            if (!pool.stable) {
+                baseTokenAmount = baseTokenAmount.plus(
+                    stableLossAmountUsd.dividedBy(price!),
+                );
+            } else {
+                baseTokenAmount = baseTokenAmount.minus(
+                    stableLossAmountUsd.dividedBy(price!),
+                );
+            }
+        }
 
         const availableTokenAmount = baseTokenAmount.multipliedBy(
             pool.config.poolLiquidityLimit,
@@ -968,29 +1015,32 @@ export class BumpinClient {
             .plus(pool.balance.unSettleAmount)
             .multipliedBy(price.price!);
 
-        // relative market unpnl usd value
         for (let relativeMarket of relativeMarkets) {
             const marketUnPnlUsd = await this.getMarketUnPnlUsd(relativeMarket);
+            const stableTradeTokenPrice =
+                await this.tradeTokenComponent!.getTradeTokenPricesByMintKey(
+                    relativeMarket.stablePoolMintKey,
+                    sync,
+                );
+            if (!stableTradeTokenPrice.price) {
+                throw new BumpinInvalidParameter(
+                    'Price not found(undefined) for mint: ' +
+                        relativeMarket.stablePoolMintKey.toString(),
+                );
+            }
+            let stableLossValue = relativeMarket.stableLoss
+                .plus(relativeMarket.stableUnsettleLoss)
+                .multipliedBy(stableTradeTokenPrice.price);
             if (!pool.stable) {
                 rawValue = rawValue.plus(marketUnPnlUsd.longUnPnl);
                 if (relativeMarket.shareShort) {
-                    rawValue = rawValue.plus(marketUnPnlUsd.shortUnPnl);
-                    rawValue = rawValue.plus(
-                        relativeMarket.stableLoss
-                            .plus(relativeMarket.stableUnsettleLoss)
-                            .multipliedBy(stablePrice.price!),
-                    );
+                    rawValue = rawValue
+                        .plus(stableLossValue)
+                        .plus(marketUnPnlUsd.shortUnPnl);
                 }
             } else {
                 if (relativeMarket.shareShort) {
-                    let stableLossValue = relativeMarket.stableLoss
-                        .plus(relativeMarket.stableUnsettleLoss)
-                        .multipliedBy(stablePrice.price!);
-                    rawValue = rawValue.plus(
-                        stableLossValue.lt(BigNumber(0))
-                            ? stableLossValue.abs()
-                            : BigNumber(0),
-                    );
+                    rawValue = rawValue.minus(stableLossValue);
                 } else {
                     rawValue = rawValue.plus(marketUnPnlUsd.shortUnPnl);
                 }
@@ -1155,7 +1205,7 @@ export class BumpinClient {
                 user,
                 await this.getTradeTokens(),
             );
-        let userAvailableValue = accountNetValue.accountNetValue
+        return accountNetValue.accountNetValue
             .minus(
                 balanceOfUserPositions.positionUnPnl.gt(BigNumber(0))
                     ? balanceOfUserPositions.positionUnPnl
@@ -1166,8 +1216,6 @@ export class BumpinClient {
                     balanceOfUserPositions.initialMarginUsdFromPortfolio,
                 ),
             );
-        console.log('userAvailableValue:' + userAvailableValue);
-        return userAvailableValue;
     }
 
     //TODO: Jax, check this

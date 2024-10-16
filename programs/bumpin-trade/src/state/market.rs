@@ -19,13 +19,13 @@ pub struct Market {
     pub short_open_interest: MarketPosition,
     pub funding_fee: MarketFundingFee,
     pub config: MarketConfig,
-    pub stable_loss: i128, // short profit mean +/otherwies mean -
+    pub stable_loss: i128, // short profit mean +/ otherwise mean -
     pub pool_key: Pubkey,
     pub pool_mint_key: Pubkey,
     pub index_mint_oracle: Pubkey,
     pub stable_pool_key: Pubkey,
     pub stable_pool_mint_key: Pubkey,
-    pub stable_unsettle_loss: i128,
+    pub stable_unsettle_loss: u128,
     pub index: u16,
     pub market_status: MarketStatus,
     pub share_short: bool,
@@ -45,13 +45,23 @@ impl Size for Market {
 }
 
 impl Market {
-    pub fn add_stable_loss(&mut self, amount: i128)-> BumpResult<()> {
+    pub fn add_stable_loss(&mut self, amount: i128) -> BumpResult<()> {
         self.stable_loss = calculator::add_i128(self.stable_loss, amount)?;
         Ok(())
     }
-    pub fn add_unsettle_stable_loss(&mut self, amount: i128) -> BumpResult<()>{
-        self.stable_unsettle_loss = calculator::add_i128(self.stable_unsettle_loss, amount)?;
+    pub fn add_unsettle_stable_loss(&mut self, amount: u128) -> BumpResult<()> {
+        self.stable_unsettle_loss = calculator::add_u128(self.stable_unsettle_loss, amount)?;
         Ok(())
+    }
+
+    pub fn sub_unsettle_stable_loss(&mut self, amount: u128) -> BumpResult<u128> {
+        if self.stable_unsettle_loss > amount {
+            let gap = calculator::sub_u128(amount, self.stable_unsettle_loss)?;
+            self.stable_unsettle_loss = 0u128;
+            return Ok(gap)
+        }
+        self.stable_unsettle_loss = calculator::sub_u128(self.stable_unsettle_loss, amount)?;
+        Ok(0u128)
     }
     pub fn update_oi(&mut self, add: bool, params: UpdateOIParams) -> BumpResult<()> {
         if add {
@@ -180,7 +190,7 @@ impl Market {
                         PRICE_PRECISION,
                         price,
                     )?
-                        .cast::<i128>()?;
+                    .cast::<i128>()?;
 
                     long_funding_fee_per_qty_delta = if long_pay_short {
                         long_funding_fee_per_qty_delta

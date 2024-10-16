@@ -27,9 +27,9 @@ pub fn withdraw(
         let available_value = user.get_available_value(trade_tokens, oracle_map)?;
 
         validate!(
-        available_value.abs().cast::<u128>()? > withdraw_usd,
-        BumpErrorCode::UserNotEnoughValue
-    )?;
+            available_value.abs().cast::<u128>()? > withdraw_usd,
+            BumpErrorCode::UserNotEnoughValue
+        )?;
     }
     user.sub_user_token_amount_ignore_used_amount(
         token_mint,

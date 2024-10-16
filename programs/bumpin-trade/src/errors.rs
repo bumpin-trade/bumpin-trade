@@ -145,12 +145,16 @@ pub enum BumpErrorCode {
     CouldNotLoadUserData,
     #[msg("PoolSubUnsettleNotEnough")]
     PoolSubUnsettleNotEnough,
+    #[msg("PoolUnsettleSmallThanTokenLiability")]
+    PoolUnsettleSmallThanTokenLiability,
     #[msg("TimestampNotFound")]
     TimestampNotFound,
     #[msg("ClaimUnqualified")]
     ClaimUnqualified,
     #[msg("PoolMintSupplyIsZero")]
     PoolMintSupplyIsZero,
+    #[msg("RebalanceMarketStableLossIgnore")]
+    RebalanceMarketStableLossIgnore,
 }
 #[macro_export]
 macro_rules! print_error {

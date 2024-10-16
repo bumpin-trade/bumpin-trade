@@ -146,100 +146,97 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         cross_net_value,
         total_position_mm
     );
-
-    if cross_net_value <= 0i128 || cross_net_value.abs().cast::<u128>()? <= total_position_mm {
-        for pos_info in &pos_infos {
-            //only cross margin position support
-            if !pos_info.is_portfolio_margin {
-                continue;
-            }
-
-            let mut market = market_map.get_mut_ref(&pos_info.symbol)?;
-
-            let index_price = oracle_map.get_price_data(&pos_info.index_mint)?.price;
-            let bankruptcy_price = calculator::format_to_ticker_size(
-                if pos_info.is_long {
-                    calculator::mul_small_rate_u(
-                        index_price,
-                        SMALL_RATE_PRECISION
-                            .cast::<i128>()?
-                            .safe_sub(bankruptcy_mr)?
-                            .abs()
-                            .cast::<u128>()?,
-                    )?
-                } else {
-                    calculator::mul_small_rate_u(
-                        index_price,
-                        SMALL_RATE_PRECISION
-                            .cast::<i128>()?
-                            .safe_add(bankruptcy_mr)?
-                            .abs()
-                            .cast::<u128>()?,
-                    )?
-                },
-                market.config.tick_size,
-                pos_info.is_long,
-            )?;
-
-            validate!(
-                bankruptcy_price > 0,
-                BumpErrorCode::LiquidationErrorWithBankruptcyPriceZero
-            )?;
-            let mm_rate = calculator::get_mm_rate(
-                market.config.maximum_leverage,
-                state.maximum_maintenance_margin_rate,
-            )?;
-            let liquidation_price = calculator::format_to_ticker_size(
-                if pos_info.is_long {
-                    calculator::div_rate_u(bankruptcy_price, RATE_PRECISION.safe_sub(mm_rate)?)?
-                } else {
-                    calculator::div_rate_u(bankruptcy_price, RATE_PRECISION.safe_add(mm_rate)?)?
-                },
-                market.config.tick_size,
-                pos_info.is_long,
-            )?;
-
-            let pool = pool_map.get_ref(&market.pool_key)?;
-            let stable_pool = pool_map.get_ref(&market.stable_pool_key)?;
-            let trade_token = trade_token_map.get_trade_token_by_mint_ref(&pos_info.margin_mint)?;
-
-            let pool_key = market.pool_key;
-            let stable_pool_key = market.stable_pool_key;
-            position_processor::decrease_position(
-                DecreasePositionParams {
-                    order_id: 0,
-                    is_liquidation: true,
-                    is_portfolio_margin: true,
-                    margin_token: pos_info.margin_mint,
-                    decrease_size: pos_info.position_size,
-                    execute_price: liquidation_price,
-                },
-                &mut user,
-                market.deref_mut(),
-                pool_map.get_mut_ref(&pool_key)?.deref_mut(),
-                pool_map.get_mut_ref(&stable_pool_key)?.deref_mut(),
-                &ctx.accounts.state,
-                None,
-                if pos_info.is_long {
-                    vault_map
-                        .get_account(&pda::generate_pool_vault_key(pool.index, ctx.program_id)?)?
-                } else {
-                    vault_map.get_account(&pda::generate_pool_vault_key(
-                        stable_pool.index,
-                        ctx.program_id,
-                    )?)?
-                },
-                trade_token_map.get_trade_token_by_mint_ref_mut(&pos_info.margin_mint)?.deref_mut(),
-                vault_map.get_account(&pda::generate_trade_token_vault_key(
-                    trade_token.index,
-                    ctx.program_id,
-                )?)?,
-                &ctx.accounts.bump_signer,
-                &ctx.accounts.token_program,
-                &mut oracle_map,
-                &pos_info.user_key,
-            )?;
+    validate!(
+        cross_net_value <= 0i128 || cross_net_value.abs().cast::<u128>()? <= total_position_mm,
+        BumpErrorCode::LiquidatePositionIgnore
+    )?;
+    for pos_info in &pos_infos {
+        //only cross margin position support
+        if !pos_info.is_portfolio_margin {
+            continue;
         }
+
+        let mut market = market_map.get_mut_ref(&pos_info.symbol)?;
+
+        let index_price = oracle_map.get_price_data(&pos_info.index_mint)?.price;
+        let bankruptcy_price = calculator::format_to_ticker_size(
+            if pos_info.is_long {
+                calculator::mul_small_rate_u(
+                    index_price,
+                    SMALL_RATE_PRECISION
+                        .cast::<i128>()?
+                        .safe_sub(bankruptcy_mr)?
+                        .abs()
+                        .cast::<u128>()?,
+                )?
+            } else {
+                calculator::mul_small_rate_u(
+                    index_price,
+                    SMALL_RATE_PRECISION
+                        .cast::<i128>()?
+                        .safe_add(bankruptcy_mr)?
+                        .abs()
+                        .cast::<u128>()?,
+                )?
+            },
+            market.config.tick_size,
+            pos_info.is_long,
+        )?;
+
+        validate!(bankruptcy_price > 0, BumpErrorCode::LiquidationErrorWithBankruptcyPriceZero)?;
+        let mm_rate = calculator::get_mm_rate(
+            market.config.maximum_leverage,
+            state.maximum_maintenance_margin_rate,
+        )?;
+        let liquidation_price = calculator::format_to_ticker_size(
+            if pos_info.is_long {
+                calculator::div_rate_u(bankruptcy_price, RATE_PRECISION.safe_sub(mm_rate)?)?
+            } else {
+                calculator::div_rate_u(bankruptcy_price, RATE_PRECISION.safe_add(mm_rate)?)?
+            },
+            market.config.tick_size,
+            pos_info.is_long,
+        )?;
+
+        let pool = pool_map.get_ref(&market.pool_key)?;
+        let stable_pool = pool_map.get_ref(&market.stable_pool_key)?;
+        let trade_token = trade_token_map.get_trade_token_by_mint_ref(&pos_info.margin_mint)?;
+
+        let pool_key = market.pool_key;
+        let stable_pool_key = market.stable_pool_key;
+        position_processor::decrease_position(
+            DecreasePositionParams {
+                order_id: 0,
+                is_liquidation: true,
+                is_portfolio_margin: true,
+                margin_token: pos_info.margin_mint,
+                decrease_size: pos_info.position_size,
+                execute_price: liquidation_price,
+            },
+            &mut user,
+            market.deref_mut(),
+            pool_map.get_mut_ref(&pool_key)?.deref_mut(),
+            pool_map.get_mut_ref(&stable_pool_key)?.deref_mut(),
+            &ctx.accounts.state,
+            None,
+            if pos_info.is_long {
+                vault_map.get_account(&pda::generate_pool_vault_key(pool.index, ctx.program_id)?)?
+            } else {
+                vault_map.get_account(&pda::generate_pool_vault_key(
+                    stable_pool.index,
+                    ctx.program_id,
+                )?)?
+            },
+            trade_token_map.get_trade_token_by_mint_ref_mut(&pos_info.margin_mint)?.deref_mut(),
+            vault_map.get_account(&pda::generate_trade_token_vault_key(
+                trade_token.index,
+                ctx.program_id,
+            )?)?,
+            &ctx.accounts.bump_signer,
+            &ctx.accounts.token_program,
+            &mut oracle_map,
+            &pos_info.user_key,
+        )?;
     }
     Ok(())
 }

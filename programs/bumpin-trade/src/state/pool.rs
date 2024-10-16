@@ -1,10 +1,11 @@
 use anchor_lang::prelude::*;
+use std::panic::Location;
 
 use bumpin_trade_attribute::bumpin_zero_copy_unsafe;
 
 use crate::errors::BumpErrorCode::PoolSubUnsettleNotEnough;
 use crate::errors::{BumpErrorCode, BumpResult};
-use crate::instructions::{add_i128, add_u128, calculator, sub_u128};
+use crate::instructions::{add_i128, add_u128, calculator, sub_i128, sub_u128};
 use crate::math::casting::Cast;
 use crate::math::constants::PRICE_TO_USD_PRECISION;
 use crate::math::safe_math::SafeMath;
@@ -14,7 +15,6 @@ use crate::state::infrastructure::pool_borrowing_fee::BorrowingFee;
 use crate::state::market::Market;
 use crate::state::market_map::MarketMap;
 use crate::state::oracle_map::OracleMap;
-use crate::state::trade_token::TradeToken;
 use crate::state::trade_token_map::TradeTokenMap;
 use crate::traits::Size;
 use crate::validate;
@@ -137,13 +137,13 @@ impl Pool {
     pub fn hold_pool_amount(
         &mut self,
         amount: u128,
+        market_map: &MarketMap,
         oracle_map: &mut OracleMap,
-        base_trade_token: &TradeToken,
-        stable_trade_token: &TradeToken,
+        trade_token_map: &TradeTokenMap,
         max_pool_liquidity_share_rate: u32,
     ) -> BumpResult<()> {
         let available_liquidity = self
-            .get_pool_available_liquidity(oracle_map, base_trade_token, stable_trade_token)?
+            .get_pool_available_liquidity(market_map, oracle_map, trade_token_map)?
             .safe_mul_rate(max_pool_liquidity_share_rate.cast::<u128>()?)?;
         validate!(amount < available_liquidity, BumpErrorCode::PoolAvailableLiquidityNotEnough)?;
         self.hold_pool(amount)?;
@@ -199,40 +199,71 @@ impl Pool {
         Ok(())
     }
 
-    pub fn settle_pool_funding_fee(
-        &mut self,
-        amount: i128,
-    ) -> BumpResult<()> {
+    pub fn settle_pool_funding_fee(&mut self, amount: i128) -> BumpResult<()> {
         if amount == 0i128 {
             return Ok(());
         }
         self.balance.settle_funding_fee = self.balance.settle_funding_fee.safe_sub(amount)?;
-        /*        if amount > 0i128 && is_cross_margin {
-                    self.balance.un_settle_amount =
-                        self.balance.un_settle_amount.safe_add(amount.abs().cast::<u128>()?)?;
-                } else if amount > 0i128 && !is_cross_margin {
-                    self.balance.amount = self.balance.amount.safe_add(amount.abs().cast::<u128>()?)?;
-                } else {
-                    validate!(
-                        self.balance.amount > amount.abs().cast::<u128>()?,
-                        BumpErrorCode::SubPoolAmountBiggerThanAmount
-                    )?;
-                    self.balance.amount = self.balance.amount.safe_sub(amount.abs().cast::<u128>()?)?;
-                }*/
         Ok(())
     }
 
     pub fn get_pool_available_liquidity(
         &self,
-        _oracle_map: &mut OracleMap,
-        _base_trade_token: &TradeToken,
-        _stable_trade_token: &TradeToken,
+        market_map: &MarketMap,
+        oracle_map: &mut OracleMap,
+        trade_token_map: &TradeTokenMap,
     ) -> BumpResult<u128> {
-        let base_token_amount = self
+        let mut base_token_amount = self
             .balance
             .amount
             .cast::<i128>()?
             .safe_add(self.balance.un_settle_amount.cast::<i128>()?)?;
+        let markets = market_map.get_all_market()?;
+        let mut market_loaded = vec![];
+        for market_loader in markets {
+            let market = market_loader.load().map_err(|e| {
+                let caller = Location::caller();
+                msg!("{:?}", e);
+                msg!("Could not load trade_token at {}:{}", caller.file(), caller.line());
+                BumpErrorCode::CouldNotLoadMarketData
+            })?;
+            if self.key.eq(&market.pool_key) || self.key.eq(&market.stable_pool_key) {
+                market_loaded.push(market);
+            }
+        }
+        validate!(
+            self.market_number == market_loaded.len() as u16,
+            BumpErrorCode::MarketNumberNotEqual2Pool
+        )?;
+
+        for market in market_loaded {
+            if !market.share_short {
+                continue;
+            }
+            let stable_trade_token =
+                trade_token_map.get_trade_token_by_mint_ref(&market.stable_pool_mint_key)?;
+            let stable_trade_token_price =
+                oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
+            let stable_loss_value = calculator::token_to_usd_i(
+                market.stable_loss.safe_add(market.stable_unsettle_loss.cast()?)?,
+                stable_trade_token.decimals,
+                stable_trade_token_price,
+            )?;
+            let trade_token = trade_token_map.get_trade_token_by_mint_ref(&self.mint_key)?;
+            let trade_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
+
+            let stable_loss_token_amount = calculator::usd_to_token_i(
+                stable_loss_value,
+                trade_token.decimals,
+                trade_token_price,
+            )?;
+            if !self.stable {
+                base_token_amount = base_token_amount.safe_add(stable_loss_token_amount)?
+            } else {
+                base_token_amount = base_token_amount.safe_sub(stable_loss_token_amount)?
+            }
+        }
+
         if base_token_amount <= 0i128 {
             return Ok(0u128);
         }
@@ -279,7 +310,7 @@ impl Pool {
                 token_balance.amount.safe_add(token_balance.un_settle_amount)?,
                 pool_liquidity_limit,
             )?
-                .safe_sub(token_balance.hold_amount)?
+            .safe_sub(token_balance.hold_amount)?
                 >= amount)
         }
     }
@@ -325,19 +356,19 @@ impl Pool {
             trade_token_price,
         )?;
 
-        let markets = market_map.get_all_market(self.market_number)?;
+        let markets = market_map.get_all_market()?;
         let mut market_loaded = vec![];
         for market_loader in markets {
             let market =
                 market_loader.load().map_err(|_e| BumpErrorCode::CouldNotLoadMarketData)?;
-            if self.key.eq(&market.pool_key) {
+            if self.key.eq(&market.pool_key) || self.key.eq(&market.stable_pool_key) {
                 market_loaded.push(market);
             }
         }
         validate!(
-                self.market_number == market_loaded.len() as u16,
-                BumpErrorCode::MarketNumberNotEqual2Pool
-            )?;
+            self.market_number == market_loaded.len() as u16,
+            BumpErrorCode::MarketNumberNotEqual2Pool
+        )?;
 
         for market in market_loaded {
             if !self.stable {
@@ -345,23 +376,34 @@ impl Pool {
                 pool_value = add_i128(pool_value, long_market_un_pnl)?;
 
                 if market.share_short {
-                    let stable_trade_token = trade_token_map.get_trade_token_by_mint_ref(&self.stable_mint_key)?;
-                    let stable_trade_token_price = oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
+                    let short_market_un_pnl = market.get_market_un_pnl(false, oracle_map)?;
+                    pool_value = add_i128(pool_value, short_market_un_pnl)?;
 
-                    let stable_loss_value = calculator::token_to_usd_i(market.stable_loss.safe_add(market.stable_unsettle_loss)?,
-                                                                       stable_trade_token.decimals, stable_trade_token_price)?;
+                    let stable_trade_token =
+                        trade_token_map.get_trade_token_by_mint_ref(&self.stable_mint_key)?;
+                    let stable_trade_token_price =
+                        oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
+
+                    let stable_loss_value = calculator::token_to_usd_i(
+                        market.stable_loss.safe_add(market.stable_unsettle_loss.cast()?)?,
+                        stable_trade_token.decimals,
+                        stable_trade_token_price,
+                    )?;
                     pool_value = add_i128(pool_value, stable_loss_value)?;
                 }
             } else {
                 if market.share_short {
-                    let stable_trade_token = trade_token_map.get_trade_token_by_mint_ref(&self.stable_mint_key)?;
-                    let stable_trade_token_price = oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
+                    let stable_trade_token =
+                        trade_token_map.get_trade_token_by_mint_ref(&self.stable_mint_key)?;
+                    let stable_trade_token_price =
+                        oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
 
-                    let stable_loss_value = calculator::token_to_usd_i(market.stable_loss.safe_add(market.stable_unsettle_loss)?,
-                                                                       stable_trade_token.decimals, stable_trade_token_price)?;
-                    if stable_loss_value < 0 {
-                        pool_value = add_i128(pool_value, stable_loss_value.abs().cast()?)?;
-                    }
+                    let stable_loss_value = calculator::token_to_usd_i(
+                        market.stable_loss.safe_add(market.stable_unsettle_loss.cast()?)?,
+                        stable_trade_token.decimals,
+                        stable_trade_token_price,
+                    )?;
+                    pool_value = sub_i128(pool_value, stable_loss_value.cast()?)?;
                 } else {
                     let short_market_un_pnl = market.get_market_un_pnl(false, oracle_map)?;
                     pool_value = add_i128(pool_value, short_market_un_pnl)?;
@@ -423,9 +465,9 @@ impl Pool {
             })?;
             if self.stable && market.share_short {
                 market.add_unsettle_stable_loss(if u_token_pnl > user_liability {
-                    user_liability.cast()?
+                    user_liability
                 } else {
-                    u_token_pnl.cast()?
+                    u_token_pnl
                 })?;
             }
         }
