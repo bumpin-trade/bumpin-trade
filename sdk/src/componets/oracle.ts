@@ -1,4 +1,8 @@
-import { AddressLookupTableAccount, ConfirmOptions, PublicKey } from '@solana/web3.js';
+import {
+    AddressLookupTableAccount,
+    ConfirmOptions,
+    PublicKey,
+} from '@solana/web3.js';
 import { BulkAccountLoader } from '../account/bulkAccountLoader';
 import { Program, Wallet } from '@coral-xyz/anchor';
 import { BumpinTrade } from '../types/bumpin_trade';
@@ -8,6 +12,8 @@ import { BumpinClientConfig } from '../bumpinClientConfig';
 import { StashedPythV2Client } from '../oracles/stashedPythV2Client';
 import { PriceUpdateV2 } from '../oracles/pythv2_def';
 import { BumpinSubscriptionFailed } from '../errors';
+import { PriceInfo } from '../oracles/types';
+import { BumpinUtils } from '../utils/utils';
 
 export class OracleComponent extends Component {
     bulkAccountLoader: BulkAccountLoader;
@@ -39,14 +45,20 @@ export class OracleComponent extends Component {
     }
 
     public async subscribe() {
-        const subscriptionPromises = this.essentialAccounts.flatMap((account) => {
-            console.log('Subscribing to account, len: ', account.state.addresses.length);
-            return account.state.addresses.map(async (key) => {
-                return await this.subscribe0(key);
-            });
-        });
+        const subscriptionPromises = this.essentialAccounts.flatMap(
+            (account) => {
+                console.log(
+                    'Subscribing to account, len: ',
+                    account.state.addresses.length,
+                );
+                return account.state.addresses.map(async (key) => {
+                    return await this.subscribe0(key);
+                });
+            },
+        );
 
-        let promises: Awaited<[StashedPythV2Client, PublicKey] | undefined>[] = await Promise.all(subscriptionPromises);
+        let promises: Awaited<[StashedPythV2Client, PublicKey] | undefined>[] =
+            await Promise.all(subscriptionPromises);
         for (const p of promises) {
             if (p) {
                 if (p) {
@@ -57,31 +69,40 @@ export class OracleComponent extends Component {
         }
     }
 
-    private async subscribe0(account: PublicKey): Promise<[StashedPythV2Client, PublicKey] | undefined> {
-        const client = new StashedPythV2Client(account, 2, this.program.provider.connection);
+    private async subscribe0(
+        account: PublicKey,
+    ): Promise<[StashedPythV2Client, PublicKey] | undefined> {
+        const client = new StashedPythV2Client(
+            account,
+            2,
+            this.program.provider.connection,
+        );
         try {
             const priceUpdateV2: PriceUpdateV2 = await client.getPriceData();
             if (priceUpdateV2) {
-                return [client, new PublicKey(priceUpdateV2.priceMessage.feedId)];
+                return [
+                    client,
+                    new PublicKey(priceUpdateV2.priceMessage.feedId),
+                ];
             }
         } catch (e) {
             return;
         }
     }
 
-    public async unsubscribe() {
+    public async unsubscribe() {}
 
-    }
-
-    public getPrices(feedId: PublicKey): PriceUpdateV2 {
+    public getPrice(feedId: PublicKey): PriceInfo {
         let client = this.oracles.get(feedId);
         if (client === undefined) {
             throw new BumpinSubscriptionFailed(
-                `TradeToken with the feedId: ${feedId} does not exist`,
+                `feedId: ${feedId} does not exist`,
             );
         }
 
-        return client.getLastOraclePriceData(1)[0];
+        return BumpinUtils.convertPriceUpdateV2ToPriceInfo(
+            client.getLastOraclePriceData(1)[0],
+        );
     }
 
     public getPricesWithCount(
@@ -96,6 +117,25 @@ export class OracleComponent extends Component {
         }
 
         return client.getLastOraclePriceData(count);
+    }
+
+    public getTokenPricesByOracleKey(
+        feedId: PublicKey,
+        count: number,
+    ): number[] {
+        let stashedPythV2Client = this.oracles.get(feedId);
+        if (stashedPythV2Client === undefined) {
+            throw new BumpinSubscriptionFailed(
+                `feedId ${feedId} does not exist`,
+            );
+        }
+        let lastOraclePriceData =
+            stashedPythV2Client.getLastOraclePriceData(count);
+        return lastOraclePriceData.map(
+            (updatePriceV2) =>
+                BumpinUtils.convertPriceUpdateV2ToPriceInfo(updatePriceV2)
+                    .price,
+        );
     }
 
     // public getTradeTokenPricesByOracleKey(

@@ -90,14 +90,21 @@ function deserializePriceUpdateV2(buffer: Buffer): PriceUpdateV2 {
 // const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
 // const publicKey = new PublicKey('4cSM2e6rvbGQUFiJbqytoVMi5GgghSMr8LwVrT9VPSPo');
 
-async function fetchPriceUpdateV2ByAccount(connection: Connection, publicKey: PublicKey): Promise<PriceUpdateV2 | undefined> {
+async function fetchPriceUpdateV2ByAccount(
+    connection: Connection,
+    publicKey: PublicKey,
+): Promise<PriceUpdateV2 | undefined> {
     const accountInfo = await connection.getAccountInfo(publicKey);
     if (accountInfo === null) {
         throw new Error('Account not found');
     }
 
     // must be the Pyth V2 receiver program, no matter what network is used
-    if (!accountInfo.owner.equals(new PublicKey('rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ'))) {
+    if (
+        !accountInfo.owner.equals(
+            new PublicKey('rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ'),
+        )
+    ) {
         throw new Error('Invalid owner');
     }
 

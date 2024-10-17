@@ -57,6 +57,7 @@ import { TradeTokenComponent } from './tradeToken';
 import { PoolComponent } from './pool';
 import { BumpinClientConfig } from '../bumpinClientConfig';
 import { MarketComponent } from './market';
+import { OracleComponent } from './oracle';
 
 export class UserComponent extends Component {
     publicKey: PublicKey;
@@ -65,6 +66,7 @@ export class UserComponent extends Component {
     tradeTokenComponent: TradeTokenComponent;
     poolComponent: PoolComponent;
     marketComponent: MarketComponent;
+    oracleComponent: OracleComponent;
 
     constructor(
         config: BumpinClientConfig,
@@ -75,6 +77,7 @@ export class UserComponent extends Component {
         tradeTokenComponent: TradeTokenComponent,
         marketComponent: MarketComponent,
         poolComponent: PoolComponent,
+        oracleComponent: OracleComponent,
         program: Program<BumpinTrade>,
         wallet?: Wallet,
         essentialAccounts: AddressLookupTableAccount[] = [],
@@ -92,6 +95,7 @@ export class UserComponent extends Component {
         this.tradeTokenComponent = tradeTokenComponent;
         this.marketComponent = marketComponent;
         this.poolComponent = poolComponent;
+        this.oracleComponent = oracleComponent;
         const [pda, _] = BumpinUtils.getPdaSync(this.program, [
             Buffer.from('user'),
             this.publicKey.toBuffer(),
@@ -739,11 +743,9 @@ export class UserComponent extends Component {
                   param,
               );
 
-        let indexPrice =
-            this.tradeTokenComponent.getTradeTokenPricesByOracleKey(
-                markets[marketIndex].indexMintOracle,
-                0,
-            )[0];
+        let indexPrice = this.oracleComponent.getPrice(
+            markets[marketIndex].indexMintOracle,
+        );
         let marginToken = isEqual(param.positionSide, PositionSide.INCREASE)
             ? isEqual(param.orderSide, OrderSide.LONG)
                 ? tradeToken
@@ -751,11 +753,7 @@ export class UserComponent extends Component {
             : isEqual(param.orderSide, OrderSide.LONG)
             ? stableTradeToken
             : tradeToken;
-        let marginPrice =
-            this.tradeTokenComponent.getTradeTokenPricesByOracleKey(
-                marginToken.oracleKey,
-                0,
-            )[0];
+        let marginPrice = this.oracleComponent.getPrice(marginToken.oracleKey);
         if (!indexPrice.price) {
             throw new BumpinInvalidParameter(
                 'Price not found(undefined) for mint: ' +
@@ -917,7 +915,7 @@ export class UserComponent extends Component {
 
         let balanceOfUserTradeTokens =
             await BumpinTokenUtils.getUserTradeTokenBalance(
-                this.tradeTokenComponent,
+                this.oracleComponent,
                 user,
                 tradeTokens,
             );
@@ -925,6 +923,7 @@ export class UserComponent extends Component {
         let balanceOfUserPositions =
             await BumpinPositionUtils.getUserPositionValue(
                 this.tradeTokenComponent,
+                this.oracleComponent,
                 user,
                 tradeTokens,
                 markets,
@@ -951,13 +950,14 @@ export class UserComponent extends Component {
     ): Promise<BigNumber> {
         let balanceOfUserTradeTokens =
             await BumpinTokenUtils.getUserTradeTokenBalance(
-                this.tradeTokenComponent,
+                this.oracleComponent,
                 user,
                 tradeTokens,
             );
         let balanceOfUserPositions =
             await BumpinPositionUtils.getUserPositionValue(
                 this.tradeTokenComponent,
+                this.oracleComponent,
                 user,
                 tradeTokens,
                 markets,
@@ -1023,11 +1023,7 @@ export class UserComponent extends Component {
         tradeToken: TradeToken,
         pool: Pool,
     ): Promise<BigNumber> {
-        const price = (
-            await this.tradeTokenComponent.getTradeTokenPricesByMintKey(
-                tradeToken.mintKey,
-            )
-        ).price;
+        const price = this.oracleComponent.getPrice(tradeToken.oracleKey).price;
         if (!price) {
             throw new BumpinInvalidParameter('Price data not found');
         }

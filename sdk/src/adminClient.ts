@@ -229,9 +229,7 @@ export class BumpinAdmin {
             .rpc(BumpinUtils.getDefaultConfirmOptions());
     }
 
-    public async DEV_TEST_ONLY__INIT_PYTHV2(
-        feedId: number[],
-    ) {
+    public async DEV_TEST_ONLY__INIT_PYTHV2(feedId: number[]) {
         let oracleKeypair = anchor.web3.Keypair.generate();
         await BumpinUtils.manualCreateAccount(
             this.provider,
@@ -244,15 +242,15 @@ export class BumpinAdmin {
             this.TEST_PYTH.programId,
         );
 
-        console.log('Price Update V2 Account Address: ', oracleKeypair.publicKey.toString());
-        const params =
-            {
-                feedId: feedId,
-                price: new BN(0),
-                exponent: 8,
-
-            }
-        ;
+        console.log(
+            'Price Update V2 Account Address: ',
+            oracleKeypair.publicKey.toString(),
+        );
+        const params = {
+            feedId: feedId,
+            price: new BN(0),
+            exponent: 8,
+        };
         await this.TEST_PYTH.methods
             .initializeV2(params)
             .accounts({
@@ -324,7 +322,10 @@ export class BumpinAdmin {
         const tradeTokenMintPublicKey = new PublicKey(tradeTokenMint);
         let oraclePublicKey: PublicKey;
         if (trueOraclePublicKey) {
-            console.log('Initial Trade Token by trueOraclePublicKey', trueOraclePublicKey);
+            console.log(
+                'Initial Trade Token by trueOraclePublicKey',
+                trueOraclePublicKey,
+            );
             oraclePublicKey = new PublicKey(trueOraclePublicKey);
         } else {
             console.log('Initial Trade Token by generated Oracle');
@@ -402,7 +403,6 @@ export class BumpinAdmin {
             .rpc(BumpinUtils.getRootConfirmOptions());
     }
 
-
     // public async tryPythV2(
     //     accounts: PublicKey[],
     // ) {
@@ -450,7 +450,6 @@ export class BumpinAdmin {
             'confirmed',
         );
     }
-
 }
 
 export type WrappedInitializePoolParams = {

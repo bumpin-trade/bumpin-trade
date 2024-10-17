@@ -1,9 +1,18 @@
-import { AccountMeta, ConfirmOptions, PublicKey, TransactionMessage, VersionedTransaction } from '@solana/web3.js';
+import {
+    AccountMeta,
+    ConfirmOptions,
+    PublicKey,
+    TransactionMessage,
+    VersionedTransaction,
+} from '@solana/web3.js';
 import * as anchor from '@coral-xyz/anchor';
 import { BN, Program, Provider, Wallet } from '@coral-xyz/anchor';
 import { Buffer } from 'buffer';
 import { BumpinTrade } from '../types/bumpin_trade';
 import BigNumber from 'bignumber.js';
+import { PriceUpdateV2 } from '../oracles/pythv2_def';
+import { PriceInfo } from '../oracles/types';
+import { PRICE_PRECISION_BIGNUMBER } from '../oracles/stashedPythV2Client';
 
 export class BumpinUtils {
     public static bigintToUsd(
@@ -321,5 +330,22 @@ export class BumpinUtils {
                 console.log(indent + `[${key}] : ${value!.toString()}`);
             }
         }
+    }
+
+    public static convertPriceUpdateV2ToPriceInfo(
+        priceUpdateV2: PriceUpdateV2,
+    ): PriceInfo {
+        let price = priceUpdateV2.priceMessage.price;
+        let exponent = priceUpdateV2.priceMessage.exponent;
+        exponent = Math.abs(exponent);
+        const pythPrecision = BigNumber(10).pow(BigNumber(exponent).abs());
+        return {
+            price: BigNumber(
+                BigNumber(price.toString())
+                    .multipliedBy(BigNumber(10).pow(exponent))
+                    .multipliedBy(PRICE_PRECISION_BIGNUMBER)
+                    .dividedBy(pythPrecision),
+            ).toNumber(),
+        };
     }
 }

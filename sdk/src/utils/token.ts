@@ -1,51 +1,20 @@
 import { Connection, PublicKey } from '@solana/web3.js';
-import { TradeTokenBalance, UserTokenAccount } from '../typedef';
+import { TradeTokenBalance } from '../typedef';
 import { BumpinAccountNotFound, BumpinTokenNotFound } from '../errors';
 import { Account, getAccount, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { OracleClient, OraclePriceData } from '../oracles/types';
 // @ts-ignore
 import { isEqual } from 'lodash';
 import { TradeToken, User, UserToken, UserTokenStatus } from '../beans/beans';
 import { TradeTokenComponent } from '../componets/tradeToken';
 import BigNumber from 'bignumber.js';
+import { OracleComponent } from '../componets/oracle';
+import { PriceUpdateV2 } from '../oracles/pythv2_def';
+import { PriceInfo } from '../oracles/types';
+import { PRICE_PRECISION_BIGNUMBER } from '../oracles/stashedPythV2Client';
 
 export class BumpinTokenUtils {
-    public static async getUserAllTokenEquity(
-        tradeTokenComponent: TradeTokenComponent,
-        user: User,
-        tradeTokens: TradeToken[],
-    ): Promise<BigNumber> {
-        let equity = new BigNumber(0);
-        for (let token of user.tokens) {
-            if (!isEqual(token.userTokenStatus, UserTokenStatus.INIT)) {
-                let tradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
-                    token.tokenMintKey,
-                    tradeTokens,
-                );
-                const price =
-                    tradeTokenComponent.getTradeTokenPricesByOracleKey(
-                        tradeToken.oracleKey,
-                        1,
-                    )[0].price!;
-                equity = equity.plus(
-                    token.amount
-                        .minus(token.liabilityAmount)
-                        .multipliedBy(price),
-                );
-            }
-        }
-        return equity;
-    }
-
-    public static async getTradeTokenPrice(
-        oracle: OracleClient,
-        tradeToken: TradeToken,
-    ): Promise<OraclePriceData> {
-        return await oracle.getOraclePriceData(tradeToken.oracleKey);
-    }
-
     public static async getUserTradeTokenBalance(
-        tradeTokenComponent: TradeTokenComponent,
+        oracleComponent: OracleComponent,
         user: User,
         tradeTokens: TradeToken[],
     ): Promise<TradeTokenBalance> {
@@ -64,7 +33,7 @@ export class BumpinTokenUtils {
                 tradeTokens,
             );
             let tokenBalance = await BumpinTokenUtils.getTradeTokenBalance(
-                tradeTokenComponent,
+                oracleComponent,
                 userToken,
                 tradeToken,
             );
@@ -88,14 +57,11 @@ export class BumpinTokenUtils {
     }
 
     public static async getTradeTokenBalance(
-        tradeTokenComponent: TradeTokenComponent,
+        oracleComponent: OracleComponent,
         userToken: UserToken,
         tradeToken: TradeToken,
     ): Promise<TradeTokenBalance> {
-        const price = tradeTokenComponent.getTradeTokenPricesByOracleKey(
-            tradeToken.oracleKey,
-            1,
-        )[0].price!;
+        const price = oracleComponent.getPrice(tradeToken.oracleKey).price!;
         let tokenNetValue = BigNumber(0);
         if (userToken.amount.gt(userToken.usedAmount)) {
             tokenNetValue = userToken.amount

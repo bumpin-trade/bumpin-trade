@@ -5,8 +5,10 @@ import { BN } from '@coral-xyz/anchor';
 import { TEN } from '../constants/numericConstants';
 import { BumpinInvalidParameter } from '../errors';
 import { fetchPriceUpdateV2ByAccount, PriceUpdateV2 } from './pythv2_def';
+import BigNumber from 'bignumber.js';
 
 export const PRICE_PRECISION = new BN(10).pow(new BN(8));
+export const PRICE_PRECISION_BIGNUMBER = BigNumber(10).pow(BigNumber(8));
 
 export class StashedPythV2Client {
     private readonly account: PublicKey;
@@ -29,7 +31,8 @@ export class StashedPythV2Client {
     }
 
     public async getPriceData(): Promise<PriceUpdateV2> {
-        const priceUpdateV2: PriceUpdateV2 | undefined = await fetchPriceUpdateV2ByAccount(this.connection, this.account);
+        const priceUpdateV2: PriceUpdateV2 | undefined =
+            await fetchPriceUpdateV2ByAccount(this.connection, this.account);
         if (!priceUpdateV2) {
             throw new BumpinInvalidParameter('Price data not found');
         }
@@ -47,7 +50,11 @@ export class StashedPythV2Client {
     public async initialize(): Promise<void> {
         setInterval(async () => {
             try {
-                const priceUpdateV2: PriceUpdateV2 | undefined = await fetchPriceUpdateV2ByAccount(this.connection, this.account);
+                const priceUpdateV2: PriceUpdateV2 | undefined =
+                    await fetchPriceUpdateV2ByAccount(
+                        this.connection,
+                        this.account,
+                    );
                 if (!priceUpdateV2) {
                     return;
                 }

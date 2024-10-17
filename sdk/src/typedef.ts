@@ -1,7 +1,6 @@
 import { PublicKey } from '@solana/web3.js';
 // import BN from "bn.js";
 import { BN } from '@coral-xyz/anchor';
-import { PriceData } from '@pythnetwork/client';
 import { BumpinUtils } from './utils/utils';
 import { BumpinInvalidParameter, BumpinTokenNotFound } from './errors';
 import BigNumber from 'bignumber.js';
@@ -642,7 +641,7 @@ export type MarketWithIndexTradeTokenPrices = {
     stablePoolMintKey: PublicKey;
     index: number;
     symbol: string;
-    indexTradeTokenPrices: PriceData[];
+    indexTradeTokenPrices: number[];
 };
 
 export type PoolSummary = {
@@ -687,18 +686,18 @@ export class TokenBalance {
     tradeToken: TradeToken;
     amount: BN;
     tokenAccountPublicKey: PublicKey;
-    tradeTokenPriceData: PriceData;
+    tradeTokenPrice: number;
 
     constructor(
         tradeToken: TradeToken,
         amount: bigint,
         tokenAccountPublicKey: PublicKey,
-        tradeTokenPriceData: PriceData,
+        tradeTokenPrice: number,
     ) {
         this.tradeToken = tradeToken;
         this.tokenAccountPublicKey = tokenAccountPublicKey;
         this.amount = new BN(amount.toString());
-        this.tradeTokenPriceData = tradeTokenPriceData;
+        this.tradeTokenPrice = tradeTokenPrice;
     }
 
     public getTokenName(): string {
@@ -706,12 +705,12 @@ export class TokenBalance {
     }
 
     public getTokenBalanceUsd(): BigNumber {
-        if (!this.tradeTokenPriceData.price) {
+        if (!this.tradeTokenPrice) {
             throw new BumpinInvalidParameter('Price data not found');
         }
         return BumpinUtils.toUsd(
             this.amount,
-            this.tradeTokenPriceData.price,
+            this.tradeTokenPrice,
             this.tradeToken.decimals,
         );
     }

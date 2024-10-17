@@ -1,8 +1,7 @@
 import { PositionBalance, PositionFee } from '../typedef';
-import { BN } from '@coral-xyz/anchor';
 import { BumpinTokenUtils } from './token';
 // @ts-ignore
-import { eq, isEqual } from 'lodash';
+import { isEqual } from 'lodash';
 import {
     BumpinMarketNotFound,
     BumpinPoolNotFound,
@@ -24,6 +23,7 @@ import BigNumber from 'bignumber.js';
 import { TradeTokenComponent } from '../componets/tradeToken';
 import { BumpinUtils } from './utils';
 import { PublicKey } from '@solana/web3.js';
+import { OracleComponent } from '../componets/oracle';
 
 export class BumpinPositionUtils {
     // public static async reducePositionPortfolioBalance(
@@ -45,17 +45,14 @@ export class BumpinPositionUtils {
     //   }
     // }
     public static async getUserAllPositionUnPnl(
-        tradeTokenComponent: TradeTokenComponent,
+        oracleComponent: OracleComponent,
         user: User,
     ): Promise<BigNumber> {
         let unPnl = new BigNumber(0);
         for (let position of user.positions) {
             if (!isEqual(position.status, PositionStatus.INIT)) {
-                const price =
-                    tradeTokenComponent.getTradeTokenPricesByOracleKey(
-                        position.indexMintOracle,
-                        1,
-                    )[0].price!;
+                const price = oracleComponent.getPrice(position.indexMintOracle)
+                    .price!;
                 if (position.isLong) {
                     unPnl = unPnl.plus(
                         position.positionSize
@@ -93,6 +90,7 @@ export class BumpinPositionUtils {
 
     public static async getUserPositionValue(
         tradeTokenComponent: TradeTokenComponent,
+        oracleComponent: OracleComponent,
         user: User,
         tradeTokens: TradeToken[],
         markets: Market[],
@@ -121,7 +119,7 @@ export class BumpinPositionUtils {
                     tradeTokens,
                 );
             let unPnlValue = await BumpinPositionUtils.getPositionUnPnlValue(
-                tradeTokenComponent,
+                oracleComponent,
                 marginTradeToken,
                 userPosition,
                 positionValue,
@@ -144,6 +142,7 @@ export class BumpinPositionUtils {
             }
             const posFee = await BumpinPositionUtils.getPositionFee(
                 tradeTokenComponent,
+                oracleComponent,
                 userPosition,
                 market,
                 pool,
@@ -171,15 +170,12 @@ export class BumpinPositionUtils {
 
     //TODO, Jax: check this
     public static async getPositionUnPnlValue(
-        tradeTokenComponent: TradeTokenComponent,
+        oracleComponent: OracleComponent,
         marginTradeToken: TradeToken,
         position: UserPosition,
         positionValue: boolean = true,
     ): Promise<BigNumber> {
-        const price = tradeTokenComponent.getTradeTokenPricesByOracleKey(
-            position.indexMintOracle,
-            1,
-        )[0].price!;
+        const price = oracleComponent.getPrice(position.indexMintOracle).price!;
         let unPnl = BigNumber(0);
         if (!position.positionSize.isZero()) {
             if (position.isLong) {
@@ -207,6 +203,7 @@ export class BumpinPositionUtils {
     //TODO: Jax: check this
     public static async getPositionFee(
         tradeTokenComponent: TradeTokenComponent,
+        oracleComponent: OracleComponent,
         position: UserPosition,
         market: Market,
         pool: Pool,
@@ -221,20 +218,19 @@ export class BumpinPositionUtils {
             totalUsd: BigNumber(0),
         };
 
-        const price = (
-            await tradeTokenComponent.getTradeTokenPricesByMintKey(
-                position.marginMintKey,
-            )
-        ).price!;
+        let marginToken = await tradeTokenComponent.getTradeTokenByMintKey(
+            position.marginMintKey,
+        );
+        const price = oracleComponent.getPrice(marginToken.oracleKey).price!;
+
+        let tradeToken = await tradeTokenComponent.getTradeTokenByMintKey(
+            market.poolMintKey,
+        );
         let { longDelta, shortDelta } =
             BumpinMarketUtils.getMarketPerTokenDelta(
                 market,
                 state,
-                (
-                    await tradeTokenComponent.getTradeTokenPricesByMintKey(
-                        market.poolMintKey,
-                    )
-                ).price!,
+                oracleComponent.getPrice(tradeToken.oracleKey).price!,
             );
         if (position.isLong) {
             positionFee.fundingFee =

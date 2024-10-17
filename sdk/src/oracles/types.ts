@@ -13,6 +13,10 @@ export type OraclePriceData = {
     maxPrice?: BN; // pre-launch markets only
 };
 
+export type PriceInfo = {
+    price: number;
+};
+
 export type OracleInfo = {
     publicKey: PublicKey;
     source: OracleSource;

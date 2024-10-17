@@ -1,4 +1,8 @@
-import { AddressLookupTableAccount, ConfirmOptions, PublicKey } from '@solana/web3.js';
+import {
+    AddressLookupTableAccount,
+    ConfirmOptions,
+    PublicKey,
+} from '@solana/web3.js';
 import { BulkAccountLoader } from '../account/bulkAccountLoader';
 import { Program, Wallet } from '@coral-xyz/anchor';
 import { BumpinUtils } from '../utils/utils';
@@ -9,7 +13,6 @@ import { BumpinSubscriptionFailed } from '../errors';
 import { DataAndSlot } from '../account/types';
 import { PollingTradeTokenAccountSubscriber } from '../account/pollingTradeTokenAccountSubscriber';
 import { StashedPythClient } from '../oracles/stashedPythClient';
-import { PriceData } from '@pythnetwork/client';
 import { TradeToken } from '../beans/beans';
 import { BumpinClientConfig } from '../bumpinClientConfig';
 
@@ -131,8 +134,6 @@ export class TradeTokenComponent extends Component {
             `TradeToken with the mint key ${mintKey} does not exist`,
         );
     }
-
-
 
     public async getTradeTokensWithSlot(
         sync: boolean = false,
