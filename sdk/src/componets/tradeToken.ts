@@ -1,8 +1,4 @@
-import {
-    AddressLookupTableAccount,
-    ConfirmOptions,
-    PublicKey,
-} from '@solana/web3.js';
+import { AddressLookupTableAccount, ConfirmOptions, PublicKey } from '@solana/web3.js';
 import { BulkAccountLoader } from '../account/bulkAccountLoader';
 import { Program, Wallet } from '@coral-xyz/anchor';
 import { BumpinUtils } from '../utils/utils';
@@ -63,19 +59,19 @@ export class TradeTokenComponent extends Component {
             tradeTokenAccountSubscriber,
         ] of this.tradeTokens.entries()) {
             await tradeTokenAccountSubscriber.subscribe();
-            let tradeToken: TradeToken =
-                tradeTokenAccountSubscriber.getAccountAndSlot().data;
-            let stashedPythClient = new StashedPythClient(
-                tradeToken.oracleKey,
-                2,
-                this.bulkAccountLoader,
-            );
-            await stashedPythClient.initialize();
-            this.tradeTokenPyths.set(key, stashedPythClient);
-            this.tradeTokenOraclePyths.set(
-                tradeToken.oracleKey.toString(),
-                stashedPythClient,
-            );
+            // let tradeToken: TradeToken =
+            //     tradeTokenAccountSubscriber.getAccountAndSlot().data;
+            // let stashedPythClient = new StashedPythClient(
+            //     tradeToken.oracleKey,
+            //     2,
+            //     this.bulkAccountLoader,
+            // );
+            // await stashedPythClient.initialize();
+            // this.tradeTokenPyths.set(key, stashedPythClient);
+            // this.tradeTokenOraclePyths.set(
+            //     tradeToken.oracleKey.toString(),
+            //     stashedPythClient,
+            // );
         }
     }
 
@@ -136,69 +132,7 @@ export class TradeTokenComponent extends Component {
         );
     }
 
-    public getTradeTokenPrices(tradeTokenKey: PublicKey): PriceData {
-        let stashedPythClient = this.tradeTokenPyths.get(
-            tradeTokenKey.toString(),
-        );
-        if (stashedPythClient === undefined) {
-            throw new BumpinSubscriptionFailed(
-                `TradeToken with the key ${tradeTokenKey} does not exist`,
-            );
-        }
-        return stashedPythClient.getLastOraclePriceData(1)[0];
-    }
 
-    public getTradeTokenPriceWithCount(
-        tradeTokenKey: PublicKey,
-        count: number = 1,
-    ): PriceData[] {
-        let stashedPythClient = this.tradeTokenPyths.get(
-            tradeTokenKey.toString(),
-        );
-        if (stashedPythClient === undefined) {
-            throw new BumpinSubscriptionFailed(
-                `TradeToken with the key ${tradeTokenKey} does not exist`,
-            );
-        }
-        return stashedPythClient.getLastOraclePriceData(count);
-    }
-
-    public getTradeTokenPricesByOracleKey(
-        oracleKey: PublicKey,
-        count: number,
-    ): PriceData[] {
-        let stashedPythClient = this.tradeTokenOraclePyths.get(
-            oracleKey.toString(),
-        );
-        if (stashedPythClient === undefined) {
-            throw new BumpinSubscriptionFailed(
-                `TradeToken with the oracle key ${oracleKey} does not exist`,
-            );
-        }
-        return stashedPythClient.getLastOraclePriceData(count);
-    }
-
-    public async getTradeTokenPricesByMintKey(
-        mintKey: PublicKey,
-        sync: boolean = false,
-    ): Promise<PriceData> {
-        let tradeToken = await this.getTradeTokenByMintKey(mintKey, sync);
-        return this.getTradeTokenPrices(
-            BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0],
-        );
-    }
-
-    public async getTradeTokenPricesByMintKeyWithCount(
-        mintKey: PublicKey,
-        count: number = 1,
-        sync: boolean = false,
-    ): Promise<PriceData[]> {
-        let tradeToken = await this.getTradeTokenByMintKey(mintKey, sync);
-        return this.getTradeTokenPriceWithCount(
-            BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0],
-            count,
-        );
-    }
 
     public async getTradeTokensWithSlot(
         sync: boolean = false,

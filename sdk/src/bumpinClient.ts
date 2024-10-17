@@ -50,6 +50,7 @@ import { isEqual } from 'lodash';
 import { BumpinPositionUtils } from './utils/position';
 import { BumpinUserUtils } from './utils/user';
 import { OracleComponent } from './componets/oracle';
+import { PriceUpdateV2 } from './oracles/pythv2_def';
 
 export class BumpinClient {
     readonly config: BumpinClientConfig;
@@ -148,7 +149,6 @@ export class BumpinClient {
         await this.stateSubscriber.subscribe();
 
         const state = this.stateSubscriber.getAccountAndSlot().data;
-        console.log("Essential account alt: ", state.essentialAccountAlt.toString());
         try {
             this.essentialAccountAltPublicKey = state.essentialAccountAlt;
             this.essentialAccounts = (
@@ -321,29 +321,27 @@ export class BumpinClient {
         return new WalletBalance(recognized, balance, 9, tokenBalances);
     }
 
+    //TODO: should be new PriceUpdateDataV2
     public getTradeTokenPrice(tradeTokenKey: PublicKey): PriceData {
         this.checkInitialization();
-        return this.tradeTokenComponent!.getTradeTokenPrices(tradeTokenKey);
+        return this.oracleComponent!.getPrices(feedId);
     }
 
     public async getTradeTokenPriceByMintKey(
         mintKey: PublicKey,
     ): Promise<PriceData> {
         this.checkInitialization();
-        return await this.tradeTokenComponent!.getTradeTokenPricesByMintKey(
+        const tradeToken = await this.tradeTokenComponent!.getTradeTokenByMintKey(
             mintKey,
         );
+        return this.oracleComponent!.getPrices(tradeToken.oracleKey);
     }
 
     public async getTradeTokenPriceByOracleKey(
-        oracleKey: PublicKey,
-    ): Promise<PriceData> {
+        feedId: PublicKey,
+    ): Promise<PriceUpdateV2> {
         this.checkInitialization();
-        let res = this.tradeTokenComponent!.getTradeTokenPricesByOracleKey(
-            oracleKey,
-            1,
-        );
-        return res[0];
+        return this.oracleComponent!.getPrices(feedId);
     }
 
     public async getPoolSummary(

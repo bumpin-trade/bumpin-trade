@@ -7,6 +7,7 @@ import { PollingStateAccountSubscriber } from '../account/pollingStateAccountSub
 import { BumpinClientConfig } from '../bumpinClientConfig';
 import { StashedPythV2Client } from '../oracles/stashedPythV2Client';
 import { PriceUpdateV2 } from '../oracles/pythv2_def';
+import { BumpinSubscriptionFailed } from '../errors';
 
 export class OracleComponent extends Component {
     bulkAccountLoader: BulkAccountLoader;
@@ -54,8 +55,6 @@ export class OracleComponent extends Component {
                 }
             }
         }
-
-        console.log('All accounts subscribed.');
     }
 
     private async subscribe0(account: PublicKey): Promise<[StashedPythV2Client, PublicKey] | undefined> {
@@ -73,4 +72,66 @@ export class OracleComponent extends Component {
     public async unsubscribe() {
 
     }
+
+    public getPrices(feedId: PublicKey): PriceUpdateV2 {
+        let client = this.oracles.get(feedId);
+        if (client === undefined) {
+            throw new BumpinSubscriptionFailed(
+                `TradeToken with the feedId: ${feedId} does not exist`,
+            );
+        }
+
+        return client.getLastOraclePriceData(1)[0];
+    }
+
+    public getPricesWithCount(
+        feedId: PublicKey,
+        count: number = 1,
+    ): PriceUpdateV2[] {
+        let client = this.oracles.get(feedId);
+        if (client === undefined) {
+            throw new BumpinSubscriptionFailed(
+                `TradeToken with the feedId: ${feedId} does not exist`,
+            );
+        }
+
+        return client.getLastOraclePriceData(count);
+    }
+
+    // public getTradeTokenPricesByOracleKey(
+    //     oracleKey: PublicKey,
+    //     count: number,
+    // ): PriceData[] {
+    //     let stashedPythClient = this.tradeTokenOraclePyths.get(
+    //         oracleKey.toString(),
+    //     );
+    //     if (stashedPythClient === undefined) {
+    //         throw new BumpinSubscriptionFailed(
+    //             `TradeToken with the oracle key ${oracleKey} does not exist`,
+    //         );
+    //     }
+    //     return stashedPythClient.getLastOraclePriceData(count);
+    // }
+    //
+    // public async getTradeTokenPricesByMintKey(
+    //     mintKey: PublicKey,
+    //     sync: boolean = false,
+    // ): Promise<PriceData> {
+    //     let tradeToken = await this.getTradeTokenByMintKey(mintKey, sync);
+    //     return this.getTradeTokenPrices(
+    //         BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0],
+    //     );
+    // }
+    //
+    // public async getTradeTokenPricesByMintKeyWithCount(
+    //     mintKey: PublicKey,
+    //     count: number = 1,
+    //     sync: boolean = false,
+    // ): Promise<PriceData[]> {
+    //     let tradeToken = await this.getTradeTokenByMintKey(mintKey, sync);
+    //     return this.getTradeTokenPriceWithCount(
+    //         BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0],
+    //         count,
+    //     );
+    // }
 }
