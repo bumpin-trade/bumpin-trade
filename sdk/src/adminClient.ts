@@ -102,6 +102,7 @@ export class BumpinAdmin {
 
     public async initializeAll(
         stateParam: InitializeStateParams,
+        oracleParams: WrappedInitializeOracleParams[],
         tradeTokenParams: WrappedInitializeTradeTokenParams[],
         poolParams: WrappedInitializePoolParams[],
         marketParams: WrappedInitializeMarketParams[],
@@ -115,6 +116,11 @@ export class BumpinAdmin {
         await this.initState(stateParam);
         console.log('State initialized');
 
+        console.log('Initializing Oracle');
+        for (let p of oracleParams) {
+            await this.initOracle(p.feedId, p.exponent, p.oracleKeypair);
+        }
+
         let tradeTokenOracleMap = new Map<string, string>();
 
         // ////////// init tradeToken
@@ -125,8 +131,7 @@ export class BumpinAdmin {
                 p.tradeTokenMint,
                 p.discount,
                 p.liquidationFactor,
-                p.exponent,
-                p.trueOraclePublicKey,
+                p.feedId,
             );
             tradeTokenOracleMap.set(p.tradeTokenMint, oracleKey.toString());
             console.log(
@@ -229,15 +234,15 @@ export class BumpinAdmin {
             .rpc(BumpinUtils.getDefaultConfirmOptions());
     }
 
-    public async DEV_TEST_ONLY__INIT_PYTHV2(feedId: number[]) {
-        let oracleKeypair = anchor.web3.Keypair.generate();
+    public async DEV_TEST_ONLY__INIT_PYTHV2(exponent: number, feedId: number[], oracleKeypair: anchor.web3.Keypair) {
+        // let oracleKeypair = anchor.web3.Keypair.generate();
         await BumpinUtils.manualCreateAccount(
             this.provider,
             this.wallet,
             oracleKeypair,
-            134,
+            136,
             await this.TEST_PYTH.provider.connection.getMinimumBalanceForRentExemption(
-                134,
+                136,
             ),
             this.TEST_PYTH.programId,
         );
@@ -249,7 +254,7 @@ export class BumpinAdmin {
         const params = {
             feedId: feedId,
             price: new BN(0),
-            exponent: 8,
+            exponent: exponent,
         };
         await this.TEST_PYTH.methods
             .initializeV2(params)
@@ -311,42 +316,44 @@ export class BumpinAdmin {
             .rpc();
     }
 
+    public async initOracle(
+        feed_id: PublicKey,
+        exponent: number,
+        oracleKeypair: anchor.web3.Keypair | undefined,
+    ) {
+        if (oracleKeypair) {
+            console.log('Initial Trade Token by generated Oracle');
+            await this.DEV_TEST_ONLY__INIT_PYTHV2(exponent, Array.from(feed_id.toBytes()), oracleKeypair);
+            console.log('Oracle initialized, FeedId: ', feed_id.toString());
+        } else {
+            console.log(
+                'Initial Trade Token by FeedId:',
+                feed_id,
+            );
+        }
+    }
+
     public async initTradeToken(
         tradeTokenName: string,
         tradeTokenMint: string,
         discount: number,
         liquidationFactor: number,
-        exponent: number,
-        trueOraclePublicKey: string | undefined,
+        feed_id_pk: string,
     ): Promise<PublicKey> {
         const tradeTokenMintPublicKey = new PublicKey(tradeTokenMint);
-        let oraclePublicKey: PublicKey;
-        if (trueOraclePublicKey) {
-            console.log(
-                'Initial Trade Token by trueOraclePublicKey',
-                trueOraclePublicKey,
-            );
-            oraclePublicKey = new PublicKey(trueOraclePublicKey);
-        } else {
-            console.log('Initial Trade Token by generated Oracle');
-            oraclePublicKey = (
-                await this.DEV_TEST_ONLY__INIT_ORACLE(70000, 1.0, exponent)
-            ).publicKey;
-            console.log('Oracle initialized: ', oraclePublicKey.toString());
-        }
+        let feedId: PublicKey = new PublicKey(feed_id_pk);
 
         const s = BumpinUtils.encodeString(tradeTokenName);
         let [pda, nonce] = BumpinUtils.getBumpinStatePda(this.program);
         await this.program.methods
-            .initializeTradeToken(discount, s, liquidationFactor)
+            .initializeTradeToken(discount, s, Array.from(feedId.toBytes()), liquidationFactor)
             .accounts({
                 tradeTokenMint: tradeTokenMintPublicKey,
-                oracle: oraclePublicKey,
                 bumpSigner: pda,
             })
             .signers([])
             .rpc(BumpinUtils.getDefaultConfirmOptions());
-        return oraclePublicKey;
+        return feedId;
     }
 
     public async initRewards(
@@ -457,14 +464,18 @@ export type WrappedInitializePoolParams = {
     param: InitializePoolParams;
 };
 
+export type WrappedInitializeOracleParams = {
+    feedId: PublicKey;
+    exponent: number;
+    oracleKeypair: anchor.web3.Keypair | undefined,
+};
+
 export type WrappedInitializeTradeTokenParams = {
-    //tradeTokenName: string, tradeTokenMint: string, discount: number, liquidationFactor: number, exponent: number
     tradeTokenName: string;
     tradeTokenMint: string;
     discount: number;
     liquidationFactor: number;
-    exponent: number;
-    trueOraclePublicKey: string | undefined;
+    feedId: string;
 };
 
 export type WrappedInitializeMarketParams = {

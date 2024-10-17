@@ -18,8 +18,6 @@ declare_id!("qq15xzXDf81cxxHtmwAyviqRzAUA3Ctqs8jqdPv1aCS");
 #[program]
 pub mod bumpin_trade {
     use super::*;
-    use crate::ids::pyth_program;
-    use pyth_solana_receiver_sdk::price_update::PriceUpdateV2;
 
     #[track_caller]
     pub fn initialize_state<'a, 'b, 'c: 'info, 'info>(
@@ -58,9 +56,10 @@ pub mod bumpin_trade {
         ctx: Context<'a, 'b, 'c, 'info, InitializeTradeToken>,
         discount: u32,
         mint_name: [u8; 32],
+        feed_id: [u8; 32],
         liquidation_factor: u32,
     ) -> Result<()> {
-        handle_initialize_trade_token(ctx, discount, mint_name, liquidation_factor)
+        handle_initialize_trade_token(ctx, discount, mint_name,feed_id, liquidation_factor)
     }
 
     #[track_caller]

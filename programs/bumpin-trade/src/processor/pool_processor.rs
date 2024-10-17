@@ -22,7 +22,7 @@ pub fn un_stake(
     let net_price = pool.get_pool_net_price(trade_token_map, oracle_map, market_map)?;
     let un_stake_usd =
         calculator::token_to_usd_u(un_stake_amount, base_trade_token.decimals, net_price)?;
-    let token_price = oracle_map.get_price_data(&base_trade_token.oracle_key)?.price;
+    let token_price = oracle_map.get_price_data(&base_trade_token.feed_id)?.price;
     let token_amount =
         calculator::usd_to_token_u(un_stake_usd, base_trade_token.decimals, token_price)?;
     validate!(un_stake_usd > pool.config.minimum_un_stake_amount, BumpErrorCode::UnStakeTooSmall)?;
@@ -49,7 +49,7 @@ pub fn stake(
     let mut supply_amount = mint_amount;
     let trade_token = trade_token_map.get_trade_token_by_mint_ref(&pool.mint_key)?;
     if pool.total_supply > 0 {
-        let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle_key)?;
+        let oracle_price_data = oracle_map.get_price_data(&trade_token.feed_id)?;
 
         supply_amount = calculator::usd_to_token_u(
             calculator::token_to_usd_u(mint_amount, trade_token.decimals, oracle_price_data.price)?,
@@ -82,7 +82,7 @@ pub fn portfolio_to_stake(
         BumpErrorCode::AmountNotEnough
     )?;
     if pool.total_supply > 0 {
-        let oracle_price_data = oracle_map.get_price_data(&trade_token.oracle_key)?;
+        let oracle_price_data = oracle_map.get_price_data(&trade_token.feed_id)?;
 
         supply_amount = calculator::usd_to_token_u(
             calculator::token_to_usd_u(mint_amount, trade_token.decimals, oracle_price_data.price)?,

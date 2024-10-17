@@ -694,7 +694,7 @@ impl User {
             }
             let trade_token =
                 trade_token_map.get_trade_token_by_mint_ref(&user_token.token_mint_key)?;
-            let oracle_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
+            let oracle_price = oracle_map.get_price_data(&trade_token.feed_id)?.price;
             total_token_net_value = total_token_net_value
                 .safe_add(user_token.get_token_net_value(&trade_token, oracle_price)?)?;
         }
@@ -807,7 +807,7 @@ impl User {
             }
             let trade_token =
                 trade_token_map.get_trade_token_by_mint_ref(&user_token.token_mint_key)?;
-            let oracle_price = oracle_map.get_price_data(&trade_token.oracle_key)?;
+            let oracle_price = oracle_map.get_price_data(&trade_token.feed_id)?;
             total_used_value = total_used_value
                 .safe_add(user_token.get_token_used_value(&trade_token, &oracle_price)?)?;
             total_token_borrowing_value = total_token_borrowing_value

@@ -67,8 +67,8 @@ pub fn handle_execute_order<'info>(
 
     let margin_token_price = oracle_map
         .get_price_data(match use_base_token(&user_order.position_side, &user_order.order_side)? {
-            true => &trade_token.oracle_key,
-            false => &stable_trade_token.oracle_key,
+            true => &trade_token.feed_id,
+            false => &stable_trade_token.feed_id,
         })
         .map_err(|_e| BumpErrorCode::OracleNotFound)?
         .price;
@@ -428,7 +428,7 @@ pub fn decrease_position<'info>(
         let position = user.get_user_position_mut_ref(position_key)?;
         let pre_position = *position;
         let position_un_pnl_usd = position.get_position_un_pnl_usd(params.execute_price)?;
-        let margin_mint_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
+        let margin_mint_token_price = oracle_map.get_price_data(&trade_token.feed_id)?.price;
         update_borrowing_fee(
             position,
             if position.is_long { stake_token_pool } else { stable_pool },

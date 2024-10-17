@@ -88,7 +88,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
         let trade_token = &trade_token_map.get_trade_token_by_mint_ref(&pos_info.margin_mint)?;
         market.update_market_funding_fee_rate(
             &ctx.accounts.state,
-            oracle_map.get_price_data(&trade_token.oracle_key)?.price,
+            oracle_map.get_price_data(&trade_token.feed_id)?.price,
         )?;
         msg!(
             "========handle_liquidate_cross_position44444, market.longPerToken:{}",
@@ -112,7 +112,7 @@ pub fn handle_liquidate_cross_position<'a, 'b, 'c: 'info, 'info>(
             })?;
             let trade_token =
                 trade_token_map.get_trade_token_by_mint_ref(&position.margin_mint_key)?;
-            let margin_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
+            let margin_token_price = oracle_map.get_price_data(&trade_token.feed_id)?.price;
             total_pos_fee = total_pos_fee.safe_add(position.get_position_fee(
                 &market,
                 &pool,
@@ -431,12 +431,12 @@ fn cal_liquidation_price(
     validate!(!user_position.is_portfolio_margin, BumpErrorCode::OnlyIsolatePositionAllowed)?;
     market.update_market_funding_fee_rate(
         state,
-        oracle_map.get_price_data(&trade_token.oracle_key)?.price,
+        oracle_map.get_price_data(&trade_token.feed_id)?.price,
     )?;
 
     pool.update_pool_borrowing_fee_rate()?;
 
-    let margin_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
+    let margin_token_price = oracle_map.get_price_data(&trade_token.feed_id)?.price;
     let liquidation_price = user_position.get_liquidation_price(
         market,
         pool,

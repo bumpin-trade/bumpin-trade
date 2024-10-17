@@ -29,8 +29,6 @@ pub struct InitializeTradeToken<'info> {
     )]
     pub trade_token_vault: Box<Account<'info, TokenAccount>>,
     /// CHECK: ?
-    pub oracle: AccountInfo<'info>,
-    /// CHECK: ?
     #[account(
         constraint = state.bump_signer.eq(& bump_signer.key())
     )]
@@ -55,6 +53,7 @@ pub fn handle_initialize_trade_token(
     ctx: Context<InitializeTradeToken>,
     discount: u32,
     name: [u8; 32],
+    feed_id: [u8; 32],
     liquidation_factor: u32,
 ) -> Result<()> {
     let state = &mut ctx.accounts.state;
@@ -62,7 +61,7 @@ pub fn handle_initialize_trade_token(
     **trade_token = TradeToken {
         mint_key: ctx.accounts.trade_token_vault.mint,
         name,
-        oracle_key: *ctx.accounts.oracle.to_account_info().key,
+        feed_id: Pubkey::new_from_array(feed_id),
         index: state.trade_token_sequence,
         discount,
         liquidation_factor,

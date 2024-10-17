@@ -114,7 +114,7 @@ pub fn handle_collect_rewards<'a, 'b, 'c: 'info, 'info>(
     let total_fee_value = token_to_usd_u(
         total_fee_amount,
         trade_token.decimals,
-        oracle_map.get_price_data(&trade_token.oracle_key)?.price,
+        oracle_map.get_price_data(&trade_token.feed_id)?.price,
     )?;
 
     let pool_value = pool.get_pool_usd_value(&trade_token_map, &mut oracle_map, &market_map)?;

@@ -243,14 +243,14 @@ impl Pool {
             let stable_trade_token =
                 trade_token_map.get_trade_token_by_mint_ref(&market.stable_pool_mint_key)?;
             let stable_trade_token_price =
-                oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
+                oracle_map.get_price_data(&stable_trade_token.feed_id)?.price;
             let stable_loss_value = calculator::token_to_usd_i(
                 market.stable_loss.safe_add(market.stable_unsettle_loss.cast()?)?,
                 stable_trade_token.decimals,
                 stable_trade_token_price,
             )?;
             let trade_token = trade_token_map.get_trade_token_by_mint_ref(&self.mint_key)?;
-            let trade_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
+            let trade_token_price = oracle_map.get_price_data(&trade_token.feed_id)?.price;
 
             let stable_loss_token_amount = calculator::usd_to_token_i(
                 stable_loss_value,
@@ -345,7 +345,7 @@ impl Pool {
         market_map: &MarketMap,
     ) -> BumpResult<u128> {
         let trade_token = trade_token_map.get_trade_token_by_mint_ref(&self.mint_key)?;
-        let trade_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
+        let trade_token_price = oracle_map.get_price_data(&trade_token.feed_id)?.price;
         let mut pool_value = calculator::token_to_usd_i(
             self.balance
                 .amount
@@ -382,7 +382,7 @@ impl Pool {
                     let stable_trade_token =
                         trade_token_map.get_trade_token_by_mint_ref(&self.stable_mint_key)?;
                     let stable_trade_token_price =
-                        oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
+                        oracle_map.get_price_data(&stable_trade_token.feed_id)?.price;
 
                     let stable_loss_value = calculator::token_to_usd_i(
                         market.stable_loss.safe_add(market.stable_unsettle_loss.cast()?)?,
@@ -396,7 +396,7 @@ impl Pool {
                     let stable_trade_token =
                         trade_token_map.get_trade_token_by_mint_ref(&self.stable_mint_key)?;
                     let stable_trade_token_price =
-                        oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
+                        oracle_map.get_price_data(&stable_trade_token.feed_id)?.price;
 
                     let stable_loss_value = calculator::token_to_usd_i(
                         market.stable_loss.safe_add(market.stable_unsettle_loss.cast()?)?,

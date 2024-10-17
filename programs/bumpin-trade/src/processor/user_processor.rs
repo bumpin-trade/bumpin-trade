@@ -21,7 +21,7 @@ pub fn withdraw(
 ) -> BumpResult {
     if user.cross_used()? {
         let trade_token = trade_tokens.get_trade_token_by_mint_ref(token_mint)?;
-        let price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
+        let price = oracle_map.get_price_data(&trade_token.feed_id)?.price;
         let withdraw_usd = calculator::token_to_usd_u(amount, trade_token.decimals, price)?;
 
         let available_value = user.get_available_value(trade_tokens, oracle_map)?;

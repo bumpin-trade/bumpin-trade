@@ -10,7 +10,7 @@ macro_rules! get_struct_values {
 #[macro_export]
 macro_rules! price {
     ($trade_token:expr, $oracles:expr) => {
-        $oracles.get_price_data(&$trade_token.oracle_key)?.price
+        $oracles.get_price_data(&$trade_token.feed_id)?.price
     };
 }
 

@@ -125,13 +125,13 @@ pub fn rebalance_market_stable_loss<'a>(
         // stable pool transfer to pool
         let stable_loss = market.stable_loss;
         let stable_trade_token_price =
-            oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
+            oracle_map.get_price_data(&stable_trade_token.feed_id)?.price;
         let stable_loss_value = token_to_usd_u(
             stable_loss.abs().cast()?,
             stable_trade_token.decimals,
             stable_trade_token_price,
         )?;
-        let trade_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
+        let trade_token_price = oracle_map.get_price_data(&trade_token.feed_id)?.price;
         let trade_token_amount =
             usd_to_token_u(stable_loss_value, trade_token.decimals, trade_token_price)?;
 
@@ -162,13 +162,13 @@ pub fn rebalance_market_stable_loss<'a>(
         //pool transfer to stable pool
         let stable_loss = market.stable_loss;
         let stable_trade_token_price =
-            oracle_map.get_price_data(&stable_trade_token.oracle_key)?.price;
+            oracle_map.get_price_data(&stable_trade_token.feed_id)?.price;
         let stable_loss_value = token_to_usd_u(
             stable_loss.abs().cast()?,
             stable_trade_token.decimals,
             stable_trade_token_price,
         )?;
-        let trade_token_price = oracle_map.get_price_data(&trade_token.oracle_key)?.price;
+        let trade_token_price = oracle_map.get_price_data(&trade_token.feed_id)?.price;
         let trade_token_amount =
             usd_to_token_u(stable_loss_value, trade_token.decimals, trade_token_price)?;
 

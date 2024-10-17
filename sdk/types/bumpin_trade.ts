@@ -2333,9 +2333,6 @@ export type BumpinTrade = {
           }
         },
         {
-          "name": "oracle"
-        },
-        {
           "name": "bumpSigner"
         },
         {
@@ -2389,6 +2386,15 @@ export type BumpinTrade = {
         },
         {
           "name": "mintName",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "feedId",
           "type": {
             "array": [
               "u8",
@@ -6667,7 +6673,7 @@ export type BumpinTrade = {
             "type": "u128"
           },
           {
-            "name": "oracleKey",
+            "name": "feedId",
             "type": "pubkey"
           },
           {

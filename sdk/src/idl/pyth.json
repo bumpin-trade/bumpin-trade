@@ -1,98 +1,157 @@
 {
-    "address": "ELu6XkLaZ9Csj1UMWfqGxwxTsReLFCdJamxzLJfKKbyH",
-    "metadata": {
-        "name": "pyth",
-        "version": "0.1.0",
-        "spec": "0.1.0"
+  "address": "ELu6XkLaZ9Csj1UMWfqGxwxTsReLFCdJamxzLJfKKbyH",
+  "metadata": {
+    "name": "pyth",
+    "version": "0.1.0",
+    "spec": "0.1.0"
+  },
+  "instructions": [
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "price",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "price",
+          "type": "i64"
+        },
+        {
+          "name": "exponent",
+          "type": "i32"
+        },
+        {
+          "name": "conf",
+          "type": "u64"
+        }
+      ]
     },
-    "instructions": [
+    {
+      "name": "initialize_v2",
+      "discriminator": [
+        67,
+        153,
+        175,
+        39,
+        218,
+        16,
+        38,
+        32
+      ],
+      "accounts": [
         {
-            "name": "initialize",
-            "discriminator": [175, 175, 109, 31, 13, 152, 155, 237],
-            "accounts": [
-                {
-                    "name": "price",
-                    "writable": true
-                }
-            ],
-            "args": [
-                {
-                    "name": "price",
-                    "type": "i64"
-                },
-                {
-                    "name": "exponent",
-                    "type": "i32"
-                },
-                {
-                    "name": "conf",
-                    "type": "u64"
-                }
-            ]
-        },
-        {
-            "name": "initialize_v2",
-            "discriminator": [67, 153, 175, 39, 218, 16, 38, 32],
-            "accounts": [
-                {
-                    "name": "price_update_v2",
-                    "writable": true
-                }
-            ],
-            "args": [
-                {
-                    "name": "params",
-                    "type": {
-                        "defined": {
-                            "name": "InitializeV2Params"
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "set_price",
-            "discriminator": [16, 19, 182, 8, 149, 83, 72, 181],
-            "accounts": [
-                {
-                    "name": "price",
-                    "writable": true
-                }
-            ],
-            "args": [
-                {
-                    "name": "price",
-                    "type": "i64"
-                },
-                {
-                    "name": "conf",
-                    "type": "u64"
-                }
-            ]
+          "name": "price_update_v2",
+          "writable": true
         }
-    ],
-    "types": [
+      ],
+      "args": [
         {
-            "name": "InitializeV2Params",
-            "type": {
-                "kind": "struct",
-                "fields": [
-                    {
-                        "name": "feed_id",
-                        "type": {
-                            "array": ["u8", 32]
-                        }
-                    },
-                    {
-                        "name": "price",
-                        "type": "i64"
-                    },
-                    {
-                        "name": "exponent",
-                        "type": "i32"
-                    }
-                ]
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "InitializeV2Params"
             }
+          }
         }
-    ]
+      ]
+    },
+    {
+      "name": "set_price",
+      "discriminator": [
+        16,
+        19,
+        182,
+        8,
+        149,
+        83,
+        72,
+        181
+      ],
+      "accounts": [
+        {
+          "name": "price",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "price",
+          "type": "i64"
+        },
+        {
+          "name": "conf",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_price_v2",
+      "discriminator": [
+        25,
+        10,
+        111,
+        255,
+        100,
+        238,
+        204,
+        145
+      ],
+      "accounts": [
+        {
+          "name": "price_update_v2",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "price",
+          "type": "i64"
+        },
+        {
+          "name": "conf",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "types": [
+    {
+      "name": "InitializeV2Params",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "feed_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "price",
+            "type": "i64"
+          },
+          {
+            "name": "exponent",
+            "type": "i32"
+          }
+        ]
+      }
+    }
+  ]
 }
