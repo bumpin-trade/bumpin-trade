@@ -231,14 +231,6 @@ pub mod bumpin_trade {
     }
 
     #[track_caller]
-    pub fn auto_compound<'a, 'b, 'c: 'info, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, AutoCompoundRewards<'c>>,
-        pool_index: u16,
-    ) -> Result<()> {
-        handle_auto_compound(ctx, pool_index)
-    }
-
-    #[track_caller]
     pub fn collect_rewards<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, CollectRewards<'info>>,
         _pool_index: u16,
