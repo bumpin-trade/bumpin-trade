@@ -1,9 +1,4 @@
-import {
-    AddressLookupTableAccount,
-    ConfirmOptions,
-    Connection,
-    PublicKey,
-} from '@solana/web3.js';
+import { AddressLookupTableAccount, ConfirmOptions, Connection, PublicKey } from '@solana/web3.js';
 import * as anchor from '@coral-xyz/anchor';
 import { AnchorProvider, Program, Wallet } from '@coral-xyz/anchor';
 import idlBumpinTrade from './idl/bumpin_trade.json';
@@ -50,18 +45,11 @@ import { PriceData } from '@pythnetwork/client';
 import BigNumber from 'bignumber.js';
 import { AccountLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import './types/bnExt';
-import {
-    Market,
-    Pool,
-    PositionStatus,
-    State,
-    TradeToken,
-    User,
-    UserStakeStatus,
-} from './beans/beans';
+import { Market, Pool, PositionStatus, State, TradeToken, User, UserStakeStatus } from './beans/beans';
 import { isEqual } from 'lodash';
 import { BumpinPositionUtils } from './utils/position';
 import { BumpinUserUtils } from './utils/user';
+import { OracleComponent } from './componets/oracle';
 
 export class BumpinClient {
     readonly config: BumpinClientConfig;
@@ -87,6 +75,7 @@ export class BumpinClient {
     // Components
     poolComponent: PoolComponent | undefined;
     tradeTokenComponent: TradeTokenComponent | undefined;
+    oracleComponent: OracleComponent | undefined;
     marketComponent: MarketComponent | undefined;
     userComponent: UserComponent | undefined;
 
@@ -159,6 +148,7 @@ export class BumpinClient {
         await this.stateSubscriber.subscribe();
 
         const state = this.stateSubscriber.getAccountAndSlot().data;
+        console.log("Essential account alt: ", state.essentialAccountAlt.toString());
         try {
             this.essentialAccountAltPublicKey = state.essentialAccountAlt;
             this.essentialAccounts = (
@@ -169,6 +159,17 @@ export class BumpinClient {
         } catch (e) {
             console.log('Essential account not found', e);
         }
+
+        this.oracleComponent = new OracleComponent(
+            this.config,
+            BumpinUtils.getDefaultConfirmOptions(),
+            this.bulkAccountLoader,
+            this.stateSubscriber,
+            this.program,
+            this.wallet,
+            this.essentialAccounts === null ? [] : [this.essentialAccounts],
+        );
+        await this.oracleComponent.subscribe();
 
         this.tradeTokenComponent = new TradeTokenComponent(
             this.config,
@@ -241,9 +242,9 @@ export class BumpinClient {
         } catch (e) {
             throw new BumpinAccountNotFound(
                 'User Account, pda: ' +
-                    pda.toString() +
-                    ' wallet: ' +
-                    this.wallet.publicKey.toString(),
+                pda.toString() +
+                ' wallet: ' +
+                this.wallet.publicKey.toString(),
             );
         }
         //TODO: Maybe has another error type
@@ -457,13 +458,13 @@ export class BumpinClient {
                 );
                 const positionValue = position.isLong
                     ? position.positionSize
-                          .minus(position.initialMarginUsd)
-                          .plus(position.mmUsd)
-                          .plus(positionSettle.positionFee)
+                        .minus(position.initialMarginUsd)
+                        .plus(position.mmUsd)
+                        .plus(positionSettle.positionFee)
                     : position.positionSize
-                          .plus(position.initialMarginUsd)
-                          .minus(position.mmUsd)
-                          .minus(positionSettle.positionFee);
+                        .plus(position.initialMarginUsd)
+                        .minus(position.mmUsd)
+                        .minus(positionSettle.positionFee);
                 return positionValue
                     .multipliedBy(position.entryPrice)
                     .dividedBy(position.positionSize)
@@ -671,19 +672,19 @@ export class BumpinClient {
         this.checkInitialization(true);
         isPortfolioMargin
             ? await this.userComponent!.updateCrossLeverage(
-                  symbol,
-                  isLong,
-                  isPortfolioMargin,
-                  leverage,
-                  sync,
-              )
+                symbol,
+                isLong,
+                isPortfolioMargin,
+                leverage,
+                sync,
+            )
             : await this.userComponent!.updateIsolateLeverage(
-                  symbol,
-                  isLong,
-                  isPortfolioMargin,
-                  leverage,
-                  sync,
-              );
+                symbol,
+                isLong,
+                isPortfolioMargin,
+                leverage,
+                sync,
+            );
     }
 
     public async getUser(sync: boolean = false): Promise<User> {
@@ -901,7 +902,7 @@ export class BumpinClient {
             if (!stableTradeToken) {
                 throw new BumpinClientInternalError(
                     'trade token not fount, trade token mint:' +
-                        market.stablePoolMintKey,
+                    market.stablePoolMintKey,
                 );
             }
             let stablePrice = (
@@ -1003,7 +1004,7 @@ export class BumpinClient {
         if (!price.price) {
             throw new BumpinInvalidParameter(
                 'Price not found(undefined) for mint: ' +
-                    pool.mintKey.toString(),
+                pool.mintKey.toString(),
             );
         }
         const relativeMarkets = BumpinMarketUtils.getMarketsByPoolKey(
@@ -1025,7 +1026,7 @@ export class BumpinClient {
             if (!stableTradeTokenPrice.price) {
                 throw new BumpinInvalidParameter(
                     'Price not found(undefined) for mint: ' +
-                        relativeMarket.stablePoolMintKey.toString(),
+                    relativeMarket.stablePoolMintKey.toString(),
                 );
             }
             let stableLossValue = relativeMarket.stableLoss
@@ -1128,7 +1129,7 @@ export class BumpinClient {
         if (!price.price) {
             throw new BumpinInvalidParameter(
                 'Price not found(undefined) for oracle: ' +
-                    market.indexMintOracle.toString(),
+                market.indexMintOracle.toString(),
             );
         }
 
