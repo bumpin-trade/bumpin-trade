@@ -54,10 +54,10 @@ pub mod bumpin_trade {
         ctx: Context<'a, 'b, 'c, 'info, InitializeTradeToken>,
         discount: u32,
         mint_name: [u8; 32],
-        feed_id: [u8; 32],
+        feed_id: Pubkey,
         liquidation_factor: u32,
     ) -> Result<()> {
-        handle_initialize_trade_token(ctx, discount, mint_name,feed_id, liquidation_factor)
+        handle_initialize_trade_token(ctx, discount, mint_name, feed_id, liquidation_factor)
     }
 
     #[track_caller]

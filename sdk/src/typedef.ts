@@ -249,7 +249,7 @@ export type TradeTokenAccount = {
     totalLiability: BN;
     totalAmount: BN;
     mintKey: PublicKey;
-    oracleKey: PublicKey;
+    feedId: PublicKey;
     vaultKey: PublicKey;
     name: number[];
     discount: number;

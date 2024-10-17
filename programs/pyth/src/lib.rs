@@ -2,11 +2,11 @@ use anchor_lang::prelude::*;
 pub mod pc;
 mod pcv2;
 
-use crate::pcv2::PriceUpdateV2;
+use crate::pcv2::{PriceUpdateV2};
 use pc::Price;
 
 #[cfg(feature = "local-net")]
-declare_id!("ELu6XkLaZ9Csj1UMWfqGxwxTsReLFCdJamxzLJfKKbyH");
+declare_id!("6GHM4TvoUsUxJp5mHC44TBmx8J5gTSQUHEtJgBvHWWXP");
 #[cfg(not(feature = "local-net"))]
 declare_id!("CC1ePebfvPy7QRTimPoVecS2UsBvYv46ynrzWocc92s");
 
@@ -74,9 +74,12 @@ pub mod pyth {
     pub fn initialize_v2(ctx: Context<InitializeV2>, params: InitializeV2Params) -> Result<()> {
         let oracle = &ctx.accounts.price_update_v2;
         let mut price_update_v2 =PriceUpdateV2::load(oracle).unwrap();
-        price_update_v2.price_message.feed_id = params.feed_id.clone();
+        price_update_v2.price_message.feed_id = params.feed_id.to_bytes();
         price_update_v2.price_message.price = params.price;
         price_update_v2.price_message.exponent = params.exponent;
+        msg!("initialize_v2, params.feed_id:{}", params.feed_id);
+        msg!("initialize_v2, params.feed_id.to_bytes(:{:?}", params.feed_id.to_bytes());
+        msg!("initialize_v2, price_update_v2.price_message.feed_id:{:?}", price_update_v2.price_message.feed_id);
         msg!("PriceUpdateV2 initialized");
         Ok(())
     }
@@ -120,7 +123,7 @@ pub struct InitializeV2<'info> {
 
 #[derive(AnchorDeserialize, AnchorSerialize, Debug, Clone, Copy)]
 pub struct InitializeV2Params {
-    pub feed_id: [u8; 32],
+    pub feed_id: Pubkey,
     pub price: i64,
     pub exponent: i32,
 }

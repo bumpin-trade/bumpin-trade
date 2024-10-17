@@ -236,7 +236,7 @@ export class BumpinAdmin {
 
     public async DEV_TEST_ONLY__INIT_PYTHV2(
         exponent: number,
-        feedId: number[],
+        feedId: PublicKey,
         oracleKeypair: anchor.web3.Keypair,
     ) {
         // let oracleKeypair = anchor.web3.Keypair.generate();
@@ -254,6 +254,8 @@ export class BumpinAdmin {
         console.log(
             'Price Update V2 Account Address: ',
             oracleKeypair.publicKey.toString(),
+            ' FeedId: ',
+            feedId.toString(),
         );
         const params = {
             feedId: feedId,
@@ -273,7 +275,7 @@ export class BumpinAdmin {
                 maxRetries: 1,
                 minContextSlot: undefined,
             });
-        console.log('Price Update V2 Account Initialized');
+        // console.log('Price Update V2 Account Initialized');
     }
 
     public async DEV_TEST_ONLY__INIT_ORACLE(
@@ -329,10 +331,9 @@ export class BumpinAdmin {
             console.log('Initial Trade Token by generated Oracle');
             await this.DEV_TEST_ONLY__INIT_PYTHV2(
                 exponent,
-                Array.from(feed_id.toBytes()),
+                feed_id,
                 oracleKeypair,
             );
-            console.log('Oracle initialized, FeedId: ', feed_id.toString());
         } else {
             console.log('Initial Trade Token by FeedId:', feed_id);
         }
@@ -354,7 +355,7 @@ export class BumpinAdmin {
             .initializeTradeToken(
                 discount,
                 s,
-                Array.from(feedId.toBytes()),
+                new PublicKey(feed_id_pk),
                 liquidationFactor,
             )
             .accounts({

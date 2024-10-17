@@ -1,6 +1,7 @@
 import { Connection, PublicKey } from '@solana/web3.js';
 import { Buffer } from 'buffer';
-
+// export const PYTH_ID = 'rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ';
+export const PYTH_ID = '6GHM4TvoUsUxJp5mHC44TBmx8J5gTSQUHEtJgBvHWWXP';
 export type VerificationLevel =
     | { kind: 'Partial'; numSignatures: number }
     | { kind: 'Full' };
@@ -57,6 +58,7 @@ function deserializePriceUpdateV2(buffer: Buffer): PriceUpdateV2 {
 
     const writeAuthority = readPublicKey();
     const verificationLevel = readVerificationLevel();
+    offset -= 1;
     const feedId = readUint8Array(32);
     const price = readBigInt64();
     const conf = readBigInt64();
@@ -100,16 +102,12 @@ async function fetchPriceUpdateV2ByAccount(
     }
 
     // must be the Pyth V2 receiver program, no matter what network is used
-    if (
-        !accountInfo.owner.equals(
-            new PublicKey('rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ'),
-        )
-    ) {
+    if (!accountInfo.owner.equals(new PublicKey(PYTH_ID))) {
         throw new Error('Invalid owner');
     }
 
     const buffer = accountInfo.data;
-    return deserializePriceUpdateV2(buffer.slice(8));
+    return deserializePriceUpdateV2(buffer);
 }
 
 export { fetchPriceUpdateV2ByAccount };

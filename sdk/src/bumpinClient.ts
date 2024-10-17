@@ -46,7 +46,6 @@ import { MarketComponent } from './componets/market';
 import { BumpinTokenUtils } from './utils/token';
 import { BumpinPoolUtils } from './utils/pool';
 import { BumpinMarketUtils } from './utils/market';
-import { PriceData } from '@pythnetwork/client';
 import BigNumber from 'bignumber.js';
 import { AccountLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import './types/bnExt';
@@ -323,7 +322,7 @@ export class BumpinClient {
                 );
             }
             const tradeTokenPrice = this.getTradeTokenPrice(
-                BumpinUtils.getTradeTokenPda(this.program, tradeToken.index)[0],
+                tradeToken.oracleKey,
             ).price;
             return new TokenBalance(
                 tradeToken,
@@ -796,7 +795,10 @@ export class BumpinClient {
         sync: boolean = false,
     ): Promise<TradeToken> {
         this.checkInitialization();
-        return this.tradeTokenComponent!.getTradeTokenByMintKey(mintKey, sync);
+        return await this.tradeTokenComponent!.getTradeTokenByMintKey(
+            mintKey,
+            sync,
+        );
     }
 
     public async getTradeTokenByOracleKey(

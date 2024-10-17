@@ -450,7 +450,7 @@ export class TradeToken {
             tradeToken.decimals,
         );
         this.mintKey = tradeToken.mintKey;
-        this.oracleKey = tradeToken.oracleKey;
+        this.oracleKey = tradeToken.feedId;
         this.vaultKey = tradeToken.vaultKey;
         this.name = BumpinUtils.decodeString(tradeToken.name);
         this.discount = tradeToken.discount / C.RATE_MULTIPLIER_NUMBER;

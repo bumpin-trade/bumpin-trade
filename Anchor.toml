@@ -9,13 +9,14 @@ bumpin_trade = "B1iAhByrb5SaGooKa4DdNGdCLCsVweCfWcT3MvLxQJXt"
 
 [programs.localnet]
 bumpin_trade = "B1iAhByrb5SaGooKa4DdNGdCLCsVweCfWcT3MvLxQJXt"
+pyth = "6GHM4TvoUsUxJp5mHC44TBmx8J5gTSQUHEtJgBvHWWXP"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Devnet"
-#cluster = "Localnet"
+#cluster = "Devnet"
+cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

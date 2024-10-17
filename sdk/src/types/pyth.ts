@@ -5,159 +5,118 @@
  * IDL can be found at `target/idl/pyth.json`.
  */
 export type Pyth = {
-  "address": "ELu6XkLaZ9Csj1UMWfqGxwxTsReLFCdJamxzLJfKKbyH",
-  "metadata": {
-    "name": "pyth",
-    "version": "0.1.0",
-    "spec": "0.1.0"
-  },
-  "instructions": [
-    {
-      "name": "initialize",
-      "discriminator": [
-        175,
-        175,
-        109,
-        31,
-        13,
-        152,
-        155,
-        237
-      ],
-      "accounts": [
+    address: '6GHM4TvoUsUxJp5mHC44TBmx8J5gTSQUHEtJgBvHWWXP';
+    metadata: {
+        name: 'pyth';
+        version: '0.1.0';
+        spec: '0.1.0';
+    };
+    instructions: [
         {
-          "name": "price",
-          "writable": true
-        }
-      ],
-      "args": [
-        {
-          "name": "price",
-          "type": "i64"
+            name: 'initialize';
+            discriminator: [175, 175, 109, 31, 13, 152, 155, 237];
+            accounts: [
+                {
+                    name: 'price';
+                    writable: true;
+                },
+            ];
+            args: [
+                {
+                    name: 'price';
+                    type: 'i64';
+                },
+                {
+                    name: 'exponent';
+                    type: 'i32';
+                },
+                {
+                    name: 'conf';
+                    type: 'u64';
+                },
+            ];
         },
         {
-          "name": "exponent",
-          "type": "i32"
+            name: 'initializeV2';
+            discriminator: [67, 153, 175, 39, 218, 16, 38, 32];
+            accounts: [
+                {
+                    name: 'priceUpdateV2';
+                    writable: true;
+                },
+            ];
+            args: [
+                {
+                    name: 'params';
+                    type: {
+                        defined: {
+                            name: 'initializeV2Params';
+                        };
+                    };
+                },
+            ];
         },
         {
-          "name": "conf",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "initializeV2",
-      "discriminator": [
-        67,
-        153,
-        175,
-        39,
-        218,
-        16,
-        38,
-        32
-      ],
-      "accounts": [
-        {
-          "name": "priceUpdateV2",
-          "writable": true
-        }
-      ],
-      "args": [
-        {
-          "name": "params",
-          "type": {
-            "defined": {
-              "name": "initializeV2Params"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "setPrice",
-      "discriminator": [
-        16,
-        19,
-        182,
-        8,
-        149,
-        83,
-        72,
-        181
-      ],
-      "accounts": [
-        {
-          "name": "price",
-          "writable": true
-        }
-      ],
-      "args": [
-        {
-          "name": "price",
-          "type": "i64"
+            name: 'setPrice';
+            discriminator: [16, 19, 182, 8, 149, 83, 72, 181];
+            accounts: [
+                {
+                    name: 'price';
+                    writable: true;
+                },
+            ];
+            args: [
+                {
+                    name: 'price';
+                    type: 'i64';
+                },
+                {
+                    name: 'conf';
+                    type: 'u64';
+                },
+            ];
         },
         {
-          "name": "conf",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "setPriceV2",
-      "discriminator": [
-        25,
-        10,
-        111,
-        255,
-        100,
-        238,
-        204,
-        145
-      ],
-      "accounts": [
-        {
-          "name": "priceUpdateV2",
-          "writable": true
-        }
-      ],
-      "args": [
-        {
-          "name": "price",
-          "type": "i64"
+            name: 'setPriceV2';
+            discriminator: [25, 10, 111, 255, 100, 238, 204, 145];
+            accounts: [
+                {
+                    name: 'priceUpdateV2';
+                    writable: true;
+                },
+            ];
+            args: [
+                {
+                    name: 'price';
+                    type: 'i64';
+                },
+                {
+                    name: 'conf';
+                    type: 'u64';
+                },
+            ];
         },
+    ];
+    types: [
         {
-          "name": "conf",
-          "type": "u64"
-        }
-      ]
-    }
-  ],
-  "types": [
-    {
-      "name": "initializeV2Params",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "feedId",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
-            "name": "price",
-            "type": "i64"
-          },
-          {
-            "name": "exponent",
-            "type": "i32"
-          }
-        ]
-      }
-    }
-  ]
+            name: 'initializeV2Params';
+            type: {
+                kind: 'struct';
+                fields: [
+                    {
+                        name: 'feedId';
+                        type: 'pubkey';
+                    },
+                    {
+                        name: 'price';
+                        type: 'i64';
+                    },
+                    {
+                        name: 'exponent';
+                        type: 'i32';
+                    },
+                ];
+            };
+        },
+    ];
 };

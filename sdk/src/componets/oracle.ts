@@ -20,7 +20,7 @@ export class OracleComponent extends Component {
     program: Program<BumpinTrade>;
     essentialAccounts: AddressLookupTableAccount[] = [];
 
-    oracles: Map<PublicKey, StashedPythV2Client> = new Map();
+    oracles: Map<string, StashedPythV2Client> = new Map();
 
     constructor(
         config: BumpinClientConfig,
@@ -62,7 +62,7 @@ export class OracleComponent extends Component {
         for (const p of promises) {
             if (p) {
                 if (p) {
-                    this.oracles.set(p[1], p[0]);
+                    this.oracles.set(p[1].toString(), p[0]);
                     console.log('Subscribed to oracle: ', p[1].toString());
                 }
             }
@@ -72,14 +72,15 @@ export class OracleComponent extends Component {
     private async subscribe0(
         account: PublicKey,
     ): Promise<[StashedPythV2Client, PublicKey] | undefined> {
-        const client = new StashedPythV2Client(
-            account,
-            2,
-            this.program.provider.connection,
-        );
         try {
+            const client = new StashedPythV2Client(
+                account,
+                2,
+                this.program.provider.connection,
+            );
             const priceUpdateV2: PriceUpdateV2 = await client.getPriceData();
             if (priceUpdateV2) {
+                await client.initialize();
                 return [
                     client,
                     new PublicKey(priceUpdateV2.priceMessage.feedId),
@@ -93,10 +94,10 @@ export class OracleComponent extends Component {
     public async unsubscribe() {}
 
     public getPrice(feedId: PublicKey): PriceInfo {
-        let client = this.oracles.get(feedId);
+        let client = this.oracles.get(feedId.toString());
         if (client === undefined) {
             throw new BumpinSubscriptionFailed(
-                `feedId: ${feedId} does not exist`,
+                `feedId: ${feedId.toString()} does not exist`,
             );
         }
 
@@ -109,10 +110,10 @@ export class OracleComponent extends Component {
         feedId: PublicKey,
         count: number = 1,
     ): PriceUpdateV2[] {
-        let client = this.oracles.get(feedId);
+        let client = this.oracles.get(feedId.toString());
         if (client === undefined) {
             throw new BumpinSubscriptionFailed(
-                `TradeToken with the feedId: ${feedId} does not exist`,
+                `feedId: ${feedId} does not exist`,
             );
         }
 
@@ -123,10 +124,10 @@ export class OracleComponent extends Component {
         feedId: PublicKey,
         count: number,
     ): number[] {
-        let stashedPythV2Client = this.oracles.get(feedId);
+        let stashedPythV2Client = this.oracles.get(feedId.toString());
         if (stashedPythV2Client === undefined) {
             throw new BumpinSubscriptionFailed(
-                `feedId ${feedId} does not exist`,
+                `feedId ${feedId.toString()} does not exist`,
             );
         }
         let lastOraclePriceData =

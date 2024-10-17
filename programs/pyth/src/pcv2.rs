@@ -46,18 +46,6 @@ pub struct PriceUpdateV2 {
     pub posted_slot: u64,
 }
 
-#[derive(Copy, Default, Clone)]
-pub struct Price {
-    pub price: i64,
-    pub conf: u64,
-    pub exponent: i32,
-    pub publish_time: i64,
-}
-
-impl PriceUpdateV2 {
-    pub const LEN: usize = 8 + 32 + 2 + 32 + 8 + 8 + 4 + 8 + 8 + 8 + 8 + 8;
-}
-
 impl PriceUpdateV2 {
     #[inline]
     pub fn load<'a>(
