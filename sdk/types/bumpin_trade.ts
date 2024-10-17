@@ -1,14 +1,20 @@
-{
+/**
+ * Program IDL in camelCase format in order to be used in JS/TS.
+ *
+ * Note that this is only a type helper and is not the actual IDL. The original
+ * IDL can be found at `target/idl/bumpin_trade.json`.
+ */
+export type BumpinTrade = {
   "address": "qq15xzXDf81cxxHtmwAyviqRzAUA3Ctqs8jqdPv1aCS",
   "metadata": {
-    "name": "bumpin_trade",
+    "name": "bumpinTrade",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
   },
   "instructions": [
     {
-      "name": "add_position_margin",
+      "name": "addPositionMargin",
       "discriminator": [
         52,
         123,
@@ -46,7 +52,7 @@
           "signer": true
         },
         {
-          "name": "user_token_account",
+          "name": "userTokenAccount",
           "writable": true
         },
         {
@@ -72,7 +78,7 @@
           }
         },
         {
-          "name": "trade_token",
+          "name": "tradeToken",
           "pda": {
             "seeds": [
               {
@@ -119,7 +125,7 @@
           }
         },
         {
-          "name": "stable_pool",
+          "name": "stablePool",
           "pda": {
             "seeds": [
               {
@@ -161,7 +167,7 @@
           }
         },
         {
-          "name": "pool_mint_vault",
+          "name": "poolMintVault",
           "pda": {
             "seeds": [
               {
@@ -187,10 +193,10 @@
           }
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
@@ -199,14 +205,14 @@
           "name": "params",
           "type": {
             "defined": {
-              "name": "UpdatePositionMarginParams"
+              "name": "updatePositionMarginParams"
             }
           }
         }
       ]
     },
     {
-      "name": "adl_cross",
+      "name": "adlCross",
       "discriminator": [
         253,
         180,
@@ -306,7 +312,7 @@
           }
         },
         {
-          "name": "stable_pool",
+          "name": "stablePool",
           "writable": true,
           "pda": {
             "seeds": [
@@ -327,7 +333,7 @@
           }
         },
         {
-          "name": "pool_vault",
+          "name": "poolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -354,7 +360,7 @@
           }
         },
         {
-          "name": "stable_pool_vault",
+          "name": "stablePoolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -381,7 +387,7 @@
           }
         },
         {
-          "name": "trade_token",
+          "name": "tradeToken",
           "pda": {
             "seeds": [
               {
@@ -408,7 +414,7 @@
           }
         },
         {
-          "name": "trade_token_vault",
+          "name": "tradeTokenVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -442,17 +448,17 @@
           }
         },
         {
-          "name": "keeper_key",
+          "name": "keeperKey",
           "signer": true,
           "relations": [
             "state"
           ]
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
@@ -461,14 +467,14 @@
           "name": "params",
           "type": {
             "defined": {
-              "name": "ADLParams"
+              "name": "adlParams"
             }
           }
         }
       ]
     },
     {
-      "name": "adl_isolate",
+      "name": "adlIsolate",
       "discriminator": [
         67,
         168,
@@ -524,7 +530,7 @@
           }
         },
         {
-          "name": "user_token_account",
+          "name": "userTokenAccount",
           "writable": true
         },
         {
@@ -572,7 +578,7 @@
           }
         },
         {
-          "name": "stable_pool",
+          "name": "stablePool",
           "writable": true,
           "pda": {
             "seeds": [
@@ -593,7 +599,7 @@
           }
         },
         {
-          "name": "pool_vault",
+          "name": "poolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -620,7 +626,7 @@
           }
         },
         {
-          "name": "stable_pool_vault",
+          "name": "stablePoolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -647,7 +653,7 @@
           }
         },
         {
-          "name": "trade_token",
+          "name": "tradeToken",
           "pda": {
             "seeds": [
               {
@@ -674,7 +680,7 @@
           }
         },
         {
-          "name": "trade_token_vault",
+          "name": "tradeTokenVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -708,17 +714,17 @@
           }
         },
         {
-          "name": "keeper_key",
+          "name": "keeperKey",
           "signer": true,
           "relations": [
             "state"
           ]
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
@@ -727,14 +733,14 @@
           "name": "params",
           "type": {
             "defined": {
-              "name": "ADLParams"
+              "name": "adlParams"
             }
           }
         }
       ]
     },
     {
-      "name": "auto_compound",
+      "name": "autoCompound",
       "discriminator": [
         190,
         236,
@@ -787,13 +793,13 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "poolIndex"
               }
             ]
           }
         },
         {
-          "name": "pool_vault",
+          "name": "poolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -814,13 +820,13 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "poolIndex"
               }
             ]
           }
         },
         {
-          "name": "pool_rewards_vault",
+          "name": "poolRewardsVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -849,7 +855,7 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "poolIndex"
               }
             ]
           }
@@ -877,22 +883,22 @@
           }
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
         {
-          "name": "pool_index",
+          "name": "poolIndex",
           "type": "u16"
         }
       ]
     },
     {
-      "name": "auto_rebalance",
+      "name": "autoRebalance",
       "discriminator": [
         236,
         1,
@@ -942,13 +948,13 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "poolIndex"
               }
             ]
           }
         },
         {
-          "name": "pool_vault",
+          "name": "poolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -969,13 +975,13 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "poolIndex"
               }
             ]
           }
         },
         {
-          "name": "trade_token",
+          "name": "tradeToken",
           "pda": {
             "seeds": [
               {
@@ -996,13 +1002,13 @@
               },
               {
                 "kind": "arg",
-                "path": "_trade_token_index"
+                "path": "tradeTokenIndex"
               }
             ]
           }
         },
         {
-          "name": "trade_token_vault",
+          "name": "tradeTokenVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1030,36 +1036,36 @@
               },
               {
                 "kind": "arg",
-                "path": "_trade_token_index"
+                "path": "tradeTokenIndex"
               }
             ]
           }
         },
         {
-          "name": "keeper_key",
+          "name": "keeperKey",
           "signer": true
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
         {
-          "name": "_pool_index",
+          "name": "poolIndex",
           "type": "u16"
         },
         {
-          "name": "_trade_token_index",
+          "name": "tradeTokenIndex",
           "type": "u16"
         }
       ]
     },
     {
-      "name": "claim_rewards",
+      "name": "claimRewards",
       "discriminator": [
         4,
         144,
@@ -1143,7 +1149,7 @@
           }
         },
         {
-          "name": "user_token_account",
+          "name": "userTokenAccount",
           "writable": true
         },
         {
@@ -1168,7 +1174,7 @@
           }
         },
         {
-          "name": "pool_rewards_vault",
+          "name": "poolRewardsVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1203,10 +1209,10 @@
           }
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
@@ -1215,14 +1221,14 @@
           "name": "params",
           "type": {
             "defined": {
-              "name": "ClaimRewardsParams"
+              "name": "claimRewardsParams"
             }
           }
         }
       ]
     },
     {
-      "name": "collect_rewards",
+      "name": "collectRewards",
       "discriminator": [
         63,
         130,
@@ -1272,13 +1278,13 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "poolIndex"
               }
             ]
           }
         },
         {
-          "name": "pool_vault",
+          "name": "poolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1299,13 +1305,13 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "poolIndex"
               }
             ]
           }
         },
         {
-          "name": "stable_pool_vault",
+          "name": "stablePoolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1326,13 +1332,13 @@
               },
               {
                 "kind": "arg",
-                "path": "_stable_pool_index"
+                "path": "stablePoolIndex"
               }
             ]
           }
         },
         {
-          "name": "trade_token",
+          "name": "tradeToken",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1354,13 +1360,13 @@
               },
               {
                 "kind": "arg",
-                "path": "_trade_token_index"
+                "path": "tradeTokenIndex"
               }
             ]
           }
         },
         {
-          "name": "stable_trade_token",
+          "name": "stableTradeToken",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1382,7 +1388,7 @@
               },
               {
                 "kind": "arg",
-                "path": "_stable_trade_token_index"
+                "path": "stableTradeTokenIndex"
               }
             ]
           }
@@ -1406,13 +1412,13 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "poolIndex"
               }
             ]
           }
         },
         {
-          "name": "pool_rewards_vault",
+          "name": "poolRewardsVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1441,48 +1447,48 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "poolIndex"
               }
             ]
           }
         },
         {
-          "name": "dao_rewards_vault",
+          "name": "daoRewardsVault",
           "writable": true
         },
         {
-          "name": "keeper_key",
+          "name": "keeperKey",
           "signer": true,
           "relations": [
             "state"
           ]
         },
         {
-          "name": "bump_signer",
+          "name": "bumpSigner",
           "relations": [
             "state"
           ]
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
         {
-          "name": "_pool_index",
+          "name": "poolIndex",
           "type": "u16"
         },
         {
-          "name": "_stable_pool_index",
+          "name": "stablePoolIndex",
           "type": "u16"
         },
         {
-          "name": "_trade_token_index",
+          "name": "tradeTokenIndex",
           "type": "u16"
         },
         {
-          "name": "_stable_trade_token_index",
+          "name": "stableTradeTokenIndex",
           "type": "u16"
         }
       ]
@@ -1526,11 +1532,11 @@
           "signer": true
         },
         {
-          "name": "user_token_account",
+          "name": "userTokenAccount",
           "writable": true
         },
         {
-          "name": "trade_token",
+          "name": "tradeToken",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1552,13 +1558,13 @@
               },
               {
                 "kind": "arg",
-                "path": "_token_index"
+                "path": "tokenIndex"
               }
             ]
           }
         },
         {
-          "name": "trade_token_vault",
+          "name": "tradeTokenVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1586,19 +1592,19 @@
               },
               {
                 "kind": "arg",
-                "path": "_token_index"
+                "path": "tokenIndex"
               }
             ]
           }
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
         {
-          "name": "token_index",
+          "name": "tokenIndex",
           "type": "u16"
         },
         {
@@ -1608,7 +1614,7 @@
       ]
     },
     {
-      "name": "execute_portfolio_order",
+      "name": "executePortfolioOrder",
       "discriminator": [
         3,
         115,
@@ -1664,14 +1670,14 @@
           }
         },
         {
-          "name": "keeper_key",
+          "name": "keeperKey",
           "signer": true
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
@@ -1680,14 +1686,14 @@
           "name": "params",
           "type": {
             "defined": {
-              "name": "ExecuteOrderParams"
+              "name": "executeOrderParams"
             }
           }
         }
       ]
     },
     {
-      "name": "execute_wallet_order",
+      "name": "executeWalletOrder",
       "discriminator": [
         244,
         115,
@@ -1743,18 +1749,18 @@
           }
         },
         {
-          "name": "user_token_account",
+          "name": "userTokenAccount",
           "writable": true
         },
         {
-          "name": "keeper_key",
+          "name": "keeperKey",
           "signer": true
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
@@ -1763,14 +1769,14 @@
           "name": "params",
           "type": {
             "defined": {
-              "name": "ExecuteOrderParams"
+              "name": "executeOrderParams"
             }
           }
         }
       ]
     },
     {
-      "name": "initialize_market",
+      "name": "initializeMarket",
       "discriminator": [
         35,
         35,
@@ -1801,7 +1807,7 @@
               {
                 "kind": "account",
                 "path": "state.market_sequence",
-                "account": "State"
+                "account": "state"
               }
             ]
           }
@@ -1828,7 +1834,7 @@
           }
         },
         {
-          "name": "stable_pool",
+          "name": "stablePool",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1849,7 +1855,7 @@
           }
         },
         {
-          "name": "index_mint_oracle"
+          "name": "indexMintOracle"
         },
         {
           "name": "admin",
@@ -1883,14 +1889,14 @@
           }
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
           "name": "rent",
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -1899,14 +1905,14 @@
           "name": "params",
           "type": {
             "defined": {
-              "name": "InitializeMarketParams"
+              "name": "initializeMarketParams"
             }
           }
         }
       ]
     },
     {
-      "name": "initialize_pool",
+      "name": "initializePool",
       "discriminator": [
         95,
         180,
@@ -1935,16 +1941,16 @@
               {
                 "kind": "account",
                 "path": "state.pool_sequence",
-                "account": "State"
+                "account": "state"
               }
             ]
           }
         },
         {
-          "name": "pool_mint"
+          "name": "poolMint"
         },
         {
-          "name": "pool_vault",
+          "name": "poolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1966,13 +1972,13 @@
               {
                 "kind": "account",
                 "path": "state.pool_sequence",
-                "account": "State"
+                "account": "state"
               }
             ]
           }
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
           "name": "state",
@@ -2010,11 +2016,11 @@
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
@@ -2023,14 +2029,14 @@
           "name": "params",
           "type": {
             "defined": {
-              "name": "InitializePoolParams"
+              "name": "initializePoolParams"
             }
           }
         }
       ]
     },
     {
-      "name": "initialize_rewards",
+      "name": "initializeRewards",
       "discriminator": [
         91,
         174,
@@ -2080,13 +2086,13 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "poolIndex"
               }
             ]
           }
         },
         {
-          "name": "pool_mint"
+          "name": "poolMint"
         },
         {
           "name": "rewards",
@@ -2107,13 +2113,13 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "poolIndex"
               }
             ]
           }
         },
         {
-          "name": "pool_rewards_vault",
+          "name": "poolRewardsVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2142,13 +2148,13 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "poolIndex"
               }
             ]
           }
         },
         {
-          "name": "dao_rewards_vault"
+          "name": "daoRewardsVault"
         },
         {
           "name": "admin",
@@ -2159,30 +2165,30 @@
           ]
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
           "name": "rent",
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
         {
-          "name": "_pool_index",
+          "name": "poolIndex",
           "type": "u16"
         }
       ]
     },
     {
-      "name": "initialize_state",
+      "name": "initializeState",
       "discriminator": [
         190,
         171,
@@ -2227,11 +2233,11 @@
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
@@ -2240,14 +2246,14 @@
           "name": "param",
           "type": {
             "defined": {
-              "name": "InitializeStateParams"
+              "name": "initializeStateParams"
             }
           }
         }
       ]
     },
     {
-      "name": "initialize_trade_token",
+      "name": "initializeTradeToken",
       "discriminator": [
         188,
         220,
@@ -2260,7 +2266,7 @@
       ],
       "accounts": [
         {
-          "name": "trade_token",
+          "name": "tradeToken",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2283,16 +2289,16 @@
               {
                 "kind": "account",
                 "path": "state.trade_token_sequence",
-                "account": "State"
+                "account": "state"
               }
             ]
           }
         },
         {
-          "name": "trade_token_mint"
+          "name": "tradeTokenMint"
         },
         {
-          "name": "trade_token_vault",
+          "name": "tradeTokenVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2321,7 +2327,7 @@
               {
                 "kind": "account",
                 "path": "state.trade_token_sequence",
-                "account": "State"
+                "account": "state"
               }
             ]
           }
@@ -2330,7 +2336,7 @@
           "name": "oracle"
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
           "name": "state",
@@ -2368,11 +2374,11 @@
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
@@ -2382,7 +2388,7 @@
           "type": "u32"
         },
         {
-          "name": "mint_name",
+          "name": "mintName",
           "type": {
             "array": [
               "u8",
@@ -2391,13 +2397,13 @@
           }
         },
         {
-          "name": "liquidation_factor",
+          "name": "liquidationFactor",
           "type": "u32"
         }
       ]
     },
     {
-      "name": "initialize_user",
+      "name": "initializeUser",
       "discriminator": [
         111,
         17,
@@ -2466,14 +2472,14 @@
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "liquidate_cross_position",
+      "name": "liquidateCrossPosition",
       "discriminator": [
         40,
         173,
@@ -2523,35 +2529,35 @@
               },
               {
                 "kind": "arg",
-                "path": "_user_authority_key"
+                "path": "userAuthorityKey"
               }
             ]
           }
         },
         {
-          "name": "keeper_key",
+          "name": "keeperKey",
           "signer": true,
           "relations": [
             "state"
           ]
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
         {
-          "name": "_user_authority_key",
+          "name": "userAuthorityKey",
           "type": "pubkey"
         }
       ]
     },
     {
-      "name": "liquidate_isolate_position",
+      "name": "liquidateIsolatePosition",
       "discriminator": [
         88,
         101,
@@ -2607,7 +2613,7 @@
           }
         },
         {
-          "name": "user_token_account",
+          "name": "userTokenAccount",
           "writable": true
         },
         {
@@ -2655,7 +2661,7 @@
           }
         },
         {
-          "name": "stable_pool",
+          "name": "stablePool",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2676,7 +2682,7 @@
           }
         },
         {
-          "name": "pool_vault",
+          "name": "poolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2703,7 +2709,7 @@
           }
         },
         {
-          "name": "stable_pool_vault",
+          "name": "stablePoolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2730,7 +2736,7 @@
           }
         },
         {
-          "name": "trade_token",
+          "name": "tradeToken",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2758,7 +2764,7 @@
           }
         },
         {
-          "name": "trade_token_vault",
+          "name": "tradeTokenVault",
           "pda": {
             "seeds": [
               {
@@ -2791,17 +2797,17 @@
           }
         },
         {
-          "name": "keeper_key",
+          "name": "keeperKey",
           "signer": true,
           "relations": [
             "state"
           ]
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
@@ -2810,14 +2816,14 @@
           "name": "params",
           "type": {
             "defined": {
-              "name": "LiquidateIsolatePositionParams"
+              "name": "liquidateIsolatePositionParams"
             }
           }
         }
       ]
     },
     {
-      "name": "modify_state",
+      "name": "modifyState",
       "discriminator": [
         138,
         33,
@@ -2865,14 +2871,14 @@
           "name": "param",
           "type": {
             "defined": {
-              "name": "ModifyStateParams"
+              "name": "modifyStateParams"
             }
           }
         }
       ]
     },
     {
-      "name": "place_portfolio_order",
+      "name": "placePortfolioOrder",
       "discriminator": [
         151,
         96,
@@ -2932,10 +2938,10 @@
           "signer": true
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
@@ -2944,14 +2950,14 @@
           "name": "order",
           "type": {
             "defined": {
-              "name": "PlaceOrderParams"
+              "name": "placeOrderParams"
             }
           }
         }
       ]
     },
     {
-      "name": "place_wallet_order",
+      "name": "placeWalletOrder",
       "discriminator": [
         135,
         59,
@@ -3011,14 +3017,14 @@
           "signer": true
         },
         {
-          "name": "user_token_account",
+          "name": "userTokenAccount",
           "writable": true
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
@@ -3027,14 +3033,14 @@
           "name": "order",
           "type": {
             "defined": {
-              "name": "PlaceOrderParams"
+              "name": "placeOrderParams"
             }
           }
         }
       ]
     },
     {
-      "name": "portfolio_cancel_order",
+      "name": "portfolioCancelOrder",
       "discriminator": [
         129,
         135,
@@ -3114,7 +3120,7 @@
           }
         },
         {
-          "name": "pool_vault",
+          "name": "poolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -3141,10 +3147,10 @@
           }
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
@@ -3153,14 +3159,14 @@
           "name": "params",
           "type": {
             "defined": {
-              "name": "CancelOrderParams"
+              "name": "cancelOrderParams"
             }
           }
         }
       ]
     },
     {
-      "name": "portfolio_stake",
+      "name": "portfolioStake",
       "discriminator": [
         197,
         248,
@@ -3195,7 +3201,7 @@
           }
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
           "name": "user",
@@ -3234,13 +3240,13 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "poolIndex"
               }
             ]
           }
         },
         {
-          "name": "pool_vault",
+          "name": "poolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -3261,13 +3267,13 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "poolIndex"
               }
             ]
           }
         },
         {
-          "name": "trade_token_vault",
+          "name": "tradeTokenVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -3295,7 +3301,7 @@
               },
               {
                 "kind": "arg",
-                "path": "_trade_token_index"
+                "path": "tradeTokenIndex"
               }
             ]
           }
@@ -3305,27 +3311,27 @@
           "signer": true
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
         {
-          "name": "pool_index",
+          "name": "poolIndex",
           "type": "u16"
         },
         {
-          "name": "trade_token_index",
+          "name": "tradeTokenIndex",
           "type": "u16"
         },
         {
-          "name": "request_token_amount",
+          "name": "requestTokenAmount",
           "type": "u128"
         }
       ]
     },
     {
-      "name": "rebalance_market_stable_loss",
+      "name": "rebalanceMarketStableLoss",
       "discriminator": [
         137,
         131,
@@ -3404,7 +3410,7 @@
           }
         },
         {
-          "name": "pool_vault",
+          "name": "poolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -3431,7 +3437,7 @@
           }
         },
         {
-          "name": "stable_pool_vault",
+          "name": "stablePoolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -3458,7 +3464,7 @@
           }
         },
         {
-          "name": "trade_token",
+          "name": "tradeToken",
           "pda": {
             "seeds": [
               {
@@ -3485,7 +3491,7 @@
           }
         },
         {
-          "name": "stable_trade_token",
+          "name": "stableTradeToken",
           "pda": {
             "seeds": [
               {
@@ -3512,38 +3518,38 @@
           }
         },
         {
-          "name": "keeper_trade_token_vault",
+          "name": "keeperTradeTokenVault",
           "writable": true
         },
         {
-          "name": "keeper_stable_trade_token_vault",
+          "name": "keeperStableTradeTokenVault",
           "writable": true
         },
         {
-          "name": "keeper_key",
+          "name": "keeperKey",
           "signer": true
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
         {
-          "name": "_params",
+          "name": "params",
           "type": {
             "defined": {
-              "name": "RebalanceMarketStableLossParams"
+              "name": "rebalanceMarketStableLossParams"
             }
           }
         }
       ]
     },
     {
-      "name": "update_cross_position_leverage",
+      "name": "updateCrossPositionLeverage",
       "discriminator": [
         202,
         193,
@@ -3624,7 +3630,7 @@
           }
         },
         {
-          "name": "stable_pool",
+          "name": "stablePool",
           "writable": true,
           "pda": {
             "seeds": [
@@ -3673,14 +3679,14 @@
           "name": "params",
           "type": {
             "defined": {
-              "name": "UpdatePositionLeverageParams"
+              "name": "updatePositionLeverageParams"
             }
           }
         }
       ]
     },
     {
-      "name": "update_isolate_position_leverage",
+      "name": "updateIsolatePositionLeverage",
       "discriminator": [
         186,
         48,
@@ -3718,7 +3724,7 @@
           "signer": true
         },
         {
-          "name": "user_token_account",
+          "name": "userTokenAccount",
           "writable": true
         },
         {
@@ -3765,7 +3771,7 @@
           }
         },
         {
-          "name": "stable_pool",
+          "name": "stablePool",
           "writable": true,
           "pda": {
             "seeds": [
@@ -3809,7 +3815,7 @@
           }
         },
         {
-          "name": "pool_mint_vault",
+          "name": "poolMintVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -3836,7 +3842,7 @@
           }
         },
         {
-          "name": "stable_pool_mint_vault",
+          "name": "stablePoolMintVault",
           "pda": {
             "seeds": [
               {
@@ -3862,10 +3868,10 @@
           }
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
@@ -3874,14 +3880,14 @@
           "name": "params",
           "type": {
             "defined": {
-              "name": "UpdatePositionLeverageParams"
+              "name": "updatePositionLeverageParams"
             }
           }
         }
       ]
     },
     {
-      "name": "wallet_cancel_order",
+      "name": "walletCancelOrder",
       "discriminator": [
         88,
         166,
@@ -3961,7 +3967,7 @@
           }
         },
         {
-          "name": "pool_vault",
+          "name": "poolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -3988,14 +3994,14 @@
           }
         },
         {
-          "name": "user_token_account",
+          "name": "userTokenAccount",
           "writable": true
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
@@ -4004,14 +4010,14 @@
           "name": "params",
           "type": {
             "defined": {
-              "name": "CancelOrderParams"
+              "name": "cancelOrderParams"
             }
           }
         }
       ]
     },
     {
-      "name": "wallet_stake",
+      "name": "walletStake",
       "discriminator": [
         133,
         206,
@@ -4082,17 +4088,17 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "poolIndex"
               }
             ]
           }
         },
         {
-          "name": "user_token_account",
+          "name": "userTokenAccount",
           "writable": true
         },
         {
-          "name": "pool_vault",
+          "name": "poolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -4113,7 +4119,7 @@
               },
               {
                 "kind": "arg",
-                "path": "_pool_index"
+                "path": "poolIndex"
               }
             ]
           }
@@ -4123,23 +4129,23 @@
           "signer": true
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
         {
-          "name": "pool_index",
+          "name": "poolIndex",
           "type": "u16"
         },
         {
-          "name": "request_token_amount",
+          "name": "requestTokenAmount",
           "type": "u128"
         }
       ]
     },
     {
-      "name": "wallet_un_stake",
+      "name": "walletUnStake",
       "discriminator": [
         233,
         75,
@@ -4174,7 +4180,7 @@
           }
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
           "name": "user",
@@ -4219,7 +4225,7 @@
           }
         },
         {
-          "name": "pool_vault",
+          "name": "poolVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -4246,7 +4252,7 @@
           }
         },
         {
-          "name": "trade_token",
+          "name": "tradeToken",
           "writable": true,
           "pda": {
             "seeds": [
@@ -4274,7 +4280,7 @@
           }
         },
         {
-          "name": "pool_rewards_vault",
+          "name": "poolRewardsVault",
           "pda": {
             "seeds": [
               {
@@ -4308,7 +4314,7 @@
           }
         },
         {
-          "name": "user_token_account",
+          "name": "userTokenAccount",
           "writable": true
         },
         {
@@ -4316,7 +4322,7 @@
           "signer": true
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
@@ -4325,7 +4331,7 @@
           "name": "params",
           "type": {
             "defined": {
-              "name": "UnStakeParams"
+              "name": "unStakeParams"
             }
           }
         }
@@ -4392,11 +4398,11 @@
           "signer": true
         },
         {
-          "name": "user_token_account",
+          "name": "userTokenAccount",
           "writable": true
         },
         {
-          "name": "trade_token_vault",
+          "name": "tradeTokenVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -4424,22 +4430,22 @@
               },
               {
                 "kind": "arg",
-                "path": "token_index"
+                "path": "tokenIndex"
               }
             ]
           }
         },
         {
-          "name": "bump_signer"
+          "name": "bumpSigner"
         },
         {
-          "name": "token_program",
+          "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
         {
-          "name": "token_index",
+          "name": "tokenIndex",
           "type": "u16"
         },
         {
@@ -4451,7 +4457,7 @@
   ],
   "accounts": [
     {
-      "name": "Market",
+      "name": "market",
       "discriminator": [
         219,
         190,
@@ -4464,7 +4470,7 @@
       ]
     },
     {
-      "name": "Pool",
+      "name": "pool",
       "discriminator": [
         241,
         154,
@@ -4477,7 +4483,7 @@
       ]
     },
     {
-      "name": "Rewards",
+      "name": "rewards",
       "discriminator": [
         12,
         223,
@@ -4490,7 +4496,7 @@
       ]
     },
     {
-      "name": "State",
+      "name": "state",
       "discriminator": [
         216,
         146,
@@ -4503,7 +4509,7 @@
       ]
     },
     {
-      "name": "TradeToken",
+      "name": "tradeToken",
       "discriminator": [
         228,
         70,
@@ -4516,7 +4522,7 @@
       ]
     },
     {
-      "name": "User",
+      "name": "user",
       "discriminator": [
         159,
         117,
@@ -4531,7 +4537,7 @@
   ],
   "events": [
     {
-      "name": "AddOrDecreaseMarginEvent",
+      "name": "addOrDecreaseMarginEvent",
       "discriminator": [
         255,
         34,
@@ -4544,7 +4550,7 @@
       ]
     },
     {
-      "name": "AddOrDeleteUserOrderEvent",
+      "name": "addOrDeleteUserOrderEvent",
       "discriminator": [
         226,
         197,
@@ -4557,7 +4563,7 @@
       ]
     },
     {
-      "name": "AddOrDeleteUserPositionEvent",
+      "name": "addOrDeleteUserPositionEvent",
       "discriminator": [
         62,
         52,
@@ -4570,7 +4576,7 @@
       ]
     },
     {
-      "name": "DepositEvent",
+      "name": "depositEvent",
       "discriminator": [
         120,
         248,
@@ -4583,7 +4589,7 @@
       ]
     },
     {
-      "name": "InitUserEvent",
+      "name": "initUserEvent",
       "discriminator": [
         172,
         69,
@@ -4596,7 +4602,7 @@
       ]
     },
     {
-      "name": "PoolUpdateEvent",
+      "name": "poolUpdateEvent",
       "discriminator": [
         124,
         213,
@@ -4609,7 +4615,7 @@
       ]
     },
     {
-      "name": "StakeOrUnStakeEvent",
+      "name": "stakeOrUnStakeEvent",
       "discriminator": [
         80,
         62,
@@ -4622,7 +4628,7 @@
       ]
     },
     {
-      "name": "UpdateUserPositionEvent",
+      "name": "updateUserPositionEvent",
       "discriminator": [
         102,
         98,
@@ -4635,7 +4641,7 @@
       ]
     },
     {
-      "name": "UserHoldUpdateEvent",
+      "name": "userHoldUpdateEvent",
       "discriminator": [
         134,
         142,
@@ -4648,7 +4654,7 @@
       ]
     },
     {
-      "name": "UserRewardsUpdateEvent",
+      "name": "userRewardsUpdateEvent",
       "discriminator": [
         93,
         62,
@@ -4661,7 +4667,7 @@
       ]
     },
     {
-      "name": "UserTokenBalanceUpdateEvent",
+      "name": "userTokenBalanceUpdateEvent",
       "discriminator": [
         6,
         46,
@@ -4674,7 +4680,7 @@
       ]
     },
     {
-      "name": "WithdrawEvent",
+      "name": "withdrawEvent",
       "discriminator": [
         22,
         9,
@@ -4690,471 +4696,471 @@
   "errors": [
     {
       "code": 6000,
-      "name": "AmountNotEnough",
-      "msg": "AmountNotEnough"
+      "name": "amountNotEnough",
+      "msg": "amountNotEnough"
     },
     {
       "code": 6001,
-      "name": "UserAvailableValueNotEnough",
-      "msg": "UserAvailableValueNotEnough"
+      "name": "userAvailableValueNotEnough",
+      "msg": "userAvailableValueNotEnough"
     },
     {
       "code": 6002,
-      "name": "SubHoldPoolBiggerThanHold",
-      "msg": "SubHoldPoolBiggerThanHold"
+      "name": "subHoldPoolBiggerThanHold",
+      "msg": "subHoldPoolBiggerThanHold"
     },
     {
       "code": 6003,
-      "name": "SubPoolStableAmountBiggerThanStableAmount",
-      "msg": "SubPoolStableAmountBiggerThanStableAmount"
+      "name": "subPoolStableAmountBiggerThanStableAmount",
+      "msg": "subPoolStableAmountBiggerThanStableAmount"
     },
     {
       "code": 6004,
-      "name": "SubPoolAmountBiggerThanAmount",
-      "msg": "SubPoolAmountBiggerThanAmount"
+      "name": "subPoolAmountBiggerThanAmount",
+      "msg": "subPoolAmountBiggerThanAmount"
     },
     {
       "code": 6005,
-      "name": "PositionShouldBeLiquidation",
-      "msg": "PositionShouldBeLiquidation"
+      "name": "positionShouldBeLiquidation",
+      "msg": "positionShouldBeLiquidation"
     },
     {
       "code": 6006,
-      "name": "OrderHoldUsdSmallThanHoldUsd",
-      "msg": "OrderHoldUsdSmallThanHoldUsd"
+      "name": "orderHoldUsdSmallThanHoldUsd",
+      "msg": "orderHoldUsdSmallThanHoldUsd"
     },
     {
       "code": 6007,
-      "name": "StandardPoolValueNotEnough",
-      "msg": "StandardPoolValueNotEnough"
+      "name": "standardPoolValueNotEnough",
+      "msg": "standardPoolValueNotEnough"
     },
     {
       "code": 6008,
-      "name": "OrderMarginUSDTooSmall",
-      "msg": "OrderMarginUSDTooSmall"
+      "name": "orderMarginUsdTooSmall",
+      "msg": "orderMarginUsdTooSmall"
     },
     {
       "code": 6009,
-      "name": "PoolAvailableLiquidityNotEnough",
-      "msg": "PoolAvailableLiquidityNotEnough"
+      "name": "poolAvailableLiquidityNotEnough",
+      "msg": "poolAvailableLiquidityNotEnough"
     },
     {
       "code": 6010,
-      "name": "InvalidTransfer",
+      "name": "invalidTransfer",
       "msg": "Invalid transfer"
     },
     {
       "code": 6011,
-      "name": "InvalidParam",
-      "msg": "InvalidParam"
+      "name": "invalidParam",
+      "msg": "invalidParam"
     },
     {
       "code": 6012,
-      "name": "OnlyOneTypeOrderAllowed",
-      "msg": "OnlyOneTypeOrderAllowed"
+      "name": "onlyOneTypeOrderAllowed",
+      "msg": "onlyOneTypeOrderAllowed"
     },
     {
       "code": 6013,
-      "name": "OrderNotExist",
-      "msg": "OrderNotExist"
+      "name": "orderNotExist",
+      "msg": "orderNotExist"
     },
     {
       "code": 6014,
-      "name": "TokenNotMatch",
-      "msg": "TokenNotMatch"
+      "name": "tokenNotMatch",
+      "msg": "tokenNotMatch"
     },
     {
       "code": 6015,
-      "name": "NoMoreUserTokenSpace",
-      "msg": "NoMoreUserTokenSpace"
+      "name": "noMoreUserTokenSpace",
+      "msg": "noMoreUserTokenSpace"
     },
     {
       "code": 6016,
-      "name": "NoMoreOrderSpace",
-      "msg": "NoMoreOrderSpace"
+      "name": "noMoreOrderSpace",
+      "msg": "noMoreOrderSpace"
     },
     {
       "code": 6017,
-      "name": "LeverageIsNotAllowed",
-      "msg": "LeverageIsNotAllowed"
+      "name": "leverageIsNotAllowed",
+      "msg": "leverageIsNotAllowed"
     },
     {
       "code": 6018,
-      "name": "PriceIsNotAllowed",
-      "msg": "PriceIsNotAllowed"
+      "name": "priceIsNotAllowed",
+      "msg": "priceIsNotAllowed"
     },
     {
       "code": 6019,
-      "name": "LiquidationErrorWithBankruptcyPriceZero",
-      "msg": "LiquidationErrorWithBankruptcyPriceZero"
+      "name": "liquidationErrorWithBankruptcyPriceZero",
+      "msg": "liquidationErrorWithBankruptcyPriceZero"
     },
     {
       "code": 6020,
-      "name": "OnlyOneDirectionPositionIsAllowed",
-      "msg": "OnlyOneDirectionPositionIsAllowed"
+      "name": "onlyOneDirectionPositionIsAllowed",
+      "msg": "onlyOneDirectionPositionIsAllowed"
     },
     {
       "code": 6021,
-      "name": "BalanceNotEnough",
-      "msg": "BalanceNotEnough"
+      "name": "balanceNotEnough",
+      "msg": "balanceNotEnough"
     },
     {
       "code": 6022,
-      "name": "PythOffline",
-      "msg": "PythOffline"
+      "name": "pythOffline",
+      "msg": "pythOffline"
     },
     {
       "code": 6023,
-      "name": "Overflow",
-      "msg": "Overflow"
+      "name": "overflow",
+      "msg": "overflow"
     },
     {
       "code": 6024,
-      "name": "TransferFailed",
-      "msg": "TransferFailed"
+      "name": "transferFailed",
+      "msg": "transferFailed"
     },
     {
       "code": 6025,
-      "name": "UnableToLoadAccountLoader",
+      "name": "unableToLoadAccountLoader",
       "msg": "Unable to load AccountLoader"
     },
     {
       "code": 6026,
-      "name": "CantPayUserInitFee",
-      "msg": "CantPayUserInitFee"
+      "name": "cantPayUserInitFee",
+      "msg": "cantPayUserInitFee"
     },
     {
       "code": 6027,
-      "name": "CouldNotFindUserToken",
-      "msg": "CouldNotFindUserToken"
+      "name": "couldNotFindUserToken",
+      "msg": "couldNotFindUserToken"
     },
     {
       "code": 6028,
-      "name": "CouldNotFindUserOrder",
-      "msg": "CouldNotFindUserOrder"
+      "name": "couldNotFindUserOrder",
+      "msg": "couldNotFindUserOrder"
     },
     {
       "code": 6029,
-      "name": "CouldNotFindUserPosition",
-      "msg": "CouldNotFindUserPosition"
+      "name": "couldNotFindUserPosition",
+      "msg": "couldNotFindUserPosition"
     },
     {
       "code": 6030,
-      "name": "LiquidatePositionIgnore",
-      "msg": "LiquidatePositionIgnore"
+      "name": "liquidatePositionIgnore",
+      "msg": "liquidatePositionIgnore"
     },
     {
       "code": 6031,
-      "name": "OnlyCrossPositionAllowed",
-      "msg": "OnlyCrossPositionAllowed"
+      "name": "onlyCrossPositionAllowed",
+      "msg": "onlyCrossPositionAllowed"
     },
     {
       "code": 6032,
-      "name": "OnlyIsolatePositionAllowed",
-      "msg": "OnlyIsolatePositionAllowed"
+      "name": "onlyIsolatePositionAllowed",
+      "msg": "onlyIsolatePositionAllowed"
     },
     {
       "code": 6033,
-      "name": "CouldNotFindUserStake",
-      "msg": "CouldNotFindUserStake"
+      "name": "couldNotFindUserStake",
+      "msg": "couldNotFindUserStake"
     },
     {
       "code": 6034,
-      "name": "UserStakeHasNoMoreClaim",
-      "msg": "UserStakeHasNoMoreClaim"
+      "name": "userStakeHasNoMoreClaim",
+      "msg": "userStakeHasNoMoreClaim"
     },
     {
       "code": 6035,
-      "name": "OracleNotFound",
-      "msg": "OracleNotFound"
+      "name": "oracleNotFound",
+      "msg": "oracleNotFound"
     },
     {
       "code": 6036,
-      "name": "OraclePriceToOld",
-      "msg": "OraclePriceToOld"
+      "name": "oraclePriceToOld",
+      "msg": "oraclePriceToOld"
     },
     {
       "code": 6037,
-      "name": "UnableToLoadOracle",
+      "name": "unableToLoadOracle",
       "msg": "Unable To Load Oracles"
     },
     {
       "code": 6038,
-      "name": "InvalidOracle",
-      "msg": "InvalidOracle"
+      "name": "invalidOracle",
+      "msg": "invalidOracle"
     },
     {
       "code": 6039,
-      "name": "BnConversionError",
+      "name": "bnConversionError",
       "msg": "Conversion to u128/u128 failed with an overflow or underflow"
     },
     {
       "code": 6040,
-      "name": "MathError",
+      "name": "mathError",
       "msg": "Math Error"
     },
     {
       "code": 6041,
-      "name": "CastingFailure",
+      "name": "castingFailure",
       "msg": "Casting Failure"
     },
     {
       "code": 6042,
-      "name": "CouldNotLoadMarketData",
-      "msg": "CouldNotLoadMarketData"
+      "name": "couldNotLoadMarketData",
+      "msg": "couldNotLoadMarketData"
     },
     {
       "code": 6043,
-      "name": "CouldNotFindMarket",
-      "msg": "CouldNotFindMarket"
+      "name": "couldNotFindMarket",
+      "msg": "couldNotFindMarket"
     },
     {
       "code": 6044,
-      "name": "InvalidMarketAccount",
-      "msg": "InvalidMarketAccount"
+      "name": "invalidMarketAccount",
+      "msg": "invalidMarketAccount"
     },
     {
       "code": 6045,
-      "name": "InvalidPriceUpdateV2Account",
-      "msg": "InvalidPriceUpdateV2Account"
+      "name": "invalidPriceUpdateV2Account",
+      "msg": "invalidPriceUpdateV2Account"
     },
     {
       "code": 6046,
-      "name": "MarketWrongMutability",
-      "msg": "MarketWrongMutability"
+      "name": "marketWrongMutability",
+      "msg": "marketWrongMutability"
     },
     {
       "code": 6047,
-      "name": "MarketNumberNotEqual2Pool",
-      "msg": "MarketNumberNotEqual2Pool"
+      "name": "marketNumberNotEqual2Pool",
+      "msg": "marketNumberNotEqual2Pool"
     },
     {
       "code": 6048,
-      "name": "FailedUnwrap",
+      "name": "failedUnwrap",
       "msg": "Failed Unwrap"
     },
     {
       "code": 6049,
-      "name": "UserNotEnoughValue",
+      "name": "userNotEnoughValue",
       "msg": "User Not Enough Value"
     },
     {
       "code": 6050,
-      "name": "AmountZero",
-      "msg": "AmountZero"
+      "name": "amountZero",
+      "msg": "amountZero"
     },
     {
       "code": 6051,
-      "name": "CouldNotLoadTokenAccountData",
-      "msg": "CouldNotLoadTokenAccountData"
+      "name": "couldNotLoadTokenAccountData",
+      "msg": "couldNotLoadTokenAccountData"
     },
     {
       "code": 6052,
-      "name": "CouldNotLoadTradeTokenData",
-      "msg": "CouldNotLoadTradeTokenData"
+      "name": "couldNotLoadTradeTokenData",
+      "msg": "couldNotLoadTradeTokenData"
     },
     {
       "code": 6053,
-      "name": "CouldNotLoadPoolData",
-      "msg": "CouldNotLoadPoolData"
+      "name": "couldNotLoadPoolData",
+      "msg": "couldNotLoadPoolData"
     },
     {
       "code": 6054,
-      "name": "InvalidTradeTokenAccount",
-      "msg": "InvalidTradeTokenAccount"
+      "name": "invalidTradeTokenAccount",
+      "msg": "invalidTradeTokenAccount"
     },
     {
       "code": 6055,
-      "name": "InvalidTokenAccount",
-      "msg": "InvalidTokenAccount"
+      "name": "invalidTokenAccount",
+      "msg": "invalidTokenAccount"
     },
     {
       "code": 6056,
-      "name": "InvalidPoolAccount",
-      "msg": "InvalidPoolAccount"
+      "name": "invalidPoolAccount",
+      "msg": "invalidPoolAccount"
     },
     {
       "code": 6057,
-      "name": "TradeTokenNotFind",
-      "msg": "CanNotFindTradeToken"
+      "name": "tradeTokenNotFind",
+      "msg": "canNotFindTradeToken"
     },
     {
       "code": 6058,
-      "name": "VaultNotFind",
-      "msg": "CanNotFindVault"
+      "name": "vaultNotFind",
+      "msg": "canNotFindVault"
     },
     {
       "code": 6059,
-      "name": "MarketNotFind",
-      "msg": "CanNotFindMarket"
+      "name": "marketNotFind",
+      "msg": "canNotFindMarket"
     },
     {
       "code": 6060,
-      "name": "StakePaused",
-      "msg": "StakePaused"
+      "name": "stakePaused",
+      "msg": "stakePaused"
     },
     {
       "code": 6061,
-      "name": "StakeToSmall",
-      "msg": "StakeToSmall"
+      "name": "stakeToSmall",
+      "msg": "stakeToSmall"
     },
     {
       "code": 6062,
-      "name": "UnStakeTooSmall",
-      "msg": "UnStakeTooSmall"
+      "name": "unStakeTooSmall",
+      "msg": "unStakeTooSmall"
     },
     {
       "code": 6063,
-      "name": "UnStakeWithAmountNotEnough",
-      "msg": "UnStakeWithAmountNotEnough"
+      "name": "unStakeWithAmountNotEnough",
+      "msg": "unStakeWithAmountNotEnough"
     },
     {
       "code": 6064,
-      "name": "UnStakeTooLarge",
-      "msg": "UnStakeTooLarge"
+      "name": "unStakeTooLarge",
+      "msg": "unStakeTooLarge"
     },
     {
       "code": 6065,
-      "name": "PositionSideNotSupport",
-      "msg": "PositionSideNotSupport"
+      "name": "positionSideNotSupport",
+      "msg": "positionSideNotSupport"
     },
     {
       "code": 6066,
-      "name": "RewardsNotFound",
-      "msg": "RewardsNotFound"
+      "name": "rewardsNotFound",
+      "msg": "rewardsNotFound"
     },
     {
       "code": 6067,
-      "name": "UserNotFound",
-      "msg": "UserNotFound"
+      "name": "userNotFound",
+      "msg": "userNotFound"
     },
     {
       "code": 6068,
-      "name": "CouldNotLoadUserData",
-      "msg": "CouldNotLoadUserData"
+      "name": "couldNotLoadUserData",
+      "msg": "couldNotLoadUserData"
     },
     {
       "code": 6069,
-      "name": "PoolSubUnsettleNotEnough",
-      "msg": "PoolSubUnsettleNotEnough"
+      "name": "poolSubUnsettleNotEnough",
+      "msg": "poolSubUnsettleNotEnough"
     },
     {
       "code": 6070,
-      "name": "PoolUnsettleSmallThanTokenLiability",
-      "msg": "PoolUnsettleSmallThanTokenLiability"
+      "name": "poolUnsettleSmallThanTokenLiability",
+      "msg": "poolUnsettleSmallThanTokenLiability"
     },
     {
       "code": 6071,
-      "name": "TimestampNotFound",
-      "msg": "TimestampNotFound"
+      "name": "timestampNotFound",
+      "msg": "timestampNotFound"
     },
     {
       "code": 6072,
-      "name": "ClaimUnqualified",
-      "msg": "ClaimUnqualified"
+      "name": "claimUnqualified",
+      "msg": "claimUnqualified"
     },
     {
       "code": 6073,
-      "name": "PoolMintSupplyIsZero",
-      "msg": "PoolMintSupplyIsZero"
+      "name": "poolMintSupplyIsZero",
+      "msg": "poolMintSupplyIsZero"
     },
     {
       "code": 6074,
-      "name": "RebalanceMarketStableLossIgnore",
-      "msg": "RebalanceMarketStableLossIgnore"
+      "name": "rebalanceMarketStableLossIgnore",
+      "msg": "rebalanceMarketStableLossIgnore"
     }
   ],
   "types": [
     {
-      "name": "ADLParams",
+      "name": "adlParams",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "pool_index",
+            "name": "poolIndex",
             "type": "u16"
           },
           {
-            "name": "stable_pool_index",
+            "name": "stablePoolIndex",
             "type": "u16"
           },
           {
-            "name": "market_index",
+            "name": "marketIndex",
             "type": "u16"
           },
           {
-            "name": "trade_token_index",
+            "name": "tradeTokenIndex",
             "type": "u16"
           },
           {
-            "name": "position_key",
+            "name": "positionKey",
             "type": "pubkey"
           },
           {
-            "name": "user_authority_key",
+            "name": "userAuthorityKey",
             "type": "pubkey"
           }
         ]
       }
     },
     {
-      "name": "AddOrDecreaseMarginEvent",
+      "name": "addOrDecreaseMarginEvent",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "user_key",
+            "name": "userKey",
             "type": "pubkey"
           },
           {
             "name": "position",
             "type": {
               "defined": {
-                "name": "UserPosition"
+                "name": "userPosition"
               }
             }
           },
           {
-            "name": "pre_position",
+            "name": "prePosition",
             "type": {
               "defined": {
-                "name": "UserPosition"
+                "name": "userPosition"
               }
             }
           },
           {
-            "name": "is_add",
+            "name": "isAdd",
             "type": "bool"
           }
         ]
       }
     },
     {
-      "name": "AddOrDeleteUserOrderEvent",
+      "name": "addOrDeleteUserOrderEvent",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "user_key",
+            "name": "userKey",
             "type": "pubkey"
           },
           {
             "name": "order",
             "type": {
               "defined": {
-                "name": "UserOrder"
+                "name": "userOrder"
               }
             }
           },
           {
-            "name": "is_add",
+            "name": "isAdd",
             "type": "bool"
           }
         ]
       }
     },
     {
-      "name": "AddOrDeleteUserPositionEvent",
+      "name": "addOrDeleteUserPositionEvent",
       "type": {
         "kind": "struct",
         "fields": [
@@ -5162,19 +5168,19 @@
             "name": "position",
             "type": {
               "defined": {
-                "name": "UserPosition"
+                "name": "userPosition"
               }
             }
           },
           {
-            "name": "is_add",
+            "name": "isAdd",
             "type": "bool"
           }
         ]
       }
     },
     {
-      "name": "BorrowingFee",
+      "name": "borrowingFee",
       "repr": {
         "kind": "c"
       },
@@ -5182,19 +5188,19 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "total_borrowing_fee",
+            "name": "totalBorrowingFee",
             "type": "u128"
           },
           {
-            "name": "total_realized_borrowing_fee",
+            "name": "totalRealizedBorrowingFee",
             "type": "u128"
           },
           {
-            "name": "cumulative_borrowing_fee_per_token",
+            "name": "cumulativeBorrowingFeePerToken",
             "type": "u128"
           },
           {
-            "name": "updated_at",
+            "name": "updatedAt",
             "type": "i64"
           },
           {
@@ -5210,44 +5216,44 @@
       }
     },
     {
-      "name": "CancelOrderParams",
+      "name": "cancelOrderParams",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "pool_index",
+            "name": "poolIndex",
             "type": "u16"
           },
           {
-            "name": "order_id",
+            "name": "orderId",
             "type": "u64"
           }
         ]
       }
     },
     {
-      "name": "ClaimRewardsParams",
+      "name": "claimRewardsParams",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "pool_index",
+            "name": "poolIndex",
             "type": "u16"
           }
         ]
       }
     },
     {
-      "name": "DepositEvent",
+      "name": "depositEvent",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "user_key",
+            "name": "userKey",
             "type": "pubkey"
           },
           {
-            "name": "token_mint",
+            "name": "tokenMint",
             "type": "pubkey"
           },
           {
@@ -5255,10 +5261,10 @@
             "type": "u128"
           },
           {
-            "name": "deposit_origin",
+            "name": "depositOrigin",
             "type": {
               "defined": {
-                "name": "DepositOrigin"
+                "name": "depositOrigin"
               }
             }
           }
@@ -5266,40 +5272,40 @@
       }
     },
     {
-      "name": "DepositOrigin",
+      "name": "depositOrigin",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "MANUAL"
+            "name": "manual"
           },
           {
-            "name": "ORDER"
+            "name": "order"
           },
           {
-            "name": "STAKE"
+            "name": "stake"
           }
         ]
       }
     },
     {
-      "name": "ExecuteOrderParams",
+      "name": "executeOrderParams",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "order_id",
+            "name": "orderId",
             "type": "u64"
           },
           {
-            "name": "user_authority_key",
+            "name": "userAuthorityKey",
             "type": "pubkey"
           }
         ]
       }
     },
     {
-      "name": "FeeReward",
+      "name": "feeReward",
       "repr": {
         "kind": "c"
       },
@@ -5307,7 +5313,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "fee_amount",
+            "name": "feeAmount",
             "docs": [
               "Fees generated from staking, redeeming, and position operations (such as increasing or decreasing positions).",
               "Used in isolated margin mode (since fees are actually transferred each time they are generated).",
@@ -5316,14 +5322,14 @@
             "type": "u128"
           },
           {
-            "name": "un_settle_fee_amount",
+            "name": "unSettleFeeAmount",
             "docs": [
               "Accounting for fees generated from cross-margin position operations."
             ],
             "type": "u128"
           },
           {
-            "name": "cumulative_rewards_per_stake_token",
+            "name": "cumulativeRewardsPerStakeToken",
             "docs": [
               "Cursor that records how many tokens each stake share can receive.",
               "This increases during keeper collect operations.",
@@ -5332,7 +5338,7 @@
             "type": "u128"
           },
           {
-            "name": "last_rewards_per_stake_token_deltas",
+            "name": "lastRewardsPerStakeTokenDeltas",
             "docs": [
               "Records the deltas of the last three keeper collect operations.",
               "Each time the keeper calls collect, a delta is recorded here.",
@@ -5349,12 +5355,12 @@
       }
     },
     {
-      "name": "InitUserEvent",
+      "name": "initUserEvent",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "user_key",
+            "name": "userKey",
             "type": "pubkey"
           },
           {
@@ -5365,7 +5371,7 @@
       }
     },
     {
-      "name": "InitializeMarketParams",
+      "name": "initializeMarketParams",
       "type": {
         "kind": "struct",
         "fields": [
@@ -5379,62 +5385,62 @@
             }
           },
           {
-            "name": "tick_size",
+            "name": "tickSize",
             "type": "u128"
           },
           {
-            "name": "open_fee_rate",
+            "name": "openFeeRate",
             "type": "u128"
           },
           {
-            "name": "close_fee_rate",
+            "name": "closeFeeRate",
             "type": "u128"
           },
           {
-            "name": "maximum_long_open_interest_cap",
+            "name": "maximumLongOpenInterestCap",
             "type": "u128"
           },
           {
-            "name": "maximum_short_open_interest_cap",
+            "name": "maximumShortOpenInterestCap",
             "type": "u128"
           },
           {
-            "name": "long_short_ratio_limit",
+            "name": "longShortRatioLimit",
             "type": "u128"
           },
           {
-            "name": "long_short_oi_bottom_limit",
+            "name": "longShortOiBottomLimit",
             "type": "u128"
           },
           {
-            "name": "maximum_leverage",
+            "name": "maximumLeverage",
             "type": "u32"
           },
           {
-            "name": "minimum_leverage",
+            "name": "minimumLeverage",
             "type": "u32"
           },
           {
-            "name": "pool_index",
+            "name": "poolIndex",
             "type": "u16"
           },
           {
-            "name": "stable_pool_index",
+            "name": "stablePoolIndex",
             "type": "u16"
           },
           {
-            "name": "max_pool_liquidity_share_rate",
+            "name": "maxPoolLiquidityShareRate",
             "type": "u32"
           },
           {
-            "name": "share_short",
+            "name": "shareShort",
             "type": "bool"
           }
         ]
       }
     },
     {
-      "name": "InitializePoolParams",
+      "name": "initializePoolParams",
       "type": {
         "kind": "struct",
         "fields": [
@@ -5448,7 +5454,7 @@
             }
           },
           {
-            "name": "stable_mint_key",
+            "name": "stableMintKey",
             "type": {
               "array": [
                 "u8",
@@ -5457,10 +5463,10 @@
             }
           },
           {
-            "name": "pool_config",
+            "name": "poolConfig",
             "type": {
               "defined": {
-                "name": "PoolConfig"
+                "name": "poolConfig"
               }
             }
           },
@@ -5472,12 +5478,12 @@
       }
     },
     {
-      "name": "InitializeStateParams",
+      "name": "initializeStateParams",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "keeper_key",
+            "name": "keeperKey",
             "type": {
               "array": [
                 "u8",
@@ -5486,114 +5492,114 @@
             }
           },
           {
-            "name": "min_order_margin_usd",
+            "name": "minOrderMarginUsd",
             "type": "u128"
           },
           {
-            "name": "maximum_maintenance_margin_rate",
+            "name": "maximumMaintenanceMarginRate",
             "type": "u32"
           },
           {
-            "name": "funding_fee_base_rate",
+            "name": "fundingFeeBaseRate",
             "type": "u128"
           },
           {
-            "name": "max_funding_base_rate",
+            "name": "maxFundingBaseRate",
             "type": "u128"
           },
           {
-            "name": "trading_fee_staking_rewards_ratio",
+            "name": "tradingFeeStakingRewardsRatio",
             "type": "u128"
           },
           {
-            "name": "trading_fee_pool_rewards_ratio",
+            "name": "tradingFeePoolRewardsRatio",
             "type": "u128"
           },
           {
-            "name": "trading_fee_usd_pool_rewards_ratio",
+            "name": "tradingFeeUsdPoolRewardsRatio",
             "type": "u128"
           },
           {
-            "name": "borrowing_fee_staking_rewards_ratio",
+            "name": "borrowingFeeStakingRewardsRatio",
             "type": "u128"
           },
           {
-            "name": "borrowing_fee_pool_rewards_ratio",
+            "name": "borrowingFeePoolRewardsRatio",
             "type": "u128"
           },
           {
-            "name": "min_precision_multiple",
+            "name": "minPrecisionMultiple",
             "type": "u128"
           },
           {
-            "name": "mint_fee_staking_rewards_ratio",
+            "name": "mintFeeStakingRewardsRatio",
             "type": "u128"
           },
           {
-            "name": "mint_fee_pool_rewards_ratio",
+            "name": "mintFeePoolRewardsRatio",
             "type": "u128"
           },
           {
-            "name": "redeem_fee_staking_rewards_ratio",
+            "name": "redeemFeeStakingRewardsRatio",
             "type": "u128"
           },
           {
-            "name": "redeem_fee_pool_rewards_ratio",
+            "name": "redeemFeePoolRewardsRatio",
             "type": "u128"
           },
           {
-            "name": "pool_rewards_interval_limit",
+            "name": "poolRewardsIntervalLimit",
             "type": "u128"
           },
           {
-            "name": "init_fee",
+            "name": "initFee",
             "type": "u64"
           },
           {
-            "name": "staking_fee_reward_ratio",
+            "name": "stakingFeeRewardRatio",
             "type": "u32"
           },
           {
-            "name": "pool_fee_reward_ratio",
+            "name": "poolFeeRewardRatio",
             "type": "u32"
           }
         ]
       }
     },
     {
-      "name": "LiquidateIsolatePositionParams",
+      "name": "liquidateIsolatePositionParams",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "position_key",
+            "name": "positionKey",
             "type": "pubkey"
           },
           {
-            "name": "market_index",
+            "name": "marketIndex",
             "type": "u16"
           },
           {
-            "name": "trade_token_index",
+            "name": "tradeTokenIndex",
             "type": "u16"
           },
           {
-            "name": "pool_index",
+            "name": "poolIndex",
             "type": "u16"
           },
           {
-            "name": "stable_pool_index",
+            "name": "stablePoolIndex",
             "type": "u16"
           },
           {
-            "name": "user_authority_key",
+            "name": "userAuthorityKey",
             "type": "pubkey"
           }
         ]
       }
     },
     {
-      "name": "Market",
+      "name": "market",
       "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
@@ -5611,26 +5617,26 @@
             }
           },
           {
-            "name": "long_open_interest",
+            "name": "longOpenInterest",
             "type": {
               "defined": {
-                "name": "MarketPosition"
+                "name": "marketPosition"
               }
             }
           },
           {
-            "name": "short_open_interest",
+            "name": "shortOpenInterest",
             "type": {
               "defined": {
-                "name": "MarketPosition"
+                "name": "marketPosition"
               }
             }
           },
           {
-            "name": "funding_fee",
+            "name": "fundingFee",
             "type": {
               "defined": {
-                "name": "MarketFundingFee"
+                "name": "marketFundingFee"
               }
             }
           },
@@ -5638,36 +5644,36 @@
             "name": "config",
             "type": {
               "defined": {
-                "name": "MarketConfig"
+                "name": "marketConfig"
               }
             }
           },
           {
-            "name": "stable_loss",
+            "name": "stableLoss",
             "type": "i128"
           },
           {
-            "name": "pool_key",
+            "name": "poolKey",
             "type": "pubkey"
           },
           {
-            "name": "pool_mint_key",
+            "name": "poolMintKey",
             "type": "pubkey"
           },
           {
-            "name": "index_mint_oracle",
+            "name": "indexMintOracle",
             "type": "pubkey"
           },
           {
-            "name": "stable_pool_key",
+            "name": "stablePoolKey",
             "type": "pubkey"
           },
           {
-            "name": "stable_pool_mint_key",
+            "name": "stablePoolMintKey",
             "type": "pubkey"
           },
           {
-            "name": "stable_unsettle_loss",
+            "name": "stableUnsettleLoss",
             "type": "u128"
           },
           {
@@ -5675,15 +5681,15 @@
             "type": "u16"
           },
           {
-            "name": "market_status",
+            "name": "marketStatus",
             "type": {
               "defined": {
-                "name": "MarketStatus"
+                "name": "marketStatus"
               }
             }
           },
           {
-            "name": "share_short",
+            "name": "shareShort",
             "type": "bool"
           },
           {
@@ -5699,7 +5705,7 @@
       }
     },
     {
-      "name": "MarketConfig",
+      "name": "marketConfig",
       "repr": {
         "kind": "c"
       },
@@ -5707,43 +5713,43 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "tick_size",
+            "name": "tickSize",
             "type": "u128"
           },
           {
-            "name": "open_fee_rate",
+            "name": "openFeeRate",
             "type": "u128"
           },
           {
-            "name": "close_fee_rate",
+            "name": "closeFeeRate",
             "type": "u128"
           },
           {
-            "name": "maximum_long_open_interest_cap",
+            "name": "maximumLongOpenInterestCap",
             "type": "u128"
           },
           {
-            "name": "maximum_short_open_interest_cap",
+            "name": "maximumShortOpenInterestCap",
             "type": "u128"
           },
           {
-            "name": "long_short_ratio_limit",
+            "name": "longShortRatioLimit",
             "type": "u128"
           },
           {
-            "name": "long_short_oi_bottom_limit",
+            "name": "longShortOiBottomLimit",
             "type": "u128"
           },
           {
-            "name": "maximum_leverage",
+            "name": "maximumLeverage",
             "type": "u32"
           },
           {
-            "name": "minimum_leverage",
+            "name": "minimumLeverage",
             "type": "u32"
           },
           {
-            "name": "max_pool_liquidity_share_rate",
+            "name": "maxPoolLiquidityShareRate",
             "type": "u32"
           },
           {
@@ -5759,7 +5765,7 @@
       }
     },
     {
-      "name": "MarketFundingFee",
+      "name": "marketFundingFee",
       "repr": {
         "kind": "c"
       },
@@ -5767,31 +5773,31 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "long_funding_fee_amount_per_size",
+            "name": "longFundingFeeAmountPerSize",
             "type": "i128"
           },
           {
-            "name": "short_funding_fee_amount_per_size",
+            "name": "shortFundingFeeAmountPerSize",
             "type": "i128"
           },
           {
-            "name": "total_long_funding_fee",
+            "name": "totalLongFundingFee",
             "type": "i128"
           },
           {
-            "name": "total_short_funding_fee",
+            "name": "totalShortFundingFee",
             "type": "i128"
           },
           {
-            "name": "long_funding_fee_rate",
+            "name": "longFundingFeeRate",
             "type": "i128"
           },
           {
-            "name": "short_funding_fee_rate",
+            "name": "shortFundingFeeRate",
             "type": "i128"
           },
           {
-            "name": "updated_at",
+            "name": "updatedAt",
             "type": "i64"
           },
           {
@@ -5807,7 +5813,7 @@
       }
     },
     {
-      "name": "MarketPosition",
+      "name": "marketPosition",
       "repr": {
         "kind": "c"
       },
@@ -5815,112 +5821,112 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "open_interest",
+            "name": "openInterest",
             "type": "u128"
           },
           {
-            "name": "entry_price",
+            "name": "entryPrice",
             "type": "u128"
           }
         ]
       }
     },
     {
-      "name": "MarketStatus",
+      "name": "marketStatus",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "NORMAL"
+            "name": "normal"
           },
           {
-            "name": "ReduceOnly"
+            "name": "reduceOnly"
           },
           {
-            "name": "Pause"
+            "name": "pause"
           }
         ]
       }
     },
     {
-      "name": "ModifyStateParams",
+      "name": "modifyStateParams",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "min_order_margin_usd",
+            "name": "minOrderMarginUsd",
             "type": {
               "option": "u128"
             }
           },
           {
-            "name": "maximum_maintenance_margin_rate",
+            "name": "maximumMaintenanceMarginRate",
             "type": {
               "option": "u32"
             }
           },
           {
-            "name": "funding_fee_base_rate",
+            "name": "fundingFeeBaseRate",
             "type": {
               "option": "u128"
             }
           },
           {
-            "name": "max_funding_base_rate",
+            "name": "maxFundingBaseRate",
             "type": {
               "option": "u128"
             }
           },
           {
-            "name": "trading_fee_staking_rewards_ratio",
+            "name": "tradingFeeStakingRewardsRatio",
             "type": {
               "option": "u32"
             }
           },
           {
-            "name": "trading_fee_pool_rewards_ratio",
+            "name": "tradingFeePoolRewardsRatio",
             "type": {
               "option": "u32"
             }
           },
           {
-            "name": "trading_fee_usd_pool_rewards_ratio",
+            "name": "tradingFeeUsdPoolRewardsRatio",
             "type": {
               "option": "u32"
             }
           },
           {
-            "name": "min_precision_multiple",
+            "name": "minPrecisionMultiple",
             "type": {
               "option": "u128"
             }
           },
           {
-            "name": "pool_rewards_interval_limit",
+            "name": "poolRewardsIntervalLimit",
             "type": {
               "option": "u128"
             }
           },
           {
-            "name": "init_fee",
+            "name": "initFee",
             "type": {
               "option": "u64"
             }
           },
           {
-            "name": "staking_fee_reward_ratio",
+            "name": "stakingFeeRewardRatio",
             "type": {
               "option": "u32"
             }
           },
           {
-            "name": "pool_fee_reward_ratio",
+            "name": "poolFeeRewardRatio",
             "type": {
               "option": "u32"
             }
           },
           {
-            "name": "essential_account_alt",
+            "name": "essentialAccountAlt",
             "type": {
               "option": {
                 "array": [
@@ -5934,58 +5940,58 @@
       }
     },
     {
-      "name": "OrderSide",
+      "name": "orderSide",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "NONE"
+            "name": "none"
           },
           {
-            "name": "LONG"
+            "name": "long"
           },
           {
-            "name": "SHORT"
+            "name": "short"
           }
         ]
       }
     },
     {
-      "name": "OrderStatus",
+      "name": "orderStatus",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "INIT"
+            "name": "init"
           },
           {
-            "name": "USING"
+            "name": "using"
           }
         ]
       }
     },
     {
-      "name": "OrderType",
+      "name": "orderType",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "NONE"
+            "name": "none"
           },
           {
-            "name": "MARKET"
+            "name": "market"
           },
           {
-            "name": "LIMIT"
+            "name": "limit"
           },
           {
-            "name": "STOP"
+            "name": "stop"
           }
         ]
       }
     },
     {
-      "name": "PlaceOrderParams",
+      "name": "placeOrderParams",
       "type": {
         "kind": "struct",
         "fields": [
@@ -6003,7 +6009,7 @@
             "type": "u128"
           },
           {
-            "name": "order_margin",
+            "name": "orderMargin",
             "type": "u128"
           },
           {
@@ -6011,54 +6017,54 @@
             "type": "u32"
           },
           {
-            "name": "trigger_price",
+            "name": "triggerPrice",
             "type": "u128"
           },
           {
-            "name": "acceptable_price",
+            "name": "acceptablePrice",
             "type": "u128"
           },
           {
-            "name": "place_time",
+            "name": "placeTime",
             "type": "i64"
           },
           {
-            "name": "is_portfolio_margin",
+            "name": "isPortfolioMargin",
             "type": "bool"
           },
           {
-            "name": "is_native_token",
+            "name": "isNativeToken",
             "type": "bool"
           },
           {
-            "name": "order_side",
+            "name": "orderSide",
             "type": {
               "defined": {
-                "name": "OrderSide"
+                "name": "orderSide"
               }
             }
           },
           {
-            "name": "position_side",
+            "name": "positionSide",
             "type": {
               "defined": {
-                "name": "PositionSide"
+                "name": "positionSide"
               }
             }
           },
           {
-            "name": "order_type",
+            "name": "orderType",
             "type": {
               "defined": {
-                "name": "OrderType"
+                "name": "orderType"
               }
             }
           },
           {
-            "name": "stop_type",
+            "name": "stopType",
             "type": {
               "defined": {
-                "name": "StopType"
+                "name": "stopType"
               }
             }
           }
@@ -6066,7 +6072,7 @@
       }
     },
     {
-      "name": "Pool",
+      "name": "pool",
       "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
@@ -6096,34 +6102,34 @@
             "type": "u128"
           },
           {
-            "name": "insurance_fund_amount",
+            "name": "insuranceFundAmount",
             "type": "u128"
           },
           {
-            "name": "total_supply",
+            "name": "totalSupply",
             "type": "u128"
           },
           {
             "name": "balance",
             "type": {
               "defined": {
-                "name": "PoolBalance"
+                "name": "poolBalance"
               }
             }
           },
           {
-            "name": "borrowing_fee",
+            "name": "borrowingFee",
             "type": {
               "defined": {
-                "name": "BorrowingFee"
+                "name": "borrowingFee"
               }
             }
           },
           {
-            "name": "fee_reward",
+            "name": "feeReward",
             "type": {
               "defined": {
-                "name": "FeeReward"
+                "name": "feeReward"
               }
             }
           },
@@ -6131,20 +6137,20 @@
             "name": "config",
             "type": {
               "defined": {
-                "name": "PoolConfig"
+                "name": "poolConfig"
               }
             }
           },
           {
-            "name": "pool_vault_key",
+            "name": "poolVaultKey",
             "type": "pubkey"
           },
           {
-            "name": "stable_mint_key",
+            "name": "stableMintKey",
             "type": "pubkey"
           },
           {
-            "name": "mint_key",
+            "name": "mintKey",
             "type": "pubkey"
           },
           {
@@ -6155,7 +6161,7 @@
             "name": "status",
             "type": {
               "defined": {
-                "name": "PoolStatus"
+                "name": "poolStatus"
               }
             }
           },
@@ -6164,7 +6170,7 @@
             "type": "bool"
           },
           {
-            "name": "market_number",
+            "name": "marketNumber",
             "type": "u16"
           },
           {
@@ -6177,7 +6183,7 @@
             }
           },
           {
-            "name": "reserve_padding",
+            "name": "reservePadding",
             "type": {
               "array": [
                 "u8",
@@ -6189,7 +6195,7 @@
       }
     },
     {
-      "name": "PoolBalance",
+      "name": "poolBalance",
       "repr": {
         "kind": "c"
       },
@@ -6197,7 +6203,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "settle_funding_fee",
+            "name": "settleFundingFee",
             "type": "i128"
           },
           {
@@ -6205,22 +6211,22 @@
             "type": "u128"
           },
           {
-            "name": "hold_amount",
+            "name": "holdAmount",
             "type": "u128"
           },
           {
-            "name": "un_settle_amount",
+            "name": "unSettleAmount",
             "type": "u128"
           },
           {
-            "name": "loss_amount",
+            "name": "lossAmount",
             "type": "u128"
           }
         ]
       }
     },
     {
-      "name": "PoolConfig",
+      "name": "poolConfig",
       "repr": {
         "kind": "c"
       },
@@ -6228,31 +6234,31 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "minimum_stake_amount",
+            "name": "minimumStakeAmount",
             "type": "u128"
           },
           {
-            "name": "minimum_un_stake_amount",
+            "name": "minimumUnStakeAmount",
             "type": "u128"
           },
           {
-            "name": "pool_liquidity_limit",
+            "name": "poolLiquidityLimit",
             "type": "u128"
           },
           {
-            "name": "borrowing_interest_rate",
+            "name": "borrowingInterestRate",
             "type": "u128"
           },
           {
-            "name": "stake_fee_rate",
+            "name": "stakeFeeRate",
             "type": "u32"
           },
           {
-            "name": "un_stake_fee_rate",
+            "name": "unStakeFeeRate",
             "type": "u32"
           },
           {
-            "name": "un_settle_mint_ratio_limit",
+            "name": "unSettleMintRatioLimit",
             "type": "u32"
           },
           {
@@ -6268,65 +6274,65 @@
       }
     },
     {
-      "name": "PoolStatus",
+      "name": "poolStatus",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "NORMAL"
+            "name": "normal"
           },
           {
-            "name": "StakePaused"
+            "name": "stakePaused"
           },
           {
-            "name": "UnStakePaused"
+            "name": "unStakePaused"
           }
         ]
       }
     },
     {
-      "name": "PoolUpdateEvent",
+      "name": "poolUpdateEvent",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "pool_key",
+            "name": "poolKey",
             "type": "pubkey"
           },
           {
-            "name": "pool_mint",
+            "name": "poolMint",
             "type": "pubkey"
           },
           {
-            "name": "pool_index",
+            "name": "poolIndex",
             "type": "u16"
           },
           {
-            "name": "pool_balance",
+            "name": "poolBalance",
             "type": {
               "defined": {
-                "name": "PoolBalance"
+                "name": "poolBalance"
               }
             }
           },
           {
-            "name": "borrowing_fee",
+            "name": "borrowingFee",
             "type": {
               "defined": {
-                "name": "BorrowingFee"
+                "name": "borrowingFee"
               }
             }
           },
           {
-            "name": "fee_reward",
+            "name": "feeReward",
             "type": {
               "defined": {
-                "name": "FeeReward"
+                "name": "feeReward"
               }
             }
           },
           {
-            "name": "total_supply",
+            "name": "totalSupply",
             "type": "u128"
           },
           {
@@ -6338,113 +6344,113 @@
             "type": "u128"
           },
           {
-            "name": "insurance_fund_amount",
+            "name": "insuranceFundAmount",
             "type": "u128"
           },
           {
-            "name": "pre_pool_balance",
+            "name": "prePoolBalance",
             "type": {
               "defined": {
-                "name": "PoolBalance"
+                "name": "poolBalance"
               }
             }
           },
           {
-            "name": "pre_borrowing_fee",
+            "name": "preBorrowingFee",
             "type": {
               "defined": {
-                "name": "BorrowingFee"
+                "name": "borrowingFee"
               }
             }
           },
           {
-            "name": "pre_fee_reward",
+            "name": "preFeeReward",
             "type": {
               "defined": {
-                "name": "FeeReward"
+                "name": "feeReward"
               }
             }
           },
           {
-            "name": "pre_total_supply",
+            "name": "preTotalSupply",
             "type": "u128"
           },
           {
-            "name": "pre_pnl",
+            "name": "prePnl",
             "type": "i128"
           },
           {
-            "name": "pre_apr",
+            "name": "preApr",
             "type": "u128"
           },
           {
-            "name": "pre_insurance_fund_amount",
+            "name": "preInsuranceFundAmount",
             "type": "u128"
           }
         ]
       }
     },
     {
-      "name": "PositionSide",
+      "name": "positionSide",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "NONE"
+            "name": "none"
           },
           {
-            "name": "INCREASE"
+            "name": "increase"
           },
           {
-            "name": "DECREASE"
+            "name": "decrease"
           }
         ]
       }
     },
     {
-      "name": "PositionStatus",
+      "name": "positionStatus",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "INIT"
+            "name": "init"
           },
           {
-            "name": "USING"
+            "name": "using"
           }
         ]
       }
     },
     {
-      "name": "RebalanceMarketStableLossParams",
+      "name": "rebalanceMarketStableLossParams",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "pool_index",
+            "name": "poolIndex",
             "type": "u16"
           },
           {
-            "name": "stable_pool_index",
+            "name": "stablePoolIndex",
             "type": "u16"
           },
           {
-            "name": "market_index",
+            "name": "marketIndex",
             "type": "u16"
           },
           {
-            "name": "trade_token_index",
+            "name": "tradeTokenIndex",
             "type": "u16"
           },
           {
-            "name": "stable_trade_token_index",
+            "name": "stableTradeTokenIndex",
             "type": "u16"
           }
         ]
       }
     },
     {
-      "name": "Rewards",
+      "name": "rewards",
       "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
@@ -6453,27 +6459,27 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "pool_un_claim_amount",
+            "name": "poolUnClaimAmount",
             "type": "u128"
           },
           {
-            "name": "pool_total_rewards_amount",
+            "name": "poolTotalRewardsAmount",
             "type": "u128"
           },
           {
-            "name": "pool_rewards_vault",
+            "name": "poolRewardsVault",
             "type": "pubkey"
           },
           {
-            "name": "dao_rewards_vault",
+            "name": "daoRewardsVault",
             "type": "pubkey"
           },
           {
-            "name": "dao_total_rewards_amount",
+            "name": "daoTotalRewardsAmount",
             "type": "u128"
           },
           {
-            "name": "pool_index",
+            "name": "poolIndex",
             "type": "u16"
           },
           {
@@ -6486,7 +6492,7 @@
             }
           },
           {
-            "name": "reserve_padding",
+            "name": "reservePadding",
             "type": {
               "array": [
                 "u8",
@@ -6498,27 +6504,27 @@
       }
     },
     {
-      "name": "StakeOrUnStakeEvent",
+      "name": "stakeOrUnStakeEvent",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "user_key",
+            "name": "userKey",
             "type": "pubkey"
           },
           {
-            "name": "token_mint",
+            "name": "tokenMint",
             "type": "pubkey"
           },
           {
-            "name": "change_supply_amount",
+            "name": "changeSupplyAmount",
             "type": "u128"
           },
           {
-            "name": "user_stake",
+            "name": "userStake",
             "type": {
               "defined": {
-                "name": "UserStake"
+                "name": "userStake"
               }
             }
           }
@@ -6526,7 +6532,7 @@
       }
     },
     {
-      "name": "State",
+      "name": "state",
       "repr": {
         "kind": "c"
       },
@@ -6538,67 +6544,67 @@
             "type": "pubkey"
           },
           {
-            "name": "bump_signer",
+            "name": "bumpSigner",
             "type": "pubkey"
           },
           {
-            "name": "keeper_key",
+            "name": "keeperKey",
             "type": "pubkey"
           },
           {
-            "name": "essential_account_alt",
+            "name": "essentialAccountAlt",
             "type": "pubkey"
           },
           {
-            "name": "funding_fee_base_rate",
+            "name": "fundingFeeBaseRate",
             "type": "u128"
           },
           {
-            "name": "maximum_funding_base_rate",
+            "name": "maximumFundingBaseRate",
             "type": "u128"
           },
           {
-            "name": "minimum_precision_multiple",
+            "name": "minimumPrecisionMultiple",
             "type": "u128"
           },
           {
-            "name": "pool_rewards_interval_limit",
+            "name": "poolRewardsIntervalLimit",
             "type": "u128"
           },
           {
-            "name": "minimum_order_margin_usd",
+            "name": "minimumOrderMarginUsd",
             "type": "u128"
           },
           {
-            "name": "init_fee",
+            "name": "initFee",
             "type": "u64"
           },
           {
-            "name": "trading_fee_usd_pool_rewards_ratio",
+            "name": "tradingFeeUsdPoolRewardsRatio",
             "type": "u32"
           },
           {
-            "name": "maximum_maintenance_margin_rate",
+            "name": "maximumMaintenanceMarginRate",
             "type": "u32"
           },
           {
-            "name": "pool_fee_reward_ratio",
+            "name": "poolFeeRewardRatio",
             "type": "u32"
           },
           {
-            "name": "market_sequence",
+            "name": "marketSequence",
             "type": "u16"
           },
           {
-            "name": "pool_sequence",
+            "name": "poolSequence",
             "type": "u16"
           },
           {
-            "name": "trade_token_sequence",
+            "name": "tradeTokenSequence",
             "type": "u16"
           },
           {
-            "name": "bump_signer_nonce",
+            "name": "bumpSignerNonce",
             "type": "u8"
           },
           {
@@ -6611,7 +6617,7 @@
             }
           },
           {
-            "name": "reserve_padding",
+            "name": "reservePadding",
             "type": {
               "array": [
                 "u8",
@@ -6623,24 +6629,24 @@
       }
     },
     {
-      "name": "StopType",
+      "name": "stopType",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "NONE"
+            "name": "none"
           },
           {
-            "name": "StopLoss"
+            "name": "stopLoss"
           },
           {
-            "name": "TakeProfit"
+            "name": "takeProfit"
           }
         ]
       }
     },
     {
-      "name": "TradeToken",
+      "name": "tradeToken",
       "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
@@ -6649,23 +6655,23 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "mint_key",
+            "name": "mintKey",
             "type": "pubkey"
           },
           {
-            "name": "total_liability",
+            "name": "totalLiability",
             "type": "u128"
           },
           {
-            "name": "total_amount",
+            "name": "totalAmount",
             "type": "u128"
           },
           {
-            "name": "oracle_key",
+            "name": "oracleKey",
             "type": "pubkey"
           },
           {
-            "name": "vault_key",
+            "name": "vaultKey",
             "type": "pubkey"
           },
           {
@@ -6682,7 +6688,7 @@
             "type": "u32"
           },
           {
-            "name": "liquidation_factor",
+            "name": "liquidationFactor",
             "type": "u32"
           },
           {
@@ -6703,7 +6709,7 @@
             }
           },
           {
-            "name": "reserve_padding",
+            "name": "reservePadding",
             "type": {
               "array": [
                 "u8",
@@ -6715,7 +6721,7 @@
       }
     },
     {
-      "name": "UnStakeParams",
+      "name": "unStakeParams",
       "type": {
         "kind": "struct",
         "fields": [
@@ -6724,18 +6730,18 @@
             "type": "u128"
           },
           {
-            "name": "pool_index",
+            "name": "poolIndex",
             "type": "u16"
           },
           {
-            "name": "trade_token_index",
+            "name": "tradeTokenIndex",
             "type": "u16"
           }
         ]
       }
     },
     {
-      "name": "UpdatePositionLeverageParams",
+      "name": "updatePositionLeverageParams",
       "type": {
         "kind": "struct",
         "fields": [
@@ -6749,11 +6755,11 @@
             }
           },
           {
-            "name": "is_long",
+            "name": "isLong",
             "type": "bool"
           },
           {
-            "name": "is_portfolio_margin",
+            "name": "isPortfolioMargin",
             "type": "bool"
           },
           {
@@ -6761,70 +6767,70 @@
             "type": "u32"
           },
           {
-            "name": "market_index",
+            "name": "marketIndex",
             "type": "u16"
           },
           {
-            "name": "pool_index",
+            "name": "poolIndex",
             "type": "u16"
           },
           {
-            "name": "stable_pool_index",
+            "name": "stablePoolIndex",
             "type": "u16"
           }
         ]
       }
     },
     {
-      "name": "UpdatePositionMarginParams",
+      "name": "updatePositionMarginParams",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "position_key",
+            "name": "positionKey",
             "type": "pubkey"
           },
           {
-            "name": "is_add",
+            "name": "isAdd",
             "type": "bool"
           },
           {
-            "name": "update_margin_amount",
+            "name": "updateMarginAmount",
             "type": "u128"
           },
           {
-            "name": "add_initial_margin_from_portfolio",
+            "name": "addInitialMarginFromPortfolio",
             "type": "u128"
           },
           {
-            "name": "market_index",
+            "name": "marketIndex",
             "type": "u16"
           },
           {
-            "name": "pool_index",
+            "name": "poolIndex",
             "type": "u16"
           },
           {
-            "name": "stable_pool_index",
+            "name": "stablePoolIndex",
             "type": "u16"
           },
           {
-            "name": "trade_token_index",
+            "name": "tradeTokenIndex",
             "type": "u16"
           }
         ]
       }
     },
     {
-      "name": "UpdateUserPositionEvent",
+      "name": "updateUserPositionEvent",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "pre_position",
+            "name": "prePosition",
             "type": {
               "defined": {
-                "name": "UserPosition"
+                "name": "userPosition"
               }
             }
           },
@@ -6832,7 +6838,7 @@
             "name": "position",
             "type": {
               "defined": {
-                "name": "UserPosition"
+                "name": "userPosition"
               }
             }
           }
@@ -6840,7 +6846,7 @@
       }
     },
     {
-      "name": "User",
+      "name": "user",
       "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "c"
@@ -6853,11 +6859,11 @@
             "type": "pubkey"
           },
           {
-            "name": "next_order_id",
+            "name": "nextOrderId",
             "type": "u64"
           },
           {
-            "name": "next_liquidation_id",
+            "name": "nextLiquidationId",
             "type": "u64"
           },
           {
@@ -6870,7 +6876,7 @@
               "array": [
                 {
                   "defined": {
-                    "name": "UserToken"
+                    "name": "userToken"
                   }
                 },
                 10
@@ -6883,7 +6889,7 @@
               "array": [
                 {
                   "defined": {
-                    "name": "UserStake"
+                    "name": "userStake"
                   }
                 },
                 10
@@ -6896,7 +6902,7 @@
               "array": [
                 {
                   "defined": {
-                    "name": "UserPosition"
+                    "name": "userPosition"
                   }
                 },
                 8
@@ -6909,7 +6915,7 @@
               "array": [
                 {
                   "defined": {
-                    "name": "UserOrder"
+                    "name": "userOrder"
                   }
                 },
                 8
@@ -6921,14 +6927,14 @@
             "type": "pubkey"
           },
           {
-            "name": "created_at",
+            "name": "createdAt",
             "type": "i64"
           },
           {
-            "name": "user_status",
+            "name": "userStatus",
             "type": {
               "defined": {
-                "name": "UserStatus"
+                "name": "userStatus"
               }
             }
           },
@@ -6945,27 +6951,27 @@
       }
     },
     {
-      "name": "UserHoldUpdateEvent",
+      "name": "userHoldUpdateEvent",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "user_key",
+            "name": "userKey",
             "type": "pubkey"
           },
           {
-            "name": "pre_hold_amount",
+            "name": "preHoldAmount",
             "type": "u128"
           },
           {
-            "name": "hold_amount",
+            "name": "holdAmount",
             "type": "u128"
           }
         ]
       }
     },
     {
-      "name": "UserOrder",
+      "name": "userOrder",
       "repr": {
         "kind": "c"
       },
@@ -6973,31 +6979,31 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "order_margin",
+            "name": "orderMargin",
             "type": "u128"
           },
           {
-            "name": "order_size",
+            "name": "orderSize",
             "type": "u128"
           },
           {
-            "name": "trigger_price",
+            "name": "triggerPrice",
             "type": "u128"
           },
           {
-            "name": "acceptable_price",
+            "name": "acceptablePrice",
             "type": "u128"
           },
           {
-            "name": "created_at",
+            "name": "createdAt",
             "type": "i64"
           },
           {
-            "name": "order_id",
+            "name": "orderId",
             "type": "u64"
           },
           {
-            "name": "margin_mint_key",
+            "name": "marginMintKey",
             "type": "pubkey"
           },
           {
@@ -7005,7 +7011,7 @@
             "type": "pubkey"
           },
           {
-            "name": "user_token_account",
+            "name": "userTokenAccount",
             "type": "pubkey"
           },
           {
@@ -7022,34 +7028,34 @@
             "type": "u32"
           },
           {
-            "name": "order_side",
+            "name": "orderSide",
             "type": {
               "defined": {
-                "name": "OrderSide"
+                "name": "orderSide"
               }
             }
           },
           {
-            "name": "position_side",
+            "name": "positionSide",
             "type": {
               "defined": {
-                "name": "PositionSide"
+                "name": "positionSide"
               }
             }
           },
           {
-            "name": "order_type",
+            "name": "orderType",
             "type": {
               "defined": {
-                "name": "OrderType"
+                "name": "orderType"
               }
             }
           },
           {
-            "name": "stop_type",
+            "name": "stopType",
             "type": {
               "defined": {
-                "name": "StopType"
+                "name": "stopType"
               }
             }
           },
@@ -7057,12 +7063,12 @@
             "name": "status",
             "type": {
               "defined": {
-                "name": "OrderStatus"
+                "name": "orderStatus"
               }
             }
           },
           {
-            "name": "is_portfolio_margin",
+            "name": "isPortfolioMargin",
             "type": "bool"
           },
           {
@@ -7075,7 +7081,7 @@
             }
           },
           {
-            "name": "reserve_padding",
+            "name": "reservePadding",
             "type": {
               "array": [
                 "u8",
@@ -7087,7 +7093,7 @@
       }
     },
     {
-      "name": "UserPosition",
+      "name": "userPosition",
       "repr": {
         "kind": "c"
       },
@@ -7095,95 +7101,95 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "position_size",
+            "name": "positionSize",
             "type": "u128"
           },
           {
-            "name": "entry_price",
+            "name": "entryPrice",
             "type": "u128"
           },
           {
-            "name": "margin_token_entry_price",
+            "name": "marginTokenEntryPrice",
             "type": "u128"
           },
           {
-            "name": "initial_margin",
+            "name": "initialMargin",
             "type": "u128"
           },
           {
-            "name": "initial_margin_usd",
+            "name": "initialMarginUsd",
             "type": "u128"
           },
           {
-            "name": "initial_margin_usd_from_portfolio",
+            "name": "initialMarginUsdFromPortfolio",
             "type": "u128"
           },
           {
-            "name": "mm_usd",
+            "name": "mmUsd",
             "type": "u128"
           },
           {
-            "name": "hold_pool_amount",
+            "name": "holdPoolAmount",
             "type": "u128"
           },
           {
-            "name": "open_fee",
+            "name": "openFee",
             "type": "u128"
           },
           {
-            "name": "open_fee_in_usd",
+            "name": "openFeeInUsd",
             "type": "u128"
           },
           {
-            "name": "realized_borrowing_fee",
+            "name": "realizedBorrowingFee",
             "type": "u128"
           },
           {
-            "name": "realized_borrowing_fee_in_usd",
+            "name": "realizedBorrowingFeeInUsd",
             "type": "u128"
           },
           {
-            "name": "open_borrowing_fee_per_token",
+            "name": "openBorrowingFeePerToken",
             "type": "u128"
           },
           {
-            "name": "realized_funding_fee",
+            "name": "realizedFundingFee",
             "type": "i128"
           },
           {
-            "name": "realized_funding_fee_in_usd",
+            "name": "realizedFundingFeeInUsd",
             "type": "i128"
           },
           {
-            "name": "open_funding_fee_amount_per_size",
+            "name": "openFundingFeeAmountPerSize",
             "type": "i128"
           },
           {
-            "name": "close_fee_in_usd",
+            "name": "closeFeeInUsd",
             "type": "u128"
           },
           {
-            "name": "realized_pnl",
+            "name": "realizedPnl",
             "type": "i128"
           },
           {
-            "name": "user_key",
+            "name": "userKey",
             "type": "pubkey"
           },
           {
-            "name": "user_token_account",
+            "name": "userTokenAccount",
             "type": "pubkey"
           },
           {
-            "name": "margin_mint_key",
+            "name": "marginMintKey",
             "type": "pubkey"
           },
           {
-            "name": "index_mint_oracle",
+            "name": "indexMintOracle",
             "type": "pubkey"
           },
           {
-            "name": "position_key",
+            "name": "positionKey",
             "type": "pubkey"
           },
           {
@@ -7196,7 +7202,7 @@
             }
           },
           {
-            "name": "updated_at",
+            "name": "updatedAt",
             "type": "i64"
           },
           {
@@ -7204,18 +7210,18 @@
             "type": "u32"
           },
           {
-            "name": "is_long",
+            "name": "isLong",
             "type": "bool"
           },
           {
-            "name": "is_portfolio_margin",
+            "name": "isPortfolioMargin",
             "type": "bool"
           },
           {
             "name": "status",
             "type": {
               "defined": {
-                "name": "PositionStatus"
+                "name": "positionStatus"
               }
             }
           },
@@ -7229,7 +7235,7 @@
             }
           },
           {
-            "name": "reserve_padding",
+            "name": "reservePadding",
             "type": {
               "array": [
                 "u8",
@@ -7241,7 +7247,7 @@
       }
     },
     {
-      "name": "UserRewards",
+      "name": "userRewards",
       "repr": {
         "kind": "c"
       },
@@ -7249,42 +7255,42 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "total_claim_rewards_amount",
+            "name": "totalClaimRewardsAmount",
             "type": "u128"
           },
           {
-            "name": "realised_rewards_token_amount",
+            "name": "realisedRewardsTokenAmount",
             "type": "u128"
           },
           {
-            "name": "open_rewards_per_stake_token",
+            "name": "openRewardsPerStakeToken",
             "type": "u128"
           },
           {
-            "name": "token_key",
+            "name": "tokenKey",
             "type": "pubkey"
           }
         ]
       }
     },
     {
-      "name": "UserRewardsUpdateEvent",
+      "name": "userRewardsUpdateEvent",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "user_key",
+            "name": "userKey",
             "type": "pubkey"
           },
           {
-            "name": "token_mint",
+            "name": "tokenMint",
             "type": "pubkey"
           },
           {
-            "name": "user_rewards",
+            "name": "userRewards",
             "type": {
               "defined": {
-                "name": "UserRewards"
+                "name": "userRewards"
               }
             }
           }
@@ -7292,7 +7298,7 @@
       }
     },
     {
-      "name": "UserStake",
+      "name": "userStake",
       "docs": [
         "Represents a user's staking information",
         "",
@@ -7306,7 +7312,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "staked_share",
+            "name": "stakedShare",
             "docs": [
               "User's staking shares",
               "",
@@ -7316,31 +7322,31 @@
             "type": "u128"
           },
           {
-            "name": "user_rewards",
+            "name": "userRewards",
             "docs": [
               "Rewards earned by the user from staking"
             ],
             "type": {
               "defined": {
-                "name": "UserRewards"
+                "name": "userRewards"
               }
             }
           },
           {
-            "name": "pool_key",
+            "name": "poolKey",
             "docs": [
               "The pool in which the user has staked"
             ],
             "type": "pubkey"
           },
           {
-            "name": "user_stake_status",
+            "name": "userStakeStatus",
             "docs": [
               "The status of the user's stake"
             ],
             "type": {
               "defined": {
-                "name": "UserStakeStatus"
+                "name": "userStakeStatus"
               }
             }
           },
@@ -7357,7 +7363,7 @@
             }
           },
           {
-            "name": "reserve_padding",
+            "name": "reservePadding",
             "docs": [
               "Reserved for future use"
             ],
@@ -7372,38 +7378,38 @@
       }
     },
     {
-      "name": "UserStakeStatus",
+      "name": "userStakeStatus",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "INIT"
+            "name": "init"
           },
           {
-            "name": "USING"
+            "name": "using"
           }
         ]
       }
     },
     {
-      "name": "UserStatus",
+      "name": "userStatus",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "NORMAL"
+            "name": "normal"
           },
           {
-            "name": "LIQUIDATION"
+            "name": "liquidation"
           },
           {
-            "name": "DISABLE"
+            "name": "disable"
           }
         ]
       }
     },
     {
-      "name": "UserToken",
+      "name": "userToken",
       "repr": {
         "kind": "c"
       },
@@ -7415,22 +7421,22 @@
             "type": "u128"
           },
           {
-            "name": "used_amount",
+            "name": "usedAmount",
             "type": "u128"
           },
           {
-            "name": "liability_amount",
+            "name": "liabilityAmount",
             "type": "u128"
           },
           {
-            "name": "token_mint_key",
+            "name": "tokenMintKey",
             "type": "pubkey"
           },
           {
-            "name": "user_token_status",
+            "name": "userTokenStatus",
             "type": {
               "defined": {
-                "name": "UserTokenStatus"
+                "name": "userTokenStatus"
               }
             }
           },
@@ -7444,7 +7450,7 @@
             }
           },
           {
-            "name": "reserve_padding",
+            "name": "reservePadding",
             "type": {
               "array": [
                 "u8",
@@ -7456,39 +7462,39 @@
       }
     },
     {
-      "name": "UserTokenBalanceUpdateEvent",
+      "name": "userTokenBalanceUpdateEvent",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "user_key",
+            "name": "userKey",
             "type": "pubkey"
           },
           {
-            "name": "token_mint",
+            "name": "tokenMint",
             "type": "pubkey"
           },
           {
-            "name": "pre_user_token",
+            "name": "preUserToken",
             "type": {
               "defined": {
-                "name": "UserToken"
+                "name": "userToken"
               }
             }
           },
           {
-            "name": "user_token",
+            "name": "userToken",
             "type": {
               "defined": {
-                "name": "UserToken"
+                "name": "userToken"
               }
             }
           },
           {
-            "name": "update_origin",
+            "name": "updateOrigin",
             "type": {
               "defined": {
-                "name": "UserTokenUpdateReason"
+                "name": "userTokenUpdateReason"
               }
             }
           }
@@ -7496,80 +7502,80 @@
       }
     },
     {
-      "name": "UserTokenStatus",
+      "name": "userTokenStatus",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "INIT"
+            "name": "init"
           },
           {
-            "name": "USING"
+            "name": "using"
           }
         ]
       }
     },
     {
-      "name": "UserTokenUpdateReason",
+      "name": "userTokenUpdateReason",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "DEFAULT"
+            "name": "default"
           },
           {
-            "name": "DEPOSIT"
+            "name": "deposit"
           },
           {
-            "name": "WITHDRAW"
+            "name": "withdraw"
           },
           {
-            "name": "SettleFee"
+            "name": "settleFee"
           },
           {
-            "name": "SettlePnl"
+            "name": "settlePnl"
           },
           {
-            "name": "DecreasePosition"
+            "name": "decreasePosition"
           },
           {
-            "name": "IncreasePosition"
+            "name": "increasePosition"
           },
           {
-            "name": "UpdateLeverage"
+            "name": "updateLeverage"
           },
           {
-            "name": "CollectOpenFee"
+            "name": "collectOpenFee"
           },
           {
-            "name": "CollectCloseFee"
+            "name": "collectCloseFee"
           },
           {
-            "name": "TransferToStake"
+            "name": "transferToStake"
           },
           {
-            "name": "TransferFromStake"
+            "name": "transferFromStake"
           },
           {
-            "name": "LiquidateLiability"
+            "name": "liquidateLiability"
           },
           {
-            "name": "Liquidation"
+            "name": "liquidation"
           }
         ]
       }
     },
     {
-      "name": "WithdrawEvent",
+      "name": "withdrawEvent",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "user_key",
+            "name": "userKey",
             "type": "pubkey"
           },
           {
-            "name": "token_mint",
+            "name": "tokenMint",
             "type": "pubkey"
           },
           {
@@ -7580,4 +7586,4 @@
       }
     }
   ]
-}
+};

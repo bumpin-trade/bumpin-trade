@@ -6,7 +6,7 @@ mod pcv2;
 use pc::Price;
 
 #[cfg(feature = "local-net")]
-declare_id!("8wGG3aH78GhfstWq6VxrCq49uWKzsCa7DKQtLhb7uW2U");
+declare_id!("ELu6XkLaZ9Csj1UMWfqGxwxTsReLFCdJamxzLJfKKbyH");
 #[cfg(not(feature = "local-net"))]
 declare_id!("CC1ePebfvPy7QRTimPoVecS2UsBvYv46ynrzWocc92s");
 

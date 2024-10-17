@@ -1,7 +1,4 @@
-use crate::state::state::State;
-use crate::state::User;
 use anchor_lang::prelude::*;
-use anchor_spl::token::Token;
 use instructions::*;
 
 pub mod errors;
@@ -14,7 +11,7 @@ pub mod state;
 pub mod traits;
 pub mod utils;
 
-declare_id!("6EXVeNZ3VmT1oSWCSd5TuUG9fg3f94utE9DtdUhCvSKE");
+declare_id!("qq15xzXDf81cxxHtmwAyviqRzAUA3Ctqs8jqdPv1aCS");
 
 // declare_id!("88ZPYBftFhJLJLXL2hBHkDcXGEW8MbpqhyCtzkCWyUry");
 
@@ -270,34 +267,34 @@ pub mod bumpin_trade {
         handle_rebalance_market_stable_loss(ctx)
     }
 
-    #[track_caller]
-    pub fn pythv2_test<'a, 'b, 'c: 'info, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, PythV2Tester<'info>>,
-    ) -> Result<()> {
-        msg!("pythv2_test");
-        let remaining_accounts = ctx.remaining_accounts;
-        msg!("remaining_account len: {}", remaining_accounts.len());
-        if remaining_accounts.len() == 0 {
-            return Ok(());
-        }
-        let first_account = &remaining_accounts[0];
-        let first_account_mut = first_account.data.try_borrow_mut().unwrap();
-        match PriceUpdateV2::try_deserialize(&mut &**first_account_mut) {
-            Ok(price_update_v2) => {
-                msg!("price_update_v2 load success");
-                msg!("PriceUpdateV2 len: {}", std::mem::size_of::<PriceUpdateV2>());
-                msg!("PriceUpdateV2 feed_id: {:?}", price_update_v2.price_message.feed_id);
-                msg!("PriceUpdateV2 price: {:?}", price_update_v2.price_message.price);
-            },
-            Err(e) => {
-                msg!("price_update_v2 deserialize error: {:?}", e);
-            },
-        }
-        Ok(())
-    }
+    // #[track_caller]
+    // pub fn pythv2_test<'a, 'b, 'c: 'info, 'info>(
+    //     ctx: Context<'a, 'b, 'c, 'info, PythV2Tester<'info>>,
+    // ) -> Result<()> {
+    //     msg!("pythv2_test");
+    //     let remaining_accounts = ctx.remaining_accounts;
+    //     msg!("remaining_account len: {}", remaining_accounts.len());
+    //     if remaining_accounts.len() == 0 {
+    //         return Ok(());
+    //     }
+    //     let first_account = &remaining_accounts[0];
+    //     let first_account_mut = first_account.data.try_borrow_mut().unwrap();
+    //     match PriceUpdateV2::try_deserialize(&mut &**first_account_mut) {
+    //         Ok(price_update_v2) => {
+    //             msg!("price_update_v2 load success");
+    //             msg!("PriceUpdateV2 len: {}", std::mem::size_of::<PriceUpdateV2>());
+    //             msg!("PriceUpdateV2 feed_id: {:?}", price_update_v2.price_message.feed_id);
+    //             msg!("PriceUpdateV2 price: {:?}", price_update_v2.price_message.price);
+    //         },
+    //         Err(e) => {
+    //             msg!("price_update_v2 deserialize error: {:?}", e);
+    //         },
+    //     }
+    //     Ok(())
+    // }
 }
 
-#[derive(Accounts)]
-pub struct PythV2Tester<'info> {
-    pub authority: Signer<'info>,
-}
+// #[derive(Accounts)]
+// pub struct PythV2Tester<'info> {
+//     pub authority: Signer<'info>,
+// }

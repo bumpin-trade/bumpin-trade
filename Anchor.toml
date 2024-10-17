@@ -5,7 +5,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-bumpin_trade = "6EXVeNZ3VmT1oSWCSd5TuUG9fg3f94utE9DtdUhCvSKE"
+bumpin_trade = "qq15xzXDf81cxxHtmwAyviqRzAUA3Ctqs8jqdPv1aCS"
 
 [registry]
 url = "https://api.apr.dev"

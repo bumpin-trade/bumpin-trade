@@ -137,7 +137,7 @@ export class BumpinAdmin {
             );
         }
 
-        ///////// init pools
+        /////// init pools
         for (let poolParam of poolParams) {
             await this.program.methods
                 .initializePool(poolParam.param)
@@ -170,9 +170,7 @@ export class BumpinAdmin {
 
         //////// init markets
         for (let marketParam of marketParams) {
-            let oracleKey = new PublicKey(
-                tradeTokenOracleMap.get(marketParam.indexMint.toString())!,
-            );
+            let oracleKey = marketParam.indexFeedId;
             await this.program.methods
                 .initializeMarket(marketParam.params)
                 .accounts({
@@ -326,11 +324,14 @@ export class BumpinAdmin {
         const tradeTokenMintPublicKey = new PublicKey(tradeTokenMint);
         let oraclePublicKey: PublicKey;
         if (trueOraclePublicKey) {
+            console.log('Initial Trade Token by trueOraclePublicKey', trueOraclePublicKey);
             oraclePublicKey = new PublicKey(trueOraclePublicKey);
         } else {
+            console.log('Initial Trade Token by generated Oracle');
             oraclePublicKey = (
                 await this.DEV_TEST_ONLY__INIT_ORACLE(70000, 1.0, exponent)
             ).publicKey;
+            console.log('Oracle initialized: ', oraclePublicKey.toString());
         }
 
         const s = BumpinUtils.encodeString(tradeTokenName);
@@ -402,25 +403,25 @@ export class BumpinAdmin {
     }
 
 
-    public async tryPythV2(
-        accounts: PublicKey[],
-    ) {
-        let remainingAccounts = [];
-        for (let account of accounts) {
-            remainingAccounts.push({
-                pubkey: account,
-                isWritable: false,
-                isSigner: false,
-            });
-        }
-
-        await this.program.methods
-            .pythv2Test()
-            .accounts({})
-            .remainingAccounts(remainingAccounts)
-            .signers([])
-            .rpc(BumpinUtils.getDefaultConfirmOptions());
-    }
+    // public async tryPythV2(
+    //     accounts: PublicKey[],
+    // ) {
+    //     let remainingAccounts = [];
+    //     for (let account of accounts) {
+    //         remainingAccounts.push({
+    //             pubkey: account,
+    //             isWritable: false,
+    //             isSigner: false,
+    //         });
+    //     }
+    //
+    //     await this.program.methods
+    //         .pythv2Test()
+    //         .accounts({})
+    //         .remainingAccounts(remainingAccounts)
+    //         .signers([])
+    //         .rpc(BumpinUtils.getDefaultConfirmOptions());
+    // }
 
     async sendAndConfirmTransaction(
         instructions: Array<TransactionInstruction>,
@@ -468,7 +469,7 @@ export type WrappedInitializeTradeTokenParams = {
 };
 
 export type WrappedInitializeMarketParams = {
-    indexMint: PublicKey;
+    indexFeedId: PublicKey;
     params: InitializeMarketParams;
 };
 
