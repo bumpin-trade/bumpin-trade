@@ -234,7 +234,11 @@ export class BumpinAdmin {
             .rpc(BumpinUtils.getDefaultConfirmOptions());
     }
 
-    public async DEV_TEST_ONLY__INIT_PYTHV2(exponent: number, feedId: number[], oracleKeypair: anchor.web3.Keypair) {
+    public async DEV_TEST_ONLY__INIT_PYTHV2(
+        exponent: number,
+        feedId: number[],
+        oracleKeypair: anchor.web3.Keypair,
+    ) {
         // let oracleKeypair = anchor.web3.Keypair.generate();
         await BumpinUtils.manualCreateAccount(
             this.provider,
@@ -323,13 +327,14 @@ export class BumpinAdmin {
     ) {
         if (oracleKeypair) {
             console.log('Initial Trade Token by generated Oracle');
-            await this.DEV_TEST_ONLY__INIT_PYTHV2(exponent, Array.from(feed_id.toBytes()), oracleKeypair);
+            await this.DEV_TEST_ONLY__INIT_PYTHV2(
+                exponent,
+                Array.from(feed_id.toBytes()),
+                oracleKeypair,
+            );
             console.log('Oracle initialized, FeedId: ', feed_id.toString());
         } else {
-            console.log(
-                'Initial Trade Token by FeedId:',
-                feed_id,
-            );
+            console.log('Initial Trade Token by FeedId:', feed_id);
         }
     }
 
@@ -344,9 +349,14 @@ export class BumpinAdmin {
         let feedId: PublicKey = new PublicKey(feed_id_pk);
 
         const s = BumpinUtils.encodeString(tradeTokenName);
-        let [pda, nonce] = BumpinUtils.getBumpinStatePda(this.program);
+        let [pda, _] = BumpinUtils.getBumpinStatePda(this.program);
         await this.program.methods
-            .initializeTradeToken(discount, s, Array.from(feedId.toBytes()), liquidationFactor)
+            .initializeTradeToken(
+                discount,
+                s,
+                Array.from(feedId.toBytes()),
+                liquidationFactor,
+            )
             .accounts({
                 tradeTokenMint: tradeTokenMintPublicKey,
                 bumpSigner: pda,
@@ -467,7 +477,7 @@ export type WrappedInitializePoolParams = {
 export type WrappedInitializeOracleParams = {
     feedId: PublicKey;
     exponent: number;
-    oracleKeypair: anchor.web3.Keypair | undefined,
+    oracleKeypair: anchor.web3.Keypair | undefined;
 };
 
 export type WrappedInitializeTradeTokenParams = {

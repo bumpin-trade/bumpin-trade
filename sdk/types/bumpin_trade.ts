@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/bumpin_trade.json`.
  */
 export type BumpinTrade = {
-  "address": "qq15xzXDf81cxxHtmwAyviqRzAUA3Ctqs8jqdPv1aCS",
+  "address": "AQkVcL5spcyrqiKNJykGWGD78ry8Erkuub2t2ogUVWca",
   "metadata": {
     "name": "bumpinTrade",
     "version": "0.1.0",

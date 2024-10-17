@@ -5,16 +5,17 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-bumpin_trade = "qq15xzXDf81cxxHtmwAyviqRzAUA3Ctqs8jqdPv1aCS"
+bumpin_trade = "B1iAhByrb5SaGooKa4DdNGdCLCsVweCfWcT3MvLxQJXt"
 
 [programs.localnet]
-bumpin_trade = "qq15xzXDf81cxxHtmwAyviqRzAUA3Ctqs8jqdPv1aCS"
+bumpin_trade = "B1iAhByrb5SaGooKa4DdNGdCLCsVweCfWcT3MvLxQJXt"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "Devnet"
+#cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

@@ -102,6 +102,35 @@ export type Pyth = {
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "setPriceV2",
+      "discriminator": [
+        25,
+        10,
+        111,
+        255,
+        100,
+        238,
+        204,
+        145
+      ],
+      "accounts": [
+        {
+          "name": "priceUpdateV2",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "price",
+          "type": "i64"
+        },
+        {
+          "name": "conf",
+          "type": "u64"
+        }
+      ]
     }
   ],
   "types": [
