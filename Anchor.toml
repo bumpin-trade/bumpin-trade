@@ -5,11 +5,11 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-bumpin_trade = "CJybzCuwnwjR8QNsv5jEjxS6H8C1kDYrsXLio5bmx122"
+bumpin_trade = "D21hrEpYeJVghAs73oRQxQrRdgXsq73upeNsm21TJ1cG"
 
 [programs.localnet]
-bumpin_trade = "CJybzCuwnwjR8QNsv5jEjxS6H8C1kDYrsXLio5bmx122"
-pyth = "GA1yvLBfF9Tj5q89CJg7ixNHDrfEMmkXTbM7CgN2bakF"
+bumpin_trade = "D21hrEpYeJVghAs73oRQxQrRdgXsq73upeNsm21TJ1cG"
+pyth = "ECKhW7wvKQGGhzGFS7LqGv4z3DRoAD8HJywd25XjBoxP"
 
 [registry]
 url = "https://api.apr.dev"

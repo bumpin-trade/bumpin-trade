@@ -5,7 +5,7 @@ mod pcv2;
 use crate::pcv2::PriceUpdateV2;
 use pc::Price;
 
-declare_id!("GA1yvLBfF9Tj5q89CJg7ixNHDrfEMmkXTbM7CgN2bakF");
+declare_id!("ECKhW7wvKQGGhzGFS7LqGv4z3DRoAD8HJywd25XjBoxP");
 
 #[program]
 pub mod pyth {
