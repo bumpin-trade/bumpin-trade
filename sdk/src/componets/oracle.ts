@@ -47,10 +47,6 @@ export class OracleComponent extends Component {
     public async subscribe() {
         const subscriptionPromises = this.essentialAccounts.flatMap(
             (account) => {
-                console.log(
-                    'Subscribing to account, len: ',
-                    account.state.addresses.length,
-                );
                 return account.state.addresses.map(async (key) => {
                     return await this.subscribe0(key);
                 });

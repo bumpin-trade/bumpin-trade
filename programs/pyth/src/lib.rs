@@ -5,10 +5,7 @@ mod pcv2;
 use crate::pcv2::PriceUpdateV2;
 use pc::Price;
 
-#[cfg(feature = "local-net")]
-declare_id!("6GHM4TvoUsUxJp5mHC44TBmx8J5gTSQUHEtJgBvHWWXP");
-#[cfg(not(feature = "local-net"))]
-declare_id!("CC1ePebfvPy7QRTimPoVecS2UsBvYv46ynrzWocc92s");
+declare_id!("GA1yvLBfF9Tj5q89CJg7ixNHDrfEMmkXTbM7CgN2bakF");
 
 #[program]
 pub mod pyth {
