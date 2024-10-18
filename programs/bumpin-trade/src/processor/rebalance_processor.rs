@@ -42,7 +42,7 @@ pub fn rebalance_pool_unsettle<'a>(
             state.bump_signer_nonce,
             fee_reward_unsettle,
         )
-            .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
+        .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
         pool.fee_reward.sub_un_settle_amount(fee_reward_unsettle)?;
         pool.fee_reward.add_fee_amount(fee_reward_unsettle)?;
     }
@@ -61,7 +61,7 @@ pub fn rebalance_pool_unsettle<'a>(
         state.bump_signer_nonce,
         transfer_amount,
     )
-        .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
+    .map_err(|_e| BumpErrorCode::InvalidTransfer)?;
     pool.sub_unsettle(transfer_amount)?;
     pool.add_amount(transfer_amount)?;
     if pool.stable {
@@ -88,7 +88,9 @@ pub fn rebalance_pool_unsettle<'a>(
             if !market.share_short || market.stable_unsettle_loss == 0u128 {
                 continue;
             }
-            if remaining_amount == 0u128 { break; }
+            if remaining_amount == 0u128 {
+                break;
+            }
             remaining_amount = market.sub_unsettle_stable_loss(transfer_amount)?;
         }
     }

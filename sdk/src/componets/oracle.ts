@@ -63,7 +63,6 @@ export class OracleComponent extends Component {
             if (p) {
                 if (p) {
                     this.oracles.set(p[1].toString(), p[0]);
-                    console.log('Subscribed to oracle: ', p[1].toString());
                 }
             }
         }
@@ -81,6 +80,12 @@ export class OracleComponent extends Component {
             const priceUpdateV2: PriceUpdateV2 = await client.getPriceData();
             if (priceUpdateV2) {
                 await client.initialize();
+                console.log(
+                    'Subscribed to feedId: ',
+                    new PublicKey(priceUpdateV2.priceMessage.feedId).toString(),
+                    ' current price: ',
+                    priceUpdateV2.priceMessage.price,
+                );
                 return [
                     client,
                     new PublicKey(priceUpdateV2.priceMessage.feedId),

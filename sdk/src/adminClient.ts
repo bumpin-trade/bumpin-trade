@@ -118,7 +118,7 @@ export class BumpinAdmin {
 
         console.log('Initializing Oracle');
         for (let p of oracleParams) {
-            await this.initOracle(p.feedId, p.exponent, p.oracleKeypair);
+            await this.initOracle(p.feedId, p.exponent, p.id);
         }
 
         let tradeTokenOracleMap = new Map<string, string>();
@@ -237,39 +237,23 @@ export class BumpinAdmin {
     public async DEV_TEST_ONLY__INIT_PYTHV2(
         exponent: number,
         feedId: PublicKey,
-        oracleKeypair: anchor.web3.Keypair,
+        id: number,
     ) {
-        // let oracleKeypair = anchor.web3.Keypair.generate();
-        await BumpinUtils.manualCreateAccount(
-            this.provider,
-            this.wallet,
-            oracleKeypair,
-            136,
-            await this.TEST_PYTH.provider.connection.getMinimumBalanceForRentExemption(
-                136,
-            ),
-            this.TEST_PYTH.programId,
-        );
-
-        console.log(
-            'Price Update V2 Account Address: ',
-            oracleKeypair.publicKey.toString(),
-            ' FeedId: ',
-            feedId.toString(),
-        );
+        console.log(' FeedId: ', feedId.toString(), 'Id: ', id.toString());
         const params = {
             feedId: feedId,
             price: new BN(0),
             exponent: exponent,
+            id: id,
         };
         await this.TEST_PYTH.methods
             .initializeV2(params)
             .accounts({
-                priceUpdateV2: oracleKeypair.publicKey,
+                admin: this.wallet.publicKey,
             })
             .signers([])
             .rpc({
-                skipPreflight: true,
+                skipPreflight: false,
                 commitment: 'confirmed',
                 preflightCommitment: 'confirmed',
                 maxRetries: 1,
@@ -325,15 +309,11 @@ export class BumpinAdmin {
     public async initOracle(
         feed_id: PublicKey,
         exponent: number,
-        oracleKeypair: anchor.web3.Keypair | undefined,
+        id: number | undefined,
     ) {
-        if (oracleKeypair) {
+        if (id) {
             console.log('Initial Trade Token by generated Oracle');
-            await this.DEV_TEST_ONLY__INIT_PYTHV2(
-                exponent,
-                feed_id,
-                oracleKeypair,
-            );
+            await this.DEV_TEST_ONLY__INIT_PYTHV2(exponent, feed_id, id!);
         } else {
             console.log('Initial Trade Token by FeedId:', feed_id);
         }
@@ -478,7 +458,7 @@ export type WrappedInitializePoolParams = {
 export type WrappedInitializeOracleParams = {
     feedId: PublicKey;
     exponent: number;
-    oracleKeypair: anchor.web3.Keypair | undefined;
+    id: number | undefined;
 };
 
 export type WrappedInitializeTradeTokenParams = {

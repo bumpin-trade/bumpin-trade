@@ -1,12 +1,12 @@
 use anchor_lang::prelude::borsh::BorshSchema;
 use anchor_lang::prelude::Pubkey;
 use anchor_lang::prelude::*;
-use bytemuck::{cast_slice_mut, from_bytes_mut, try_cast_slice_mut, Pod, Zeroable};
-use std::cell::RefMut;
+// use bytemuck::{cast_slice_mut, from_bytes_mut, try_cast_slice_mut};
+// use std::cell::RefMut;
 
 pub type FeedId = [u8; 32];
 #[repr(C)]
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, BorshSchema, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, BorshSchema, Debug, Default)]
 pub struct PriceFeedMessage {
     pub feed_id: FeedId,
     pub price: i64,
@@ -38,7 +38,8 @@ pub enum VerificationLevel {
 }
 
 #[account]
-#[derive(BorshSchema, Copy)]
+#[derive(Default)]
+#[repr(C)]
 pub struct PriceUpdateV2 {
     pub write_authority: Pubkey,
     pub verification_level: VerificationLevel,
@@ -46,21 +47,27 @@ pub struct PriceUpdateV2 {
     pub posted_slot: u64,
 }
 
-impl PriceUpdateV2 {
-    #[inline]
-    pub fn load<'a>(
-        price_feed: &'a AccountInfo,
-    ) -> std::result::Result<RefMut<'a, PriceUpdateV2>, ProgramError> {
-        let account_data: RefMut<'a, [u8]> =
-            RefMut::map(price_feed.try_borrow_mut_data().unwrap(), |data| *data);
-
-        let state: RefMut<'a, Self> = RefMut::map(account_data, |data| {
-            from_bytes_mut(cast_slice_mut::<u8, u8>(try_cast_slice_mut(data).unwrap()))
-        });
-        Ok(state)
+impl Default for VerificationLevel {
+    fn default() -> Self {
+        VerificationLevel::Full
     }
 }
 
-unsafe impl Zeroable for PriceUpdateV2 {}
+// impl PriceUpdateV2 {
+//     #[inline]
+//     pub fn load<'a>(
+//         price_feed: &'a AccountInfo,
+//     ) -> std::result::Result<RefMut<'a, PriceUpdateV2>, ProgramError> {
+//         let account_data: RefMut<'a, [u8]> =
+//             RefMut::map(price_feed.try_borrow_mut_data().unwrap(), |data| *data);
+//
+//         let state: RefMut<'a, Self> = RefMut::map(account_data, |data| {
+//             from_bytes_mut(cast_slice_mut::<u8, u8>(try_cast_slice_mut(data).unwrap()))
+//         });
+//         Ok(state)
+//     }
+// }
 
-unsafe impl Pod for PriceUpdateV2 {}
+// unsafe impl Zeroable for PriceUpdateV2 {}
+
+// unsafe impl Pod for PriceUpdateV2 {}

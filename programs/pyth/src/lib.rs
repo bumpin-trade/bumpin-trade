@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 pub mod pc;
 mod pcv2;
 
-use crate::pcv2::{PriceUpdateV2};
+use crate::pcv2::PriceUpdateV2;
 use pc::Price;
 
 #[cfg(feature = "local-net")]
@@ -72,26 +72,22 @@ pub mod pyth {
     }
 
     pub fn initialize_v2(ctx: Context<InitializeV2>, params: InitializeV2Params) -> Result<()> {
-        let oracle = &ctx.accounts.price_update_v2;
-        let mut price_update_v2 =PriceUpdateV2::load(oracle).unwrap();
+        let price_update_v2 = &mut ctx.accounts.price_update_v2;
         price_update_v2.price_message.feed_id = params.feed_id.to_bytes();
         price_update_v2.price_message.price = params.price;
         price_update_v2.price_message.exponent = params.exponent;
-        msg!("initialize_v2, params.feed_id:{}", params.feed_id);
-        msg!("initialize_v2, params.feed_id.to_bytes(:{:?}", params.feed_id.to_bytes());
-        msg!("initialize_v2, price_update_v2.price_message.feed_id:{:?}", price_update_v2.price_message.feed_id);
+        price_update_v2.verification_level = pcv2::VerificationLevel::Full;
+        msg!("initialize_v2, id: {}, params.feed_id: {}", params.id, params.feed_id);
         msg!("PriceUpdateV2 initialized");
         Ok(())
     }
 
     pub fn set_price_v2(ctx: Context<SetPriceV2>, price: i64, conf: u64) -> Result<()> {
-        let oracle = &ctx.accounts.price_update_v2;
-        let mut price_update_v2 = PriceUpdateV2::load(oracle).unwrap();
+        let price_update_v2 = &mut ctx.accounts.price_update_v2;
         price_update_v2.price_message.price = price;
         price_update_v2.price_message.conf = conf;
         Ok(())
     }
-
 }
 #[derive(Accounts)]
 pub struct SetPrice<'info> {
@@ -108,17 +104,37 @@ pub struct Initialize<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(id: u64)]
 pub struct SetPriceV2<'info> {
-    /// CHECK: this program is just for testing
+    #[account(
+        mut,
+        seeds = [b"pythv2", id.to_le_bytes().as_ref()],
+        bump,
+    )]
+    pub price_update_v2: Account<'info, PriceUpdateV2>,
+
     #[account(mut)]
-    pub price_update_v2: AccountInfo<'info>,
+    pub admin: Signer<'info>,
+    pub rent: Sysvar<'info, Rent>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
+#[instruction(params: InitializeV2Params)]
 pub struct InitializeV2<'info> {
-    /// CHECK: this program is just for testing
+    #[account(
+        init,
+        seeds = [b"pythv2", params.id.to_le_bytes().as_ref()],
+        space =  std::mem::size_of::<PriceUpdateV2>() + 8,
+        bump,
+        payer = admin
+    )]
+    pub price_update_v2: Account<'info, PriceUpdateV2>,
+
     #[account(mut)]
-    pub price_update_v2: AccountInfo<'info>,
+    pub admin: Signer<'info>,
+    pub rent: Sysvar<'info, Rent>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Debug, Clone, Copy)]
@@ -126,4 +142,5 @@ pub struct InitializeV2Params {
     pub feed_id: Pubkey,
     pub price: i64,
     pub exponent: i32,
+    pub id: u16,
 }

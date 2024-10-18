@@ -58,7 +58,7 @@ impl Market {
         if self.stable_unsettle_loss > amount {
             let gap = calculator::sub_u128(amount, self.stable_unsettle_loss)?;
             self.stable_unsettle_loss = 0u128;
-            return Ok(gap)
+            return Ok(gap);
         }
         self.stable_unsettle_loss = calculator::sub_u128(self.stable_unsettle_loss, amount)?;
         Ok(0u128)

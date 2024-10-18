@@ -58,7 +58,6 @@ function deserializePriceUpdateV2(buffer: Buffer): PriceUpdateV2 {
 
     const writeAuthority = readPublicKey();
     const verificationLevel = readVerificationLevel();
-    offset -= 1;
     const feedId = readUint8Array(32);
     const price = readBigInt64();
     const conf = readBigInt64();
@@ -107,7 +106,7 @@ async function fetchPriceUpdateV2ByAccount(
     }
 
     const buffer = accountInfo.data;
-    return deserializePriceUpdateV2(buffer);
+    return deserializePriceUpdateV2(buffer.slice(8));
 }
 
 export { fetchPriceUpdateV2ByAccount };

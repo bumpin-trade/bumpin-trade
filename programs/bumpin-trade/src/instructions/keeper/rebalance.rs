@@ -110,7 +110,6 @@ pub struct RebalanceMarketStableLoss<'info> {
     )]
     pub pool: AccountLoader<'info, Pool>,
 
-
     #[account(
         mut,
         seeds = [b"pool_vault".as_ref(), _params.pool_index.to_le_bytes().as_ref()],
