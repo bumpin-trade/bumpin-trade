@@ -3,17 +3,17 @@ import {
     ConfirmOptions,
     PublicKey,
 } from '@solana/web3.js';
-import { BulkAccountLoader } from '../account/bulkAccountLoader';
-import { Program, Wallet } from '@coral-xyz/anchor';
-import { BumpinTrade } from '../types/bumpin_trade';
-import { Component } from './componet';
-import { PollingStateAccountSubscriber } from '../account/pollingStateAccountSubscriber';
-import { BumpinClientConfig } from '../bumpinClientConfig';
-import { StashedPythV2Client } from '../oracles/stashedPythV2Client';
-import { PriceUpdateV2 } from '../oracles/pythv2_def';
-import { BumpinSubscriptionFailed } from '../errors';
-import { PriceInfo } from '../oracles/types';
-import { BumpinUtils } from '../utils/utils';
+import {BulkAccountLoader} from '../account/bulkAccountLoader';
+import {Program, Wallet} from '@coral-xyz/anchor';
+import {BumpinTrade} from '../types/bumpin_trade';
+import {Component} from './componet';
+import {PollingStateAccountSubscriber} from '../account/pollingStateAccountSubscriber';
+import {BumpinClientConfig} from '../bumpinClientConfig';
+import {StashedPythV2Client} from '../oracles/stashedPythV2Client';
+import {fetchPriceUpdateV2ByAccount, fetchPriceUpdateV2ByMultiAccounts, PriceUpdateV2} from '../oracles/pythv2_def';
+import {BumpinSubscriptionFailed} from '../errors';
+import {PriceInfo} from '../oracles/types';
+import {BumpinUtils} from '../utils/utils';
 
 export class OracleComponent extends Component {
     bulkAccountLoader: BulkAccountLoader;
@@ -55,6 +55,7 @@ export class OracleComponent extends Component {
 
         let promises: Awaited<[StashedPythV2Client, PublicKey] | undefined>[] =
             await Promise.all(subscriptionPromises);
+
         for (const p of promises) {
             if (p) {
                 if (p) {
@@ -62,6 +63,25 @@ export class OracleComponent extends Component {
                 }
             }
         }
+
+        setInterval(async () => {
+            try {
+                let oracleAccounts = Array.from(this.oracles.values()).map(key => key.getPriceDataAccountPublicKey());
+                let priceAccounts = await fetchPriceUpdateV2ByMultiAccounts(this.program.provider.connection, oracleAccounts);
+                if (priceAccounts != null) {
+                    for (let priceUpdateV2 of priceAccounts) {
+                        if (priceUpdateV2 == null)
+                            continue;
+                        let stashedPythV2Client = this.oracles.get(new PublicKey(priceUpdateV2.priceMessage.feedId).toString());
+                        if (stashedPythV2Client != null) {
+                            stashedPythV2Client.enqueuePrice(priceUpdateV2);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Error in stashedPythV2Client: ', e);
+            }
+        }, 1000);
     }
 
     private async subscribe0(
@@ -92,7 +112,8 @@ export class OracleComponent extends Component {
         }
     }
 
-    public async unsubscribe() {}
+    public async unsubscribe() {
+    }
 
     public getPrice(feedId: PublicKey): PriceInfo {
         let client = this.oracles.get(feedId.toString());
@@ -101,10 +122,10 @@ export class OracleComponent extends Component {
                 `feedId: ${feedId.toString()} does not exist`,
             );
         }
-
-        return BumpinUtils.convertPriceUpdateV2ToPriceInfo(
+        let priceInfo = BumpinUtils.convertPriceUpdateV2ToPriceInfo(
             client.getLastOraclePriceData(1)[0],
         );
+        return priceInfo;
     }
 
     public getPricesWithCount(

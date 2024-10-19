@@ -429,7 +429,7 @@ export class BumpinClient {
         const state = await this.getState();
         let liquidationPrice;
         if (position.isPortfolioMargin) {
-            const userNetValue = await this.getUserAccountNetValue(true);
+            const userNetValue = await this.getUserAccountNetValue(false);
             const totalSize = userPositions
                 .filter((position) => position.isPortfolioMargin)
                 .map((position) => {
@@ -474,7 +474,7 @@ export class BumpinClient {
         return BigNumber(await liquidationPrice());
     }
 
-    public async getUserSummary(sync: boolean = true): Promise<UserSummary> {
+    public async getUserSummary(sync: boolean = false): Promise<UserSummary> {
         this.checkInitialization(true);
         const userSummary = {
             accountNetValue: new BigNumber(0),
@@ -1062,9 +1062,9 @@ export class BumpinClient {
         positionKey: PublicKey,
         settleValue: BigNumber,
     ): Promise<PositionSettle> {
-        let user = await this.getUser(true);
-        let markets = await this.getMarkets(true);
-        let pools = await this.getPools(true);
+        let user = await this.getUser(false);
+        let markets = await this.getMarkets(false);
+        let pools = await this.getPools(false);
 
         let positionSettle = {
             settleMargin: new BigNumber(0),

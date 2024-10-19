@@ -1,10 +1,10 @@
-import { parsePriceData } from '@pythnetwork/client';
-import { Connection, PublicKey } from '@solana/web3.js';
-import { OraclePriceData } from './types';
-import { BN } from '@coral-xyz/anchor';
-import { TEN } from '../constants/numericConstants';
-import { BumpinInvalidParameter } from '../errors';
-import { fetchPriceUpdateV2ByAccount, PriceUpdateV2 } from './pythv2_def';
+import {parsePriceData} from '@pythnetwork/client';
+import {Connection, PublicKey} from '@solana/web3.js';
+import {OraclePriceData} from './types';
+import {BN} from '@coral-xyz/anchor';
+import {TEN} from '../constants/numericConstants';
+import {BumpinInvalidParameter} from '../errors';
+import {fetchPriceUpdateV2ByAccount, PriceUpdateV2} from './pythv2_def';
 import BigNumber from 'bignumber.js';
 
 export const PRICE_PRECISION = new BN(10).pow(new BN(8));
@@ -21,7 +21,7 @@ export class StashedPythV2Client {
         account: PublicKey,
         stashLength: number,
         connection: Connection,
-        interval: number = 1000,
+        interval: number = 5000,
     ) {
         this.account = account;
         this.stashLength = stashLength;
@@ -48,21 +48,21 @@ export class StashedPythV2Client {
     }
 
     public async initialize(): Promise<void> {
-        setInterval(async () => {
-            try {
-                const priceUpdateV2: PriceUpdateV2 | undefined =
-                    await fetchPriceUpdateV2ByAccount(
-                        this.connection,
-                        this.account,
-                    );
-                if (!priceUpdateV2) {
-                    return;
-                }
-                this.queue.enqueue(priceUpdateV2!);
-            } catch (e) {
-                console.error('Error in stashedPythV2Client: ', e);
+        // setInterval(async () => {
+        try {
+            const priceUpdateV2: PriceUpdateV2 | undefined =
+                await fetchPriceUpdateV2ByAccount(
+                    this.connection,
+                    this.account,
+                );
+            if (!priceUpdateV2) {
+                return;
             }
-        }, this.interval);
+            this.queue.enqueue(priceUpdateV2!);
+        } catch (e) {
+            console.error('Error in stashedPythV2Client: ', e);
+        }
+        //   }, this.interval);
     }
 
     public getLastOraclePriceData(count: number): PriceUpdateV2[] {
@@ -71,6 +71,10 @@ export class StashedPythV2Client {
             throw new BumpinInvalidParameter('Price data not found');
         }
         return last;
+    }
+
+    public enqueuePrice(priceUpdateV2: PriceUpdateV2) {
+        this.queue.enqueue(priceUpdateV2);
     }
 
     public getLatestOraclePriceData(): PriceUpdateV2 {

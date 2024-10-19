@@ -1,5 +1,6 @@
-import { Connection, PublicKey } from '@solana/web3.js';
-import { Buffer } from 'buffer';
+import {AccountInfo, Connection, PublicKey} from '@solana/web3.js';
+import {Buffer} from 'buffer';
+
 export const PYTH_ID = 'rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ';
 // export const PYTH_ID = '6GHM4TvoUsUxJp5mHC44TBmx8J5gTSQUHEtJgBvHWWXP';
 export type VerificationLevel =
@@ -51,9 +52,9 @@ function deserializePriceUpdateV2(buffer: Buffer): PriceUpdateV2 {
         if (kind === 0) {
             const numSignatures = buffer.readUInt8(offset);
             offset += 1;
-            return { kind: 'Partial', numSignatures };
+            return {kind: 'Partial', numSignatures};
         }
-        return { kind: 'Full' };
+        return {kind: 'Full'};
     };
 
     const writeAuthority = readPublicKey();
@@ -109,4 +110,31 @@ async function fetchPriceUpdateV2ByAccount(
     return deserializePriceUpdateV2(buffer.slice(8));
 }
 
-export { fetchPriceUpdateV2ByAccount };
+async function fetchPriceUpdateV2ByMultiAccounts(
+    connection: Connection,
+    publicKeys: PublicKey[]
+): Promise<(PriceUpdateV2 | undefined)[]> {
+    const accountInfos = await connection.getMultipleAccountsInfo(publicKeys);
+    if (accountInfos === null) {
+        throw new Error('Accounts not found');
+    }
+
+    const priceUpdates: (PriceUpdateV2 | undefined)[] = [];
+
+    for (const accountInfo of accountInfos) {
+        if (accountInfo === null) {
+            throw new Error('Account not found');
+        }
+        if (!accountInfo.owner.equals(new PublicKey(PYTH_ID))) {
+            throw new Error('Invalid owner');
+        }
+
+        const buffer = accountInfo.data;
+        const priceUpdate = deserializePriceUpdateV2(buffer.slice(8));
+        priceUpdates.push(priceUpdate);
+    }
+
+    return priceUpdates;
+}
+
+export {fetchPriceUpdateV2ByAccount, fetchPriceUpdateV2ByMultiAccounts};
