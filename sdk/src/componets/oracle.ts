@@ -63,6 +63,9 @@ export class OracleComponent extends Component {
                 }
             }
         }
+        this.oracles.forEach((key,value) =>{
+            console.log("======oracle ", value)
+        })
 
         setInterval(async () => {
             try {

@@ -259,7 +259,7 @@ export class BumpinAdmin {
                 maxRetries: 1,
                 minContextSlot: undefined,
             });
-        // console.log('Price Update V2 Account Initialized');
+        console.log('Price Update V2 Account Initialized');
     }
 
     public async DEV_TEST_ONLY__INIT_ORACLE(

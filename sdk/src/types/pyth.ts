@@ -150,39 +150,7 @@ export type Pyth = {
       "accounts": [
         {
           "name": "priceUpdateV2",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  112,
-                  121,
-                  116,
-                  104,
-                  118,
-                  50
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "id"
-              }
-            ]
-          }
-        },
-        {
-          "name": "admin",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "rent",
-          "address": "SysvarRent111111111111111111111111111111111"
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
+          "writable": true
         }
       ],
       "args": [

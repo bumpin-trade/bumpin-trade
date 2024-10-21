@@ -101,19 +101,11 @@ pub struct Initialize<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(id: u64)]
 pub struct SetPriceV2<'info> {
     #[account(
         mut,
-        seeds = [b"pythv2", id.to_le_bytes().as_ref()],
-        bump,
     )]
     pub price_update_v2: Account<'info, PriceUpdateV2>,
-
-    #[account(mut)]
-    pub admin: Signer<'info>,
-    pub rent: Sysvar<'info, Rent>,
-    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]

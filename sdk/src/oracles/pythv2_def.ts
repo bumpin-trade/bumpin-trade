@@ -1,8 +1,8 @@
 import {AccountInfo, Connection, PublicKey} from '@solana/web3.js';
 import {Buffer} from 'buffer';
 
-export const PYTH_ID = 'rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ';
-// export const PYTH_ID = '6GHM4TvoUsUxJp5mHC44TBmx8J5gTSQUHEtJgBvHWWXP';
+// export const PYTH_ID = 'rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ';
+export const PYTH_ID = '6GHM4TvoUsUxJp5mHC44TBmx8J5gTSQUHEtJgBvHWWXP';
 export type VerificationLevel =
     | { kind: 'Partial'; numSignatures: number }
     | { kind: 'Full' };
@@ -114,6 +114,7 @@ async function fetchPriceUpdateV2ByMultiAccounts(
     connection: Connection,
     publicKeys: PublicKey[]
 ): Promise<(PriceUpdateV2 | undefined)[]> {
+    console.log("fetchPriceUpdateV2ByMultiAccounts:", publicKeys.map(key=>key.toString()).toString())
     const accountInfos = await connection.getMultipleAccountsInfo(publicKeys);
     if (accountInfos === null) {
         throw new Error('Accounts not found');
