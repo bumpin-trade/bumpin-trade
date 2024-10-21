@@ -63,9 +63,7 @@ export class OracleComponent extends Component {
                 }
             }
         }
-        this.oracles.forEach((key,value) =>{
-            console.log("======oracle ", value)
-        })
+
 
         setInterval(async () => {
             try {
@@ -111,6 +109,7 @@ export class OracleComponent extends Component {
                 ];
             }
         } catch (e) {
+            // console.error('Error in subscribe0: ', e);
             return;
         }
     }

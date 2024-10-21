@@ -102,9 +102,7 @@ pub struct Initialize<'info> {
 
 #[derive(Accounts)]
 pub struct SetPriceV2<'info> {
-    #[account(
-        mut,
-    )]
+    #[account(mut)]
     pub price_update_v2: Account<'info, PriceUpdateV2>,
 }
 
@@ -114,7 +112,7 @@ pub struct InitializeV2<'info> {
     #[account(
         init,
         seeds = [b"pythv2", params.id.to_le_bytes().as_ref()],
-        space =  std::mem::size_of::<PriceUpdateV2>() + 8,
+        space =  std::mem::size_of::<PriceUpdateV2>() ,
         bump,
         payer = admin
     )]
