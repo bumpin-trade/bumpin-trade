@@ -32,7 +32,7 @@ export class BumpinClientConfigBuilder {
             verbose: false,
             endpoint,
             wallet: new NoneWallet(),
-            pollingFrequency: 30000,
+            pollingFrequency: 2,
             connectionConfig,
         };
     }

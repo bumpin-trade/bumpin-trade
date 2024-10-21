@@ -82,6 +82,8 @@ pub mod pyth {
     pub fn set_price_v2(ctx: Context<SetPriceV2>, price: i64, conf: u64) -> Result<()> {
         let price_update_v2 = &mut ctx.accounts.price_update_v2;
         price_update_v2.price_message.price = price;
+        price_update_v2.price_message.prev_publish_time = price_update_v2.price_message.publish_time;
+        price_update_v2.price_message.publish_time = Clock::get()?.unix_timestamp;
         price_update_v2.price_message.conf = conf;
         Ok(())
     }

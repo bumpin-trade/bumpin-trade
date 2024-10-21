@@ -131,7 +131,6 @@ async function fetchPriceUpdateV2ByMultiAccounts(
 
         const buffer = accountInfo.data;
         const priceUpdate = deserializePriceUpdateV2(buffer.slice(8));
-        console.log(new PublicKey(priceUpdate.priceMessage.feedId).toString())
         priceUpdates.push(priceUpdate);
     }
 

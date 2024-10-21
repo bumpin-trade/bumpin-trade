@@ -118,7 +118,7 @@ export class BumpinAdmin {
 
         console.log('Initializing Oracle');
         for (let p of oracleParams) {
-            await this.initOracle(p.feedId, p.exponent, p.id);
+            await this.initOracle(p.feedId, p.exponent, p.id, p.account);
         }
 
         let tradeTokenOracleMap = new Map<string, string>();
@@ -238,8 +238,9 @@ export class BumpinAdmin {
         exponent: number,
         feedId: PublicKey,
         id: number,
+        account: PublicKey,
     ) {
-        console.log(' FeedId: ', feedId.toString(), 'Id: ', id.toString());
+        console.log(' FeedId: ', feedId.toString(), 'Id: ', id.toString(), 'account:', account.toString());
         const params = {
             feedId: feedId,
             price: new BN(0),
@@ -310,10 +311,11 @@ export class BumpinAdmin {
         feed_id: PublicKey,
         exponent: number,
         id: number | undefined,
+        account: PublicKey,
     ) {
         if (id) {
             console.log('Initial Trade Token by generated Oracle');
-            await this.DEV_TEST_ONLY__INIT_PYTHV2(exponent, feed_id, id!);
+            await this.DEV_TEST_ONLY__INIT_PYTHV2(exponent, feed_id, id!, account);
         } else {
             console.log('Initial Trade Token by FeedId:', feed_id);
         }
@@ -459,6 +461,7 @@ export type WrappedInitializeOracleParams = {
     feedId: PublicKey;
     exponent: number;
     id: number | undefined;
+    account: PublicKey;
 };
 
 export type WrappedInitializeTradeTokenParams = {

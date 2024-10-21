@@ -33,7 +33,10 @@ pub fn get_pyth_price(
     let clock = Clock::get().map_err(|_e| BumpErrorCode::TimestampNotFound)?;
 
     let price_data =
-        price_oracle.get_price_no_older_than(&clock, 180, feed_id).map_err(|_e| PythOffline)?;
+        price_oracle.get_price_no_older_than(&clock, 180, feed_id).map_err(|_e| {
+            msg!("=====get_pyth_price:{} ", _e.to_string());
+            PythOffline
+        })?;
     let oracle_price = price_data.price;
     let oracle_conf = price_data.conf;
 

@@ -151,22 +151,6 @@ export class UserComponent extends Component {
             );
         }
 
-        let remainingAccounts = this.getUserTradeTokenRemainingAccounts(
-            await this.getUser(),
-            allTradeTokens,
-        );
-        let markets = BumpinMarketUtils.getMarketsByPoolKey(
-            pool.key,
-            allMarkets,
-        );
-        for (let market of markets.values()) {
-            remainingAccounts.push({
-                pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
-                isWritable: true,
-                isSigner: false,
-            });
-        }
-
         const ix = await this.program.methods
             .portfolioStake(pool.index, tradeToken.index, amount)
             .accounts({
@@ -174,11 +158,7 @@ export class UserComponent extends Component {
                 bumpSigner: (await this.getState()).bumpSigner,
             })
             .remainingAccounts(
-                BumpinUtils.removeDuplicateAccounts(
-                    remainingAccounts.concat(
-                        await this.essentialRemainingAccounts(),
-                    ),
-                ),
+                await this.allEssentialRemainingAccounts(true),
             )
             .signers([])
             .instruction();
@@ -207,40 +187,7 @@ export class UserComponent extends Component {
                 wallet,
                 tradeToken.mintKey,
             );
-
-        let remainingAccounts = [];
-        remainingAccounts.push({
-            pubkey: tradeToken.mintKey,
-            isWritable: false,
-            isSigner: false,
-        });
-        remainingAccounts.push({
-            pubkey: tradeToken.oracleKey,
-            isWritable: false,
-            isSigner: false,
-        });
-        let pda = BumpinUtils.getTradeTokenPda(
-            this.program,
-            tradeToken.index,
-        )[0];
-        remainingAccounts.push({
-            pubkey: pda,
-            isWritable: false,
-            isSigner: false,
-        });
-
-        let markets = BumpinMarketUtils.getMarketsByPoolKey(
-            pool.key,
-            allMarkets,
-        );
-        for (let market of markets) {
-            remainingAccounts.push({
-                pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
-                isWritable: true,
-                isSigner: false,
-            });
-        }
-
+        let accountMetas = await this.allEssentialRemainingAccounts(true);
         const ix = await this.program.methods
             .walletStake(pool.index, amount)
             .accounts({
@@ -248,11 +195,7 @@ export class UserComponent extends Component {
                 userTokenAccount: tokenAccount.address,
             })
             .remainingAccounts(
-                BumpinUtils.removeDuplicateAccounts(
-                    remainingAccounts.concat(
-                        await this.essentialRemainingAccounts(),
-                    ),
-                ),
+                accountMetas
             )
             .signers([])
             .instruction();
@@ -283,39 +226,6 @@ export class UserComponent extends Component {
             poolIndex: pool.index,
             tradeTokenIndex: tradeToken.index,
         };
-
-        let remainingAccounts = [];
-        remainingAccounts.push({
-            pubkey: tradeToken.mintKey,
-            isWritable: false,
-            isSigner: false,
-        });
-        remainingAccounts.push({
-            pubkey: tradeToken.oracleKey,
-            isWritable: false,
-            isSigner: false,
-        });
-        let pda = BumpinUtils.getTradeTokenPda(
-            this.program,
-            tradeToken.index,
-        )[0];
-        remainingAccounts.push({
-            pubkey: pda,
-            isWritable: false,
-            isSigner: false,
-        });
-
-        let markets = BumpinMarketUtils.getMarketsByPoolKey(
-            pool.key,
-            allMarkets,
-        );
-        for (let market of markets) {
-            remainingAccounts.push({
-                pubkey: BumpinUtils.getMarketPda(this.program, market.index)[0],
-                isWritable: true,
-                isSigner: false,
-            });
-        }
         let tokenAccount =
             await BumpinTokenUtils.getTokenAccountFromWalletAndMintKey(
                 this.program.provider.connection,
@@ -331,11 +241,7 @@ export class UserComponent extends Component {
                 bumpSigner: (await this.getState()).bumpSigner,
             })
             .remainingAccounts(
-                BumpinUtils.removeDuplicateAccounts(
-                    remainingAccounts.concat(
-                        await this.essentialRemainingAccounts(),
-                    ),
-                ),
+                await this.allEssentialRemainingAccounts(true),
             )
             .signers([])
             .instruction();
@@ -453,7 +359,7 @@ export class UserComponent extends Component {
             stablePoolIndex: stablePool.index,
         };
         let accountMetas = BumpinUtils.removeDuplicateAccounts(
-            await this.essentialRemainingAccounts(),
+            await this.allEssentialRemainingAccounts(true),
         );
         const ix = await this.program.methods
             .updateCrossPositionLeverage(params)
@@ -807,7 +713,7 @@ export class UserComponent extends Component {
             ),
         };
         let accountMetas = BumpinUtils.removeDuplicateAccounts(
-            (await this.essentialRemainingAccounts()).concat(remainingAccounts),
+            (await this.allEssentialRemainingAccounts(true)).concat(remainingAccounts),
         );
 
         await this.placePerpOrderValidation(
@@ -1146,11 +1052,6 @@ export class UserComponent extends Component {
             isWritable: true,
             isSigner: false,
         });
-        accounts.push({
-            pubkey: mainMarket.indexMintOracle,
-            isWritable: true,
-            isSigner: false,
-        });
         let baseTradeToken = BumpinTokenUtils.getTradeTokenByMintPublicKey(
             mainMarket.poolMintKey,
             tradeTokens,
@@ -1187,11 +1088,6 @@ export class UserComponent extends Component {
         });
         accounts.push({
             pubkey: mainMarket.stablePoolMintKey,
-            isWritable: true,
-            isSigner: false,
-        });
-        accounts.push({
-            pubkey: stableTradeToken.oracleKey,
             isWritable: true,
             isSigner: false,
         });

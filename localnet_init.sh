@@ -14,7 +14,7 @@ solana airdrop 100000 $(solana-keygen pubkey ./keys/player4.json) --url localhos
 solana airdrop 100000 $(solana-keygen pubkey ./keys/player5.json) --url localhost> /dev/null
 solana airdrop 100000 $(solana-keygen pubkey ./keys/reward.json) --url localhost> /dev/null
 coin_names=("sol" "stable" "btc" "eth" "bnb" "bonk")
-decimals=(9 6 8 8 8 5)
+decimals=(8 8 8 8 8 10)
 mint_amounts=(1000 1000000 10 100 1000000000 1000)
 results="================================================\n"
 results_code="\n================================================\n"
