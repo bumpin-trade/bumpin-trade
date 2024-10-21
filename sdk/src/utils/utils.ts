@@ -342,8 +342,6 @@ export class BumpinUtils {
         return {
             price: BigNumber(
                 BigNumber(price.toString())
-                    .multipliedBy(BigNumber(10).pow(exponent))
-                    .multipliedBy(PRICE_PRECISION_BIGNUMBER)
                     .dividedBy(pythPrecision),
             ).toNumber(),
         };
