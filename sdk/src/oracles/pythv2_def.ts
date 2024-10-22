@@ -1,8 +1,8 @@
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 import { Buffer } from 'buffer';
 
-// export const PYTH_ID = 'rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ';
-export const PYTH_ID = 'ECKhW7wvKQGGhzGFS7LqGv4z3DRoAD8HJywd25XjBoxP';
+export const PYTH_ID = 'rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ';
+// export const PYTH_ID = 'ECKhW7wvKQGGhzGFS7LqGv4z3DRoAD8HJywd25XjBoxP';
 export type VerificationLevel =
     | { kind: 'Partial'; numSignatures: number }
     | { kind: 'Full' };
