@@ -3,7 +3,6 @@ use crate::math::casting::Cast;
 use crate::math::safe_math::SafeMath;
 use crate::state::market::Market;
 use crate::state::pool::Pool;
-use anchor_lang::prelude::msg;
 
 #[track_caller]
 pub fn charge_staking_fee(stake_pool: &mut Pool, amount: u128) -> BumpResult<u128> {
@@ -68,8 +67,6 @@ pub fn collect_borrowing_fee(
 
 #[track_caller]
 pub fn settle_funding_fee(pool: &mut Pool, fee_amount: i128, is_cross: bool) -> BumpResult<()> {
-    msg!("=======settle_funding_fee, fee_amount:{}", fee_amount);
-    msg!("=======settle_funding_fee, is_cross:{}", is_cross);
     if fee_amount <= 0i128 {
         //pool should pay to user
         pool.sub_amount(fee_amount.abs().cast::<u128>()?)?;

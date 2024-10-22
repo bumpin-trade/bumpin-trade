@@ -55,8 +55,10 @@ impl OracleMap {
                     match PriceUpdateV2::try_deserialize(&mut &**data) {
                         Ok(price_update_v2) => {
                             let feed_id = price_update_v2.price_message.feed_id.clone();
-                            oracles.insert(feed_id, price_update_v2);
-                            msg!("price_update_v2 inserted, feed_id:{}", Pubkey::from(feed_id));
+                            oracles.insert(
+                                feed_id,
+                                price_update_v2,
+                            );
                         },
                         Err(_) => {
                             msg!("error in deserialize priceUpdateV2");
