@@ -1,5 +1,5 @@
-import {AccountInfo, Connection, PublicKey} from '@solana/web3.js';
-import {Buffer} from 'buffer';
+import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
+import { Buffer } from 'buffer';
 
 // export const PYTH_ID = 'rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ';
 export const PYTH_ID = 'ECKhW7wvKQGGhzGFS7LqGv4z3DRoAD8HJywd25XjBoxP';
@@ -52,9 +52,9 @@ function deserializePriceUpdateV2(buffer: Buffer): PriceUpdateV2 {
         if (kind === 0) {
             const numSignatures = buffer.readUInt8(offset);
             offset += 1;
-            return {kind: 'Partial', numSignatures};
+            return { kind: 'Partial', numSignatures };
         }
-        return {kind: 'Full'};
+        return { kind: 'Full' };
     };
 
     const writeAuthority = readPublicKey();
@@ -112,7 +112,7 @@ async function fetchPriceUpdateV2ByAccount(
 
 async function fetchPriceUpdateV2ByMultiAccounts(
     connection: Connection,
-    publicKeys: PublicKey[]
+    publicKeys: PublicKey[],
 ): Promise<(PriceUpdateV2 | undefined)[]> {
     const accountInfos = await connection.getMultipleAccountsInfo(publicKeys);
     if (accountInfos === null) {
@@ -137,4 +137,4 @@ async function fetchPriceUpdateV2ByMultiAccounts(
     return priceUpdates;
 }
 
-export {fetchPriceUpdateV2ByAccount, fetchPriceUpdateV2ByMultiAccounts};
+export { fetchPriceUpdateV2ByAccount, fetchPriceUpdateV2ByMultiAccounts };

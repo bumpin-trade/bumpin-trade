@@ -240,7 +240,14 @@ export class BumpinAdmin {
         id: number,
         account: PublicKey,
     ) {
-        console.log(' FeedId: ', feedId.toString(), 'Id: ', id.toString(), 'account:', account.toString());
+        console.log(
+            ' FeedId: ',
+            feedId.toString(),
+            'Id: ',
+            id.toString(),
+            'account:',
+            account.toString(),
+        );
         const params = {
             feedId: feedId,
             price: new BN(0),
@@ -315,7 +322,12 @@ export class BumpinAdmin {
     ) {
         if (id) {
             console.log('Initial Trade Token by generated Oracle');
-            await this.DEV_TEST_ONLY__INIT_PYTHV2(exponent, feed_id, id!, account);
+            await this.DEV_TEST_ONLY__INIT_PYTHV2(
+                exponent,
+                feed_id,
+                id!,
+                account,
+            );
         } else {
             console.log('Initial Trade Token by FeedId:', feed_id);
         }

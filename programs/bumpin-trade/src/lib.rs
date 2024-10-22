@@ -11,7 +11,7 @@ pub mod state;
 pub mod traits;
 pub mod utils;
 
-declare_id!("D21hrEpYeJVghAs73oRQxQrRdgXsq73upeNsm21TJ1cG");
+declare_id!("2yBLUGR3kEeTTym6KvkVjrnkMn9snMjd43hoUqovQgDT");
 
 #[program]
 pub mod bumpin_trade {

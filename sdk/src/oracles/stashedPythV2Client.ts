@@ -1,10 +1,10 @@
-import {parsePriceData} from '@pythnetwork/client';
-import {Connection, PublicKey} from '@solana/web3.js';
-import {OraclePriceData} from './types';
-import {BN} from '@coral-xyz/anchor';
-import {TEN} from '../constants/numericConstants';
-import {BumpinInvalidParameter} from '../errors';
-import {fetchPriceUpdateV2ByAccount, PriceUpdateV2} from './pythv2_def';
+import { parsePriceData } from '@pythnetwork/client';
+import { Connection, PublicKey } from '@solana/web3.js';
+import { OraclePriceData } from './types';
+import { BN } from '@coral-xyz/anchor';
+import { TEN } from '../constants/numericConstants';
+import { BumpinInvalidParameter } from '../errors';
+import { fetchPriceUpdateV2ByAccount, PriceUpdateV2 } from './pythv2_def';
 import BigNumber from 'bignumber.js';
 
 export const PRICE_PRECISION = new BN(10).pow(new BN(8));

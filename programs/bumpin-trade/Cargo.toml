@@ -9,7 +9,7 @@ crate-type = ["cdylib", "lib"]
 name = "bumpin_trade"
 
 [features]
-default = ["localnet"]
+default = []
 mainnet-beta = []
 localnet = []
 devnet = []

@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-num_loops=4
+num_loops=6
 echo "num_loops: $num_loops"
 echo "Creating... "
 # Step 1: Airdrop SOL to the admin account

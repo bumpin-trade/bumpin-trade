@@ -50,5 +50,3 @@ impl Default for VerificationLevel {
         VerificationLevel::Full
     }
 }
-
-

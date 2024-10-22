@@ -341,8 +341,7 @@ export class BumpinUtils {
         const pythPrecision = BigNumber(10).pow(BigNumber(exponent).abs());
         return {
             price: BigNumber(
-                BigNumber(price.toString())
-                    .dividedBy(pythPrecision),
+                BigNumber(price.toString()).dividedBy(pythPrecision),
             ).toNumber(),
         };
     }
