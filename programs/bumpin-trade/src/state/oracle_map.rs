@@ -59,7 +59,6 @@ impl OracleMap {
                                 feed_id,
                                 price_update_v2,
                             );
-                            msg!("price_update_v2 inserted, feed_id:{}", Pubkey::from(feed_id));
                         },
                         Err(_) => {
                             msg!("error in deserialize priceUpdateV2");
