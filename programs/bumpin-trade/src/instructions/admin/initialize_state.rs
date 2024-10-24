@@ -32,6 +32,10 @@ pub struct ModifyState<'info> {
         has_one = admin
     )]
     pub state: Account<'info, State>,
+
+    #[account(
+        constraint = state.admin.eq(& admin.key())
+    )]
     pub admin: Signer<'info>,
 }
 

@@ -43,6 +43,14 @@ pub mod bumpin_trade {
     }
 
     #[track_caller]
+    pub fn modify_pool<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, InitializePool>,
+        params: ModifyPoolParams,
+    ) -> Result<()> {
+        handle_modify_pool(ctx, params)
+    }
+
+    #[track_caller]
     pub fn initialize_user<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializeUser>,
     ) -> Result<()> {
@@ -61,11 +69,27 @@ pub mod bumpin_trade {
     }
 
     #[track_caller]
+    pub fn modify_trade_token<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, ModifyTradeToken>,
+        params: ModifyTradeTokenParams,
+    ) -> Result<()> {
+        handle_modify_trade_token(ctx, params)
+    }
+
+    #[track_caller]
     pub fn initialize_market<'a, 'b, 'c: 'info, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, InitializeMarket>,
         params: InitializeMarketParams,
     ) -> Result<()> {
         handle_initialize_market(ctx, params)
+    }
+
+    #[track_caller]
+    pub fn modify_market<'a, 'b, 'c: 'info, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, UpdateMarket>,
+        params: ModifyMarketParams,
+    ) -> Result<()> {
+        handle_modify_market(ctx, params)
     }
 
     #[track_caller]
@@ -263,35 +287,4 @@ pub mod bumpin_trade {
     ) -> Result<()> {
         handle_rebalance_market_stable_loss(ctx)
     }
-
-    // #[track_caller]
-    // pub fn pythv2_test<'a, 'b, 'c: 'info, 'info>(
-    //     ctx: Context<'a, 'b, 'c, 'info, PythV2Tester<'info>>,
-    // ) -> Result<()> {
-    //     msg!("pythv2_test");
-    //     let remaining_accounts = ctx.remaining_accounts;
-    //     msg!("remaining_account len: {}", remaining_accounts.len());
-    //     if remaining_accounts.len() == 0 {
-    //         return Ok(());
-    //     }
-    //     let first_account = &remaining_accounts[0];
-    //     let first_account_mut = first_account.data.try_borrow_mut().unwrap();
-    //     match PriceUpdateV2::try_deserialize(&mut &**first_account_mut) {
-    //         Ok(price_update_v2) => {
-    //             msg!("price_update_v2 load success");
-    //             msg!("PriceUpdateV2 len: {}", std::mem::size_of::<PriceUpdateV2>());
-    //             msg!("PriceUpdateV2 feed_id: {:?}", price_update_v2.price_message.feed_id);
-    //             msg!("PriceUpdateV2 price: {:?}", price_update_v2.price_message.price);
-    //         },
-    //         Err(e) => {
-    //             msg!("price_update_v2 deserialize error: {:?}", e);
-    //         },
-    //     }
-    //     Ok(())
-    // }
 }
-
-// #[derive(Accounts)]
-// pub struct PythV2Tester<'info> {
-//     pub authority: Signer<'info>,
-// }
